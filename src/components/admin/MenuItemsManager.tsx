@@ -8,8 +8,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
-import { Plus, Pencil, Trash2, Image as ImageIcon } from "lucide-react";
+import { Plus, Pencil, Trash2, Image as ImageIcon, Star } from "lucide-react";
 
 interface MenuItem {
   id: string;
@@ -19,6 +20,7 @@ interface MenuItem {
   category_id: string | null;
   image_url: string | null;
   is_available: boolean | null;
+  is_featured: boolean | null;
   display_order: number | null;
 }
 
@@ -41,6 +43,7 @@ const MenuItemsManager = () => {
     category_id: "",
     image_url: "",
     is_available: true,
+    is_featured: false,
     display_order: 0,
   });
 
@@ -114,6 +117,7 @@ const MenuItemsManager = () => {
         category_id: formData.category_id || null,
         image_url: formData.image_url || null,
         is_available: formData.is_available,
+        is_featured: formData.is_featured,
         display_order: formData.display_order,
       };
 
@@ -152,6 +156,7 @@ const MenuItemsManager = () => {
       category_id: item.category_id || "",
       image_url: item.image_url || "",
       is_available: item.is_available ?? true,
+      is_featured: item.is_featured ?? false,
       display_order: item.display_order || 0,
     });
     setDialogOpen(true);
@@ -183,6 +188,7 @@ const MenuItemsManager = () => {
       category_id: "",
       image_url: "",
       is_available: true,
+      is_featured: false,
       display_order: 0,
     });
     setEditingItem(null);
@@ -314,6 +320,21 @@ const MenuItemsManager = () => {
                   </Select>
                 </div>
               </div>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label htmlFor="featured">Producto Destacado</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Los productos destacados aparecen en el carrusel principal
+                    </p>
+                  </div>
+                  <Switch
+                    id="featured"
+                    checked={formData.is_featured}
+                    onCheckedChange={(checked) => setFormData({ ...formData, is_featured: checked })}
+                  />
+                </div>
+              </div>
               <Button type="submit" className="w-full" disabled={uploading}>
                 {uploading ? "Subiendo imagen..." : editingItem ? "Actualizar" : "Crear"}
               </Button>
@@ -330,13 +351,14 @@ const MenuItemsManager = () => {
               <TableHead>Categoría</TableHead>
               <TableHead>Precio</TableHead>
               <TableHead>Estado</TableHead>
+              <TableHead>Destacado</TableHead>
               <TableHead className="text-right">Acciones</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {items.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center text-muted-foreground">
+                <TableCell colSpan={7} className="text-center text-muted-foreground">
                   No hay platillos. Crea uno para empezar.
                 </TableCell>
               </TableRow>
@@ -367,6 +389,14 @@ const MenuItemsManager = () => {
                     }`}>
                       {item.is_available ? "Disponible" : "No disponible"}
                     </span>
+                  </TableCell>
+                  <TableCell>
+                    {item.is_featured && (
+                      <div className="flex items-center gap-1 text-amber-600">
+                        <Star className="w-4 h-4 fill-amber-600" />
+                        <span className="text-xs">Destacado</span>
+                      </div>
+                    )}
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
