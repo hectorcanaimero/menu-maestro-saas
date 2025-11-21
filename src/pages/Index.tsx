@@ -5,8 +5,9 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { ProductCard } from "@/components/catalog/ProductCard";
 import { Button } from "@/components/ui/button";
-import { ShoppingCart } from "lucide-react";
+import { ShoppingCart, Store as StoreIcon } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
+import { useStore } from "@/contexts/StoreContext";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Plus, Minus, Trash2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -15,22 +16,50 @@ import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious
 
 const Index = () => {
   const { items, updateQuantity, removeItem, totalItems, totalPrice } = useCart();
+  const { store, loading: storeLoading } = useStore();
   const navigate = useNavigate();
 
   // Fetch featured products
   const { data: featuredProducts } = useQuery({
-    queryKey: ["featured-products"],
+    queryKey: ["featured-products", store?.id],
     queryFn: async () => {
+      if (!store?.id) return [];
       const { data, error } = await supabase
         .from("menu_items")
         .select("*")
+        .eq("store_id", store.id)
         .eq("is_available", true)
         .eq("is_featured", true)
         .order("display_order", { ascending: true });
       if (error) throw error;
       return data;
     },
+    enabled: !!store?.id,
   });
+
+  if (storeLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Cargando tienda...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!store) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center max-w-md mx-auto px-4">
+          <StoreIcon className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+          <h1 className="text-2xl font-bold mb-2">Tienda no encontrada</h1>
+          <p className="text-muted-foreground mb-6">Esta tienda no existe o no está activa.</p>
+          <Button onClick={() => navigate("/create-store")}>Crear mi tienda</Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background pb-20">

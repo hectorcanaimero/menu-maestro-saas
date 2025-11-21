@@ -1,7 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useCart } from "@/contexts/CartContext";
+import { useStore } from "@/contexts/StoreContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,6 +16,7 @@ import InputMask from "react-input-mask";
 const Checkout = () => {
   const navigate = useNavigate();
   const { items, totalPrice, clearCart } = useCart();
+  const { store } = useStore();
   const [loading, setLoading] = useState(false);
   const [country, setCountry] = useState<"brazil" | "venezuela">("brazil");
   const [formData, setFormData] = useState({
@@ -25,15 +27,13 @@ const Checkout = () => {
     notes: "",
   });
 
-  useEffect(() => {
-    if (items.length === 0) {
-      toast.error("Tu carrito está vacío");
-      navigate("/");
-    }
-  }, [items, navigate]);
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!store?.id) {
+      toast.error("No se pudo identificar la tienda");
+      return;
+    }
 
     setLoading(true);
     try {
@@ -44,6 +44,7 @@ const Checkout = () => {
         .from("orders")
         .insert([
           {
+            store_id: store.id,
             user_id: session?.user?.id || null,
             total_amount: totalPrice,
             customer_name: formData.customer_name,

@@ -6,18 +6,22 @@ import { useSearchParams } from "react-router-dom";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { LayoutGrid, List } from "lucide-react";
+import { useStore } from "@/contexts/StoreContext";
 
 export const ProductGrid = () => {
   const [searchParams] = useSearchParams();
   const categoryFilter = searchParams.get("category");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const { store } = useStore();
 
   const { data: products, isLoading } = useQuery({
-    queryKey: ["menu-items", categoryFilter],
+    queryKey: ["menu-items", categoryFilter, store?.id],
     queryFn: async () => {
+      if (!store?.id) return [];
       let query = supabase
         .from("menu_items")
         .select("*")
+        .eq("store_id", store.id)
         .eq("is_available", true)
         .eq("is_featured", false)
         .order("display_order", { ascending: true });
@@ -30,6 +34,7 @@ export const ProductGrid = () => {
       if (error) throw error;
       return data;
     },
+    enabled: !!store?.id,
   });
 
   if (isLoading) {
