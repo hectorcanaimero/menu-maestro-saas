@@ -241,7 +241,9 @@ export type Database = {
           is_active: boolean | null
           logo_url: string | null
           name: string
-          operating_mode: Database["public"]["Enums"]["operating_mode"] | null
+          operating_modes:
+            | Database["public"]["Enums"]["operating_mode"][]
+            | null
           owner_id: string
           phone: string | null
           subdomain: string
@@ -256,7 +258,9 @@ export type Database = {
           is_active?: boolean | null
           logo_url?: string | null
           name: string
-          operating_mode?: Database["public"]["Enums"]["operating_mode"] | null
+          operating_modes?:
+            | Database["public"]["Enums"]["operating_mode"][]
+            | null
           owner_id: string
           phone?: string | null
           subdomain: string
@@ -271,7 +275,9 @@ export type Database = {
           is_active?: boolean | null
           logo_url?: string | null
           name?: string
-          operating_mode?: Database["public"]["Enums"]["operating_mode"] | null
+          operating_modes?:
+            | Database["public"]["Enums"]["operating_mode"][]
+            | null
           owner_id?: string
           phone?: string | null
           subdomain?: string
