@@ -38,7 +38,7 @@ export const CartSheet = () => {
             </div>
           ) : (
             <>
-              <div className="flex justify-between items-center text-lg font-bold">
+              <div className="flex justify-between items-center text-lg font-bold mb-4">
                 <span>Total:</span>
                 <span className="text-primary">${totalPrice.toFixed(2)}</span>
               </div>
