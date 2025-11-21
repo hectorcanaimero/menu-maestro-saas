@@ -3,10 +3,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { ProductCard } from "./ProductCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useSearchParams } from "react-router-dom";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { LayoutGrid, List } from "lucide-react";
 
 export const ProductGrid = () => {
   const [searchParams] = useSearchParams();
   const categoryFilter = searchParams.get("category");
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
   const { data: products, isLoading } = useQuery({
     queryKey: ["menu-items", categoryFilter],
@@ -52,17 +56,44 @@ export const ProductGrid = () => {
   }
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-      {products.map((product) => (
-        <ProductCard
-          key={product.id}
-          id={product.id}
-          name={product.name}
-          price={Number(product.price)}
-          image_url={product.image_url}
-          description={product.description}
-        />
-      ))}
+    <div className="space-y-6">
+      {/* View Toggle */}
+      <div className="flex justify-end gap-2">
+        <Button
+          variant={viewMode === "grid" ? "default" : "outline"}
+          size="sm"
+          onClick={() => setViewMode("grid")}
+        >
+          <LayoutGrid className="w-4 h-4 mr-2" />
+          Grid
+        </Button>
+        <Button
+          variant={viewMode === "list" ? "default" : "outline"}
+          size="sm"
+          onClick={() => setViewMode("list")}
+        >
+          <List className="w-4 h-4 mr-2" />
+          Lista
+        </Button>
+      </div>
+
+      {/* Products Grid */}
+      <div className={viewMode === "grid" 
+        ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6" 
+        : "flex flex-col gap-4"
+      }>
+        {products.map((product) => (
+          <ProductCard
+            key={product.id}
+            id={product.id}
+            name={product.name}
+            price={Number(product.price)}
+            image_url={product.image_url}
+            description={product.description}
+            layout={viewMode}
+          />
+        ))}
+      </div>
     </div>
   );
 };
