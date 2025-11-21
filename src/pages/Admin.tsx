@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { LogOut, ChefHat } from "lucide-react";
 import CategoriesManager from "@/components/admin/CategoriesManager";
 import MenuItemsManager from "@/components/admin/MenuItemsManager";
+import OrdersManager from "@/components/admin/OrdersManager";
 
 const Admin = () => {
   const navigate = useNavigate();
@@ -104,11 +105,16 @@ const Admin = () => {
       </header>
 
       <main className="container mx-auto px-4 py-8">
-        <Tabs defaultValue="categories" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 max-w-md">
+        <Tabs defaultValue="orders" className="w-full">
+          <TabsList className="grid w-full grid-cols-3 max-w-2xl">
+            <TabsTrigger value="orders">Pedidos</TabsTrigger>
             <TabsTrigger value="categories">Categorías</TabsTrigger>
             <TabsTrigger value="items">Platillos</TabsTrigger>
           </TabsList>
+          
+          <TabsContent value="orders" className="mt-6">
+            <OrdersManager />
+          </TabsContent>
           
           <TabsContent value="categories" className="mt-6">
             <CategoriesManager />

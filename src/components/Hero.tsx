@@ -1,15 +1,45 @@
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { ChevronRight, Settings } from "lucide-react";
+import { ChevronRight, Settings, Package } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { CartSheet } from "@/components/cart/CartSheet";
 import heroImage from "@/assets/hero-restaurant.jpg";
 
 export const Hero = () => {
   const navigate = useNavigate();
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      setIsAuthenticated(!!session);
+    };
+    checkAuth();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
+      setIsAuthenticated(!!session);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
-      {/* Admin Access Button */}
-      <div className="absolute top-4 right-4 z-20">
+      {/* Admin Access and Cart Buttons */}
+      <div className="absolute top-4 right-4 z-20 flex gap-2">
+        <CartSheet />
+        {isAuthenticated && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => navigate("/my-orders")}
+            className="bg-background/80 backdrop-blur-sm hover:bg-background"
+          >
+            <Package className="w-4 h-4 mr-2" />
+            Mis Pedidos
+          </Button>
+        )}
         <Button
           variant="outline"
           size="sm"
