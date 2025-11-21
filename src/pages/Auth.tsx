@@ -17,6 +17,7 @@ const Auth = () => {
   const [signupData, setSignupData] = useState({ email: "", password: "", fullName: "" });
 
   useEffect(() => {
+    // Check current session
     const checkUser = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
@@ -24,6 +25,16 @@ const Auth = () => {
       }
     };
     checkUser();
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN' && session) {
+        toast.success("¡Bienvenido!");
+        navigate("/admin");
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, [navigate]);
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -42,12 +53,14 @@ const Auth = () => {
         } else {
           toast.error(error.message);
         }
+        setIsLoading(false);
         return;
       }
 
-      if (data.session) {
-        toast.success("¡Bienvenido!");
-        navigate("/admin");
+      // La redirección se manejará en onAuthStateChange
+      if (!data.session) {
+        toast.error("Error al iniciar sesión");
+        setIsLoading(false);
       }
     } catch (error) {
       toast.error("Error al iniciar sesión");
