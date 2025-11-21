@@ -11,21 +11,27 @@ interface ProductCardProps {
   price: number;
   image_url: string | null;
   description?: string | null;
+  layout?: "grid" | "list";
 }
 
-export const ProductCard = ({ id, name, price, image_url, description }: ProductCardProps) => {
+export const ProductCard = ({ id, name, price, image_url, description, layout = "list" }: ProductCardProps) => {
   const { addItem } = useCart();
   const navigate = useNavigate();
 
   const handleAddToCart = () => {
     addItem({ id, name, price, image_url });
   };
+  
+  const isGridView = layout === "grid";
 
   return (
     <Card className="group h-full overflow-hidden border border-border/40 hover:border-border hover:shadow-lg transition-all duration-300 bg-background">
-      <div className="flex flex-col sm:flex-row h-full">
+      <div className={isGridView ? "flex flex-col h-full" : "flex flex-col sm:flex-row h-full"}>
         {/* Image Container */}
-        <div className="w-full sm:w-48 aspect-square sm:aspect-auto overflow-hidden bg-muted/30 flex-shrink-0">
+        <div className={isGridView 
+          ? "w-full aspect-square overflow-hidden bg-muted/30" 
+          : "w-full sm:w-48 aspect-square sm:aspect-auto overflow-hidden bg-muted/30 flex-shrink-0"
+        }>
           {image_url ? (
             <img
               src={image_url}
