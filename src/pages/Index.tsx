@@ -24,8 +24,7 @@ const Index = () => {
         .from("menu_items")
         .select("*")
         .eq("is_available", true)
-        .order("display_order", { ascending: true })
-        .limit(3);
+        .order("display_order", { ascending: true });
       if (error) throw error;
       return data;
     },
