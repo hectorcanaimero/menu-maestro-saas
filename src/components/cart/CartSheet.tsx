@@ -38,13 +38,13 @@ export const CartSheet = () => {
             </div>
           ) : (
             <>
-              <Button className="w-full" size="lg" onClick={() => navigate("/checkout")}>
-                Realizar Pedido
-              </Button>
               <div className="flex justify-between items-center text-lg font-bold">
                 <span>Total:</span>
                 <span className="text-primary">${totalPrice.toFixed(2)}</span>
               </div>
+              <Button className="w-full" size="lg" onClick={() => navigate("/checkout")}>
+                Realizar Pedido
+              </Button>
               <div className="border-t pt-4 mt-4 space-y-4"></div>
               <div className="flex-1 overflow-y-auto space-y-4 pr-2">
                 {items.map((item) => (
