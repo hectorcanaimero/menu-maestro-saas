@@ -1,14 +1,16 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Menu, X, ShoppingCart, Package, User } from "lucide-react";
+import { Menu, X, ShoppingCart, Package, User, Settings } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useCart } from "@/contexts/CartContext";
+import { useStore } from "@/contexts/StoreContext";
 import { supabase } from "@/integrations/supabase/client";
 import { CartSheet } from "@/components/cart/CartSheet";
 
 export const Header = () => {
   const navigate = useNavigate();
   const { totalItems } = useCart();
+  const { store, isStoreOwner } = useStore();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -29,8 +31,6 @@ export const Header = () => {
   const menuItems = [
     { label: "Inicio", href: "/" },
     { label: "Productos", href: "/#productos" },
-    { label: "Categorías", href: "/#categorias" },
-    { label: "Contacto", href: "/#contacto" },
   ];
 
   return (
@@ -42,7 +42,7 @@ export const Header = () => {
             onClick={() => navigate("/")}
             className="flex items-center space-x-2 font-bold text-xl text-foreground hover:text-primary transition-colors"
           >
-            <span>Tu Tienda</span>
+            <span>{store?.name || "Tienda"}</span>
           </button>
 
           {/* Desktop Navigation */}
@@ -68,15 +68,29 @@ export const Header = () => {
                 size="icon"
                 onClick={() => navigate("/my-orders")}
                 className="relative"
+                title="Mis Pedidos"
               >
                 <Package className="w-5 h-5" />
+              </Button>
+            )}
+
+            {isStoreOwner && (
+              <Button
+                variant="default"
+                size="sm"
+                onClick={() => navigate("/admin")}
+                className="hidden md:flex items-center gap-2"
+              >
+                <Settings className="w-4 h-4" />
+                Admin
               </Button>
             )}
 
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => navigate("/auth")}
+              onClick={() => navigate(isAuthenticated ? "/auth" : "/auth")}
+              title={isAuthenticated ? "Mi Cuenta" : "Iniciar Sesión"}
             >
               <User className="w-5 h-5" />
             </Button>
@@ -110,6 +124,20 @@ export const Header = () => {
                 {item.label}
               </a>
             ))}
+            {isStoreOwner && (
+              <Button
+                variant="default"
+                size="sm"
+                onClick={() => {
+                  navigate("/admin");
+                  setMobileMenuOpen(false);
+                }}
+                className="w-full flex items-center gap-2 justify-center"
+              >
+                <Settings className="w-4 h-4" />
+                Panel Admin
+              </Button>
+            )}
           </nav>
         )}
       </div>

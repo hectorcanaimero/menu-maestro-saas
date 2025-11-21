@@ -1,6 +1,7 @@
 import { Header } from "@/components/catalog/Header";
 import { ProductGrid } from "@/components/catalog/ProductGrid";
 import { CategoriesSection } from "@/components/catalog/CategoriesSection";
+import { Footer } from "@/components/catalog/Footer";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { ProductCard } from "@/components/catalog/ProductCard";
@@ -55,7 +56,10 @@ const Index = () => {
           <StoreIcon className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
           <h1 className="text-2xl font-bold mb-2">Tienda no encontrada</h1>
           <p className="text-muted-foreground mb-6">Esta tienda no existe o no está activa.</p>
-          <Button onClick={() => navigate("/create-store")}>Crear mi tienda</Button>
+          <div className="flex gap-3 justify-center">
+            <Button onClick={() => navigate("/welcome")}>Ver PideAI</Button>
+            <Button variant="outline" onClick={() => navigate("/create-store")}>Crear mi tienda</Button>
+          </div>
         </div>
       </div>
     );
@@ -111,6 +115,10 @@ const Index = () => {
           <ProductGrid />
         </section>
       </div>
+
+      {/* Footer */}
+      <Footer />
+
       {/* Floating Cart Button with Sheet */}
       <Sheet>
         <SheetTrigger asChild>
