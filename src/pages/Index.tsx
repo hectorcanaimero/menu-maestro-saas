@@ -64,6 +64,7 @@ const Index = () => {
                       image_url={product.image_url}
                       description={product.description}
                       layout="grid"
+                      compact: true,
                     />
                   </CarouselItem>
                 ))}

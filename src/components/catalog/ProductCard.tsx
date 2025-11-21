@@ -15,7 +15,15 @@ interface ProductCardProps {
   compact?: boolean;
 }
 
-export const ProductCard = ({ id, name, price, image_url, description, layout = "list", compact = false }: ProductCardProps) => {
+export const ProductCard = ({
+  id,
+  name,
+  price,
+  image_url,
+  description,
+  layout = "list",
+  compact = false,
+}: ProductCardProps) => {
   const { addItem } = useCart();
   const navigate = useNavigate();
 
@@ -23,22 +31,25 @@ export const ProductCard = ({ id, name, price, image_url, description, layout = 
     e.stopPropagation();
     addItem({ id, name, price, image_url });
   };
-  
+
   const isGridView = layout === "grid";
 
   return (
-    <Card 
+    <Card
       className="group h-full overflow-hidden border border-border/40 hover:border-border hover:shadow-lg transition-all duration-300 bg-card cursor-pointer relative"
       onClick={() => navigate(`/products/${id}`)}
     >
       <div className={isGridView ? "flex flex-col h-full" : "flex flex-col sm:flex-row h-full"}>
         {/* Image Container */}
-        <div className={isGridView 
-          ? "w-full aspect-square overflow-hidden bg-muted/30" 
-          : compact 
-            ? "w-full aspect-[4/3] overflow-hidden bg-muted/30"
-            : "w-full sm:w-48 aspect-square sm:aspect-auto overflow-hidden bg-muted/30 flex-shrink-0"
-        }>
+        <div
+          className={
+            isGridView
+              ? "w-full aspect-square overflow-hidden bg-muted/30"
+              : compact
+                ? "w-full aspect-[4/3] overflow-hidden bg-muted/30"
+                : "w-full sm:w-48 aspect-square sm:aspect-auto overflow-hidden bg-muted/30 flex-shrink-0"
+          }
+        >
           {image_url ? (
             <img
               src={image_url}
@@ -56,17 +67,9 @@ export const ProductCard = ({ id, name, price, image_url, description, layout = 
         <div className="flex flex-col flex-1 p-4">
           {/* Product Info */}
           <div className="flex-1 space-y-1">
-            <h3 className="font-semibold text-foreground text-base line-clamp-1">
-              {name}
-            </h3>
-            {description && !compact && (
-              <p className="text-sm text-muted-foreground line-clamp-2">
-                {description}
-              </p>
-            )}
-            <p className="text-lg font-bold text-foreground pt-1">
-              ${price.toFixed(2)}
-            </p>
+            <h3 className="font-semibold text-foreground text-base line-clamp-1">{name}</h3>
+            {description && !compact && <p className="text-sm text-muted-foreground line-clamp-2">{description}</p>}
+            <p className="text-lg font-bold text-foreground pt-1">${price.toFixed(2)}</p>
           </div>
         </div>
 
