@@ -2,21 +2,26 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { useSearchParams } from "react-router-dom";
+import { useStore } from "@/contexts/StoreContext";
 
 export const CategoriesSection = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const selectedCategory = searchParams.get("category");
+  const { store } = useStore();
 
   const { data: categories, isLoading } = useQuery({
-    queryKey: ["categories"],
+    queryKey: ["categories", store?.id],
     queryFn: async () => {
+      if (!store?.id) return [];
       const { data, error } = await supabase
         .from("categories")
         .select("*")
+        .eq("store_id", store.id)
         .order("display_order", { ascending: true });
       if (error) throw error;
       return data;
     },
+    enabled: !!store?.id,
   });
 
   const handleCategoryClick = (categoryId: string) => {

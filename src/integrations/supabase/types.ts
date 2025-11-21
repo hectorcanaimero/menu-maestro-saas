@@ -21,6 +21,7 @@ export type Database = {
           display_order: number | null
           id: string
           name: string
+          store_id: string | null
         }
         Insert: {
           created_at?: string | null
@@ -28,6 +29,7 @@ export type Database = {
           display_order?: number | null
           id?: string
           name: string
+          store_id?: string | null
         }
         Update: {
           created_at?: string | null
@@ -35,8 +37,17 @@ export type Database = {
           display_order?: number | null
           id?: string
           name?: string
+          store_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "categories_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       menu_items: {
         Row: {
@@ -50,6 +61,7 @@ export type Database = {
           is_featured: boolean | null
           name: string
           price: number
+          store_id: string | null
         }
         Insert: {
           category_id?: string | null
@@ -62,6 +74,7 @@ export type Database = {
           is_featured?: boolean | null
           name: string
           price: number
+          store_id?: string | null
         }
         Update: {
           category_id?: string | null
@@ -74,6 +87,7 @@ export type Database = {
           is_featured?: boolean | null
           name?: string
           price?: number
+          store_id?: string | null
         }
         Relationships: [
           {
@@ -81,6 +95,13 @@ export type Database = {
             columns: ["category_id"]
             isOneToOne: false
             referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "menu_items_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
             referencedColumns: ["id"]
           },
         ]
@@ -140,6 +161,7 @@ export type Database = {
           id: string
           notes: string | null
           status: string
+          store_id: string | null
           total_amount: number
           updated_at: string | null
           user_id: string | null
@@ -153,6 +175,7 @@ export type Database = {
           id?: string
           notes?: string | null
           status?: string
+          store_id?: string | null
           total_amount?: number
           updated_at?: string | null
           user_id?: string | null
@@ -166,11 +189,20 @@ export type Database = {
           id?: string
           notes?: string | null
           status?: string
+          store_id?: string | null
           total_amount?: number
           updated_at?: string | null
           user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "orders_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
@@ -195,6 +227,51 @@ export type Database = {
           full_name?: string | null
           id?: string
           role?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      stores: {
+        Row: {
+          address: string | null
+          created_at: string | null
+          description: string | null
+          email: string | null
+          id: string
+          is_active: boolean | null
+          logo_url: string | null
+          name: string
+          owner_id: string
+          phone: string | null
+          subdomain: string
+          updated_at: string | null
+        }
+        Insert: {
+          address?: string | null
+          created_at?: string | null
+          description?: string | null
+          email?: string | null
+          id?: string
+          is_active?: boolean | null
+          logo_url?: string | null
+          name: string
+          owner_id: string
+          phone?: string | null
+          subdomain: string
+          updated_at?: string | null
+        }
+        Update: {
+          address?: string | null
+          created_at?: string | null
+          description?: string | null
+          email?: string | null
+          id?: string
+          is_active?: boolean | null
+          logo_url?: string | null
+          name?: string
+          owner_id?: string
+          phone?: string | null
+          subdomain?: string
           updated_at?: string | null
         }
         Relationships: []
