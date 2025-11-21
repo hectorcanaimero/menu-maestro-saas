@@ -12,7 +12,7 @@ interface Store {
   email: string | null;
   address: string | null;
   is_active: boolean;
-  operating_mode: "delivery" | "pickup" | "digital_menu" | null;
+  operating_modes: Array<"delivery" | "pickup" | "digital_menu"> | null;
 }
 
 interface StoreContextType {

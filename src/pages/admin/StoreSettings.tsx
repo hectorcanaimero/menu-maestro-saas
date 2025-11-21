@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 
@@ -21,9 +21,8 @@ const storeSettingsSchema = z.object({
     .trim()
     .regex(/^\+(?:58|55)\d{10,11}$/, "Formato: +58 (Venezuela) o +55 (Brasil) seguido de 10-11 dígitos"),
   email: z.string().trim().email("Email inválido").max(255),
-  operating_mode: z.enum(["delivery", "pickup", "digital_menu"], {
-    errorMap: () => ({ message: "Selecciona un modo de funcionamiento" }),
-  }),
+  operating_modes: z.array(z.enum(["delivery", "pickup", "digital_menu"]))
+    .min(1, "Selecciona al menos un modo de funcionamiento"),
 });
 
 type StoreSettingsForm = z.infer<typeof storeSettingsSchema>;
@@ -43,9 +42,12 @@ const StoreSettings = () => {
     formState: { errors },
   } = useForm<StoreSettingsForm>({
     resolver: zodResolver(storeSettingsSchema),
+    defaultValues: {
+      operating_modes: [],
+    },
   });
 
-  const operatingMode = watch("operating_mode");
+  const operatingModes = watch("operating_modes");
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -66,7 +68,7 @@ const StoreSettings = () => {
       setValue("name", store.name);
       setValue("phone", store.phone || "");
       setValue("email", store.email || "");
-      setValue("operating_mode", (store.operating_mode as any) || "delivery");
+      setValue("operating_modes", store.operating_modes || ["delivery"]);
     }
   }, [store, setValue]);
 
@@ -81,7 +83,7 @@ const StoreSettings = () => {
           name: data.name,
           phone: data.phone,
           email: data.email,
-          operating_mode: data.operating_mode,
+          operating_modes: data.operating_modes,
           updated_at: new Date().toISOString(),
         })
         .eq("id", store.id);
@@ -175,25 +177,40 @@ const StoreSettings = () => {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="operating_mode">Modo de funcionamiento</Label>
-                    <Select
-                      value={operatingMode}
-                      onValueChange={(value) => setValue("operating_mode", value as any)}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecciona un modo" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="delivery">Delivery</SelectItem>
-                        <SelectItem value="pickup">Entrega en tienda</SelectItem>
-                        <SelectItem value="digital_menu">Menú Digital</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <Label>Modo de funcionamiento</Label>
+                    <div className="space-y-3">
+                      {[
+                        { value: "delivery", label: "Delivery" },
+                        { value: "pickup", label: "Entrega en tienda" },
+                        { value: "digital_menu", label: "Menú Digital" },
+                      ].map((mode) => (
+                        <div key={mode.value} className="flex items-center space-x-2">
+                          <Checkbox
+                            id={mode.value}
+                            checked={operatingModes?.includes(mode.value as any)}
+                            onCheckedChange={(checked) => {
+                              const current = operatingModes || [];
+                              if (checked) {
+                                setValue("operating_modes", [...current, mode.value as any]);
+                              } else {
+                                setValue("operating_modes", current.filter((m) => m !== mode.value));
+                              }
+                            }}
+                          />
+                          <label
+                            htmlFor={mode.value}
+                            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                          >
+                            {mode.label}
+                          </label>
+                        </div>
+                      ))}
+                    </div>
                     <p className="text-sm text-muted-foreground">
-                      Selecciona cómo funciona tu negocio.
+                      Selecciona los modos en que funciona tu negocio (puedes seleccionar varios).
                     </p>
-                    {errors.operating_mode && (
-                      <p className="text-sm text-destructive">{errors.operating_mode.message}</p>
+                    {errors.operating_modes && (
+                      <p className="text-sm text-destructive">{errors.operating_modes.message}</p>
                     )}
                   </div>
 
