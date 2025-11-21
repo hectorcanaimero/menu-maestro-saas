@@ -77,12 +77,11 @@ const Index = () => {
             </Carousel>
           </section>
         )}
+        {/* All Products Section with Grid/List Toggle */}
+        <section id="productos">
+          <ProductGrid />
+        </section>
       </div>
-      {/* All Products Section with Grid/List Toggle */}
-      <section id="productos">
-        <ProductGrid />
-      </section>
-
       {/* Floating Cart Button with Sheet */}
       <Sheet>
         <SheetTrigger asChild>
