@@ -6,6 +6,7 @@ import { useCart } from "@/contexts/CartContext";
 import { useStore } from "@/contexts/StoreContext";
 import { supabase } from "@/integrations/supabase/client";
 import { CartSheet } from "@/components/cart/CartSheet";
+import { StoreHoursDisplay } from "./StoreHoursDisplay";
 
 export const Header = () => {
   const navigate = useNavigate();
@@ -46,7 +47,7 @@ export const Header = () => {
           </button>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center space-x-6">
+          <nav className="hidden md:flex items-center space-x-4">
             {menuItems.map((item) => (
               <a
                 key={item.href}
@@ -56,6 +57,9 @@ export const Header = () => {
                 {item.label}
               </a>
             ))}
+            {store && (
+              <StoreHoursDisplay storeId={store.id} forceStatus={store.force_status} />
+            )}
           </nav>
 
           {/* Actions */}
@@ -124,6 +128,11 @@ export const Header = () => {
                 {item.label}
               </a>
             ))}
+            {store && (
+              <div className="py-2">
+                <StoreHoursDisplay storeId={store.id} forceStatus={store.force_status} />
+              </div>
+            )}
             {isStoreOwner && (
               <Button
                 variant="default"
