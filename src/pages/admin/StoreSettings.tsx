@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
+import { BusinessHoursTab } from "@/components/admin/BusinessHoursTab";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 
@@ -116,8 +117,9 @@ const StoreSettings = () => {
         <h1 className="text-3xl font-bold mb-6">Configuración de Tienda</h1>
 
         <Tabs defaultValue="company" className="w-full">
-          <TabsList className="grid w-full grid-cols-1 max-w-md">
+          <TabsList className="grid w-full grid-cols-2 max-w-md">
             <TabsTrigger value="company">Empresa</TabsTrigger>
+            <TabsTrigger value="hours">Horario de apertura</TabsTrigger>
           </TabsList>
 
           <TabsContent value="company" className="mt-6">
@@ -221,6 +223,10 @@ const StoreSettings = () => {
                 </form>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="hours" className="mt-6">
+            <BusinessHoursTab storeId={store.id} forceStatus={store.force_status} />
           </TabsContent>
         </Tabs>
       </div>

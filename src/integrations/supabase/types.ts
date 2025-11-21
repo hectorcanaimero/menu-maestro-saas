@@ -231,12 +231,48 @@ export type Database = {
         }
         Relationships: []
       }
+      store_hours: {
+        Row: {
+          close_time: string
+          created_at: string | null
+          day_of_week: number
+          id: string
+          open_time: string
+          store_id: string
+        }
+        Insert: {
+          close_time: string
+          created_at?: string | null
+          day_of_week: number
+          id?: string
+          open_time: string
+          store_id: string
+        }
+        Update: {
+          close_time?: string
+          created_at?: string | null
+          day_of_week?: number
+          id?: string
+          open_time?: string
+          store_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "store_hours_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       stores: {
         Row: {
           address: string | null
           created_at: string | null
           description: string | null
           email: string | null
+          force_status: Database["public"]["Enums"]["force_status"] | null
           id: string
           is_active: boolean | null
           logo_url: string | null
@@ -254,6 +290,7 @@ export type Database = {
           created_at?: string | null
           description?: string | null
           email?: string | null
+          force_status?: Database["public"]["Enums"]["force_status"] | null
           id?: string
           is_active?: boolean | null
           logo_url?: string | null
@@ -271,6 +308,7 @@ export type Database = {
           created_at?: string | null
           description?: string | null
           email?: string | null
+          force_status?: Database["public"]["Enums"]["force_status"] | null
           id?: string
           is_active?: boolean | null
           logo_url?: string | null
@@ -329,6 +367,7 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "user"
+      force_status: "normal" | "force_open" | "force_closed"
       operating_mode: "delivery" | "pickup" | "digital_menu"
     }
     CompositeTypes: {
@@ -458,6 +497,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "user"],
+      force_status: ["normal", "force_open", "force_closed"],
       operating_mode: ["delivery", "pickup", "digital_menu"],
     },
   },

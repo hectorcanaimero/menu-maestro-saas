@@ -13,6 +13,7 @@ interface Store {
   address: string | null;
   is_active: boolean;
   operating_modes: Array<"delivery" | "pickup" | "digital_menu"> | null;
+  force_status: "normal" | "force_open" | "force_closed" | null;
 }
 
 interface StoreContextType {
