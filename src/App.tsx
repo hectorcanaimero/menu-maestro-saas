@@ -17,6 +17,7 @@ import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminOrders from "./pages/admin/AdminOrders";
 import AdminCategories from "./pages/admin/AdminCategories";
 import AdminMenuItems from "./pages/admin/AdminMenuItems";
+import StoreSettings from "./pages/admin/StoreSettings";
 
 const queryClient = new QueryClient();
 
@@ -33,10 +34,11 @@ const App = () => (
               <Route path="/welcome" element={<Welcome />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/create-store" element={<CreateStore />} />
-              <Route path="/admin" element={<AdminDashboard />} />
-              <Route path="/admin/orders" element={<AdminOrders />} />
-              <Route path="/admin/categories" element={<AdminCategories />} />
-              <Route path="/admin/menu-items" element={<AdminMenuItems />} />
+          <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/admin/orders" element={<AdminOrders />} />
+          <Route path="/admin/categories" element={<AdminCategories />} />
+          <Route path="/admin/menu-items" element={<AdminMenuItems />} />
+          <Route path="/admin/settings" element={<StoreSettings />} />
               <Route path="/checkout" element={<Checkout />} />
               <Route path="/my-orders" element={<MyOrders />} />
               <Route path="/products/:id" element={<ProductDetail />} />

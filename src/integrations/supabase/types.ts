@@ -241,6 +241,7 @@ export type Database = {
           is_active: boolean | null
           logo_url: string | null
           name: string
+          operating_mode: Database["public"]["Enums"]["operating_mode"] | null
           owner_id: string
           phone: string | null
           subdomain: string
@@ -255,6 +256,7 @@ export type Database = {
           is_active?: boolean | null
           logo_url?: string | null
           name: string
+          operating_mode?: Database["public"]["Enums"]["operating_mode"] | null
           owner_id: string
           phone?: string | null
           subdomain: string
@@ -269,6 +271,7 @@ export type Database = {
           is_active?: boolean | null
           logo_url?: string | null
           name?: string
+          operating_mode?: Database["public"]["Enums"]["operating_mode"] | null
           owner_id?: string
           phone?: string | null
           subdomain?: string
@@ -320,6 +323,7 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "user"
+      operating_mode: "delivery" | "pickup" | "digital_menu"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -448,6 +452,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "user"],
+      operating_mode: ["delivery", "pickup", "digital_menu"],
     },
   },
 } as const

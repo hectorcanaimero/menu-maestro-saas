@@ -1,4 +1,4 @@
-import { LayoutDashboard, ShoppingCart, FolderTree, UtensilsCrossed } from "lucide-react";
+import { LayoutDashboard, ShoppingCart, FolderTree, UtensilsCrossed, Settings } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import {
   Sidebar,
@@ -17,6 +17,7 @@ const navItems = [
   { path: "/admin/orders", label: "Pedidos", icon: ShoppingCart },
   { path: "/admin/categories", label: "Categorías", icon: FolderTree },
   { path: "/admin/menu-items", label: "Platillos", icon: UtensilsCrossed },
+  { path: "/admin/settings", label: "Configuración", icon: Settings },
 ];
 
 export function AppSidebar() {
