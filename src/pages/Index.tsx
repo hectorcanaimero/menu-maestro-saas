@@ -34,7 +34,7 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background pb-20">
       <Header />
-      
+
       {/* Categories Horizontal Scroll */}
       <CategoriesSection />
 
@@ -43,14 +43,12 @@ const Index = () => {
         {featuredProducts && featuredProducts.length > 0 && (
           <section className="mb-12">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-2xl font-bold text-foreground">
-                Destacados
-              </h2>
+              <h2 className="text-2xl font-bold text-foreground">Destacados</h2>
               <Button variant="ghost" size="sm" className="text-primary">
                 Ver todo
               </Button>
             </div>
-            
+
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {featuredProducts.map((product) => (
                 <ProductCard
@@ -67,12 +65,11 @@ const Index = () => {
             </div>
           </section>
         )}
-
-        {/* All Products Section with Grid/List Toggle */}
-        <section id="productos">
-          <ProductGrid />
-        </section>
       </div>
+      {/* All Products Section with Grid/List Toggle */}
+      <section id="productos">
+        <ProductGrid />
+      </section>
 
       {/* Floating Cart Button with Sheet */}
       <Sheet>
@@ -89,47 +86,36 @@ const Index = () => {
             )}
           </Button>
         </SheetTrigger>
-        
+
         <SheetContent className="w-full sm:max-w-lg">
           <SheetHeader>
             <SheetTitle>Carrito de Compras</SheetTitle>
           </SheetHeader>
-          
+
           <div className="mt-8 flex flex-col h-full">
             {items.length === 0 ? (
               <div className="flex-1 flex flex-col items-center justify-center text-center py-12">
                 <ShoppingCart className="w-16 h-16 text-muted-foreground mb-4" />
                 <p className="text-lg text-muted-foreground">Tu carrito está vacío</p>
-                <p className="text-sm text-muted-foreground mt-2">
-                  Agrega productos para comenzar
-                </p>
+                <p className="text-sm text-muted-foreground mt-2">Agrega productos para comenzar</p>
               </div>
             ) : (
               <>
                 <div className="flex-1 overflow-y-auto space-y-4 pr-2">
                   {items.map((item) => (
-                    <div
-                      key={item.id}
-                      className="flex gap-4 p-4 rounded-lg border bg-card"
-                    >
+                    <div key={item.id} className="flex gap-4 p-4 rounded-lg border bg-card">
                       {item.image_url ? (
-                        <img
-                          src={item.image_url}
-                          alt={item.name}
-                          className="w-20 h-20 object-cover rounded"
-                        />
+                        <img src={item.image_url} alt={item.name} className="w-20 h-20 object-cover rounded" />
                       ) : (
                         <div className="w-20 h-20 bg-muted rounded flex items-center justify-center">
                           <ShoppingCart className="w-8 h-8 text-muted-foreground" />
                         </div>
                       )}
-                      
+
                       <div className="flex-1">
                         <h4 className="font-semibold">{item.name}</h4>
-                        <p className="text-sm text-foreground font-semibold mt-1">
-                          ${item.price.toFixed(2)}
-                        </p>
-                        
+                        <p className="text-sm text-foreground font-semibold mt-1">${item.price.toFixed(2)}</p>
+
                         <div className="flex items-center gap-2 mt-2">
                           <Button
                             variant="outline"
@@ -139,9 +125,7 @@ const Index = () => {
                           >
                             <Minus className="w-3 h-3" />
                           </Button>
-                          <span className="w-8 text-center font-medium">
-                            {item.quantity}
-                          </span>
+                          <span className="w-8 text-center font-medium">{item.quantity}</span>
                           <Button
                             variant="outline"
                             size="icon"
@@ -163,18 +147,14 @@ const Index = () => {
                     </div>
                   ))}
                 </div>
-                
+
                 <div className="border-t pt-4 mt-4 space-y-4">
                   <div className="flex justify-between items-center text-lg font-bold">
                     <span>Total:</span>
                     <span className="text-foreground">${totalPrice.toFixed(2)}</span>
                   </div>
-                  
-                  <Button
-                    className="w-full"
-                    size="lg"
-                    onClick={() => navigate("/checkout")}
-                  >
+
+                  <Button className="w-full" size="lg" onClick={() => navigate("/checkout")}>
                     Realizar Pedido
                   </Button>
                 </div>
