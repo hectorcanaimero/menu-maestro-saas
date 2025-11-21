@@ -1,10 +1,25 @@
 import { Button } from "@/components/ui/button";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, Settings } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import heroImage from "@/assets/hero-restaurant.jpg";
 
 export const Hero = () => {
+  const navigate = useNavigate();
+
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
+      {/* Admin Access Button */}
+      <div className="absolute top-4 right-4 z-20">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => navigate("/auth")}
+          className="bg-background/80 backdrop-blur-sm hover:bg-background"
+        >
+          <Settings className="w-4 h-4 mr-2" />
+          Panel Admin
+        </Button>
+      </div>
       {/* Background Image with Overlay */}
       <div 
         className="absolute inset-0 bg-cover bg-center"
