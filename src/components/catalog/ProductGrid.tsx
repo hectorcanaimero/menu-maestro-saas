@@ -19,6 +19,7 @@ export const ProductGrid = () => {
         .from("menu_items")
         .select("*")
         .eq("is_available", true)
+        .eq("is_featured", false)
         .order("display_order", { ascending: true });
 
       if (categoryFilter) {
@@ -48,9 +49,7 @@ export const ProductGrid = () => {
   if (!products || products.length === 0) {
     return (
       <div className="text-center py-12">
-        <p className="text-muted-foreground text-lg">
-          No hay productos disponibles en este momento.
-        </p>
+        <p className="text-muted-foreground text-lg">No hay productos disponibles en este momento.</p>
       </div>
     );
   }
@@ -59,9 +58,7 @@ export const ProductGrid = () => {
     <div className="space-y-4">
       {/* Section Header with View Toggle */}
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold text-foreground">
-          {categoryFilter ? "Productos" : "Todos los Productos"}
-        </h2>
+        <h2 className="text-2xl font-bold text-foreground">{categoryFilter ? "Productos" : "Todos los Productos"}</h2>
         <div className="flex gap-2">
           <Button
             variant={viewMode === "grid" ? "default" : "outline"}
@@ -85,10 +82,9 @@ export const ProductGrid = () => {
       </div>
 
       {/* Products Grid */}
-      <div className={viewMode === "grid" 
-        ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" 
-        : "flex flex-col gap-4"
-      }>
+      <div
+        className={viewMode === "grid" ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" : "flex flex-col gap-4"}
+      >
         {products.map((product) => (
           <ProductCard
             key={product.id}
