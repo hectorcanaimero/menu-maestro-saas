@@ -1,8 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Utensils } from "lucide-react";
+import { Utensils, ShoppingCart } from "lucide-react";
+import { useCart } from "@/contexts/CartContext";
 import ensaladaCesar from "@/assets/ensalada-cesar.jpg";
 import carpaccio from "@/assets/carpaccio.jpg";
 import filetMignon from "@/assets/filet-mignon.jpg";
@@ -21,6 +23,8 @@ const imageMap: Record<string, string> = {
 };
 
 export const MenuSection = () => {
+  const { addItem } = useCart();
+  
   const { data: categories } = useQuery({
     queryKey: ["categories"],
     queryFn: async () => {
@@ -112,9 +116,19 @@ export const MenuSection = () => {
                             ${item.price}
                           </span>
                           {item.is_available ? (
-                            <span className="text-xs text-green-600 bg-green-50 dark:bg-green-950/30 px-3 py-1 rounded-full">
-                              Disponible
-                            </span>
+                            <Button
+                              size="sm"
+                              onClick={() => addItem({
+                                id: item.id,
+                                name: item.name,
+                                price: item.price,
+                                image_url: imageMap[item.name] || item.image_url,
+                              })}
+                              className="gap-2"
+                            >
+                              <ShoppingCart className="w-4 h-4" />
+                              Agregar
+                            </Button>
                           ) : (
                             <span className="text-xs text-muted-foreground bg-muted px-3 py-1 rounded-full">
                               No disponible
