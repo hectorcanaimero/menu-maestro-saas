@@ -8,6 +8,7 @@ import { LogOut, ChefHat } from "lucide-react";
 import CategoriesManager from "@/components/admin/CategoriesManager";
 import MenuItemsManager from "@/components/admin/MenuItemsManager";
 import OrdersManager from "@/components/admin/OrdersManager";
+import DashboardStats from "@/components/admin/DashboardStats";
 
 const Admin = () => {
   const navigate = useNavigate();
@@ -105,6 +106,8 @@ const Admin = () => {
       </header>
 
       <main className="container mx-auto px-4 py-8">
+        <DashboardStats />
+        
         <Tabs defaultValue="orders" className="w-full">
           <TabsList className="grid w-full grid-cols-3 max-w-2xl">
             <TabsTrigger value="orders">Pedidos</TabsTrigger>
