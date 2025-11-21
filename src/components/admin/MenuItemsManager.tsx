@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useStore } from "@/contexts/StoreContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -30,6 +31,7 @@ interface Category {
 }
 
 const MenuItemsManager = () => {
+  const { store } = useStore();
   const [items, setItems] = useState<MenuItem[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
@@ -48,14 +50,18 @@ const MenuItemsManager = () => {
   });
 
   useEffect(() => {
-    fetchData();
-  }, []);
+    if (store?.id) {
+      fetchData();
+    }
+  }, [store?.id]);
 
   const fetchData = async () => {
+    if (!store?.id) return;
+    
     try {
       const [itemsResponse, categoriesResponse] = await Promise.all([
-        supabase.from("menu_items").select("*").order("display_order", { ascending: true }),
-        supabase.from("categories").select("id, name").order("name"),
+        supabase.from("menu_items").select("*").eq("store_id", store.id).order("display_order", { ascending: true }),
+        supabase.from("categories").select("id, name").eq("store_id", store.id).order("name"),
       ]);
 
       if (itemsResponse.error) throw itemsResponse.error;
@@ -109,8 +115,14 @@ const MenuItemsManager = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    if (!store?.id) {
+      toast.error("No se pudo identificar la tienda");
+      return;
+    }
+
     try {
       const itemData = {
+        store_id: store.id,
         name: formData.name,
         description: formData.description,
         price: parseFloat(formData.price),
@@ -122,9 +134,11 @@ const MenuItemsManager = () => {
       };
 
       if (editingItem) {
+        // Don't update store_id on edit
+        const { store_id, ...updateData } = itemData;
         const { error } = await supabase
           .from("menu_items")
-          .update(itemData)
+          .update(updateData)
           .eq("id", editingItem.id);
 
         if (error) throw error;

@@ -1,9 +1,10 @@
 import { ReactNode } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { useStore } from "@/contexts/StoreContext";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { LogOut, ChefHat, LayoutDashboard, ShoppingCart, FolderTree, UtensilsCrossed } from "lucide-react";
+import { LogOut, ChefHat, LayoutDashboard, ShoppingCart, FolderTree, UtensilsCrossed, Store as StoreIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface AdminLayoutProps {
@@ -14,6 +15,7 @@ interface AdminLayoutProps {
 const AdminLayout = ({ children, userEmail }: AdminLayoutProps) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { store, loading: storeLoading, isStoreOwner } = useStore();
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -28,6 +30,43 @@ const AdminLayout = ({ children, userEmail }: AdminLayoutProps) => {
     { path: "/admin/menu-items", label: "Platillos", icon: UtensilsCrossed },
   ];
 
+  if (storeLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Cargando...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!store) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center max-w-md mx-auto px-4">
+          <StoreIcon className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+          <h1 className="text-2xl font-bold mb-2">No tienes una tienda</h1>
+          <p className="text-muted-foreground mb-6">Necesitas crear una tienda para acceder al panel de administración.</p>
+          <Button onClick={() => navigate("/create-store")}>Crear mi tienda</Button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isStoreOwner) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center max-w-md mx-auto px-4">
+          <StoreIcon className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+          <h1 className="text-2xl font-bold mb-2">Acceso denegado</h1>
+          <p className="text-muted-foreground mb-6">No tienes permisos para administrar esta tienda.</p>
+          <Button onClick={() => navigate("/")}>Volver al inicio</Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b bg-card sticky top-0 z-50">
@@ -36,7 +75,8 @@ const AdminLayout = ({ children, userEmail }: AdminLayoutProps) => {
             <ChefHat className="w-8 h-8 text-primary" />
             <div>
               <h1 className="text-2xl font-bold">Panel de Administración</h1>
-              <p className="text-sm text-muted-foreground">{userEmail}</p>
+              <p className="text-sm text-muted-foreground">{store.name}</p>
+              <p className="text-xs text-muted-foreground">{userEmail}</p>
             </div>
           </div>
           <div className="flex gap-2">
