@@ -2,6 +2,7 @@ import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ShoppingCart, Eye } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
+import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
 interface ProductCardProps {
@@ -14,6 +15,7 @@ interface ProductCardProps {
 
 export const ProductCard = ({ id, name, price, image_url, description }: ProductCardProps) => {
   const { addItem } = useCart();
+  const navigate = useNavigate();
 
   const handleAddToCart = () => {
     addItem({ id, name, price, image_url });
@@ -57,6 +59,7 @@ export const ProductCard = ({ id, name, price, image_url, description }: Product
       <CardFooter className="p-4 pt-0 flex gap-2">
         <Button
           variant="outline"
+          onClick={() => navigate(`/products/${id}`)}
           className="flex-1 border-border/50 hover:border-primary hover:bg-primary/5"
         >
           <Eye className="w-4 h-4 mr-2" />
