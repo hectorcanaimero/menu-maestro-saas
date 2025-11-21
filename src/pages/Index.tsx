@@ -43,7 +43,7 @@ const Index = () => {
         {/* Featured Section */}
         {featuredProducts && featuredProducts.length > 0 && (
           <section className="mb-12">
-            <div className="flex justify-between items-center mb-6">
+            <div className="flex justify-between items-center pt-4 mb-6">
               <h2 className="text-2xl font-bold text-foreground">Destacados</h2>
             </div>
 
@@ -56,7 +56,10 @@ const Index = () => {
             >
               <CarouselContent className="-ml-2 md:-ml-4">
                 {featuredProducts.map((product) => (
-                  <CarouselItem key={product.id} className="pl-2 md:pl-4 basis-1/2 sm:basis-1/3 md:basis-1/4 lg:basis-1/5 xl:basis-1/6">
+                  <CarouselItem
+                    key={product.id}
+                    className="pl-2 md:pl-4 basis-1/2 sm:basis-1/3 md:basis-1/4 lg:basis-1/5 xl:basis-1/6"
+                  >
                     <ProductCard
                       id={product.id}
                       name={product.name}
