@@ -6,11 +6,14 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { CartProvider } from "@/contexts/CartContext";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
-import Admin from "./pages/Admin";
 import Checkout from "./pages/Checkout";
 import MyOrders from "./pages/MyOrders";
 import ProductDetail from "./pages/ProductDetail";
 import NotFound from "./pages/NotFound";
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminOrders from "./pages/admin/AdminOrders";
+import AdminCategories from "./pages/admin/AdminCategories";
+import AdminMenuItems from "./pages/admin/AdminMenuItems";
 
 const queryClient = new QueryClient();
 
@@ -24,7 +27,10 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
-            <Route path="/admin" element={<Admin />} />
+            <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/admin/orders" element={<AdminOrders />} />
+            <Route path="/admin/categories" element={<AdminCategories />} />
+            <Route path="/admin/menu-items" element={<AdminMenuItems />} />
             <Route path="/checkout" element={<Checkout />} />
             <Route path="/my-orders" element={<MyOrders />} />
             <Route path="/products/:id" element={<ProductDetail />} />
