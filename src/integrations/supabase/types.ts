@@ -268,8 +268,12 @@ export type Database = {
       }
       stores: {
         Row: {
+          accept_cash: boolean | null
           address: string | null
           created_at: string | null
+          currency: string | null
+          decimal_places: number | null
+          decimal_separator: string | null
           description: string | null
           email: string | null
           force_status: Database["public"]["Enums"]["force_status"] | null
@@ -281,13 +285,20 @@ export type Database = {
             | Database["public"]["Enums"]["operating_mode"][]
             | null
           owner_id: string
+          payment_on_delivery: string | null
           phone: string | null
+          require_payment_proof: boolean | null
           subdomain: string
+          thousands_separator: string | null
           updated_at: string | null
         }
         Insert: {
+          accept_cash?: boolean | null
           address?: string | null
           created_at?: string | null
+          currency?: string | null
+          decimal_places?: number | null
+          decimal_separator?: string | null
           description?: string | null
           email?: string | null
           force_status?: Database["public"]["Enums"]["force_status"] | null
@@ -299,13 +310,20 @@ export type Database = {
             | Database["public"]["Enums"]["operating_mode"][]
             | null
           owner_id: string
+          payment_on_delivery?: string | null
           phone?: string | null
+          require_payment_proof?: boolean | null
           subdomain: string
+          thousands_separator?: string | null
           updated_at?: string | null
         }
         Update: {
+          accept_cash?: boolean | null
           address?: string | null
           created_at?: string | null
+          currency?: string | null
+          decimal_places?: number | null
+          decimal_separator?: string | null
           description?: string | null
           email?: string | null
           force_status?: Database["public"]["Enums"]["force_status"] | null
@@ -317,8 +335,11 @@ export type Database = {
             | Database["public"]["Enums"]["operating_mode"][]
             | null
           owner_id?: string
+          payment_on_delivery?: string | null
           phone?: string | null
+          require_payment_proof?: boolean | null
           subdomain?: string
+          thousands_separator?: string | null
           updated_at?: string | null
         }
         Relationships: [

@@ -14,6 +14,13 @@ interface Store {
   is_active: boolean;
   operating_modes: Array<"delivery" | "pickup" | "digital_menu"> | null;
   force_status: "normal" | "force_open" | "force_closed" | null;
+  currency: string | null;
+  decimal_places: number | null;
+  decimal_separator: string | null;
+  thousands_separator: string | null;
+  accept_cash: boolean | null;
+  payment_on_delivery: string | null;
+  require_payment_proof: boolean | null;
 }
 
 interface StoreContextType {
