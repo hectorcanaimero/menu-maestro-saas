@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useStore } from "@/contexts/StoreContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -28,14 +29,19 @@ interface Order {
 }
 
 const OrdersManager = () => {
+  const { store } = useStore();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchOrders();
-  }, []);
+    if (store?.id) {
+      fetchOrders();
+    }
+  }, [store?.id]);
 
   const fetchOrders = async () => {
+    if (!store?.id) return;
+    
     try {
       const { data, error } = await supabase
         .from("orders")
@@ -43,6 +49,7 @@ const OrdersManager = () => {
           *,
           order_items (*)
         `)
+        .eq("store_id", store.id)
         .order("created_at", { ascending: false });
 
       if (error) throw error;

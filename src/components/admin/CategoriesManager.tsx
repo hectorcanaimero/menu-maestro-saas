@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useStore } from "@/contexts/StoreContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -18,6 +19,7 @@ interface Category {
 }
 
 const CategoriesManager = () => {
+  const { store } = useStore();
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -29,14 +31,19 @@ const CategoriesManager = () => {
   });
 
   useEffect(() => {
-    fetchCategories();
-  }, []);
+    if (store?.id) {
+      fetchCategories();
+    }
+  }, [store?.id]);
 
   const fetchCategories = async () => {
+    if (!store?.id) return;
+    
     try {
       const { data, error } = await supabase
         .from("categories")
         .select("*")
+        .eq("store_id", store.id)
         .order("display_order", { ascending: true });
 
       if (error) throw error;
@@ -51,6 +58,11 @@ const CategoriesManager = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!store?.id) {
+      toast.error("No se pudo identificar la tienda");
+      return;
+    }
 
     try {
       if (editingCategory) {
@@ -70,6 +82,7 @@ const CategoriesManager = () => {
           .from("categories")
           .insert([
             {
+              store_id: store.id,
               name: formData.name,
               description: formData.description,
               display_order: formData.display_order,
