@@ -11,12 +11,13 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import { Plus, Minus, Trash2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 
 const Index = () => {
   const { items, updateQuantity, removeItem, totalItems, totalPrice } = useCart();
   const navigate = useNavigate();
 
-  // Fetch featured products (first 3)
+  // Fetch featured products
   const { data: featuredProducts } = useQuery({
     queryKey: ["featured-products"],
     queryFn: async () => {
@@ -24,6 +25,7 @@ const Index = () => {
         .from("menu_items")
         .select("*")
         .eq("is_available", true)
+        .eq("is_featured", true)
         .order("display_order", { ascending: true });
       if (error) throw error;
       return data;
@@ -41,27 +43,34 @@ const Index = () => {
         {/* Featured Section */}
         {featuredProducts && featuredProducts.length > 0 && (
           <section className="mb-12">
-            <div className="flex justify-between items-center mb-4">
+            <div className="flex justify-between items-center mb-6">
               <h2 className="text-2xl font-bold text-foreground">Destacados</h2>
-              <Button variant="ghost" size="sm" className="text-primary">
-                Ver todo
-              </Button>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {featuredProducts.map((product) => (
-                <ProductCard
-                  key={product.id}
-                  id={product.id}
-                  name={product.name}
-                  price={Number(product.price)}
-                  image_url={product.image_url}
-                  description={product.description}
-                  layout="list"
-                  compact
-                />
-              ))}
-            </div>
+            <Carousel
+              opts={{
+                align: "start",
+                loop: true,
+              }}
+              className="w-full"
+            >
+              <CarouselContent className="-ml-2 md:-ml-4">
+                {featuredProducts.map((product) => (
+                  <CarouselItem key={product.id} className="pl-2 md:pl-4 basis-full sm:basis-1/2 lg:basis-1/3">
+                    <ProductCard
+                      id={product.id}
+                      name={product.name}
+                      price={Number(product.price)}
+                      image_url={product.image_url}
+                      description={product.description}
+                      layout="grid"
+                    />
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+              <CarouselPrevious className="hidden sm:flex" />
+              <CarouselNext className="hidden sm:flex" />
+            </Carousel>
           </section>
         )}
       </div>
