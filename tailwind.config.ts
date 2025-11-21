@@ -57,6 +57,25 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+        "elegant-dark": "hsl(var(--elegant-dark))",
+        "elegant-gray": "hsl(var(--elegant-gray))",
+        gold: "hsl(var(--gold))",
+        "gold-light": "hsl(var(--gold-light))",
+        cream: "hsl(var(--cream))",
+      },
+      backgroundImage: {
+        "gradient-gold": "var(--gradient-gold)",
+        "gradient-dark": "var(--gradient-dark)",
+        "gradient-elegant": "var(--gradient-elegant)",
+      },
+      boxShadow: {
+        "gold": "var(--shadow-gold)",
+        "elegant": "var(--shadow-elegant)",
+        "card-custom": "var(--shadow-card)",
+      },
+      transitionProperty: {
+        "smooth": "var(--transition-smooth)",
+        "spring": "var(--transition-spring)",
       },
       borderRadius: {
         lg: "var(--radius)",
