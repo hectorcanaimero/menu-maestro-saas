@@ -23,9 +23,9 @@ export const ProductCard = ({ id, name, price, image_url, description }: Product
 
   return (
     <Card className="group h-full overflow-hidden border border-border/40 hover:border-border hover:shadow-lg transition-all duration-300 bg-background">
-      <CardContent className="p-0">
+      <div className="flex flex-col sm:flex-row h-full">
         {/* Image Container */}
-        <div className="aspect-square overflow-hidden bg-muted/30">
+        <div className="w-full sm:w-48 aspect-square sm:aspect-auto overflow-hidden bg-muted/30 flex-shrink-0">
           {image_url ? (
             <img
               src={image_url}
@@ -39,40 +39,43 @@ export const ProductCard = ({ id, name, price, image_url, description }: Product
           )}
         </div>
 
-        {/* Product Info */}
-        <div className="p-4 space-y-2">
-          <h3 className="font-semibold text-foreground text-base line-clamp-2 min-h-[3rem]">
-            {name}
-          </h3>
-          {description && (
-            <p className="text-sm text-muted-foreground line-clamp-2">
-              {description}
+        {/* Content Container */}
+        <div className="flex flex-col flex-1 p-4">
+          {/* Product Info */}
+          <div className="flex-1 space-y-2">
+            <h3 className="font-semibold text-foreground text-base line-clamp-2">
+              {name}
+            </h3>
+            {description && (
+              <p className="text-sm text-muted-foreground line-clamp-2">
+                {description}
+              </p>
+            )}
+            <p className="text-xl font-bold text-primary">
+              ${price.toFixed(2)}
             </p>
-          )}
-          <p className="text-xl font-bold text-primary">
-            ${price.toFixed(2)}
-          </p>
-        </div>
-      </CardContent>
+          </div>
 
-      {/* Action Buttons */}
-      <CardFooter className="p-4 pt-0 flex gap-2">
-        <Button
-          variant="outline"
-          onClick={() => navigate(`/products/${id}`)}
-          className="flex-1 border-border/50 hover:border-primary hover:bg-primary/5"
-        >
-          <Eye className="w-4 h-4 mr-2" />
-          Ver más
-        </Button>
-        <Button
-          onClick={handleAddToCart}
-          className="flex-1 bg-primary hover:bg-primary/90"
-        >
-          <ShoppingCart className="w-4 h-4 mr-2" />
-          Agregar
-        </Button>
-      </CardFooter>
+          {/* Action Buttons */}
+          <div className="flex gap-2 mt-4">
+            <Button
+              variant="outline"
+              onClick={() => navigate(`/products/${id}`)}
+              className="flex-1 border-border/50 hover:border-primary hover:bg-primary/5"
+            >
+              <Eye className="w-4 h-4 mr-2" />
+              Ver más
+            </Button>
+            <Button
+              onClick={handleAddToCart}
+              className="flex-1 bg-primary hover:bg-primary/90"
+            >
+              <ShoppingCart className="w-4 h-4 mr-2" />
+              Agregar
+            </Button>
+          </div>
+        </div>
+      </div>
     </Card>
   );
 };
