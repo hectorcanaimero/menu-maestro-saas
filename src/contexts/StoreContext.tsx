@@ -36,10 +36,10 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
       // Extract subdomain from hostname
       const hostname = window.location.hostname;
       const parts = hostname.split(".");
-      
+
       // For development: if localhost, use a default subdomain or check localStorage
-      let subdomain = localStorage.getItem("dev_subdomain") || "demo";
-      
+      let subdomain = localStorage.getItem("dev_subdomain") || "totus";
+
       // For production: extract subdomain (e.g., tienda1.pideai.com -> tienda1)
       if (hostname.includes("pideai.com") && parts.length >= 3) {
         subdomain = parts[0];
@@ -58,9 +58,11 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
         setStore(null);
       } else {
         setStore(data);
-        
+
         // Check if current user is the store owner
-        const { data: { session } } = await supabase.auth.getSession();
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
         setIsStoreOwner(session?.user?.id === data.owner_id);
       }
     } catch (error) {
@@ -71,11 +73,7 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  return (
-    <StoreContext.Provider value={{ store, loading, isStoreOwner }}>
-      {children}
-    </StoreContext.Provider>
-  );
+  return <StoreContext.Provider value={{ store, loading, isStoreOwner }}>{children}</StoreContext.Provider>;
 };
 
 export const useStore = () => {
