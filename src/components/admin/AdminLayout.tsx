@@ -1,11 +1,12 @@
 import { ReactNode } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useStore } from "@/contexts/StoreContext";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { LogOut, ChefHat, LayoutDashboard, ShoppingCart, FolderTree, UtensilsCrossed, Store as StoreIcon } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { LogOut, ChefHat, Store as StoreIcon } from "lucide-react";
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { AppSidebar } from "./AppSidebar";
 
 interface AdminLayoutProps {
   children: ReactNode;
@@ -14,7 +15,6 @@ interface AdminLayoutProps {
 
 const AdminLayout = ({ children, userEmail }: AdminLayoutProps) => {
   const navigate = useNavigate();
-  const location = useLocation();
   const { store, loading: storeLoading, isStoreOwner } = useStore();
 
   const handleLogout = async () => {
@@ -23,12 +23,6 @@ const AdminLayout = ({ children, userEmail }: AdminLayoutProps) => {
     navigate("/");
   };
 
-  const navItems = [
-    { path: "/admin", label: "Dashboard", icon: LayoutDashboard },
-    { path: "/admin/orders", label: "Pedidos", icon: ShoppingCart },
-    { path: "/admin/categories", label: "Categorías", icon: FolderTree },
-    { path: "/admin/menu-items", label: "Platillos", icon: UtensilsCrossed },
-  ];
 
   if (storeLoading) {
     return (
@@ -68,51 +62,38 @@ const AdminLayout = ({ children, userEmail }: AdminLayoutProps) => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b bg-card sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <div className="flex items-center gap-2">
-            <ChefHat className="w-8 h-8 text-primary" />
-            <div>
-              <h1 className="text-2xl font-bold">Panel de Administración</h1>
-              <p className="text-sm text-muted-foreground">{store.name}</p>
-              <p className="text-xs text-muted-foreground">{userEmail}</p>
+    <SidebarProvider>
+      <div className="min-h-screen flex w-full bg-background">
+        <AppSidebar />
+        
+        <div className="flex-1 flex flex-col">
+          <header className="border-b bg-card sticky top-0 z-50">
+            <div className="px-4 py-4 flex justify-between items-center">
+              <div className="flex items-center gap-3">
+                <SidebarTrigger />
+                <ChefHat className="w-8 h-8 text-primary" />
+                <div>
+                  <h1 className="text-xl font-bold">Panel de Administración</h1>
+                  <p className="text-sm text-muted-foreground">{store.name}</p>
+                  <p className="text-xs text-muted-foreground">{userEmail}</p>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={() => navigate("/")}>
+                  Ver Sitio
+                </Button>
+                <Button variant="outline" onClick={handleLogout}>
+                  <LogOut className="w-4 h-4 mr-2" />
+                  Cerrar Sesión
+                </Button>
+              </div>
             </div>
-          </div>
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={() => navigate("/")}>
-              Ver Sitio
-            </Button>
-            <Button variant="outline" onClick={handleLogout}>
-              <LogOut className="w-4 h-4 mr-2" />
-              Cerrar Sesión
-            </Button>
-          </div>
+          </header>
+
+          <main className="flex-1 p-6">{children}</main>
         </div>
-      </header>
-
-      <div className="container mx-auto px-4 py-6">
-        <nav className="flex gap-2 mb-6 overflow-x-auto">
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = location.pathname === item.path;
-            return (
-              <Button
-                key={item.path}
-                variant={isActive ? "default" : "outline"}
-                onClick={() => navigate(item.path)}
-                className={cn("flex items-center gap-2 whitespace-nowrap")}
-              >
-                <Icon className="w-4 h-4" />
-                {item.label}
-              </Button>
-            );
-          })}
-        </nav>
-
-        <main>{children}</main>
       </div>
-    </div>
+    </SidebarProvider>
   );
 };
 
