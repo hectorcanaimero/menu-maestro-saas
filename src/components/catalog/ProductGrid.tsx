@@ -56,30 +56,37 @@ export const ProductGrid = () => {
   }
 
   return (
-    <div className="space-y-6">
-      {/* View Toggle */}
-      <div className="flex justify-end gap-2">
-        <Button
-          variant={viewMode === "grid" ? "default" : "outline"}
-          size="sm"
-          onClick={() => setViewMode("grid")}
-        >
-          <LayoutGrid className="w-4 h-4 mr-2" />
-          Grid
-        </Button>
-        <Button
-          variant={viewMode === "list" ? "default" : "outline"}
-          size="sm"
-          onClick={() => setViewMode("list")}
-        >
-          <List className="w-4 h-4 mr-2" />
-          Lista
-        </Button>
+    <div className="space-y-4">
+      {/* Section Header with View Toggle */}
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold text-foreground">
+          {categoryFilter ? "Productos" : "Todos los Productos"}
+        </h2>
+        <div className="flex gap-2">
+          <Button
+            variant={viewMode === "grid" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setViewMode("grid")}
+            className="rounded-full"
+          >
+            <LayoutGrid className="w-4 h-4 sm:mr-2" />
+            <span className="hidden sm:inline">Grid</span>
+          </Button>
+          <Button
+            variant={viewMode === "list" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setViewMode("list")}
+            className="rounded-full"
+          >
+            <List className="w-4 h-4 sm:mr-2" />
+            <span className="hidden sm:inline">Lista</span>
+          </Button>
+        </div>
       </div>
 
       {/* Products Grid */}
       <div className={viewMode === "grid" 
-        ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6" 
+        ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" 
         : "flex flex-col gap-4"
       }>
         {products.map((product) => (

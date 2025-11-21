@@ -1,9 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { CategoryCard } from "./CategoryCard";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
+import { useSearchParams } from "react-router-dom";
 
 export const CategoriesSection = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const selectedCategory = searchParams.get("category");
+
   const { data: categories, isLoading } = useQuery({
     queryKey: ["categories"],
     queryFn: async () => {
@@ -16,48 +19,36 @@ export const CategoriesSection = () => {
     },
   });
 
-  if (isLoading) {
-    return (
-      <section id="categorias" className="py-16 bg-muted/20">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
-            <Skeleton className="h-10 w-64 mx-auto mb-4" />
-            <Skeleton className="h-6 w-96 mx-auto" />
-          </div>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {[...Array(4)].map((_, i) => (
-              <Skeleton key={i} className="aspect-video w-full" />
-            ))}
-          </div>
-        </div>
-      </section>
-    );
-  }
+  const handleCategoryClick = (categoryId: string) => {
+    if (selectedCategory === categoryId) {
+      setSearchParams({});
+    } else {
+      setSearchParams({ category: categoryId });
+    }
+  };
 
-  if (!categories || categories.length === 0) {
+  if (isLoading || !categories || categories.length === 0) {
     return null;
   }
 
   return (
-    <section id="categorias" className="py-16 bg-muted/20">
+    <section className="sticky top-16 z-40 bg-background border-b border-border py-4">
       <div className="container mx-auto px-4">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-            Explora por Categoría
-          </h2>
-          <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-            Encuentra exactamente lo que buscas navegando por nuestras categorías
-          </p>
-        </div>
-
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
           {categories.map((category) => (
-            <CategoryCard
+            <Button
               key={category.id}
-              id={category.id}
-              name={category.name}
-              description={category.description}
-            />
+              variant={selectedCategory === category.id ? "default" : "outline"}
+              size="sm"
+              onClick={() => handleCategoryClick(category.id)}
+              className={`rounded-full whitespace-nowrap ${
+                selectedCategory === category.id 
+                  ? "bg-primary text-primary-foreground" 
+                  : "bg-background hover:bg-muted"
+              }`}
+            >
+              {category.name}
+            </Button>
           ))}
         </div>
       </div>
