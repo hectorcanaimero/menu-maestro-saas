@@ -7,14 +7,16 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { ArrowLeft, ShoppingCart } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
+import InputMask from "react-input-mask";
 
 const Checkout = () => {
   const navigate = useNavigate();
   const { items, totalPrice, clearCart } = useCart();
   const [loading, setLoading] = useState(false);
-  const [user, setUser] = useState<any>(null);
+  const [country, setCountry] = useState<"brazil" | "venezuela">("brazil");
   const [formData, setFormData] = useState({
     customer_name: "",
     customer_email: "",
@@ -22,24 +24,6 @@ const Checkout = () => {
     delivery_address: "",
     notes: "",
   });
-
-  useEffect(() => {
-    checkAuth();
-  }, []);
-
-  const checkAuth = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
-      toast.error("Debes iniciar sesión para hacer un pedido");
-      navigate("/auth");
-      return;
-    }
-    setUser(session.user);
-    setFormData((prev) => ({
-      ...prev,
-      customer_email: session.user.email || "",
-    }));
-  };
 
   useEffect(() => {
     if (items.length === 0) {
@@ -50,16 +34,17 @@ const Checkout = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user) return;
 
     setLoading(true);
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      
       // Create order
       const { data: order, error: orderError } = await supabase
         .from("orders")
         .insert([
           {
-            user_id: user.id,
+            user_id: session?.user?.id || null,
             total_amount: totalPrice,
             customer_name: formData.customer_name,
             customer_email: formData.customer_email,
@@ -90,7 +75,7 @@ const Checkout = () => {
 
       toast.success("¡Pedido realizado con éxito!");
       clearCart();
-      navigate("/my-orders");
+      navigate("/");
     } catch (error) {
       console.error("Error creating order:", error);
       toast.error("Error al crear el pedido");
@@ -98,6 +83,8 @@ const Checkout = () => {
       setLoading(false);
     }
   };
+
+  const phoneMask = country === "brazil" ? "+55 (99) 99999-9999" : "+58 (999) 999-9999";
 
   if (items.length === 0) {
     return null;
@@ -150,15 +137,37 @@ const Checkout = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="phone">Teléfono</Label>
-                  <Input
-                    id="phone"
-                    type="tel"
+                  <Label htmlFor="country">País *</Label>
+                  <Select value={country} onValueChange={(value: "brazil" | "venezuela") => setCountry(value)}>
+                    <SelectTrigger id="country">
+                      <SelectValue placeholder="Selecciona un país" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="brazil">Brasil</SelectItem>
+                      <SelectItem value="venezuela">Venezuela</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="phone">Teléfono *</Label>
+                  <InputMask
+                    mask={phoneMask}
                     value={formData.customer_phone}
                     onChange={(e) =>
                       setFormData({ ...formData, customer_phone: e.target.value })
                     }
-                  />
+                  >
+                    {/* @ts-ignore */}
+                    {(inputProps: any) => (
+                      <Input
+                        {...inputProps}
+                        id="phone"
+                        type="tel"
+                        required
+                      />
+                    )}
+                  </InputMask>
                 </div>
 
                 <div className="space-y-2">
