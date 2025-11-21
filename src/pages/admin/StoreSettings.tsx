@@ -13,6 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { BusinessHoursTab } from "@/components/admin/BusinessHoursTab";
+import { PaymentSettingsTab } from "@/components/admin/PaymentSettingsTab";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 
@@ -117,9 +118,10 @@ const StoreSettings = () => {
         <h1 className="text-3xl font-bold mb-6">Configuración de Tienda</h1>
 
         <Tabs defaultValue="company" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 max-w-md">
+          <TabsList className="grid w-full grid-cols-3 max-w-2xl">
             <TabsTrigger value="company">Empresa</TabsTrigger>
             <TabsTrigger value="hours">Horario de apertura</TabsTrigger>
+            <TabsTrigger value="payment">Pago</TabsTrigger>
           </TabsList>
 
           <TabsContent value="company" className="mt-6">
@@ -227,6 +229,21 @@ const StoreSettings = () => {
 
           <TabsContent value="hours" className="mt-6">
             <BusinessHoursTab storeId={store.id} forceStatus={store.force_status} />
+          </TabsContent>
+
+          <TabsContent value="payment" className="mt-6">
+            <PaymentSettingsTab
+              storeId={store.id}
+              initialData={{
+                currency: store.currency,
+                decimal_places: store.decimal_places,
+                decimal_separator: store.decimal_separator,
+                thousands_separator: store.thousands_separator,
+                accept_cash: store.accept_cash,
+                payment_on_delivery: store.payment_on_delivery,
+                require_payment_proof: store.require_payment_proof,
+              }}
+            />
           </TabsContent>
         </Tabs>
       </div>
