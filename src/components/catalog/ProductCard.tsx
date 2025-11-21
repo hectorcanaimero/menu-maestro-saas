@@ -36,7 +36,7 @@ export const ProductCard = ({
 
   return (
     <Card
-      className={`group h-full overflow-hidden border border-border/40 hover:border-border hover:shadow-lg transition-all duration-300 bg-card cursor-pointer relative ${compact ? 'max-w-[200px]' : ''}`}
+      className={`group h-full overflow-hidden border border-border/40 hover:border-border hover:shadow-lg transition-all duration-300 bg-card cursor-pointer rounded-sm relative ${compact ? "max-w-[200px]" : ""}`}
       onClick={() => navigate(`/products/${id}`)}
     >
       <div className={isGridView ? "flex flex-col h-full" : "flex flex-col sm:flex-row h-full"}>
