@@ -9,7 +9,8 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Textarea } from "@/components/ui/textarea";
+import { Separator } from "@/components/ui/separator";
+import { PaymentMethodsManager } from "./PaymentMethodsManager";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 
@@ -19,7 +20,6 @@ const paymentSettingsSchema = z.object({
   decimal_separator: z.string().max(5, "Máximo 5 caracteres"),
   thousands_separator: z.string().max(5, "Máximo 5 caracteres"),
   accept_cash: z.boolean(),
-  payment_on_delivery: z.string().max(500, "Máximo 500 caracteres"),
   require_payment_proof: z.boolean(),
 });
 
@@ -33,7 +33,6 @@ interface PaymentSettingsTabProps {
     decimal_separator: string | null;
     thousands_separator: string | null;
     accept_cash: boolean | null;
-    payment_on_delivery: string | null;
     require_payment_proof: boolean | null;
   };
 }
@@ -63,7 +62,6 @@ export function PaymentSettingsTab({ storeId, initialData }: PaymentSettingsTabP
       decimal_separator: initialData.decimal_separator || ",",
       thousands_separator: initialData.thousands_separator || ".",
       accept_cash: initialData.accept_cash ?? true,
-      payment_on_delivery: initialData.payment_on_delivery || "Pago Movil,Zelle",
       require_payment_proof: initialData.require_payment_proof ?? false,
     },
   });
@@ -78,7 +76,6 @@ export function PaymentSettingsTab({ storeId, initialData }: PaymentSettingsTabP
     setValue("decimal_separator", initialData.decimal_separator || ",");
     setValue("thousands_separator", initialData.thousands_separator || ".");
     setValue("accept_cash", initialData.accept_cash ?? true);
-    setValue("payment_on_delivery", initialData.payment_on_delivery || "Pago Movil,Zelle");
     setValue("require_payment_proof", initialData.require_payment_proof ?? false);
   }, [initialData, setValue]);
 
@@ -92,7 +89,6 @@ export function PaymentSettingsTab({ storeId, initialData }: PaymentSettingsTabP
           decimal_separator: data.decimal_separator,
           thousands_separator: data.thousands_separator,
           accept_cash: data.accept_cash,
-          payment_on_delivery: data.payment_on_delivery,
           require_payment_proof: data.require_payment_proof,
           updated_at: new Date().toISOString(),
         })
@@ -202,23 +198,11 @@ export function PaymentSettingsTab({ storeId, initialData }: PaymentSettingsTabP
             </Select>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="payment_on_delivery">Pago a la entrega</Label>
-            <Textarea
-              id="payment_on_delivery"
-              {...register("payment_on_delivery")}
-              placeholder="Pago Movil,Zelle"
-              rows={3}
-            />
-            <p className="text-sm text-muted-foreground">
-              Estas son opciones de pago que se utilizarán directamente en el momento de la entrega
-              y no al realizar el pedido en el sistema. Enumere todos los métodos de pago separados
-              por comas (,). Como: Tarjeta de crédito, tarjeta de débito, cupón.
-            </p>
-            {errors.payment_on_delivery && (
-              <p className="text-sm text-destructive">{errors.payment_on_delivery.message}</p>
-            )}
-          </div>
+          <Separator className="my-6" />
+
+          <PaymentMethodsManager storeId={storeId} />
+
+          <Separator className="my-6" />
 
           <div className="space-y-2">
             <div className="flex items-center space-x-2">
