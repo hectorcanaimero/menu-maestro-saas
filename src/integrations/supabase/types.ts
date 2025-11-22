@@ -49,6 +49,41 @@ export type Database = {
           },
         ]
       }
+      delivery_zones: {
+        Row: {
+          created_at: string | null
+          delivery_price: number
+          display_order: number | null
+          id: string
+          store_id: string
+          zone_name: string
+        }
+        Insert: {
+          created_at?: string | null
+          delivery_price?: number
+          display_order?: number | null
+          id?: string
+          store_id: string
+          zone_name: string
+        }
+        Update: {
+          created_at?: string | null
+          delivery_price?: number
+          display_order?: number | null
+          id?: string
+          store_id?: string
+          zone_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "delivery_zones_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       menu_items: {
         Row: {
           category_id: string | null
@@ -394,8 +429,11 @@ export type Database = {
           currency: string | null
           decimal_places: number | null
           decimal_separator: string | null
+          delivery_price_mode: string | null
           description: string | null
           email: string | null
+          estimated_delivery_time: string | null
+          fixed_delivery_price: number | null
           force_status: Database["public"]["Enums"]["force_status"] | null
           id: string
           is_active: boolean | null
@@ -414,6 +452,7 @@ export type Database = {
           phone: string | null
           redirect_to_whatsapp: boolean | null
           require_payment_proof: boolean | null
+          skip_payment_digital_menu: boolean | null
           subdomain: string
           thousands_separator: string | null
           updated_at: string | null
@@ -425,8 +464,11 @@ export type Database = {
           currency?: string | null
           decimal_places?: number | null
           decimal_separator?: string | null
+          delivery_price_mode?: string | null
           description?: string | null
           email?: string | null
+          estimated_delivery_time?: string | null
+          fixed_delivery_price?: number | null
           force_status?: Database["public"]["Enums"]["force_status"] | null
           id?: string
           is_active?: boolean | null
@@ -445,6 +487,7 @@ export type Database = {
           phone?: string | null
           redirect_to_whatsapp?: boolean | null
           require_payment_proof?: boolean | null
+          skip_payment_digital_menu?: boolean | null
           subdomain: string
           thousands_separator?: string | null
           updated_at?: string | null
@@ -456,8 +499,11 @@ export type Database = {
           currency?: string | null
           decimal_places?: number | null
           decimal_separator?: string | null
+          delivery_price_mode?: string | null
           description?: string | null
           email?: string | null
+          estimated_delivery_time?: string | null
+          fixed_delivery_price?: number | null
           force_status?: Database["public"]["Enums"]["force_status"] | null
           id?: string
           is_active?: boolean | null
@@ -476,6 +522,7 @@ export type Database = {
           phone?: string | null
           redirect_to_whatsapp?: boolean | null
           require_payment_proof?: boolean | null
+          skip_payment_digital_menu?: boolean | null
           subdomain?: string
           thousands_separator?: string | null
           updated_at?: string | null
