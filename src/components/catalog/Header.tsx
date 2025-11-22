@@ -15,6 +15,9 @@ export const Header = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
+  // Use custom logo if available
+  const logoUrl = store?.logo_url;
+
   useEffect(() => {
     const checkAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession();
@@ -43,7 +46,11 @@ export const Header = () => {
             onClick={() => navigate("/")}
             className="flex items-center space-x-2 font-bold text-xl text-foreground hover:text-primary transition-colors"
           >
-            <span>{store?.name || "Tienda"}</span>
+            {logoUrl ? (
+              <img src={logoUrl} alt={store?.name} className="h-10 w-auto object-contain" />
+            ) : (
+              <span>{store?.name || "Tienda"}</span>
+            )}
           </button>
 
           {/* Desktop Navigation */}

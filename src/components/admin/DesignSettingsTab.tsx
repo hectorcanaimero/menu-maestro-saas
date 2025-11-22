@@ -21,6 +21,7 @@ interface DesignSettingsTabProps {
   storeId: string;
   initialData: {
     logo_url?: string | null;
+    banner_url?: string | null;
     primary_color?: string | null;
     price_color?: string | null;
   };
@@ -29,7 +30,9 @@ interface DesignSettingsTabProps {
 export const DesignSettingsTab = ({ storeId, initialData }: DesignSettingsTabProps) => {
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [uploadingBanner, setUploadingBanner] = useState(false);
   const [logoUrl, setLogoUrl] = useState(initialData.logo_url || "");
+  const [bannerUrl, setBannerUrl] = useState(initialData.banner_url || "");
   
   const {
     register,
@@ -114,6 +117,77 @@ export const DesignSettingsTab = ({ storeId, initialData }: DesignSettingsTabPro
     }
   };
 
+  const handleBannerUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith("image/")) {
+      toast.error("Por favor selecciona una imagen válida");
+      return;
+    }
+
+    // Validate file size (max 5MB for banner)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("La imagen debe ser menor a 5MB");
+      return;
+    }
+
+    setUploadingBanner(true);
+    try {
+      const fileExt = file.name.split(".").pop();
+      const fileName = `${storeId}-banner-${Date.now()}.${fileExt}`;
+      const filePath = fileName;
+
+      // Upload to menu-images bucket
+      const { error: uploadError, data } = await supabase.storage
+        .from("menu-images")
+        .upload(filePath, file, {
+          upsert: true,
+        });
+
+      if (uploadError) throw uploadError;
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from("menu-images")
+        .getPublicUrl(filePath);
+
+      // Update store with banner URL
+      const { error: updateError } = await supabase
+        .from("stores")
+        .update({ banner_url: publicUrl })
+        .eq("id", storeId);
+
+      if (updateError) throw updateError;
+
+      setBannerUrl(publicUrl);
+      toast.success("Banner subido correctamente");
+    } catch (error: any) {
+      console.error("Error uploading banner:", error);
+      toast.error("Error al subir el banner");
+    } finally {
+      setUploadingBanner(false);
+    }
+  };
+
+  const handleRemoveBanner = async () => {
+    try {
+      const { error } = await supabase
+        .from("stores")
+        .update({ banner_url: null })
+        .eq("id", storeId);
+
+      if (error) throw error;
+
+      setBannerUrl("");
+      toast.success("Banner eliminado correctamente");
+    } catch (error: any) {
+      console.error("Error removing banner:", error);
+      toast.error("Error al eliminar el banner");
+    }
+  };
+
   const onSubmit = async (data: DesignSettingsForm) => {
     setSaving(true);
     try {
@@ -195,6 +269,56 @@ export const DesignSettingsTab = ({ storeId, initialData }: DesignSettingsTabPro
             )}
             <p className="text-sm text-muted-foreground">
               Sube el logo de tu negocio (máximo 2MB, formato JPG, PNG o WEBP)
+            </p>
+          </div>
+
+          {/* Banner Upload */}
+          <div className="space-y-2 border-t pt-6">
+            <Label>Banner / Imagen de Portada</Label>
+            {bannerUrl ? (
+              <div className="flex items-start gap-4">
+                <div className="relative w-full max-w-2xl">
+                  <img
+                    src={bannerUrl}
+                    alt="Banner"
+                    className="w-full h-48 object-cover border rounded-lg"
+                  />
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    size="icon"
+                    className="absolute top-2 right-2"
+                    onClick={handleRemoveBanner}
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-center gap-4">
+                <Label
+                  htmlFor="banner-upload"
+                  className="flex items-center gap-2 px-4 py-2 border rounded-lg cursor-pointer hover:bg-muted transition-colors"
+                >
+                  {uploadingBanner ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Upload className="w-4 h-4" />
+                  )}
+                  <span>{uploadingBanner ? "Subiendo..." : "Subir banner"}</span>
+                </Label>
+                <Input
+                  id="banner-upload"
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleBannerUpload}
+                  disabled={uploadingBanner}
+                />
+              </div>
+            )}
+            <p className="text-sm text-muted-foreground">
+              Sube una imagen de portada para tu catálogo (máximo 5MB, formato JPG, PNG o WEBP). Recomendado: 1920x600px
             </p>
           </div>
 

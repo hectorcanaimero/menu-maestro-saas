@@ -227,6 +227,7 @@ const StoreSettings = () => {
               storeId={store.id}
               initialData={{
                 logo_url: store.logo_url,
+                banner_url: (store as any).banner_url,
                 primary_color: (store as any).primary_color,
                 price_color: (store as any).price_color,
               }}

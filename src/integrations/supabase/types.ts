@@ -465,6 +465,7 @@ export type Database = {
         Row: {
           accept_cash: boolean | null
           address: string | null
+          banner_url: string | null
           created_at: string | null
           currency: string | null
           decimal_places: number | null
@@ -507,6 +508,7 @@ export type Database = {
         Insert: {
           accept_cash?: boolean | null
           address?: string | null
+          banner_url?: string | null
           created_at?: string | null
           currency?: string | null
           decimal_places?: number | null
@@ -549,6 +551,7 @@ export type Database = {
         Update: {
           accept_cash?: boolean | null
           address?: string | null
+          banner_url?: string | null
           created_at?: string | null
           currency?: string | null
           decimal_places?: number | null

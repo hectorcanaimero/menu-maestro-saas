@@ -1,14 +1,18 @@
 import { Button } from "@/components/ui/button";
 import { ChevronRight } from "lucide-react";
 import heroImage from "@/assets/hero-restaurant.jpg";
+import { useStore } from "@/contexts/StoreContext";
 
 export const HeroBanner = () => {
+  const { store } = useStore();
+  const bannerImage = store?.banner_url || heroImage;
+  
   return (
     <section className="relative h-[500px] md:h-[600px] flex items-center justify-center overflow-hidden">
       {/* Background Image with Overlay */}
       <div 
         className="absolute inset-0 bg-cover bg-center"
-        style={{ backgroundImage: `url(${heroImage})` }}
+        style={{ backgroundImage: `url(${bannerImage})` }}
       >
         <div className="absolute inset-0 bg-gradient-to-r from-background/90 via-background/70 to-background/90" />
       </div>
