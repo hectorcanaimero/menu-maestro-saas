@@ -493,6 +493,8 @@ export type Database = {
           owner_id: string
           payment_on_delivery: string | null
           phone: string | null
+          price_color: string | null
+          primary_color: string | null
           redirect_to_whatsapp: boolean | null
           remove_address_number: boolean | null
           remove_zipcode: boolean | null
@@ -533,6 +535,8 @@ export type Database = {
           owner_id: string
           payment_on_delivery?: string | null
           phone?: string | null
+          price_color?: string | null
+          primary_color?: string | null
           redirect_to_whatsapp?: boolean | null
           remove_address_number?: boolean | null
           remove_zipcode?: boolean | null
@@ -573,6 +577,8 @@ export type Database = {
           owner_id?: string
           payment_on_delivery?: string | null
           phone?: string | null
+          price_color?: string | null
+          primary_color?: string | null
           redirect_to_whatsapp?: boolean | null
           remove_address_number?: boolean | null
           remove_zipcode?: boolean | null

@@ -120,22 +120,16 @@ export const DesignSettingsTab = ({ storeId, initialData }: DesignSettingsTabPro
       const { error } = await supabase
         .from("stores")
         .update({
-          // Store colors as custom fields - we'll need to add these to the schema
+          primary_color: data.primary_color,
+          price_color: data.price_color,
           updated_at: new Date().toISOString(),
         })
         .eq("id", storeId);
 
       if (error) throw error;
 
-      // For now, store colors in localStorage until we add them to the database
-      if (data.primary_color) {
-        localStorage.setItem(`store-${storeId}-primary-color`, data.primary_color);
-      }
-      if (data.price_color) {
-        localStorage.setItem(`store-${storeId}-price-color`, data.price_color);
-      }
-
       toast.success("Configuración de diseño guardada correctamente");
+      window.location.reload();
     } catch (error: any) {
       console.error("Error saving design settings:", error);
       toast.error("Error al guardar la configuración de diseño");
