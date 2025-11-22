@@ -11,7 +11,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
-import { Plus, Pencil, Trash2, Image as ImageIcon, Star } from "lucide-react";
+import { Plus, Pencil, Trash2, Image as ImageIcon, Star, Settings } from "lucide-react";
+import { ProductExtrasManager } from "./ProductExtrasManager";
 
 interface MenuItem {
   id: string;
@@ -38,6 +39,8 @@ const MenuItemsManager = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [extrasDialogOpen, setExtrasDialogOpen] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -219,7 +222,15 @@ const MenuItemsManager = () => {
   }
 
   return (
-    <Card>
+    <>
+      <ProductExtrasManager
+        open={extrasDialogOpen}
+        onOpenChange={setExtrasDialogOpen}
+        menuItemId={selectedItem?.id || ""}
+        menuItemName={selectedItem?.name || ""}
+      />
+      
+      <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>Gestión de Platillos</CardTitle>
         <Dialog open={dialogOpen} onOpenChange={(open) => {
@@ -412,8 +423,19 @@ const MenuItemsManager = () => {
                       </div>
                     )}
                   </TableCell>
-                  <TableCell className="text-right">
+                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => {
+                          setSelectedItem(item);
+                          setExtrasDialogOpen(true);
+                        }}
+                        title="Gestionar extras"
+                      >
+                        <Settings className="w-4 h-4" />
+                      </Button>
                       <Button
                         variant="ghost"
                         size="icon"
@@ -437,6 +459,7 @@ const MenuItemsManager = () => {
         </Table>
       </CardContent>
     </Card>
+    </>
   );
 };
 
