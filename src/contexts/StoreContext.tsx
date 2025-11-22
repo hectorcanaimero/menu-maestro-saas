@@ -8,6 +8,7 @@ interface Store {
   owner_id: string;
   description: string | null;
   logo_url: string | null;
+  banner_url: string | null;
   phone: string | null;
   email: string | null;
   address: string | null;
