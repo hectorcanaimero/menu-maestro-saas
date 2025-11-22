@@ -1,7 +1,13 @@
+interface OrderItemExtra {
+  name: string;
+  price: number;
+}
+
 interface OrderItem {
   name: string;
   quantity: number;
   price: number;
+  extras?: OrderItemExtra[];
 }
 
 interface OrderData {
@@ -68,10 +74,18 @@ export const generateWhatsAppMessage = (
     .map((item) => {
       let productText = templates.orderProductTemplate;
       
+      // Generate extras text
+      const extrasText = item.extras && item.extras.length > 0
+        ? item.extras.map(extra => `  + ${extra.name} (${formatPrice(extra.price)})`).join("\n")
+        : "";
+      
+      // Calculate item total price (base price + extras)
+      const itemTotal = item.price + (item.extras?.reduce((sum, e) => sum + e.price, 0) || 0);
+      
       productText = productText.replace(/{product-qty}/g, item.quantity.toString());
       productText = productText.replace(/{product-name}/g, item.name);
-      productText = productText.replace(/{product-price}/g, formatPrice(item.price));
-      productText = productText.replace(/{product-extras}/g, ""); // Not implemented yet
+      productText = productText.replace(/{product-price}/g, formatPrice(itemTotal));
+      productText = productText.replace(/{product-extras}/g, extrasText);
       productText = productText.replace(/{product-note}/g, ""); // Not implemented yet
       
       return productText;

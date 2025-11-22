@@ -1,12 +1,20 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { toast } from "sonner";
 
+interface CartItemExtra {
+  id: string;
+  name: string;
+  price: number;
+}
+
 interface CartItem {
   id: string;
   name: string;
   price: number;
   quantity: number;
   image_url: string | null;
+  extras?: CartItemExtra[];
+  cartItemId?: string; // Unique ID for cart items with different extras
 }
 
 interface CartContextType {
@@ -33,15 +41,19 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
 
   const addItem = (item: Omit<CartItem, "quantity">) => {
     setItems((current) => {
-      const existing = current.find((i) => i.id === item.id);
+      // Create unique cart item ID based on product and extras
+      const cartItemId = item.cartItemId || `${item.id}-${JSON.stringify(item.extras || [])}`;
+      const itemWithId = { ...item, cartItemId };
+      
+      const existing = current.find((i) => i.cartItemId === cartItemId);
       if (existing) {
         toast.success("Cantidad actualizada");
         return current.map((i) =>
-          i.id === item.id ? { ...i, quantity: i.quantity + 1 } : i
+          i.cartItemId === cartItemId ? { ...i, quantity: i.quantity + 1 } : i
         );
       }
       toast.success("Platillo agregado al carrito");
-      return [...current, { ...item, quantity: 1 }];
+      return [...current, { ...itemWithId, quantity: 1 }];
     });
   };
 
@@ -66,7 +78,10 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
-  const totalPrice = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const totalPrice = items.reduce((sum, item) => {
+    const extrasPrice = item.extras?.reduce((acc, extra) => acc + extra.price, 0) || 0;
+    return sum + (item.price + extrasPrice) * item.quantity;
+  }, 0);
 
   return (
     <CartContext.Provider

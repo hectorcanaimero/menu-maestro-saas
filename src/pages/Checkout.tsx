@@ -157,11 +157,36 @@ const Checkout = () => {
         item_name: item.name,
       }));
 
-      const { error: itemsError } = await supabase
+      const { data: createdItems, error: itemsError } = await supabase
         .from("order_items")
-        .insert(orderItems);
+        .insert(orderItems)
+        .select();
 
       if (itemsError) throw itemsError;
+
+      // Create order item extras
+      if (createdItems) {
+        const itemExtras = createdItems.flatMap((orderItem, index) => {
+          const cartItem = items[index];
+          if (!cartItem.extras || cartItem.extras.length === 0) return [];
+          
+          return cartItem.extras.map((extra) => ({
+            order_item_id: orderItem.id,
+            extra_name: extra.name,
+            extra_price: extra.price,
+          }));
+        });
+
+        if (itemExtras.length > 0) {
+          const { error: extrasError } = await supabase
+            .from("order_item_extras")
+            .insert(itemExtras);
+
+          if (extrasError) {
+            console.error("Error saving extras:", extrasError);
+          }
+        }
+      }
 
       // Generate WhatsApp message
       if (store.phone && (store.order_product_template || store.order_message_template_delivery)) {
@@ -172,6 +197,7 @@ const Checkout = () => {
               name: item.name,
               quantity: item.quantity,
               price: item.price,
+              extras: item.extras,
             })),
             totalAmount: totalPrice,
             customerName: formData.customer_name,
@@ -467,25 +493,39 @@ const Checkout = () => {
             </CardHeader>
             <CardContent className="space-y-4">
               {items.map((item) => (
-                <div key={item.id} className="flex justify-between items-start pb-4 border-b">
-                  <div className="flex gap-3">
-                    {item.image_url && (
-                      <img
-                        src={item.image_url}
-                        alt={item.name}
-                        className="w-16 h-16 object-cover rounded"
-                      />
-                    )}
-                    <div>
-                      <h4 className="font-medium">{item.name}</h4>
-                      <p className="text-sm text-muted-foreground">
-                        Cantidad: {item.quantity}
+                <div key={item.cartItemId || item.id} className="pb-4 border-b">
+                  <div className="flex justify-between items-start">
+                    <div className="flex gap-3">
+                      {item.image_url && (
+                        <img
+                          src={item.image_url}
+                          alt={item.name}
+                          className="w-16 h-16 object-cover rounded"
+                        />
+                      )}
+                      <div>
+                        <h4 className="font-medium">{item.name}</h4>
+                        <p className="text-sm text-muted-foreground">
+                          Cantidad: {item.quantity}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-semibold">
+                        ${((item.price + (item.extras?.reduce((sum, e) => sum + e.price, 0) || 0)) * item.quantity).toFixed(2)}
                       </p>
                     </div>
                   </div>
-                  <p className="font-semibold">
-                    ${(item.price * item.quantity).toFixed(2)}
-                  </p>
+                  {item.extras && item.extras.length > 0 && (
+                    <div className="ml-20 mt-2 text-sm text-muted-foreground space-y-1">
+                      {item.extras.map((extra, idx) => (
+                        <div key={idx} className="flex justify-between">
+                          <span>+ {extra.name}</span>
+                          <span>${extra.price.toFixed(2)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               ))}
 

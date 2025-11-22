@@ -106,6 +106,38 @@ export type Database = {
           },
         ]
       }
+      order_item_extras: {
+        Row: {
+          created_at: string | null
+          extra_name: string
+          extra_price: number
+          id: string
+          order_item_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          extra_name: string
+          extra_price: number
+          id?: string
+          order_item_id: string
+        }
+        Update: {
+          created_at?: string | null
+          extra_name?: string
+          extra_price?: number
+          id?: string
+          order_item_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_item_extras_order_item_id_fkey"
+            columns: ["order_item_id"]
+            isOneToOne: false
+            referencedRelation: "order_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       order_items: {
         Row: {
           created_at: string | null
@@ -250,6 +282,44 @@ export type Database = {
             columns: ["store_id"]
             isOneToOne: false
             referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      product_extras: {
+        Row: {
+          created_at: string | null
+          display_order: number | null
+          id: string
+          is_available: boolean | null
+          menu_item_id: string
+          name: string
+          price: number
+        }
+        Insert: {
+          created_at?: string | null
+          display_order?: number | null
+          id?: string
+          is_available?: boolean | null
+          menu_item_id: string
+          name: string
+          price?: number
+        }
+        Update: {
+          created_at?: string | null
+          display_order?: number | null
+          id?: string
+          is_available?: boolean | null
+          menu_item_id?: string
+          name?: string
+          price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_extras_menu_item_id_fkey"
+            columns: ["menu_item_id"]
+            isOneToOne: false
+            referencedRelation: "menu_items"
             referencedColumns: ["id"]
           },
         ]
