@@ -120,11 +120,11 @@ const StoreSettings = () => {
 
   return (
     <AdminLayout userEmail={user.email || ""}>
-      <div className="max-w-4xl">
+      <div>
         <h1 className="text-3xl font-bold mb-6">Configuración de Tienda</h1>
 
         <Tabs defaultValue="company" className="w-full">
-          <TabsList className="grid w-full grid-cols-5 max-w-4xl">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="company">Empresa</TabsTrigger>
             <TabsTrigger value="delivery">Entrega</TabsTrigger>
             <TabsTrigger value="hours">Horario</TabsTrigger>
