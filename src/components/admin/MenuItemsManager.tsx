@@ -13,6 +13,7 @@ import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { Plus, Pencil, Trash2, Image as ImageIcon, Star, Settings } from "lucide-react";
 import { ProductExtrasManager } from "./ProductExtrasManager";
+import { MenuItemCard } from "./MenuItemCard";
 
 interface MenuItem {
   id: string;
@@ -231,14 +232,14 @@ const MenuItemsManager = () => {
       />
       
       <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
+      <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <CardTitle>Gestión de Platillos</CardTitle>
         <Dialog open={dialogOpen} onOpenChange={(open) => {
           setDialogOpen(open);
           if (!open) resetForm();
         }}>
           <DialogTrigger asChild>
-            <Button>
+            <Button size="sm">
               <Plus className="w-4 h-4 mr-2" />
               Nuevo Platillo
             </Button>
@@ -368,95 +369,121 @@ const MenuItemsManager = () => {
         </Dialog>
       </CardHeader>
       <CardContent>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Imagen</TableHead>
-              <TableHead>Nombre</TableHead>
-              <TableHead>Categoría</TableHead>
-              <TableHead>Precio</TableHead>
-              <TableHead>Estado</TableHead>
-              <TableHead>Destacado</TableHead>
-              <TableHead className="text-right">Acciones</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {items.length === 0 ? (
+        {/* Mobile View - Cards */}
+        <div className="grid gap-4 md:hidden">
+          {items.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              No hay platillos. Crea uno para empezar.
+            </div>
+          ) : (
+            items.map((item) => (
+              <MenuItemCard
+                key={item.id}
+                item={item}
+                categoryName={getCategoryName(item.category_id)}
+                onEdit={handleEdit}
+                onDelete={handleDelete}
+                onManageExtras={(item) => {
+                  setSelectedItem(item);
+                  setExtrasDialogOpen(true);
+                }}
+              />
+            ))
+          )}
+        </div>
+
+        {/* Desktop View - Table */}
+        <div className="hidden md:block">
+          <Table>
+            <TableHeader>
               <TableRow>
-                <TableCell colSpan={7} className="text-center text-muted-foreground">
-                  No hay platillos. Crea uno para empezar.
-                </TableCell>
+                <TableHead>Imagen</TableHead>
+                <TableHead>Nombre</TableHead>
+                <TableHead>Categoría</TableHead>
+                <TableHead>Precio</TableHead>
+                <TableHead>Estado</TableHead>
+                <TableHead>Destacado</TableHead>
+                <TableHead className="text-right">Acciones</TableHead>
               </TableRow>
-            ) : (
-              items.map((item) => (
-                <TableRow key={item.id}>
-                  <TableCell>
-                    {item.image_url ? (
-                      <img
-                        src={item.image_url}
-                        alt={item.name}
-                        className="w-16 h-16 object-cover rounded"
-                      />
-                    ) : (
-                      <div className="w-16 h-16 bg-muted rounded flex items-center justify-center">
-                        <ImageIcon className="w-6 h-6 text-muted-foreground" />
-                      </div>
-                    )}
-                  </TableCell>
-                  <TableCell className="font-medium">{item.name}</TableCell>
-                  <TableCell>{getCategoryName(item.category_id)}</TableCell>
-                  <TableCell>${item.price.toFixed(2)}</TableCell>
-                  <TableCell>
-                    <span className={`px-2 py-1 rounded text-xs ${
-                      item.is_available
-                        ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100"
-                        : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100"
-                    }`}>
-                      {item.is_available ? "Disponible" : "No disponible"}
-                    </span>
-                  </TableCell>
-                  <TableCell>
-                    {item.is_featured && (
-                      <div className="flex items-center gap-1 text-amber-600">
-                        <Star className="w-4 h-4 fill-amber-600" />
-                        <span className="text-xs">Destacado</span>
-                      </div>
-                    )}
-                  </TableCell>
-                   <TableCell className="text-right">
-                    <div className="flex justify-end gap-2">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => {
-                          setSelectedItem(item);
-                          setExtrasDialogOpen(true);
-                        }}
-                        title="Gestionar extras"
-                      >
-                        <Settings className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleEdit(item)}
-                      >
-                        <Pencil className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleDelete(item.id)}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
+            </TableHeader>
+            <TableBody>
+              {items.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={7} className="text-center text-muted-foreground">
+                    No hay platillos. Crea uno para empezar.
                   </TableCell>
                 </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
+              ) : (
+                items.map((item) => (
+                  <TableRow key={item.id}>
+                    <TableCell>
+                      {item.image_url ? (
+                        <img
+                          src={item.image_url}
+                          alt={item.name}
+                          className="w-16 h-16 object-cover rounded"
+                        />
+                      ) : (
+                        <div className="w-16 h-16 bg-muted rounded flex items-center justify-center">
+                          <ImageIcon className="w-6 h-6 text-muted-foreground" />
+                        </div>
+                      )}
+                    </TableCell>
+                    <TableCell className="font-medium">{item.name}</TableCell>
+                    <TableCell>{getCategoryName(item.category_id)}</TableCell>
+                    <TableCell>${item.price.toFixed(2)}</TableCell>
+                    <TableCell>
+                      <span className={`px-2 py-1 rounded text-xs ${
+                        item.is_available
+                          ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100"
+                          : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100"
+                      }`}>
+                        {item.is_available ? "Disponible" : "No disponible"}
+                      </span>
+                    </TableCell>
+                    <TableCell>
+                      {item.is_featured && (
+                        <div className="flex items-center gap-1 text-amber-600">
+                          <Star className="w-4 h-4 fill-amber-600" />
+                          <span className="text-xs">Destacado</span>
+                        </div>
+                      )}
+                    </TableCell>
+                     <TableCell className="text-right">
+                      <div className="flex justify-end gap-2">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => {
+                            setSelectedItem(item);
+                            setExtrasDialogOpen(true);
+                          }}
+                          title="Gestionar extras"
+                        >
+                          <Settings className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleEdit(item)}
+                        >
+                          <Pencil className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleDelete(item.id)}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </div>
       </CardContent>
     </Card>
     </>

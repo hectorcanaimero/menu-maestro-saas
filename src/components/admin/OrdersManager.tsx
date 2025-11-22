@@ -11,6 +11,7 @@ import { Pagination, PaginationContent, PaginationItem, PaginationLink, Paginati
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { Package, RefreshCw, Eye, Filter, Download, ExternalLink, FileImage } from "lucide-react";
+import { OrderCard } from "./OrderCard";
 
 interface OrderItemExtra {
   id: string;
@@ -254,7 +255,7 @@ const OrdersManager = () => {
             </div>
           </div>
 
-          {/* Orders Table */}
+          {/* Orders Grid/Table */}
           {loading ? (
             <div className="text-center py-12">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
@@ -269,7 +270,20 @@ const OrdersManager = () => {
             </div>
           ) : (
             <>
-              <div className="border rounded-lg overflow-hidden">
+              {/* Mobile View - Cards */}
+              <div className="grid gap-4 md:hidden">
+                {currentOrders.map((order) => (
+                  <OrderCard
+                    key={order.id}
+                    order={order}
+                    onStatusChange={updateOrderStatus}
+                    onViewDetails={handleViewDetails}
+                  />
+                ))}
+              </div>
+
+              {/* Desktop View - Table */}
+              <div className="hidden md:block border rounded-lg overflow-hidden">
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -406,7 +420,7 @@ const OrdersManager = () => {
 
       {/* Order Details Dialog */}
       <Dialog open={detailsOpen} onOpenChange={setDetailsOpen}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Detalles del Pedido #{selectedOrder?.id.slice(0, 8)}</DialogTitle>
           </DialogHeader>

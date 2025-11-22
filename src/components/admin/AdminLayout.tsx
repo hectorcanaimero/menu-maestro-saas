@@ -72,29 +72,29 @@ const AdminLayout = ({ children, userEmail }: AdminLayoutProps) => {
         
         <div className="flex-1 flex flex-col">
           <header className="border-b bg-card sticky top-0 z-50">
-            <div className="px-4 py-4 flex justify-between items-center">
-              <div className="flex items-center gap-3">
+            <div className="px-3 sm:px-6 py-3 sm:py-4 flex justify-between items-center gap-2">
+              <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
                 <SidebarTrigger />
-                <ChefHat className="w-8 h-8 text-primary" />
-                <div>
-                  <h1 className="text-xl font-bold">Panel de Administración</h1>
-                  <p className="text-sm text-muted-foreground">{store.name}</p>
-                  <p className="text-xs text-muted-foreground">{userEmail}</p>
+                <ChefHat className="w-6 h-6 sm:w-8 sm:h-8 text-primary flex-shrink-0" />
+                <div className="min-w-0 flex-1">
+                  <h1 className="text-sm sm:text-xl font-bold truncate">Panel Admin</h1>
+                  <p className="text-xs sm:text-sm text-muted-foreground truncate">{store.name}</p>
+                  <p className="text-xs text-muted-foreground hidden sm:block truncate">{userEmail}</p>
                 </div>
               </div>
-              <div className="flex gap-2">
-                <Button variant="outline" onClick={() => navigate("/")}>
+              <div className="flex gap-1 sm:gap-2 flex-shrink-0">
+                <Button variant="outline" size="sm" onClick={() => navigate("/")} className="hidden sm:flex">
                   Ver Sitio
                 </Button>
-                <Button variant="outline" onClick={handleLogout}>
-                  <LogOut className="w-4 h-4 mr-2" />
-                  Cerrar Sesión
+                <Button variant="outline" size="sm" onClick={handleLogout} className="sm:flex">
+                  <LogOut className="w-4 h-4 sm:mr-2" />
+                  <span className="hidden sm:inline">Cerrar Sesión</span>
                 </Button>
               </div>
             </div>
           </header>
 
-          <main className="flex-1 p-6">{children}</main>
+          <main className="flex-1 p-3 sm:p-6">{children}</main>
         </div>
       </div>
     </SidebarProvider>
