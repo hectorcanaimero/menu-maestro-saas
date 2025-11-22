@@ -16,6 +16,7 @@ import { BusinessHoursTab } from "@/components/admin/BusinessHoursTab";
 import { PaymentSettingsTab } from "@/components/admin/PaymentSettingsTab";
 import { OrderSettingsTab } from "@/components/admin/OrderSettingsTab";
 import { DeliverySettingsTab } from "@/components/admin/DeliverySettingsTab";
+import { AdvancedSettingsTab } from "@/components/admin/AdvancedSettingsTab";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 
@@ -124,12 +125,13 @@ const StoreSettings = () => {
         <h1 className="text-3xl font-bold mb-6">Configuración de Tienda</h1>
 
         <Tabs defaultValue="company" className="w-full">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-6">
             <TabsTrigger value="company">Empresa</TabsTrigger>
             <TabsTrigger value="delivery">Entrega</TabsTrigger>
             <TabsTrigger value="hours">Horario</TabsTrigger>
             <TabsTrigger value="order">Orden</TabsTrigger>
             <TabsTrigger value="payment">Pago</TabsTrigger>
+            <TabsTrigger value="advanced">Avanzado</TabsTrigger>
           </TabsList>
 
           <TabsContent value="company" className="mt-6">
@@ -258,6 +260,19 @@ const StoreSettings = () => {
                 skip_payment_digital_menu: store.skip_payment_digital_menu,
                 delivery_price_mode: (store.delivery_price_mode as "fixed" | "by_zone") || "fixed",
                 fixed_delivery_price: store.fixed_delivery_price,
+              }}
+            />
+          </TabsContent>
+
+          <TabsContent value="advanced" className="mt-6">
+            <AdvancedSettingsTab
+              storeId={store.id}
+              initialData={{
+                remove_zipcode: store.remove_zipcode,
+                remove_address_number: store.remove_address_number,
+                enable_audio_notifications: store.enable_audio_notifications,
+                notification_volume: store.notification_volume,
+                notification_repeat_count: store.notification_repeat_count,
               }}
             />
           </TabsContent>

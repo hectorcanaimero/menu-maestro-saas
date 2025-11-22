@@ -432,6 +432,7 @@ export type Database = {
           delivery_price_mode: string | null
           description: string | null
           email: string | null
+          enable_audio_notifications: boolean | null
           estimated_delivery_time: string | null
           fixed_delivery_price: number | null
           force_status: Database["public"]["Enums"]["force_status"] | null
@@ -440,6 +441,8 @@ export type Database = {
           logo_url: string | null
           minimum_order_price: number | null
           name: string
+          notification_repeat_count: number | null
+          notification_volume: number | null
           operating_modes:
             | Database["public"]["Enums"]["operating_mode"][]
             | null
@@ -451,6 +454,8 @@ export type Database = {
           payment_on_delivery: string | null
           phone: string | null
           redirect_to_whatsapp: boolean | null
+          remove_address_number: boolean | null
+          remove_zipcode: boolean | null
           require_payment_proof: boolean | null
           skip_payment_digital_menu: boolean | null
           subdomain: string
@@ -467,6 +472,7 @@ export type Database = {
           delivery_price_mode?: string | null
           description?: string | null
           email?: string | null
+          enable_audio_notifications?: boolean | null
           estimated_delivery_time?: string | null
           fixed_delivery_price?: number | null
           force_status?: Database["public"]["Enums"]["force_status"] | null
@@ -475,6 +481,8 @@ export type Database = {
           logo_url?: string | null
           minimum_order_price?: number | null
           name: string
+          notification_repeat_count?: number | null
+          notification_volume?: number | null
           operating_modes?:
             | Database["public"]["Enums"]["operating_mode"][]
             | null
@@ -486,6 +494,8 @@ export type Database = {
           payment_on_delivery?: string | null
           phone?: string | null
           redirect_to_whatsapp?: boolean | null
+          remove_address_number?: boolean | null
+          remove_zipcode?: boolean | null
           require_payment_proof?: boolean | null
           skip_payment_digital_menu?: boolean | null
           subdomain: string
@@ -502,6 +512,7 @@ export type Database = {
           delivery_price_mode?: string | null
           description?: string | null
           email?: string | null
+          enable_audio_notifications?: boolean | null
           estimated_delivery_time?: string | null
           fixed_delivery_price?: number | null
           force_status?: Database["public"]["Enums"]["force_status"] | null
@@ -510,6 +521,8 @@ export type Database = {
           logo_url?: string | null
           minimum_order_price?: number | null
           name?: string
+          notification_repeat_count?: number | null
+          notification_volume?: number | null
           operating_modes?:
             | Database["public"]["Enums"]["operating_mode"][]
             | null
@@ -521,6 +534,8 @@ export type Database = {
           payment_on_delivery?: string | null
           phone?: string | null
           redirect_to_whatsapp?: boolean | null
+          remove_address_number?: boolean | null
+          remove_zipcode?: boolean | null
           require_payment_proof?: boolean | null
           skip_payment_digital_menu?: boolean | null
           subdomain?: string

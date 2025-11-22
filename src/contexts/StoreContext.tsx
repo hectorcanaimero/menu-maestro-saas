@@ -31,6 +31,11 @@ interface Store {
   skip_payment_digital_menu: boolean | null;
   delivery_price_mode: string | null;
   fixed_delivery_price: number | null;
+  remove_zipcode: boolean | null;
+  remove_address_number: boolean | null;
+  enable_audio_notifications: boolean | null;
+  notification_volume: number | null;
+  notification_repeat_count: number | null;
 }
 
 interface StoreContextType {
