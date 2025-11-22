@@ -160,6 +160,7 @@ export type Database = {
           delivery_address: string | null
           id: string
           notes: string | null
+          payment_proof_url: string | null
           status: string
           store_id: string | null
           total_amount: number
@@ -174,6 +175,7 @@ export type Database = {
           delivery_address?: string | null
           id?: string
           notes?: string | null
+          payment_proof_url?: string | null
           status?: string
           store_id?: string | null
           total_amount?: number
@@ -188,6 +190,7 @@ export type Database = {
           delivery_address?: string | null
           id?: string
           notes?: string | null
+          payment_proof_url?: string | null
           status?: string
           store_id?: string | null
           total_amount?: number

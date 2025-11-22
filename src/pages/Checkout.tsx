@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useCart } from "@/contexts/CartContext";
@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Upload, X } from "lucide-react";
 import InputMask from "react-input-mask";
 
 const Checkout = () => {
@@ -19,6 +19,7 @@ const Checkout = () => {
   const { store } = useStore();
   const [loading, setLoading] = useState(false);
   const [country, setCountry] = useState<"brazil" | "venezuela">("brazil");
+  const [paymentProofFile, setPaymentProofFile] = useState<File | null>(null);
   const [formData, setFormData] = useState({
     customer_name: "",
     customer_email: "",
@@ -35,9 +36,41 @@ const Checkout = () => {
       return;
     }
 
+    // Validate payment proof if required
+    if (store.require_payment_proof && !paymentProofFile) {
+      toast.error("Debes subir un comprobante de pago");
+      return;
+    }
+
     setLoading(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
+      
+      let paymentProofUrl = null;
+
+      // Upload payment proof if provided
+      if (paymentProofFile) {
+        const fileExt = paymentProofFile.name.split('.').pop();
+        const fileName = `${session?.user?.id || 'anonymous'}/${Date.now()}.${fileExt}`;
+        
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('payment-proofs')
+          .upload(fileName, paymentProofFile);
+
+        if (uploadError) {
+          console.error('Error uploading payment proof:', uploadError);
+          toast.error('Error al subir el comprobante de pago');
+          setLoading(false);
+          return;
+        }
+
+        // Get public URL
+        const { data: urlData } = supabase.storage
+          .from('payment-proofs')
+          .getPublicUrl(uploadData.path);
+        
+        paymentProofUrl = urlData.publicUrl;
+      }
       
       // Create order
       const { data: order, error: orderError } = await supabase
@@ -52,6 +85,7 @@ const Checkout = () => {
             customer_phone: formData.customer_phone,
             delivery_address: formData.delivery_address,
             notes: formData.notes,
+            payment_proof_url: paymentProofUrl,
           },
         ])
         .select()
@@ -82,6 +116,26 @@ const Checkout = () => {
       toast.error("Error al crear el pedido");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Validate file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error("El archivo debe ser menor a 5MB");
+        return;
+      }
+      
+      // Validate file type (images and PDFs)
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'];
+      if (!allowedTypes.includes(file.type)) {
+        toast.error("Solo se permiten imágenes (JPG, PNG, WEBP) y PDF");
+        return;
+      }
+      
+      setPaymentProofFile(file);
     }
   };
 
@@ -196,6 +250,42 @@ const Checkout = () => {
                     placeholder="Instrucciones especiales para la entrega..."
                   />
                 </div>
+
+                {store?.require_payment_proof && (
+                  <div className="space-y-2">
+                    <Label htmlFor="payment-proof">
+                      Comprobante de Pago * 
+                      <span className="text-xs text-muted-foreground ml-2">(Requerido)</span>
+                    </Label>
+                    <div className="space-y-2">
+                      <Input
+                        id="payment-proof"
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp,application/pdf"
+                        onChange={handleFileChange}
+                        className="cursor-pointer"
+                        required
+                      />
+                      {paymentProofFile && (
+                        <div className="flex items-center gap-2 p-2 bg-muted rounded-md">
+                          <Upload className="w-4 h-4 text-primary" />
+                          <span className="text-sm flex-1">{paymentProofFile.name}</span>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setPaymentProofFile(null)}
+                          >
+                            <X className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      )}
+                      <p className="text-xs text-muted-foreground">
+                        Formatos aceptados: JPG, PNG, WEBP, PDF. Tamaño máximo: 5MB
+                      </p>
+                    </div>
+                  </div>
+                )}
 
                 <Button type="submit" className="w-full" size="lg" disabled={loading}>
                   {loading ? "Procesando..." : "Confirmar Pedido"}
