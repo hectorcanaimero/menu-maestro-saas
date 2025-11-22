@@ -1,4 +1,4 @@
-import { LayoutDashboard, ShoppingCart, FolderTree, UtensilsCrossed, Settings, Users } from "lucide-react";
+import { LayoutDashboard, ShoppingCart, FolderTree, UtensilsCrossed, Settings, Users, ChefHat } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import {
   Sidebar,
@@ -15,6 +15,7 @@ import {
 const navItems = [
   { path: "/admin", label: "Dashboard", icon: LayoutDashboard },
   { path: "/admin/orders", label: "Pedidos", icon: ShoppingCart },
+  { path: "/admin/kitchen", label: "Cocina", icon: ChefHat },
   { path: "/admin/customers", label: "Clientes", icon: Users },
   { path: "/admin/categories", label: "Categorías", icon: FolderTree },
   { path: "/admin/menu-items", label: "Platillos", icon: UtensilsCrossed },

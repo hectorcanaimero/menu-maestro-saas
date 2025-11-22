@@ -16,6 +16,7 @@ import ProductDetail from "./pages/ProductDetail";
 import NotFound from "./pages/NotFound";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminOrders from "./pages/admin/AdminOrders";
+import AdminKitchen from "./pages/admin/AdminKitchen";
 import AdminCategories from "./pages/admin/AdminCategories";
 import AdminMenuItems from "./pages/admin/AdminMenuItems";
 import AdminCustomers from "./pages/admin/AdminCustomers";
@@ -38,6 +39,7 @@ const App = () => (
               <Route path="/create-store" element={<CreateStore />} />
               <Route path="/admin" element={<AdminDashboard />} />
               <Route path="/admin/orders" element={<AdminOrders />} />
+              <Route path="/admin/kitchen" element={<AdminKitchen />} />
               <Route path="/admin/categories" element={<AdminCategories />} />
               <Route path="/admin/menu-items" element={<AdminMenuItems />} />
               <Route path="/admin/customers" element={<AdminCustomers />} />
