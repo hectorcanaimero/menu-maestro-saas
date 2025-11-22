@@ -21,11 +21,13 @@ import { Loader2 } from "lucide-react";
 
 const storeSettingsSchema = z.object({
   name: z.string().trim().min(1, "El nombre es requerido").max(100, "Máximo 100 caracteres"),
-  phone: z.string()
+  phone: z
+    .string()
     .trim()
     .regex(/^\+(?:58|55)\d{10,11}$/, "Formato: +58 (Venezuela) o +55 (Brasil) seguido de 10-11 dígitos"),
   email: z.string().trim().email("Email inválido").max(255),
-  operating_modes: z.array(z.enum(["delivery", "pickup", "digital_menu"]))
+  operating_modes: z
+    .array(z.enum(["delivery", "pickup", "digital_menu"]))
     .min(1, "Selecciona al menos un modo de funcionamiento"),
 });
 
@@ -55,7 +57,9 @@ const StoreSettings = () => {
 
   useEffect(() => {
     const checkAuth = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (!user) {
         navigate("/auth");
         return;
@@ -122,66 +126,46 @@ const StoreSettings = () => {
         <Tabs defaultValue="company" className="w-full">
           <TabsList className="grid w-full grid-cols-5 max-w-4xl">
             <TabsTrigger value="company">Empresa</TabsTrigger>
-            <TabsTrigger value="hours">Horario</TabsTrigger>
-            <TabsTrigger value="payment">Pago</TabsTrigger>
-            <TabsTrigger value="order">Orden</TabsTrigger>
             <TabsTrigger value="delivery">Entrega</TabsTrigger>
+            <TabsTrigger value="hours">Horario</TabsTrigger>
+            <TabsTrigger value="order">Orden</TabsTrigger>
+            <TabsTrigger value="payment">Pago</TabsTrigger>
           </TabsList>
 
           <TabsContent value="company" className="mt-6">
             <Card>
               <CardHeader>
                 <CardTitle>Información de la Empresa</CardTitle>
-                <CardDescription>
-                  En esta sección puede configurar todos los ajustes de la empresa.
-                </CardDescription>
+                <CardDescription>En esta sección puede configurar todos los ajustes de la empresa.</CardDescription>
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
                   <div className="space-y-2">
                     <Label htmlFor="name">Nombre de la empresa</Label>
-                    <Input
-                      id="name"
-                      {...register("name")}
-                      placeholder="Mi Restaurante"
-                    />
+                    <Input id="name" {...register("name")} placeholder="Mi Restaurante" />
                     <p className="text-sm text-muted-foreground">
                       El nombre de la empresa se puede usar en mensajes personalizados u otras partes del sitio.
                     </p>
-                    {errors.name && (
-                      <p className="text-sm text-destructive">{errors.name.message}</p>
-                    )}
+                    {errors.name && <p className="text-sm text-destructive">{errors.name.message}</p>}
                   </div>
 
                   <div className="space-y-2">
                     <Label htmlFor="phone">WhatsApp</Label>
-                    <Input
-                      id="phone"
-                      {...register("phone")}
-                      placeholder="+5511999999999"
-                    />
+                    <Input id="phone" {...register("phone")} placeholder="+5511999999999" />
                     <p className="text-sm text-muted-foreground">
-                      Este teléfono se puede utilizar en mensajes personalizados u otras partes del sitio. Formato: +58 (Venezuela) o +55 (Brasil).
+                      Este teléfono se puede utilizar en mensajes personalizados u otras partes del sitio. Formato: +58
+                      (Venezuela) o +55 (Brasil).
                     </p>
-                    {errors.phone && (
-                      <p className="text-sm text-destructive">{errors.phone.message}</p>
-                    )}
+                    {errors.phone && <p className="text-sm text-destructive">{errors.phone.message}</p>}
                   </div>
 
                   <div className="space-y-2">
                     <Label htmlFor="email">Email</Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      {...register("email")}
-                      placeholder="contacto@mirestaurante.com"
-                    />
+                    <Input id="email" type="email" {...register("email")} placeholder="contacto@mirestaurante.com" />
                     <p className="text-sm text-muted-foreground">
                       Este correo electrónico se puede utilizar en mensajes personalizados u otras partes del sitio.
                     </p>
-                    {errors.email && (
-                      <p className="text-sm text-destructive">{errors.email.message}</p>
-                    )}
+                    {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
                   </div>
 
                   <div className="space-y-2">
@@ -201,7 +185,10 @@ const StoreSettings = () => {
                               if (checked) {
                                 setValue("operating_modes", [...current, mode.value as any]);
                               } else {
-                                setValue("operating_modes", current.filter((m) => m !== mode.value));
+                                setValue(
+                                  "operating_modes",
+                                  current.filter((m) => m !== mode.value),
+                                );
                               }
                             }}
                           />
