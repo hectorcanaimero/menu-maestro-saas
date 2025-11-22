@@ -21,6 +21,12 @@ interface Store {
   accept_cash: boolean | null;
   payment_on_delivery: string | null;
   require_payment_proof: boolean | null;
+  minimum_order_price: number | null;
+  redirect_to_whatsapp: boolean | null;
+  order_product_template: string | null;
+  order_message_template_delivery: string | null;
+  order_message_template_pickup: string | null;
+  order_message_template_digital_menu: string | null;
 }
 
 interface StoreContextType {
