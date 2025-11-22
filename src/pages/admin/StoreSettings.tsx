@@ -102,7 +102,7 @@ const StoreSettings = () => {
     }
   };
 
-  if (loading || !user) {
+  if (loading || !user || !store) {
     return (
       <AdminLayout userEmail="">
         <div className="flex items-center justify-center min-h-[400px]">
