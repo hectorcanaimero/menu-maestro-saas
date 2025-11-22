@@ -17,6 +17,7 @@ import { PaymentSettingsTab } from "@/components/admin/PaymentSettingsTab";
 import { OrderSettingsTab } from "@/components/admin/OrderSettingsTab";
 import { DeliverySettingsTab } from "@/components/admin/DeliverySettingsTab";
 import { AdvancedSettingsTab } from "@/components/admin/AdvancedSettingsTab";
+import { DesignSettingsTab } from "@/components/admin/DesignSettingsTab";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 
@@ -125,8 +126,9 @@ const StoreSettings = () => {
         <h1 className="text-3xl font-bold mb-6">Configuración de Tienda</h1>
 
         <Tabs defaultValue="company" className="w-full">
-          <TabsList className="grid w-full grid-cols-6">
+          <TabsList className="grid w-full grid-cols-7">
             <TabsTrigger value="company">Empresa</TabsTrigger>
+            <TabsTrigger value="design">Diseño</TabsTrigger>
             <TabsTrigger value="delivery">Entrega</TabsTrigger>
             <TabsTrigger value="hours">Horario</TabsTrigger>
             <TabsTrigger value="order">Orden</TabsTrigger>
@@ -218,6 +220,17 @@ const StoreSettings = () => {
                 </form>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="design" className="mt-6">
+            <DesignSettingsTab
+              storeId={store.id}
+              initialData={{
+                logo_url: store.logo_url,
+                primary_color: null,
+                price_color: null,
+              }}
+            />
           </TabsContent>
 
           <TabsContent value="hours" className="mt-6">
