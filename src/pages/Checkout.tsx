@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "sonner";
 import { ArrowLeft, Upload, X } from "lucide-react";
 import InputMask from "react-input-mask";
+import { generateWhatsAppMessage, redirectToWhatsApp } from "@/lib/whatsappMessageGenerator";
 
 interface PaymentMethod {
   id: string;
@@ -154,7 +155,59 @@ const Checkout = () => {
 
       if (itemsError) throw itemsError;
 
-      toast.success("¡Pedido realizado con éxito!");
+      // Generate WhatsApp message
+      if (store.phone && (store.order_product_template || store.order_message_template_delivery)) {
+        const whatsappMessage = generateWhatsAppMessage(
+          {
+            orderNumber: order.id.substring(0, 8).toUpperCase(),
+            items: items.map(item => ({
+              name: item.name,
+              quantity: item.quantity,
+              price: item.price,
+            })),
+            totalAmount: totalPrice,
+            customerName: formData.customer_name,
+            customerEmail: formData.customer_email,
+            customerPhone: formData.customer_phone,
+            deliveryAddress: formData.delivery_address,
+            notes: formData.notes,
+            paymentMethod: selectedPaymentMethod,
+            currency: store.currency || "USD",
+            decimalPlaces: store.decimal_places || 2,
+            decimalSeparator: store.decimal_separator || ".",
+            thousandsSeparator: store.thousands_separator || ",",
+          },
+          {
+            orderProductTemplate: store.order_product_template || "{product-qty} {product-name}",
+            orderMessageTemplate: store.order_message_template_delivery || "Pedido #{order-number}\n\n{order-products}\n\nTotal: {order-total}",
+          }
+        );
+
+        // Redirect to WhatsApp if enabled
+        if (store.redirect_to_whatsapp) {
+          toast.success("¡Pedido realizado! Redirigiendo a WhatsApp...");
+          clearCart();
+          
+          // Small delay to show the toast
+          setTimeout(() => {
+            redirectToWhatsApp(store.phone!, whatsappMessage);
+            navigate("/");
+          }, 1500);
+          return;
+        } else {
+          // Show success with option to send via WhatsApp
+          toast.success("¡Pedido realizado con éxito!", {
+            action: {
+              label: "Enviar por WhatsApp",
+              onClick: () => redirectToWhatsApp(store.phone!, whatsappMessage),
+            },
+            duration: 10000,
+          });
+        }
+      } else {
+        toast.success("¡Pedido realizado con éxito!");
+      }
+
       clearCart();
       navigate("/");
     } catch (error) {
