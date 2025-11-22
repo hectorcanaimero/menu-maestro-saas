@@ -1,9 +1,11 @@
+import { useState } from "react";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ShoppingCart, Eye } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { ProductExtrasDialog } from "./ProductExtrasDialog";
 
 interface ProductCardProps {
   id: string;
@@ -26,19 +28,34 @@ export const ProductCard = ({
 }: ProductCardProps) => {
   const { addItem } = useCart();
   const navigate = useNavigate();
+  const [showExtrasDialog, setShowExtrasDialog] = useState(false);
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.stopPropagation();
-    addItem({ id, name, price, image_url });
+    setShowExtrasDialog(true);
+  };
+
+  const handleConfirmWithExtras = (extras: any[]) => {
+    addItem({ id, name, price, image_url, extras });
   };
 
   const isGridView = layout === "grid";
 
   return (
-    <Card
-      className={`group h-full overflow-hidden border border-border/40 hover:border-border hover:shadow-lg transition-all duration-300 bg-card cursor-pointer rounded-sm relative ${compact ? "max-w-[200px]" : ""}`}
-      onClick={() => navigate(`/products/${id}`)}
-    >
+    <>
+      <ProductExtrasDialog
+        open={showExtrasDialog}
+        onOpenChange={setShowExtrasDialog}
+        productId={id}
+        productName={name}
+        productPrice={price}
+        onConfirm={handleConfirmWithExtras}
+      />
+      
+      <Card
+        className={`group h-full overflow-hidden border border-border/40 hover:border-border hover:shadow-lg transition-all duration-300 bg-card cursor-pointer rounded-sm relative ${compact ? "max-w-[200px]" : ""}`}
+        onClick={() => navigate(`/products/${id}`)}
+      >
       <div className={isGridView ? "flex flex-col h-full" : "flex flex-col sm:flex-row h-full"}>
         {/* Image Container */}
         <div
@@ -82,6 +99,7 @@ export const ProductCard = ({
           <ShoppingCart className="h-5 w-5" />
         </Button>
       </div>
-    </Card>
+      </Card>
+    </>
   );
 };
