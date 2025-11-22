@@ -227,8 +227,8 @@ const StoreSettings = () => {
               storeId={store.id}
               initialData={{
                 logo_url: store.logo_url,
-                primary_color: null,
-                price_color: null,
+                primary_color: (store as any).primary_color,
+                price_color: (store as any).price_color,
               }}
             />
           </TabsContent>
