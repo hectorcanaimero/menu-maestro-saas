@@ -22,12 +22,17 @@ interface OrderData {
 
 interface StoreTemplates {
   orderProductTemplate: string;
-  orderMessageTemplate: string;
+  orderMessageTemplateDelivery: string;
+  orderMessageTemplatePickup: string;
+  orderMessageTemplateDigitalMenu: string;
 }
+
+type OrderType = 'delivery' | 'pickup' | 'digital_menu';
 
 export const generateWhatsAppMessage = (
   orderData: OrderData,
-  templates: StoreTemplates
+  templates: StoreTemplates,
+  orderType: OrderType = 'delivery'
 ): string => {
   const {
     orderNumber,
@@ -79,8 +84,16 @@ export const generateWhatsAppMessage = (
     timeStyle: "short",
   });
 
+  // Select template based on order type
+  let templateMessage = templates.orderMessageTemplateDelivery;
+  if (orderType === 'pickup') {
+    templateMessage = templates.orderMessageTemplatePickup;
+  } else if (orderType === 'digital_menu') {
+    templateMessage = templates.orderMessageTemplateDigitalMenu;
+  }
+
   // Replace tokens in order message template
-  let finalMessage = templates.orderMessageTemplate;
+  let finalMessage = templateMessage;
   
   finalMessage = finalMessage.replace(/{order-number}/g, orderNumber);
   finalMessage = finalMessage.replace(/{order-date-time}/g, orderDateTime);

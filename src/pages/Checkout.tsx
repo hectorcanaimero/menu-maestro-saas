@@ -29,6 +29,7 @@ const Checkout = () => {
   const [paymentProofFile, setPaymentProofFile] = useState<File | null>(null);
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string>("");
+  const [orderType, setOrderType] = useState<"delivery" | "pickup" | "digital_menu">("delivery");
   const [formData, setFormData] = useState({
     customer_name: "",
     customer_email: "",
@@ -73,6 +74,12 @@ const Checkout = () => {
     // Validate minimum order price
     if (store.minimum_order_price && totalPrice < store.minimum_order_price) {
       toast.error(`El pedido mínimo es $${store.minimum_order_price.toFixed(2)}`);
+      return;
+    }
+
+      // Validate delivery address for delivery orders
+    if (orderType === "delivery" && !formData.delivery_address.trim()) {
+      toast.error("Debes proporcionar una dirección de entrega");
       return;
     }
 
@@ -129,10 +136,11 @@ const Checkout = () => {
             customer_name: formData.customer_name,
             customer_email: formData.customer_email,
             customer_phone: formData.customer_phone,
-            delivery_address: formData.delivery_address,
+            delivery_address: orderType === "delivery" ? formData.delivery_address : null,
             notes: formData.notes,
             payment_proof_url: paymentProofUrl,
             payment_method: selectedPaymentMethod || null,
+            order_type: orderType,
           },
         ])
         .select()
@@ -179,8 +187,11 @@ const Checkout = () => {
           },
           {
             orderProductTemplate: store.order_product_template || "{product-qty} {product-name}",
-            orderMessageTemplate: store.order_message_template_delivery || "Pedido #{order-number}\n\n{order-products}\n\nTotal: {order-total}",
-          }
+            orderMessageTemplateDelivery: store.order_message_template_delivery || "Pedido #{order-number}\n\n{order-products}\n\nTotal: {order-total}",
+            orderMessageTemplatePickup: store.order_message_template_pickup || "Pedido #{order-number}\n\n{order-products}\n\nTotal: {order-total}",
+            orderMessageTemplateDigitalMenu: store.order_message_template_digital_menu || "Pedido #{order-number}\n\n{order-products}\n\nTotal: {order-total}",
+          },
+          orderType
         );
 
         // Redirect to WhatsApp if enabled
@@ -266,6 +277,31 @@ const Checkout = () => {
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-2">
+                  <Label htmlFor="order-type">Tipo de Orden *</Label>
+                  <Select value={orderType} onValueChange={(value: "delivery" | "pickup" | "digital_menu") => setOrderType(value)}>
+                    <SelectTrigger id="order-type">
+                      <SelectValue placeholder="Selecciona el tipo de orden" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {store?.operating_modes?.includes("delivery") && (
+                        <SelectItem value="delivery">Entrega a Domicilio</SelectItem>
+                      )}
+                      {store?.operating_modes?.includes("pickup") && (
+                        <SelectItem value="pickup">Recoger en Tienda</SelectItem>
+                      )}
+                      {store?.operating_modes?.includes("digital_menu") && (
+                        <SelectItem value="digital_menu">Menú Digital</SelectItem>
+                      )}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground">
+                    {orderType === "delivery" && "Tu pedido será entregado en la dirección que proporciones"}
+                    {orderType === "pickup" && "Podrás recoger tu pedido en la tienda"}
+                    {orderType === "digital_menu" && "Pedido para consumo en el local"}
+                  </p>
+                </div>
+
+                <div className="space-y-2">
                   <Label htmlFor="name">Nombre Completo *</Label>
                   <Input
                     id="name"
@@ -324,18 +360,20 @@ const Checkout = () => {
                   </InputMask>
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="address">Dirección de Entrega *</Label>
-                  <Textarea
-                    id="address"
-                    value={formData.delivery_address}
-                    onChange={(e) =>
-                      setFormData({ ...formData, delivery_address: e.target.value })
-                    }
-                    required
-                    rows={3}
-                  />
-                </div>
+                {orderType === "delivery" && (
+                  <div className="space-y-2">
+                    <Label htmlFor="address">Dirección de Entrega *</Label>
+                    <Textarea
+                      id="address"
+                      value={formData.delivery_address}
+                      onChange={(e) =>
+                        setFormData({ ...formData, delivery_address: e.target.value })
+                      }
+                      required
+                      rows={3}
+                    />
+                  </div>
+                )}
 
                 <div className="space-y-2">
                   <Label htmlFor="notes">Notas Adicionales</Label>
