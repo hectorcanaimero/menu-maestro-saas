@@ -287,6 +287,7 @@ const Checkout = () => {
         ...formData,
         order_type: orderType,
         payment_proof_url: paymentProofUrl,
+        country: country,
       };
       
       sessionStorage.setItem("pendingOrder", JSON.stringify(orderData));
