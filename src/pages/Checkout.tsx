@@ -245,8 +245,8 @@ const Checkout = () => {
       return;
     }
 
-    // Validate payment proof if required
-    if (store.require_payment_proof && !paymentProofFile) {
+    // Validate payment proof if required (only for delivery and pickup)
+    if (store.require_payment_proof && (orderType === "delivery" || orderType === "pickup") && !paymentProofFile) {
       toast.error("Debes subir un comprobante de pago");
       return;
     }
@@ -658,7 +658,7 @@ const Checkout = () => {
                   />
                 )}
 
-                {store?.require_payment_proof && (
+                {store?.require_payment_proof && (orderType === "delivery" || orderType === "pickup") && (
                   <div className="space-y-2">
                     <FormLabel>
                       Comprobante de Pago *
