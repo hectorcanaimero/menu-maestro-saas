@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { Users, Search, Edit, Trash2, Eye, RefreshCw, Copy, AlertTriangle } from "lucide-react";
+import { CustomerCard } from "./CustomerCard";
 
 interface Customer {
   id: string;
@@ -277,7 +278,7 @@ const CustomersManager = () => {
             </p>
           </div>
 
-          {/* Customers Table */}
+          {/* Customers Grid/Table */}
           {filteredCustomers.length === 0 ? (
             <div className="text-center py-12">
               <Users className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
@@ -287,7 +288,20 @@ const CustomersManager = () => {
             </div>
           ) : (
             <>
-              <div className="border rounded-lg overflow-hidden">
+              {/* Mobile View - Cards */}
+              <div className="grid gap-4 md:hidden">
+                {currentCustomers.map((customer) => (
+                  <CustomerCard
+                    key={customer.id}
+                    customer={customer}
+                    onEdit={handleEdit}
+                    onFindDuplicates={findDuplicates}
+                  />
+                ))}
+              </div>
+
+              {/* Desktop View - Table */}
+              <div className="hidden md:block border rounded-lg overflow-hidden">
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -344,7 +358,7 @@ const CustomersManager = () => {
                           </div>
                         </TableCell>
                       </TableRow>
-                    ))}
+                     ))}
                   </TableBody>
                 </Table>
               </div>
