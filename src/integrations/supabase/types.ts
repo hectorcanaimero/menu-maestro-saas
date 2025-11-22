@@ -49,6 +49,36 @@ export type Database = {
           },
         ]
       }
+      customers: {
+        Row: {
+          country: string | null
+          created_at: string
+          email: string
+          id: string
+          name: string
+          phone: string | null
+          updated_at: string
+        }
+        Insert: {
+          country?: string | null
+          created_at?: string
+          email: string
+          id?: string
+          name: string
+          phone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          country?: string | null
+          created_at?: string
+          email?: string
+          id?: string
+          name?: string
+          phone?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       delivery_zones: {
         Row: {
           created_at: string | null
@@ -222,6 +252,7 @@ export type Database = {
         Row: {
           created_at: string | null
           customer_email: string
+          customer_id: string | null
           customer_name: string
           customer_phone: string | null
           delivery_address: string | null
@@ -239,6 +270,7 @@ export type Database = {
         Insert: {
           created_at?: string | null
           customer_email: string
+          customer_id?: string | null
           customer_name: string
           customer_phone?: string | null
           delivery_address?: string | null
@@ -256,6 +288,7 @@ export type Database = {
         Update: {
           created_at?: string | null
           customer_email?: string
+          customer_id?: string | null
           customer_name?: string
           customer_phone?: string | null
           delivery_address?: string | null
@@ -271,6 +304,13 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "orders_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "orders_store_id_fkey"
             columns: ["store_id"]

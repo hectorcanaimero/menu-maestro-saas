@@ -25,6 +25,7 @@ interface OrderData {
   payment_method?: string;
   order_type: "delivery" | "pickup" | "digital_menu";
   payment_proof_url?: string;
+  country?: string;
 }
 
 const ConfirmOrder = () => {
@@ -60,6 +61,36 @@ const ConfirmOrder = () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
 
+      // First, create or get customer
+      let customerId: string;
+      
+      // Try to find existing customer by email and phone
+      const { data: existingCustomer } = await supabase
+        .from("customers")
+        .select("id")
+        .eq("email", orderData.customer_email)
+        .eq("phone", orderData.customer_phone || "")
+        .maybeSingle();
+
+      if (existingCustomer) {
+        customerId = existingCustomer.id;
+      } else {
+        // Create new customer
+        const { data: newCustomer, error: customerError } = await supabase
+          .from("customers")
+          .insert({
+            name: orderData.customer_name,
+            email: orderData.customer_email,
+            phone: orderData.customer_phone || null,
+            country: orderData.country || "brazil",
+          })
+          .select("id")
+          .single();
+
+        if (customerError) throw customerError;
+        customerId = newCustomer.id;
+      }
+
       // Build full address
       let fullAddress = null;
       if (orderData.order_type === "delivery") {
@@ -86,6 +117,7 @@ const ConfirmOrder = () => {
           {
             store_id: store.id,
             user_id: session?.user?.id || null,
+            customer_id: customerId,
             total_amount: totalPrice,
             customer_name: orderData.customer_name,
             customer_email: orderData.customer_email,
