@@ -10,7 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { Package, RefreshCw, Eye, Filter } from "lucide-react";
+import { Package, RefreshCw, Eye, Filter, Download, ExternalLink, FileImage } from "lucide-react";
 
 interface OrderItemExtra {
   id: string;
@@ -277,6 +277,7 @@ const OrdersManager = () => {
                       <TableHead>Cliente</TableHead>
                       <TableHead>Tipo</TableHead>
                       <TableHead>Total</TableHead>
+                      <TableHead>Comprobante</TableHead>
                       <TableHead>Estado</TableHead>
                       <TableHead>Fecha</TableHead>
                       <TableHead className="text-right">Acciones</TableHead>
@@ -301,6 +302,20 @@ const OrdersManager = () => {
                         </TableCell>
                         <TableCell className="font-medium">
                           ${order.total_amount.toFixed(2)}
+                        </TableCell>
+                        <TableCell>
+                          {order.payment_proof_url ? (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => window.open(order.payment_proof_url, '_blank')}
+                              className="h-8 px-2"
+                            >
+                              <FileImage className="w-4 h-4 text-primary" />
+                            </Button>
+                          ) : (
+                            <span className="text-xs text-muted-foreground">-</span>
+                          )}
                         </TableCell>
                         <TableCell>
                           <Select
@@ -509,14 +524,52 @@ const OrdersManager = () => {
                   {selectedOrder.payment_proof_url && (
                     <div>
                       <p className="text-sm font-medium text-muted-foreground mb-2">Comprobante de Pago</p>
-                      <a 
-                        href={selectedOrder.payment_proof_url} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="text-primary hover:underline"
-                      >
-                        Ver comprobante
-                      </a>
+                      <div className="space-y-3">
+                        {/* Preview if it's an image */}
+                        {(selectedOrder.payment_proof_url.includes('.jpg') || 
+                          selectedOrder.payment_proof_url.includes('.jpeg') || 
+                          selectedOrder.payment_proof_url.includes('.png') || 
+                          selectedOrder.payment_proof_url.includes('.webp')) && (
+                          <div className="relative border rounded-lg overflow-hidden bg-muted">
+                            <img 
+                              src={selectedOrder.payment_proof_url} 
+                              alt="Comprobante de pago"
+                              className="w-full h-48 object-contain"
+                            />
+                          </div>
+                        )}
+                        
+                        {/* Action buttons */}
+                        <div className="flex gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => window.open(selectedOrder.payment_proof_url, '_blank')}
+                            className="flex-1"
+                          >
+                            <ExternalLink className="w-4 h-4 mr-2" />
+                            Ver completo
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              const link = document.createElement('a');
+                              link.href = selectedOrder.payment_proof_url!;
+                              link.download = `comprobante-${selectedOrder.id.slice(0, 8)}.jpg`;
+                              link.target = '_blank';
+                              document.body.appendChild(link);
+                              link.click();
+                              document.body.removeChild(link);
+                              toast.success("Descargando comprobante...");
+                            }}
+                            className="flex-1"
+                          >
+                            <Download className="w-4 h-4 mr-2" />
+                            Descargar
+                          </Button>
+                        </div>
+                      </div>
                     </div>
                   )}
                   <div className="pt-2 border-t">
