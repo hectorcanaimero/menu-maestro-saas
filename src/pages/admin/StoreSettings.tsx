@@ -240,7 +240,6 @@ const StoreSettings = () => {
                 decimal_separator: store.decimal_separator,
                 thousands_separator: store.thousands_separator,
                 accept_cash: store.accept_cash,
-                payment_on_delivery: store.payment_on_delivery,
                 require_payment_proof: store.require_payment_proof,
               }}
             />
