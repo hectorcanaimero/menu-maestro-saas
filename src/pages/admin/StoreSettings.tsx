@@ -14,6 +14,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Checkbox } from "@/components/ui/checkbox";
 import { BusinessHoursTab } from "@/components/admin/BusinessHoursTab";
 import { PaymentSettingsTab } from "@/components/admin/PaymentSettingsTab";
+import { OrderSettingsTab } from "@/components/admin/OrderSettingsTab";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 
@@ -118,10 +119,11 @@ const StoreSettings = () => {
         <h1 className="text-3xl font-bold mb-6">Configuración de Tienda</h1>
 
         <Tabs defaultValue="company" className="w-full">
-          <TabsList className="grid w-full grid-cols-3 max-w-2xl">
+          <TabsList className="grid w-full grid-cols-4 max-w-3xl">
             <TabsTrigger value="company">Empresa</TabsTrigger>
             <TabsTrigger value="hours">Horario de apertura</TabsTrigger>
             <TabsTrigger value="payment">Pago</TabsTrigger>
+            <TabsTrigger value="order">Orden</TabsTrigger>
           </TabsList>
 
           <TabsContent value="company" className="mt-6">
@@ -241,6 +243,20 @@ const StoreSettings = () => {
                 thousands_separator: store.thousands_separator,
                 accept_cash: store.accept_cash,
                 require_payment_proof: store.require_payment_proof,
+              }}
+            />
+          </TabsContent>
+
+          <TabsContent value="order" className="mt-6">
+            <OrderSettingsTab
+              storeId={store.id}
+              initialData={{
+                minimum_order_price: store.minimum_order_price,
+                redirect_to_whatsapp: store.redirect_to_whatsapp,
+                order_product_template: store.order_product_template,
+                order_message_template_delivery: store.order_message_template_delivery,
+                order_message_template_pickup: store.order_message_template_pickup,
+                order_message_template_digital_menu: store.order_message_template_digital_menu,
               }}
             />
           </TabsContent>

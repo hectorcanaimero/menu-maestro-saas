@@ -324,13 +324,19 @@ export type Database = {
           id: string
           is_active: boolean | null
           logo_url: string | null
+          minimum_order_price: number | null
           name: string
           operating_modes:
             | Database["public"]["Enums"]["operating_mode"][]
             | null
+          order_message_template_delivery: string | null
+          order_message_template_digital_menu: string | null
+          order_message_template_pickup: string | null
+          order_product_template: string | null
           owner_id: string
           payment_on_delivery: string | null
           phone: string | null
+          redirect_to_whatsapp: boolean | null
           require_payment_proof: boolean | null
           subdomain: string
           thousands_separator: string | null
@@ -349,13 +355,19 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           logo_url?: string | null
+          minimum_order_price?: number | null
           name: string
           operating_modes?:
             | Database["public"]["Enums"]["operating_mode"][]
             | null
+          order_message_template_delivery?: string | null
+          order_message_template_digital_menu?: string | null
+          order_message_template_pickup?: string | null
+          order_product_template?: string | null
           owner_id: string
           payment_on_delivery?: string | null
           phone?: string | null
+          redirect_to_whatsapp?: boolean | null
           require_payment_proof?: boolean | null
           subdomain: string
           thousands_separator?: string | null
@@ -374,13 +386,19 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           logo_url?: string | null
+          minimum_order_price?: number | null
           name?: string
           operating_modes?:
             | Database["public"]["Enums"]["operating_mode"][]
             | null
+          order_message_template_delivery?: string | null
+          order_message_template_digital_menu?: string | null
+          order_message_template_pickup?: string | null
+          order_product_template?: string | null
           owner_id?: string
           payment_on_delivery?: string | null
           phone?: string | null
+          redirect_to_whatsapp?: boolean | null
           require_payment_proof?: boolean | null
           subdomain?: string
           thousands_separator?: string | null
