@@ -36,6 +36,12 @@ const Checkout = () => {
       return;
     }
 
+    // Validate minimum order price
+    if (store.minimum_order_price && totalPrice < store.minimum_order_price) {
+      toast.error(`El pedido mínimo es $${store.minimum_order_price.toFixed(2)}`);
+      return;
+    }
+
     // Validate payment proof if required
     if (store.require_payment_proof && !paymentProofFile) {
       toast.error("Debes subir un comprobante de pago");
@@ -287,7 +293,12 @@ const Checkout = () => {
                   </div>
                 )}
 
-                <Button type="submit" className="w-full" size="lg" disabled={loading}>
+                <Button 
+                  type="submit" 
+                  className="w-full" 
+                  size="lg" 
+                  disabled={loading || (store?.minimum_order_price ? totalPrice < store.minimum_order_price : false)}
+                >
                   {loading ? "Procesando..." : "Confirmar Pedido"}
                 </Button>
               </form>
@@ -323,6 +334,16 @@ const Checkout = () => {
               ))}
 
               <div className="pt-4 space-y-2">
+                {store?.minimum_order_price && totalPrice < store.minimum_order_price && (
+                  <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-md">
+                    <p className="text-sm text-destructive font-medium">
+                      Pedido mínimo: ${store.minimum_order_price.toFixed(2)}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Te faltan ${(store.minimum_order_price - totalPrice).toFixed(2)} para alcanzar el mínimo
+                    </p>
+                  </div>
+                )}
                 <div className="flex justify-between text-lg font-bold">
                   <span>Total:</span>
                   <span className="text-primary">${totalPrice.toFixed(2)}</span>
