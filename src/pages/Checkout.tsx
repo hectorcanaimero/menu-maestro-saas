@@ -1,14 +1,17 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { useCart } from "@/contexts/CartContext";
 import { useStore } from "@/contexts/StoreContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { toast } from "sonner";
 import { ArrowLeft, Upload, X } from "lucide-react";
 import InputMask from "react-input-mask";
@@ -20,6 +23,80 @@ interface PaymentMethod {
   description: string | null;
 }
 
+// Create validation schema
+const createCheckoutSchema = (
+  orderType: "delivery" | "pickup" | "digital_menu",
+  removeZipcode: boolean,
+  removeAddressNumber: boolean,
+  requirePaymentMethod: boolean
+) => {
+  return z.object({
+    customer_name: z
+      .string()
+      .trim()
+      .min(2, { message: "El nombre debe tener al menos 2 caracteres" })
+      .max(100, { message: "El nombre no puede exceder 100 caracteres" }),
+    customer_email: z
+      .string()
+      .trim()
+      .email({ message: "Debe ser un email válido" })
+      .max(255, { message: "El email no puede exceder 255 caracteres" }),
+    customer_phone: z
+      .string()
+      .trim()
+      .min(10, { message: "El teléfono debe tener al menos 10 dígitos" })
+      .max(20, { message: "El teléfono no puede exceder 20 caracteres" }),
+    delivery_address: orderType === "delivery"
+      ? z
+          .string()
+          .trim()
+          .min(5, { message: "La dirección debe tener al menos 5 caracteres" })
+          .max(200, { message: "La dirección no puede exceder 200 caracteres" })
+      : z.string().optional(),
+    address_number: orderType === "delivery" && !removeAddressNumber
+      ? z
+          .string()
+          .trim()
+          .min(1, { message: "El número es requerido" })
+          .max(20, { message: "El número no puede exceder 20 caracteres" })
+      : z.string().optional(),
+    address_complement: z
+      .string()
+      .trim()
+      .max(100, { message: "El complemento no puede exceder 100 caracteres" })
+      .optional(),
+    address_neighborhood: z
+      .string()
+      .trim()
+      .max(100, { message: "El barrio no puede exceder 100 caracteres" })
+      .optional(),
+    address_zipcode: orderType === "delivery" && !removeZipcode
+      ? z
+          .string()
+          .trim()
+          .min(4, { message: "El código postal debe tener al menos 4 caracteres" })
+          .max(20, { message: "El código postal no puede exceder 20 caracteres" })
+      : z.string().optional(),
+    table_number: orderType === "digital_menu"
+      ? z
+          .string()
+          .trim()
+          .min(1, { message: "El número de mesa es requerido" })
+          .max(10, { message: "El número de mesa no puede exceder 10 caracteres" })
+      : z.string().optional(),
+    notes: z
+      .string()
+      .trim()
+      .max(500, { message: "Las notas no pueden exceder 500 caracteres" })
+      .optional(),
+    payment_method: requirePaymentMethod
+      ? z.string().min(1, { message: "Debes seleccionar un método de pago" })
+      : z.string().optional(),
+  });
+};
+
+type CheckoutFormData = z.infer<ReturnType<typeof createCheckoutSchema>>;
+
 const Checkout = () => {
   const navigate = useNavigate();
   const { items, totalPrice, clearCart } = useCart();
@@ -28,20 +105,38 @@ const Checkout = () => {
   const [country, setCountry] = useState<"brazil" | "venezuela">("brazil");
   const [paymentProofFile, setPaymentProofFile] = useState<File | null>(null);
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string>("");
   const [orderType, setOrderType] = useState<"delivery" | "pickup" | "digital_menu">("delivery");
-  const [formData, setFormData] = useState({
-    customer_name: "",
-    customer_email: "",
-    customer_phone: "",
-    delivery_address: "",
-    address_number: "",
-    address_complement: "",
-    address_neighborhood: "",
-    address_zipcode: "",
-    table_number: "",
-    notes: "",
+
+  // Create form with validation
+  const form = useForm<CheckoutFormData>({
+    resolver: zodResolver(
+      createCheckoutSchema(
+        orderType,
+        store?.remove_zipcode || false,
+        store?.remove_address_number || false,
+        paymentMethods.length > 0
+      )
+    ),
+    defaultValues: {
+      customer_name: "",
+      customer_email: "",
+      customer_phone: "",
+      delivery_address: "",
+      address_number: "",
+      address_complement: "",
+      address_neighborhood: "",
+      address_zipcode: "",
+      table_number: "",
+      notes: "",
+      payment_method: "",
+    },
+    mode: "onChange",
   });
+
+  // Update form validation when orderType or store settings change
+  useEffect(() => {
+    form.clearErrors();
+  }, [orderType, store?.remove_zipcode, store?.remove_address_number, form]);
 
   useEffect(() => {
     const loadPaymentMethods = async () => {
@@ -60,17 +155,15 @@ const Checkout = () => {
         setPaymentMethods(data);
         // Auto-select first method if only one available
         if (data.length === 1) {
-          setSelectedPaymentMethod(data[0].name);
+          form.setValue("payment_method", data[0].name);
         }
       }
     };
 
     loadPaymentMethods();
-  }, [store?.id]);
+  }, [store?.id, form]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
+  const handleSubmit = async (data: CheckoutFormData) => {
     if (!store?.id) {
       toast.error("No se pudo identificar la tienda");
       return;
@@ -79,34 +172,6 @@ const Checkout = () => {
     // Validate minimum order price
     if (store.minimum_order_price && totalPrice < store.minimum_order_price) {
       toast.error(`El pedido mínimo es $${store.minimum_order_price.toFixed(2)}`);
-      return;
-    }
-
-    // Validate delivery address for delivery orders
-    if (orderType === "delivery") {
-      if (!formData.delivery_address.trim()) {
-        toast.error("Debes proporcionar una dirección de entrega");
-        return;
-      }
-      if (!store?.remove_address_number && !formData.address_number.trim()) {
-        toast.error("Debes proporcionar el número de dirección");
-        return;
-      }
-      if (!store?.remove_zipcode && !formData.address_zipcode.trim()) {
-        toast.error("Debes proporcionar el código postal");
-        return;
-      }
-    }
-
-    // Validate table number for digital menu orders
-    if (orderType === "digital_menu" && !formData.table_number.trim()) {
-      toast.error("Debes proporcionar el número de mesa");
-      return;
-    }
-
-    // Validate payment method selection
-    if (paymentMethods.length > 0 && !selectedPaymentMethod) {
-      toast.error("Debes seleccionar un método de pago");
       return;
     }
 
@@ -149,20 +214,20 @@ const Checkout = () => {
       // Build delivery address string for delivery orders
       let fullAddress = null;
       if (orderType === "delivery") {
-        const addressParts = [formData.delivery_address];
-        if (!store?.remove_address_number && formData.address_number) {
-          addressParts.push(formData.address_number);
+        const addressParts = [data.delivery_address || ""];
+        if (!store?.remove_address_number && data.address_number) {
+          addressParts.push(data.address_number);
         }
-        if (formData.address_complement) {
-          addressParts.push(formData.address_complement);
+        if (data.address_complement) {
+          addressParts.push(data.address_complement);
         }
-        if (formData.address_neighborhood) {
-          addressParts.push(formData.address_neighborhood);
+        if (data.address_neighborhood) {
+          addressParts.push(data.address_neighborhood);
         }
-        if (!store?.remove_zipcode && formData.address_zipcode) {
-          addressParts.push(formData.address_zipcode);
+        if (!store?.remove_zipcode && data.address_zipcode) {
+          addressParts.push(data.address_zipcode);
         }
-        fullAddress = addressParts.join(", ");
+        fullAddress = addressParts.filter(Boolean).join(", ");
       }
 
       // Create order
@@ -173,15 +238,15 @@ const Checkout = () => {
             store_id: store.id,
             user_id: session?.user?.id || null,
             total_amount: totalPrice,
-            customer_name: formData.customer_name,
-            customer_email: formData.customer_email,
-            customer_phone: formData.customer_phone,
+            customer_name: data.customer_name,
+            customer_email: data.customer_email,
+            customer_phone: data.customer_phone,
             delivery_address: fullAddress,
-            notes: orderType === "digital_menu" && formData.table_number 
-              ? `Mesa: ${formData.table_number}\n${formData.notes}` 
-              : formData.notes,
+            notes: orderType === "digital_menu" && data.table_number 
+              ? `Mesa: ${data.table_number}${data.notes ? `\n${data.notes}` : ''}` 
+              : data.notes || null,
             payment_proof_url: paymentProofUrl,
-            payment_method: selectedPaymentMethod || null,
+            payment_method: data.payment_method || null,
             order_type: orderType,
           },
         ])
@@ -242,12 +307,12 @@ const Checkout = () => {
               extras: item.extras,
             })),
             totalAmount: totalPrice,
-            customerName: formData.customer_name,
-            customerEmail: formData.customer_email,
-            customerPhone: formData.customer_phone,
-            deliveryAddress: formData.delivery_address,
-            notes: formData.notes,
-            paymentMethod: selectedPaymentMethod,
+            customerName: data.customer_name,
+            customerEmail: data.customer_email,
+            customerPhone: data.customer_phone,
+            deliveryAddress: fullAddress || "",
+            notes: data.notes || "",
+            paymentMethod: data.payment_method || "",
             currency: store.currency || "USD",
             decimalPlaces: store.decimal_places || 2,
             decimalSeparator: store.decimal_separator || ".",
@@ -343,261 +408,289 @@ const Checkout = () => {
               <CardTitle>Información de Entrega</CardTitle>
             </CardHeader>
             <CardContent>
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="order-type">Tipo de Orden *</Label>
-                  <Select value={orderType} onValueChange={(value: "delivery" | "pickup" | "digital_menu") => setOrderType(value)}>
-                    <SelectTrigger id="order-type">
-                      <SelectValue placeholder="Selecciona el tipo de orden" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {store?.operating_modes?.includes("delivery") && (
-                        <SelectItem value="delivery">Entrega a Domicilio</SelectItem>
-                      )}
-                      {store?.operating_modes?.includes("pickup") && (
-                        <SelectItem value="pickup">Recoger en Tienda</SelectItem>
-                      )}
-                      {store?.operating_modes?.includes("digital_menu") && (
-                        <SelectItem value="digital_menu">Menú Digital</SelectItem>
-                      )}
-                    </SelectContent>
-                  </Select>
-                  <p className="text-xs text-muted-foreground">
-                    {orderType === "delivery" && "Tu pedido será entregado en la dirección que proporciones"}
-                    {orderType === "pickup" && "Podrás recoger tu pedido en la tienda"}
-                    {orderType === "digital_menu" && "Pedido para consumo en el local"}
-                  </p>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="name">Nombre Completo *</Label>
-                  <Input
-                    id="name"
-                    value={formData.customer_name}
-                    onChange={(e) =>
-                      setFormData({ ...formData, customer_name: e.target.value })
-                    }
-                    required
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email *</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={formData.customer_email}
-                    onChange={(e) =>
-                      setFormData({ ...formData, customer_email: e.target.value })
-                    }
-                    required
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="country">País *</Label>
-                  <Select value={country} onValueChange={(value: "brazil" | "venezuela") => setCountry(value)}>
-                    <SelectTrigger id="country">
-                      <SelectValue placeholder="Selecciona un país" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="brazil">Brasil</SelectItem>
-                      <SelectItem value="venezuela">Venezuela</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="phone">Teléfono *</Label>
-                  <InputMask
-                    mask={phoneMask}
-                    value={formData.customer_phone}
-                    onChange={(e) =>
-                      setFormData({ ...formData, customer_phone: e.target.value })
-                    }
-                  >
-                    {/* @ts-ignore */}
-                    {(inputProps: any) => (
-                      <Input
-                        {...inputProps}
-                        id="phone"
-                        type="tel"
-                        required
-                      />
-                    )}
-                  </InputMask>
-                </div>
-
-                {orderType === "delivery" && (
-                  <>
-                    <div className="space-y-2">
-                      <Label htmlFor="address">Calle/Avenida/Pasaje *</Label>
-                      <Input
-                        id="address"
-                        value={formData.delivery_address}
-                        onChange={(e) =>
-                          setFormData({ ...formData, delivery_address: e.target.value })
-                        }
-                        required
-                        placeholder="Ej: Av. Principal"
-                      />
-                    </div>
-
-                    {!store?.remove_address_number && (
-                      <div className="space-y-2">
-                        <Label htmlFor="address-number">Número *</Label>
-                        <Input
-                          id="address-number"
-                          value={formData.address_number}
-                          onChange={(e) =>
-                            setFormData({ ...formData, address_number: e.target.value })
-                          }
-                          required={!store?.remove_address_number}
-                          placeholder="Ej: 123"
-                        />
-                      </div>
-                    )}
-
-                    <div className="space-y-2">
-                      <Label htmlFor="address-complement">Complemento</Label>
-                      <Input
-                        id="address-complement"
-                        value={formData.address_complement}
-                        onChange={(e) =>
-                          setFormData({ ...formData, address_complement: e.target.value })
-                        }
-                        placeholder="Ej: Apto 4B, Casa 5, etc."
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="address-neighborhood">Barrio/Vecindario</Label>
-                      <Input
-                        id="address-neighborhood"
-                        value={formData.address_neighborhood}
-                        onChange={(e) =>
-                          setFormData({ ...formData, address_neighborhood: e.target.value })
-                        }
-                        placeholder="Ej: Centro"
-                      />
-                    </div>
-
-                    {!store?.remove_zipcode && (
-                      <div className="space-y-2">
-                        <Label htmlFor="address-zipcode">Código Postal *</Label>
-                        <Input
-                          id="address-zipcode"
-                          value={formData.address_zipcode}
-                          onChange={(e) =>
-                            setFormData({ ...formData, address_zipcode: e.target.value })
-                          }
-                          required={!store?.remove_zipcode}
-                          placeholder="Ej: 12345-678"
-                        />
-                      </div>
-                    )}
-                  </>
-                )}
-
-                {orderType === "digital_menu" && (
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="table-number">Número de Mesa *</Label>
-                    <Input
-                      id="table-number"
-                      type="number"
-                      value={formData.table_number}
-                      onChange={(e) =>
-                        setFormData({ ...formData, table_number: e.target.value })
-                      }
-                      required
-                      placeholder="Ej: 1"
-                    />
-                  </div>
-                )}
-
-                <div className="space-y-2">
-                  <Label htmlFor="notes">Notas Adicionales</Label>
-                  <Textarea
-                    id="notes"
-                    value={formData.notes}
-                    onChange={(e) =>
-                      setFormData({ ...formData, notes: e.target.value })
-                    }
-                    rows={3}
-                    placeholder="Instrucciones especiales para la entrega..."
-                  />
-                </div>
-
-                {paymentMethods.length > 0 && (
-                  <div className="space-y-2">
-                    <Label htmlFor="payment-method">Método de Pago *</Label>
-                    <Select value={selectedPaymentMethod} onValueChange={setSelectedPaymentMethod}>
-                      <SelectTrigger id="payment-method">
-                        <SelectValue placeholder="Selecciona un método de pago" />
+                    <FormLabel htmlFor="order-type">Tipo de Orden *</FormLabel>
+                    <Select value={orderType} onValueChange={(value: "delivery" | "pickup" | "digital_menu") => setOrderType(value)}>
+                      <SelectTrigger id="order-type">
+                        <SelectValue placeholder="Selecciona el tipo de orden" />
                       </SelectTrigger>
                       <SelectContent>
-                        {paymentMethods.map((method) => (
-                          <SelectItem key={method.id} value={method.name}>
-                            <div className="flex flex-col">
-                              <span>{method.name}</span>
-                              {method.description && (
-                                <span className="text-xs text-muted-foreground">
-                                  {method.description}
-                                </span>
-                              )}
-                            </div>
-                          </SelectItem>
-                        ))}
+                        {store?.operating_modes?.includes("delivery") && (
+                          <SelectItem value="delivery">Entrega a Domicilio</SelectItem>
+                        )}
+                        {store?.operating_modes?.includes("pickup") && (
+                          <SelectItem value="pickup">Recoger en Tienda</SelectItem>
+                        )}
+                        {store?.operating_modes?.includes("digital_menu") && (
+                          <SelectItem value="digital_menu">Menú Digital</SelectItem>
+                        )}
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-muted-foreground">
+                      {orderType === "delivery" && "Tu pedido será entregado en la dirección que proporciones"}
+                      {orderType === "pickup" && "Podrás recoger tu pedido en la tienda"}
+                      {orderType === "digital_menu" && "Pedido para consumo en el local"}
+                    </p>
+                  </div>
+
+                  <FormField
+                    control={form.control}
+                    name="customer_name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Nombre Completo *</FormLabel>
+                        <FormControl>
+                          <Input {...field} placeholder="Ej: Juan Pérez" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="customer_email"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Email *</FormLabel>
+                        <FormControl>
+                          <Input {...field} type="email" placeholder="Ej: juan@email.com" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <div className="space-y-2">
+                    <FormLabel htmlFor="country">País *</FormLabel>
+                    <Select value={country} onValueChange={(value: "brazil" | "venezuela") => setCountry(value)}>
+                      <SelectTrigger id="country">
+                        <SelectValue placeholder="Selecciona un país" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="brazil">Brasil</SelectItem>
+                        <SelectItem value="venezuela">Venezuela</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
-                )}
 
-                {store?.require_payment_proof && (
-                  <div className="space-y-2">
-                    <Label htmlFor="payment-proof">
-                      Comprobante de Pago * 
-                      <span className="text-xs text-muted-foreground ml-2">(Requerido)</span>
-                    </Label>
-                    <div className="space-y-2">
-                      <Input
-                        id="payment-proof"
-                        type="file"
-                        accept="image/jpeg,image/png,image/webp,application/pdf"
-                        onChange={handleFileChange}
-                        className="cursor-pointer"
-                        required
-                      />
-                      {paymentProofFile && (
-                        <div className="flex items-center gap-2 p-2 bg-muted rounded-md">
-                          <Upload className="w-4 h-4 text-primary" />
-                          <span className="text-sm flex-1">{paymentProofFile.name}</span>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => setPaymentProofFile(null)}
+                  <FormField
+                    control={form.control}
+                    name="customer_phone"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Teléfono *</FormLabel>
+                        <FormControl>
+                          <InputMask
+                            mask={phoneMask}
+                            value={field.value}
+                            onChange={field.onChange}
                           >
-                            <X className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      )}
-                      <p className="text-xs text-muted-foreground">
-                        Formatos aceptados: JPG, PNG, WEBP, PDF. Tamaño máximo: 5MB
-                      </p>
-                    </div>
-                  </div>
-                )}
+                            {/* @ts-ignore */}
+                            {(inputProps: any) => (
+                              <Input
+                                {...inputProps}
+                                type="tel"
+                                placeholder={country === "brazil" ? "+55 (00) 00000-0000" : "+58 (000) 000-0000"}
+                              />
+                            )}
+                          </InputMask>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-                <Button 
-                  type="submit" 
-                  className="w-full" 
-                  size="lg" 
-                  disabled={loading || (store?.minimum_order_price ? totalPrice < store.minimum_order_price : false)}
-                >
-                  {loading ? "Procesando..." : "Confirmar Pedido"}
-                </Button>
-              </form>
+                  {orderType === "delivery" && (
+                    <>
+                      <FormField
+                        control={form.control}
+                        name="delivery_address"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Calle/Avenida/Pasaje *</FormLabel>
+                            <FormControl>
+                              <Input {...field} placeholder="Ej: Av. Principal" />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      {!store?.remove_address_number && (
+                        <FormField
+                          control={form.control}
+                          name="address_number"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Número *</FormLabel>
+                              <FormControl>
+                                <Input {...field} placeholder="Ej: 123" />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      )}
+
+                      <FormField
+                        control={form.control}
+                        name="address_complement"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Complemento</FormLabel>
+                            <FormControl>
+                              <Input {...field} placeholder="Ej: Apto 4B, Casa 5, etc." />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="address_neighborhood"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Barrio/Vecindario</FormLabel>
+                            <FormControl>
+                              <Input {...field} placeholder="Ej: Centro" />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      {!store?.remove_zipcode && (
+                        <FormField
+                          control={form.control}
+                          name="address_zipcode"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Código Postal *</FormLabel>
+                              <FormControl>
+                                <Input {...field} placeholder="Ej: 12345-678" />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      )}
+                    </>
+                  )}
+
+                  {orderType === "digital_menu" && (
+                    <FormField
+                      control={form.control}
+                      name="table_number"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Número de Mesa *</FormLabel>
+                          <FormControl>
+                            <Input {...field} type="number" placeholder="Ej: 1" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  )}
+
+                  <FormField
+                    control={form.control}
+                    name="notes"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Notas Adicionales</FormLabel>
+                        <FormControl>
+                          <Textarea {...field} rows={3} placeholder="Instrucciones especiales..." />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  {paymentMethods.length > 0 && (
+                    <FormField
+                      control={form.control}
+                      name="payment_method"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Método de Pago *</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Selecciona un método de pago" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {paymentMethods.map((method) => (
+                                <SelectItem key={method.id} value={method.name}>
+                                  <div className="flex flex-col">
+                                    <span>{method.name}</span>
+                                    {method.description && (
+                                      <span className="text-xs text-muted-foreground">
+                                        {method.description}
+                                      </span>
+                                    )}
+                                  </div>
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  )}
+
+                  {store?.require_payment_proof && (
+                    <div className="space-y-2">
+                      <FormLabel htmlFor="payment-proof">
+                        Comprobante de Pago * 
+                        <span className="text-xs text-muted-foreground ml-2">(Obligatorio)</span>
+                      </FormLabel>
+                      <div className="space-y-2">
+                        <Input
+                          id="payment-proof"
+                          type="file"
+                          accept="image/jpeg,image/png,image/webp,application/pdf"
+                          onChange={handleFileChange}
+                          className="cursor-pointer"
+                          required
+                        />
+                        {paymentProofFile && (
+                          <div className="flex items-center gap-2 p-2 bg-muted rounded-md">
+                            <Upload className="w-4 h-4 text-primary" />
+                            <span className="text-sm flex-1">{paymentProofFile.name}</span>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setPaymentProofFile(null)}
+                            >
+                              <X className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        )}
+                        <p className="text-xs text-muted-foreground">
+                          Adjunta tu comprobante de pago (JPG, PNG, WEBP, PDF). Tamaño máximo: 5MB
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  <Button 
+                    type="submit" 
+                    className="w-full" 
+                    size="lg" 
+                    disabled={loading || (store?.minimum_order_price ? totalPrice < store.minimum_order_price : false)}
+                  >
+                    {loading ? "Procesando..." : "Confirmar Pedido"}
+                  </Button>
+                </form>
+              </Form>
             </CardContent>
           </Card>
 
