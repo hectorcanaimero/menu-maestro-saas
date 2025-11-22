@@ -35,6 +35,11 @@ const Checkout = () => {
     customer_email: "",
     customer_phone: "",
     delivery_address: "",
+    address_number: "",
+    address_complement: "",
+    address_neighborhood: "",
+    address_zipcode: "",
+    table_number: "",
     notes: "",
   });
 
@@ -77,9 +82,25 @@ const Checkout = () => {
       return;
     }
 
-      // Validate delivery address for delivery orders
-    if (orderType === "delivery" && !formData.delivery_address.trim()) {
-      toast.error("Debes proporcionar una dirección de entrega");
+    // Validate delivery address for delivery orders
+    if (orderType === "delivery") {
+      if (!formData.delivery_address.trim()) {
+        toast.error("Debes proporcionar una dirección de entrega");
+        return;
+      }
+      if (!store?.remove_address_number && !formData.address_number.trim()) {
+        toast.error("Debes proporcionar el número de dirección");
+        return;
+      }
+      if (!store?.remove_zipcode && !formData.address_zipcode.trim()) {
+        toast.error("Debes proporcionar el código postal");
+        return;
+      }
+    }
+
+    // Validate table number for digital menu orders
+    if (orderType === "digital_menu" && !formData.table_number.trim()) {
+      toast.error("Debes proporcionar el número de mesa");
       return;
     }
 
@@ -125,6 +146,25 @@ const Checkout = () => {
         paymentProofUrl = urlData.publicUrl;
       }
       
+      // Build delivery address string for delivery orders
+      let fullAddress = null;
+      if (orderType === "delivery") {
+        const addressParts = [formData.delivery_address];
+        if (!store?.remove_address_number && formData.address_number) {
+          addressParts.push(formData.address_number);
+        }
+        if (formData.address_complement) {
+          addressParts.push(formData.address_complement);
+        }
+        if (formData.address_neighborhood) {
+          addressParts.push(formData.address_neighborhood);
+        }
+        if (!store?.remove_zipcode && formData.address_zipcode) {
+          addressParts.push(formData.address_zipcode);
+        }
+        fullAddress = addressParts.join(", ");
+      }
+
       // Create order
       const { data: order, error: orderError } = await supabase
         .from("orders")
@@ -136,8 +176,10 @@ const Checkout = () => {
             customer_name: formData.customer_name,
             customer_email: formData.customer_email,
             customer_phone: formData.customer_phone,
-            delivery_address: orderType === "delivery" ? formData.delivery_address : null,
-            notes: formData.notes,
+            delivery_address: fullAddress,
+            notes: orderType === "digital_menu" && formData.table_number 
+              ? `Mesa: ${formData.table_number}\n${formData.notes}` 
+              : formData.notes,
             payment_proof_url: paymentProofUrl,
             payment_method: selectedPaymentMethod || null,
             order_type: orderType,
@@ -387,16 +429,88 @@ const Checkout = () => {
                 </div>
 
                 {orderType === "delivery" && (
+                  <>
+                    <div className="space-y-2">
+                      <Label htmlFor="address">Calle/Avenida/Pasaje *</Label>
+                      <Input
+                        id="address"
+                        value={formData.delivery_address}
+                        onChange={(e) =>
+                          setFormData({ ...formData, delivery_address: e.target.value })
+                        }
+                        required
+                        placeholder="Ej: Av. Principal"
+                      />
+                    </div>
+
+                    {!store?.remove_address_number && (
+                      <div className="space-y-2">
+                        <Label htmlFor="address-number">Número *</Label>
+                        <Input
+                          id="address-number"
+                          value={formData.address_number}
+                          onChange={(e) =>
+                            setFormData({ ...formData, address_number: e.target.value })
+                          }
+                          required={!store?.remove_address_number}
+                          placeholder="Ej: 123"
+                        />
+                      </div>
+                    )}
+
+                    <div className="space-y-2">
+                      <Label htmlFor="address-complement">Complemento</Label>
+                      <Input
+                        id="address-complement"
+                        value={formData.address_complement}
+                        onChange={(e) =>
+                          setFormData({ ...formData, address_complement: e.target.value })
+                        }
+                        placeholder="Ej: Apto 4B, Casa 5, etc."
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="address-neighborhood">Barrio/Vecindario</Label>
+                      <Input
+                        id="address-neighborhood"
+                        value={formData.address_neighborhood}
+                        onChange={(e) =>
+                          setFormData({ ...formData, address_neighborhood: e.target.value })
+                        }
+                        placeholder="Ej: Centro"
+                      />
+                    </div>
+
+                    {!store?.remove_zipcode && (
+                      <div className="space-y-2">
+                        <Label htmlFor="address-zipcode">Código Postal *</Label>
+                        <Input
+                          id="address-zipcode"
+                          value={formData.address_zipcode}
+                          onChange={(e) =>
+                            setFormData({ ...formData, address_zipcode: e.target.value })
+                          }
+                          required={!store?.remove_zipcode}
+                          placeholder="Ej: 12345-678"
+                        />
+                      </div>
+                    )}
+                  </>
+                )}
+
+                {orderType === "digital_menu" && (
                   <div className="space-y-2">
-                    <Label htmlFor="address">Dirección de Entrega *</Label>
-                    <Textarea
-                      id="address"
-                      value={formData.delivery_address}
+                    <Label htmlFor="table-number">Número de Mesa *</Label>
+                    <Input
+                      id="table-number"
+                      type="number"
+                      value={formData.table_number}
                       onChange={(e) =>
-                        setFormData({ ...formData, delivery_address: e.target.value })
+                        setFormData({ ...formData, table_number: e.target.value })
                       }
                       required
-                      rows={3}
+                      placeholder="Ej: 1"
                     />
                   </div>
                 )}
