@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { toast } from "sonner";
 import { ArrowLeft, ArrowRight, Upload, X, Check } from "lucide-react";
@@ -20,6 +21,12 @@ interface PaymentMethod {
   id: string;
   name: string;
   description: string | null;
+}
+
+interface DeliveryZone {
+  id: string;
+  zone_name: string;
+  delivery_price: number;
 }
 
 // Create validation schema for each step
@@ -59,7 +66,9 @@ const createStepSchema = (
           .min(5, { message: "La dirección debe tener al menos 5 caracteres" })
           .max(200, { message: "La dirección no puede exceder 200 caracteres" }),
         address_complement: z.string().optional(),
-        address_neighborhood: z.string().optional(),
+        address_neighborhood: z
+          .string()
+          .min(1, { message: "Debes seleccionar un barrio" }),
       };
       
       if (!removeAddressNumber) {
@@ -131,6 +140,7 @@ const Checkout = () => {
   const [country, setCountry] = useState<"brazil" | "venezuela">("brazil");
   const [paymentProofFile, setPaymentProofFile] = useState<File | null>(null);
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
+  const [deliveryZones, setDeliveryZones] = useState<DeliveryZone[]>([]);
   const [orderType, setOrderType] = useState<"delivery" | "pickup" | "digital_menu">("delivery");
 
   const totalSteps = orderType === "pickup" ? 3 : 3; // Same steps for all types
@@ -184,7 +194,24 @@ const Checkout = () => {
       }
     };
 
+    const loadDeliveryZones = async () => {
+      if (!store?.id) return;
+
+      const { data, error } = await supabase
+        .from("delivery_zones")
+        .select("id, zone_name, delivery_price")
+        .eq("store_id", store.id)
+        .order("display_order", { ascending: true });
+
+      if (error) {
+        console.error("Error loading delivery zones:", error);
+      } else if (data) {
+        setDeliveryZones(data);
+      }
+    };
+
     loadPaymentMethods();
+    loadDeliveryZones();
   }, [store?.id, form]);
 
   const handleNext = async () => {
@@ -513,10 +540,21 @@ const Checkout = () => {
                       name="address_neighborhood"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Barrio</FormLabel>
-                          <FormControl>
-                            <Input {...field} placeholder="Centro" />
-                          </FormControl>
+                          <FormLabel>Barrio *</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Selecciona tu barrio" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {deliveryZones.map((zone) => (
+                                <SelectItem key={zone.id} value={zone.zone_name}>
+                                  {zone.zone_name} - ${zone.delivery_price.toFixed(2)}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
                           <FormMessage />
                         </FormItem>
                       )}
