@@ -61,18 +61,43 @@ const ConfirmOrder = () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
 
-      // First, create or get customer
+      // First, create or update customer
       let customerId: string;
       
-      // Try to find existing customer by email and phone
+      // Try to find existing customer by email (unique identifier)
       const { data: existingCustomer } = await supabase
         .from("customers")
-        .select("id")
+        .select("id, name, phone, country")
         .eq("email", orderData.customer_email)
-        .eq("phone", orderData.customer_phone || "")
         .maybeSingle();
 
       if (existingCustomer) {
+        // Customer exists - update their information if changed
+        const needsUpdate = 
+          existingCustomer.name !== orderData.customer_name ||
+          existingCustomer.phone !== orderData.customer_phone ||
+          existingCustomer.country !== (orderData.country || "brazil");
+
+        if (needsUpdate) {
+          const { error: updateError } = await supabase
+            .from("customers")
+            .update({
+              name: orderData.customer_name,
+              phone: orderData.customer_phone || null,
+              country: orderData.country || "brazil",
+            })
+            .eq("id", existingCustomer.id);
+
+          if (updateError) {
+            console.error("Error updating customer:", updateError);
+            toast.error("Error al actualizar información del cliente");
+            setLoading(false);
+            return;
+          }
+          
+          toast.info("Información del cliente actualizada");
+        }
+        
         customerId = existingCustomer.id;
       } else {
         // Create new customer
@@ -87,7 +112,20 @@ const ConfirmOrder = () => {
           .select("id")
           .single();
 
-        if (customerError) throw customerError;
+        if (customerError) {
+          console.error("Error creating customer:", customerError);
+          
+          // Check if it's a duplicate email error
+          if (customerError.code === "23505") {
+            toast.error("Este email ya está registrado con información diferente");
+          } else {
+            toast.error("Error al registrar cliente");
+          }
+          
+          setLoading(false);
+          return;
+        }
+        
         customerId = newCustomer.id;
       }
 
