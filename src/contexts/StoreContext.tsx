@@ -27,6 +27,10 @@ interface Store {
   order_message_template_delivery: string | null;
   order_message_template_pickup: string | null;
   order_message_template_digital_menu: string | null;
+  estimated_delivery_time: string | null;
+  skip_payment_digital_menu: boolean | null;
+  delivery_price_mode: string | null;
+  fixed_delivery_price: number | null;
 }
 
 interface StoreContextType {

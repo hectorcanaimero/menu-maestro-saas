@@ -15,6 +15,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { BusinessHoursTab } from "@/components/admin/BusinessHoursTab";
 import { PaymentSettingsTab } from "@/components/admin/PaymentSettingsTab";
 import { OrderSettingsTab } from "@/components/admin/OrderSettingsTab";
+import { DeliverySettingsTab } from "@/components/admin/DeliverySettingsTab";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 
@@ -119,11 +120,12 @@ const StoreSettings = () => {
         <h1 className="text-3xl font-bold mb-6">Configuración de Tienda</h1>
 
         <Tabs defaultValue="company" className="w-full">
-          <TabsList className="grid w-full grid-cols-4 max-w-3xl">
+          <TabsList className="grid w-full grid-cols-5 max-w-4xl">
             <TabsTrigger value="company">Empresa</TabsTrigger>
-            <TabsTrigger value="hours">Horario de apertura</TabsTrigger>
+            <TabsTrigger value="hours">Horario</TabsTrigger>
             <TabsTrigger value="payment">Pago</TabsTrigger>
             <TabsTrigger value="order">Orden</TabsTrigger>
+            <TabsTrigger value="delivery">Entrega</TabsTrigger>
           </TabsList>
 
           <TabsContent value="company" className="mt-6">
@@ -257,6 +259,18 @@ const StoreSettings = () => {
                 order_message_template_delivery: store.order_message_template_delivery,
                 order_message_template_pickup: store.order_message_template_pickup,
                 order_message_template_digital_menu: store.order_message_template_digital_menu,
+              }}
+            />
+          </TabsContent>
+
+          <TabsContent value="delivery" className="mt-6">
+            <DeliverySettingsTab
+              storeId={store.id}
+              initialData={{
+                estimated_delivery_time: store.estimated_delivery_time,
+                skip_payment_digital_menu: store.skip_payment_digital_menu,
+                delivery_price_mode: (store.delivery_price_mode as "fixed" | "by_zone") || "fixed",
+                fixed_delivery_price: store.fixed_delivery_price,
               }}
             />
           </TabsContent>
