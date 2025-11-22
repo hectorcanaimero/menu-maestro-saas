@@ -327,15 +327,37 @@ const ReportsManager = () => {
                     <XAxis dataKey="date" />
                     <YAxis />
                     <Tooltip 
-                      formatter={(value: number, name: string) => {
-                        if (name === "sales") return [`$${value.toFixed(2)}`, "Ventas"];
-                        return [value, "Pedidos"];
-                      }}
+                      formatter={(value: number) => [`$${value.toFixed(2)}`, "Ventas"]}
                     />
                     <Legend 
-                      formatter={(value) => value === "sales" ? "Ventas" : "Pedidos"}
+                      formatter={() => "Ventas"}
                     />
                     <Bar dataKey="sales" fill="hsl(var(--primary))" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Orders Chart */}
+          {dailySalesData.length > 0 && (
+            <Card className="mb-6">
+              <CardHeader>
+                <CardTitle className="text-base">Pedidos en el Período</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={300}>
+                  <BarChart data={dailySalesData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="date" />
+                    <YAxis />
+                    <Tooltip 
+                      formatter={(value: number) => [value, "Pedidos"]}
+                    />
+                    <Legend 
+                      formatter={() => "Pedidos"}
+                    />
+                    <Bar dataKey="orders" fill="hsl(var(--chart-2))" />
                   </BarChart>
                 </ResponsiveContainer>
               </CardContent>
