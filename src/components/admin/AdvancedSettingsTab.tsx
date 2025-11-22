@@ -6,7 +6,8 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
+import { Loader2, Volume2 } from "lucide-react";
+import { playNotificationSound } from "@/lib/notificationSound";
 
 interface AdvancedSettingsTabProps {
   storeId: string;
@@ -30,6 +31,11 @@ export const AdvancedSettingsTab = ({ storeId, initialData }: AdvancedSettingsTa
   const [notificationRepeatCount, setNotificationRepeatCount] = useState(
     initialData.notification_repeat_count ?? 3
   );
+
+  const handleTestSound = () => {
+    playNotificationSound(notificationVolume, notificationRepeatCount);
+    toast.info("Reproduciendo sonido de prueba...");
+  };
 
   const handleSave = async () => {
     setSaving(true);
@@ -170,6 +176,22 @@ export const AdvancedSettingsTab = ({ storeId, initialData }: AdvancedSettingsTa
               className="w-full"
               disabled={!enableAudioNotifications}
             />
+          </div>
+
+          <div className="pt-4">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleTestSound}
+              disabled={!enableAudioNotifications}
+              className="w-full"
+            >
+              <Volume2 className="w-4 h-4 mr-2" />
+              Probar sonido de notificación
+            </Button>
+            <p className="text-xs text-muted-foreground mt-2 text-center">
+              Haz clic para escuchar cómo sonarán las notificaciones con la configuración actual
+            </p>
           </div>
         </CardContent>
       </Card>
