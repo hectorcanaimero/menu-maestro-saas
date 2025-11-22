@@ -10,6 +10,7 @@ import Welcome from "./pages/Welcome";
 import Auth from "./pages/Auth";
 import CreateStore from "./pages/CreateStore";
 import Checkout from "./pages/Checkout";
+import ConfirmOrder from "./pages/ConfirmOrder";
 import MyOrders from "./pages/MyOrders";
 import ProductDetail from "./pages/ProductDetail";
 import NotFound from "./pages/NotFound";
@@ -34,12 +35,13 @@ const App = () => (
               <Route path="/welcome" element={<Welcome />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/create-store" element={<CreateStore />} />
-          <Route path="/admin" element={<AdminDashboard />} />
-          <Route path="/admin/orders" element={<AdminOrders />} />
-          <Route path="/admin/categories" element={<AdminCategories />} />
-          <Route path="/admin/menu-items" element={<AdminMenuItems />} />
-          <Route path="/admin/settings" element={<StoreSettings />} />
+              <Route path="/admin" element={<AdminDashboard />} />
+              <Route path="/admin/orders" element={<AdminOrders />} />
+              <Route path="/admin/categories" element={<AdminCategories />} />
+              <Route path="/admin/menu-items" element={<AdminMenuItems />} />
+              <Route path="/admin/settings" element={<StoreSettings />} />
               <Route path="/checkout" element={<Checkout />} />
+              <Route path="/confirm-order" element={<ConfirmOrder />} />
               <Route path="/my-orders" element={<MyOrders />} />
               <Route path="/products/:id" element={<ProductDetail />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

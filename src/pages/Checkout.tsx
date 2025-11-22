@@ -15,7 +15,6 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { toast } from "sonner";
 import { ArrowLeft, Upload, X } from "lucide-react";
 import InputMask from "react-input-mask";
-import { generateWhatsAppMessage, redirectToWhatsApp } from "@/lib/whatsappMessageGenerator";
 
 interface PaymentMethod {
   id: string;
@@ -99,7 +98,7 @@ type CheckoutFormData = z.infer<ReturnType<typeof createCheckoutSchema>>;
 
 const Checkout = () => {
   const navigate = useNavigate();
-  const { items, totalPrice, clearCart } = useCart();
+  const { items, totalPrice } = useCart();
   const { store } = useStore();
   const [loading, setLoading] = useState(false);
   const [country, setCountry] = useState<"brazil" | "venezuela">("brazil");
@@ -147,7 +146,7 @@ const Checkout = () => {
         .select("id, name, description")
         .eq("store_id", store.id)
         .eq("is_active", true)
-        .order("display_order", { ascending: true });
+        .order("display_order", { ascending: true});
 
       if (error) {
         console.error("Error loading payment methods:", error);
@@ -210,153 +209,19 @@ const Checkout = () => {
         
         paymentProofUrl = urlData.publicUrl;
       }
+
+      // Save order data to sessionStorage and navigate to confirmation
+      const orderData = {
+        ...data,
+        order_type: orderType,
+        payment_proof_url: paymentProofUrl,
+      };
       
-      // Build delivery address string for delivery orders
-      let fullAddress = null;
-      if (orderType === "delivery") {
-        const addressParts = [data.delivery_address || ""];
-        if (!store?.remove_address_number && data.address_number) {
-          addressParts.push(data.address_number);
-        }
-        if (data.address_complement) {
-          addressParts.push(data.address_complement);
-        }
-        if (data.address_neighborhood) {
-          addressParts.push(data.address_neighborhood);
-        }
-        if (!store?.remove_zipcode && data.address_zipcode) {
-          addressParts.push(data.address_zipcode);
-        }
-        fullAddress = addressParts.filter(Boolean).join(", ");
-      }
-
-      // Create order
-      const { data: order, error: orderError } = await supabase
-        .from("orders")
-        .insert([
-          {
-            store_id: store.id,
-            user_id: session?.user?.id || null,
-            total_amount: totalPrice,
-            customer_name: data.customer_name,
-            customer_email: data.customer_email,
-            customer_phone: data.customer_phone,
-            delivery_address: fullAddress,
-            notes: orderType === "digital_menu" && data.table_number 
-              ? `Mesa: ${data.table_number}${data.notes ? `\n${data.notes}` : ''}` 
-              : data.notes || null,
-            payment_proof_url: paymentProofUrl,
-            payment_method: data.payment_method || null,
-            order_type: orderType,
-          },
-        ])
-        .select()
-        .single();
-
-      if (orderError) throw orderError;
-
-      // Create order items
-      const orderItems = items.map((item) => ({
-        order_id: order.id,
-        menu_item_id: item.id,
-        quantity: item.quantity,
-        price_at_time: item.price,
-        item_name: item.name,
-      }));
-
-      const { data: createdItems, error: itemsError } = await supabase
-        .from("order_items")
-        .insert(orderItems)
-        .select();
-
-      if (itemsError) throw itemsError;
-
-      // Create order item extras
-      if (createdItems) {
-        const itemExtras = createdItems.flatMap((orderItem, index) => {
-          const cartItem = items[index];
-          if (!cartItem.extras || cartItem.extras.length === 0) return [];
-          
-          return cartItem.extras.map((extra) => ({
-            order_item_id: orderItem.id,
-            extra_name: extra.name,
-            extra_price: extra.price,
-          }));
-        });
-
-        if (itemExtras.length > 0) {
-          const { error: extrasError } = await supabase
-            .from("order_item_extras")
-            .insert(itemExtras);
-
-          if (extrasError) {
-            console.error("Error saving extras:", extrasError);
-          }
-        }
-      }
-
-      // Generate WhatsApp message
-      if (store.phone && (store.order_product_template || store.order_message_template_delivery)) {
-        const whatsappMessage = generateWhatsAppMessage(
-          {
-            orderNumber: order.id.substring(0, 8).toUpperCase(),
-            items: items.map(item => ({
-              name: item.name,
-              quantity: item.quantity,
-              price: item.price,
-              extras: item.extras,
-            })),
-            totalAmount: totalPrice,
-            customerName: data.customer_name,
-            customerEmail: data.customer_email,
-            customerPhone: data.customer_phone,
-            deliveryAddress: fullAddress || "",
-            notes: data.notes || "",
-            paymentMethod: data.payment_method || "",
-            currency: store.currency || "USD",
-            decimalPlaces: store.decimal_places || 2,
-            decimalSeparator: store.decimal_separator || ".",
-            thousandsSeparator: store.thousands_separator || ",",
-          },
-          {
-            orderProductTemplate: store.order_product_template || "{product-qty} {product-name}",
-            orderMessageTemplateDelivery: store.order_message_template_delivery || "Pedido #{order-number}\n\n{order-products}\n\nTotal: {order-total}",
-            orderMessageTemplatePickup: store.order_message_template_pickup || "Pedido #{order-number}\n\n{order-products}\n\nTotal: {order-total}",
-            orderMessageTemplateDigitalMenu: store.order_message_template_digital_menu || "Pedido #{order-number}\n\n{order-products}\n\nTotal: {order-total}",
-          },
-          orderType
-        );
-
-        // Redirect to WhatsApp if enabled
-        if (store.redirect_to_whatsapp) {
-          toast.success("¡Pedido realizado! Redirigiendo a WhatsApp...");
-          clearCart();
-          
-          // Small delay to show the toast
-          setTimeout(() => {
-            redirectToWhatsApp(store.phone!, whatsappMessage);
-            navigate("/");
-          }, 1500);
-          return;
-        } else {
-          // Show success with option to send via WhatsApp
-          toast.success("¡Pedido realizado con éxito!", {
-            action: {
-              label: "Enviar por WhatsApp",
-              onClick: () => redirectToWhatsApp(store.phone!, whatsappMessage),
-            },
-            duration: 10000,
-          });
-        }
-      } else {
-        toast.success("¡Pedido realizado con éxito!");
-      }
-
-      clearCart();
-      navigate("/");
+      sessionStorage.setItem("pendingOrder", JSON.stringify(orderData));
+      navigate("/confirm-order");
     } catch (error) {
-      console.error("Error creating order:", error);
-      toast.error("Error al crear el pedido");
+      console.error("Error preparing order:", error);
+      toast.error("Error al preparar el pedido");
     } finally {
       setLoading(false);
     }
@@ -424,7 +289,7 @@ const Checkout = () => {
                           <SelectItem value="pickup">Recoger en Tienda</SelectItem>
                         )}
                         {store?.operating_modes?.includes("digital_menu") && (
-                          <SelectItem value="digital_menu">Menú Digital</SelectItem>
+                          <SelectItem value="digital_menu">Servicio en Tienda</SelectItem>
                         )}
                       </SelectContent>
                     </Select>
@@ -687,7 +552,7 @@ const Checkout = () => {
                     size="lg" 
                     disabled={loading || (store?.minimum_order_price ? totalPrice < store.minimum_order_price : false)}
                   >
-                    {loading ? "Procesando..." : "Confirmar Pedido"}
+                    {loading ? "Procesando..." : "Continuar a Confirmación"}
                   </Button>
                 </form>
               </Form>
