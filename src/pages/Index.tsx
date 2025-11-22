@@ -15,6 +15,7 @@ import { useNavigate } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { useStoreTheme } from "@/hooks/useStoreTheme";
+import { StoreHoursDisplay } from "@/components/catalog/StoreHoursDisplay";
 
 const Index = () => {
   const { items, updateQuantity, removeItem, totalItems, totalPrice } = useCart();
@@ -77,6 +78,13 @@ const Index = () => {
       <CategoriesSection />
 
       <div className="container mx-auto px-4">
+        {/* Store Status - Mobile Only */}
+        {store && (
+          <div className="md:hidden py-4 flex justify-center">
+            <StoreHoursDisplay storeId={store.id} forceStatus={store.force_status} />
+          </div>
+        )}
+        
         {/* Featured Section */}
         {featuredProducts && featuredProducts.length > 0 && (
           <section className="mb-12">
