@@ -40,7 +40,7 @@ export const CartSheet = () => {
             <>
               <div className="flex justify-between items-center text-lg font-bold mb-4">
                 <span>Total:</span>
-                <span className="text-primary">${totalPrice.toFixed(2)}</span>
+                <span style={{ color: `hsl(var(--price-color, var(--primary)))` }}>${totalPrice.toFixed(2)}</span>
               </div>
               <Button className="w-full" size="lg" onClick={() => navigate("/checkout")}>
                 Realizar Pedido
@@ -60,7 +60,7 @@ export const CartSheet = () => {
 
                       <div className="flex-1">
                         <h4 className="font-semibold">{item.name}</h4>
-                        <p className="text-sm text-primary font-semibold mt-1">${item.price.toFixed(2)}</p>
+                        <p className="text-sm font-semibold mt-1" style={{ color: `hsl(var(--price-color, var(--primary)))` }}>${item.price.toFixed(2)}</p>
 
                         <div className="flex items-center gap-2 mt-2">
                           <Button

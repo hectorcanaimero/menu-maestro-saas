@@ -22,6 +22,7 @@ All colors MUST be HSL.
 
     --primary: 333 71% 50%;
     --primary-foreground: 327 73% 97%;
+    --price-color: var(--foreground);
 
     --secondary: 240 5% 33%;
     --secondary-foreground: 0 0% 98%;
@@ -101,6 +102,7 @@ All colors MUST be HSL.
 
     --primary: 328 85% 70%;
     --primary-foreground: 336 83% 17%;
+    --price-color: var(--foreground);
 
     --secondary: 240 3% 46%;
     --secondary-foreground: 0 0% 98%;

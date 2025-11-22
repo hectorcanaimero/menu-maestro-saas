@@ -9,6 +9,7 @@ import { useCart } from "@/contexts/CartContext";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ProductCard } from "@/components/catalog/ProductCard";
 import { toast } from "sonner";
+import { useStoreTheme } from "@/hooks/useStoreTheme";
 
 interface Product {
   id: string;
@@ -28,6 +29,9 @@ export default function ProductDetail() {
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
+  
+  // Apply store theme colors
+  useStoreTheme();
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -149,7 +153,7 @@ export default function ProductDetail() {
               <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2">
                 {product.name}
               </h1>
-              <p className="text-3xl font-bold text-primary">
+              <p className="text-3xl font-bold" style={{ color: `hsl(var(--price-color, var(--primary)))` }}>
                 ${product.price.toFixed(2)}
               </p>
             </div>

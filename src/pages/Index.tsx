@@ -14,11 +14,15 @@ import { Plus, Minus, Trash2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
+import { useStoreTheme } from "@/hooks/useStoreTheme";
 
 const Index = () => {
   const { items, updateQuantity, removeItem, totalItems, totalPrice } = useCart();
   const { store, loading: storeLoading } = useStore();
   const navigate = useNavigate();
+  
+  // Apply store theme colors
+  useStoreTheme();
 
   // Fetch featured products
   const { data: featuredProducts } = useQuery({
@@ -162,7 +166,7 @@ const Index = () => {
 
                       <div className="flex-1">
                         <h4 className="font-semibold">{item.name}</h4>
-                        <p className="text-sm text-foreground font-semibold mt-1">${item.price.toFixed(2)}</p>
+                        <p className="text-sm font-semibold mt-1" style={{ color: `hsl(var(--price-color, var(--foreground)))` }}>${item.price.toFixed(2)}</p>
 
                         <div className="flex items-center gap-2 mt-2">
                           <Button
@@ -199,7 +203,7 @@ const Index = () => {
                 <div className="border-t pt-4 mt-4 space-y-4">
                   <div className="flex justify-between items-center text-lg font-bold">
                     <span>Total:</span>
-                    <span className="text-foreground">${totalPrice.toFixed(2)}</span>
+                    <span style={{ color: `hsl(var(--price-color, var(--foreground)))` }}>${totalPrice.toFixed(2)}</span>
                   </div>
 
                   <Button className="w-full" size="lg" onClick={() => navigate("/checkout")}>

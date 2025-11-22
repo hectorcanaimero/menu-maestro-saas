@@ -86,7 +86,7 @@ export const ProductCard = ({
           <div className="flex-1 space-y-1">
             <h3 className="font-semibold text-foreground text-base line-clamp-1">{name}</h3>
             {description && !compact && <p className="text-sm text-muted-foreground line-clamp-2">{description}</p>}
-            <p className="text-lg font-bold text-foreground pt-1">${price.toFixed(2)}</p>
+            <p className="text-lg font-bold pt-1" style={{ color: `hsl(var(--price-color, var(--foreground)))` }}>${price.toFixed(2)}</p>
           </div>
         </div>
 

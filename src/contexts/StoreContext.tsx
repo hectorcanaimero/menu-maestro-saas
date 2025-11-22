@@ -36,6 +36,8 @@ interface Store {
   enable_audio_notifications: boolean | null;
   notification_volume: number | null;
   notification_repeat_count: number | null;
+  primary_color: string | null;
+  price_color: string | null;
 }
 
 interface StoreContextType {
