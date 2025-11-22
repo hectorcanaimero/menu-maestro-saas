@@ -13,6 +13,12 @@ import { toast } from "sonner";
 import { ArrowLeft, Upload, X } from "lucide-react";
 import InputMask from "react-input-mask";
 
+interface PaymentMethod {
+  id: string;
+  name: string;
+  description: string | null;
+}
+
 const Checkout = () => {
   const navigate = useNavigate();
   const { items, totalPrice, clearCart } = useCart();
@@ -20,6 +26,8 @@ const Checkout = () => {
   const [loading, setLoading] = useState(false);
   const [country, setCountry] = useState<"brazil" | "venezuela">("brazil");
   const [paymentProofFile, setPaymentProofFile] = useState<File | null>(null);
+  const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string>("");
   const [formData, setFormData] = useState({
     customer_name: "",
     customer_email: "",
@@ -27,6 +35,31 @@ const Checkout = () => {
     delivery_address: "",
     notes: "",
   });
+
+  useEffect(() => {
+    const loadPaymentMethods = async () => {
+      if (!store?.id) return;
+
+      const { data, error } = await supabase
+        .from("payment_methods")
+        .select("id, name, description")
+        .eq("store_id", store.id)
+        .eq("is_active", true)
+        .order("display_order", { ascending: true });
+
+      if (error) {
+        console.error("Error loading payment methods:", error);
+      } else if (data) {
+        setPaymentMethods(data);
+        // Auto-select first method if only one available
+        if (data.length === 1) {
+          setSelectedPaymentMethod(data[0].name);
+        }
+      }
+    };
+
+    loadPaymentMethods();
+  }, [store?.id]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -39,6 +72,12 @@ const Checkout = () => {
     // Validate minimum order price
     if (store.minimum_order_price && totalPrice < store.minimum_order_price) {
       toast.error(`El pedido mínimo es $${store.minimum_order_price.toFixed(2)}`);
+      return;
+    }
+
+    // Validate payment method selection
+    if (paymentMethods.length > 0 && !selectedPaymentMethod) {
+      toast.error("Debes seleccionar un método de pago");
       return;
     }
 
@@ -92,6 +131,7 @@ const Checkout = () => {
             delivery_address: formData.delivery_address,
             notes: formData.notes,
             payment_proof_url: paymentProofUrl,
+            payment_method: selectedPaymentMethod || null,
           },
         ])
         .select()
@@ -256,6 +296,31 @@ const Checkout = () => {
                     placeholder="Instrucciones especiales para la entrega..."
                   />
                 </div>
+
+                {paymentMethods.length > 0 && (
+                  <div className="space-y-2">
+                    <Label htmlFor="payment-method">Método de Pago *</Label>
+                    <Select value={selectedPaymentMethod} onValueChange={setSelectedPaymentMethod}>
+                      <SelectTrigger id="payment-method">
+                        <SelectValue placeholder="Selecciona un método de pago" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {paymentMethods.map((method) => (
+                          <SelectItem key={method.id} value={method.name}>
+                            <div className="flex flex-col">
+                              <span>{method.name}</span>
+                              {method.description && (
+                                <span className="text-xs text-muted-foreground">
+                                  {method.description}
+                                </span>
+                              )}
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
 
                 {store?.require_payment_proof && (
                   <div className="space-y-2">
