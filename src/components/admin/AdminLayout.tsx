@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { LogOut, ChefHat, Store as StoreIcon } from "lucide-react";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "./AppSidebar";
+import { useOrderNotifications } from "@/hooks/useOrderNotifications";
 
 interface AdminLayoutProps {
   children: ReactNode;
@@ -16,6 +17,9 @@ interface AdminLayoutProps {
 const AdminLayout = ({ children, userEmail }: AdminLayoutProps) => {
   const navigate = useNavigate();
   const { store, loading: storeLoading, isStoreOwner } = useStore();
+  
+  // Initialize order notifications
+  useOrderNotifications();
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
