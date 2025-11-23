@@ -26,6 +26,7 @@ const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
 const AdminOrders = lazy(() => import("./pages/admin/AdminOrders"));
 const AdminKitchen = lazy(() => import("./pages/admin/AdminKitchen"));
 const AdminReports = lazy(() => import("./pages/admin/AdminReports"));
+const AdminAnalytics = lazy(() => import("./pages/admin/AdminAnalytics"));
 const AdminCategories = lazy(() => import("./pages/admin/AdminCategories"));
 const AdminMenuItems = lazy(() => import("./pages/admin/AdminMenuItems"));
 const AdminCustomers = lazy(() => import("./pages/admin/AdminCustomers"));
@@ -85,6 +86,14 @@ const App = () => (
                     element={
                       <ProtectedRoute>
                         <AdminReports />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/admin/analytics"
+                    element={
+                      <ProtectedRoute>
+                        <AdminAnalytics />
                       </ProtectedRoute>
                     }
                   />
