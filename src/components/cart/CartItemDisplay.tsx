@@ -54,6 +54,7 @@ export function CartItemDisplay({
         <img
           src={image_url}
           alt={name}
+          loading="lazy"
           className="w-16 h-16 sm:w-20 sm:h-20 object-cover rounded flex-shrink-0"
         />
       ) : (
