@@ -3,19 +3,40 @@ import { supabase } from "@/integrations/supabase/client";
 import { ProductCard } from "./ProductCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useSearchParams } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { LayoutGrid, List } from "lucide-react";
+import { LayoutGrid, List, Search as SearchIcon } from "lucide-react";
 import { useStore } from "@/contexts/StoreContext";
+import { SearchBar } from "./SearchBar";
+import { useDebounce } from "@/hooks/useDebounce";
 
 export const ProductGrid = () => {
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const categoryFilter = searchParams.get("category");
+  const searchQuery = searchParams.get("search") || "";
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [localSearchQuery, setLocalSearchQuery] = useState(searchQuery);
+  const debouncedSearchQuery = useDebounce(localSearchQuery, 400);
   const { store } = useStore();
 
+  // Update URL when debounced search query changes
+  useEffect(() => {
+    const newParams = new URLSearchParams(searchParams);
+    if (debouncedSearchQuery) {
+      newParams.set("search", debouncedSearchQuery);
+    } else {
+      newParams.delete("search");
+    }
+    setSearchParams(newParams, { replace: true });
+  }, [debouncedSearchQuery]);
+
+  // Sync local search with URL on mount/category change
+  useEffect(() => {
+    setLocalSearchQuery(searchQuery);
+  }, [searchQuery]);
+
   const { data: products, isLoading } = useQuery({
-    queryKey: ["menu-items", categoryFilter, store?.id],
+    queryKey: ["menu-items", categoryFilter, debouncedSearchQuery, store?.id],
     queryFn: async () => {
       if (!store?.id) return [];
       let query = supabase
@@ -28,6 +49,13 @@ export const ProductGrid = () => {
 
       if (categoryFilter) {
         query = query.eq("category_id", categoryFilter);
+      }
+
+      // Add search filter with case-insensitive ILIKE
+      if (debouncedSearchQuery) {
+        query = query.or(
+          `name.ilike.%${debouncedSearchQuery}%,description.ilike.%${debouncedSearchQuery}%`
+        );
       }
 
       const { data, error } = await query;
@@ -51,25 +79,37 @@ export const ProductGrid = () => {
     );
   }
 
-  if (!products || products.length === 0) {
-    return (
-      <div className="text-center py-12">
-        <p className="text-muted-foreground text-lg">No hay productos disponibles en este momento.</p>
-      </div>
-    );
-  }
+  const hasSearchQuery = debouncedSearchQuery.trim().length > 0;
+  const noResults = !products || products.length === 0;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 md:space-y-6">
+      {/* Search Bar */}
+      <SearchBar
+        value={localSearchQuery}
+        onChange={setLocalSearchQuery}
+        placeholder="Buscar por nombre o descripción..."
+        className="w-full"
+      />
+
       {/* Section Header with View Toggle */}
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold text-foreground">{categoryFilter ? "Productos" : "Todos los Productos"}</h2>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+        <div>
+          <h2 className="text-xl md:text-2xl font-bold text-foreground">
+            {categoryFilter ? "Productos" : "Todos los Productos"}
+          </h2>
+          {hasSearchQuery && (
+            <p className="text-sm text-muted-foreground mt-1">
+              Resultados para: "{debouncedSearchQuery}"
+            </p>
+          )}
+        </div>
         <div className="flex gap-2">
           <Button
             variant={viewMode === "grid" ? "default" : "outline"}
             size="sm"
             onClick={() => setViewMode("grid")}
-            className="rounded-full"
+            className="rounded-full h-9 md:h-8"
           >
             <LayoutGrid className="w-4 h-4 sm:mr-2" />
             <span className="hidden sm:inline">Grid</span>
@@ -78,7 +118,7 @@ export const ProductGrid = () => {
             variant={viewMode === "list" ? "default" : "outline"}
             size="sm"
             onClick={() => setViewMode("list")}
-            className="rounded-full"
+            className="rounded-full h-9 md:h-8"
           >
             <List className="w-4 h-4 sm:mr-2" />
             <span className="hidden sm:inline">Lista</span>
@@ -86,22 +126,48 @@ export const ProductGrid = () => {
         </div>
       </div>
 
+      {/* No Results Message */}
+      {noResults && (
+        <div className="text-center py-12">
+          <SearchIcon className="w-16 h-16 mx-auto text-muted-foreground mb-4 opacity-50" />
+          {hasSearchQuery ? (
+            <>
+              <p className="text-lg font-medium mb-2">No se encontraron productos</p>
+              <p className="text-muted-foreground">
+                No hay productos que coincidan con "{debouncedSearchQuery}"
+              </p>
+              <Button
+                variant="outline"
+                className="mt-4"
+                onClick={() => setLocalSearchQuery("")}
+              >
+                Limpiar búsqueda
+              </Button>
+            </>
+          ) : (
+            <p className="text-muted-foreground text-lg">No hay productos disponibles en este momento.</p>
+          )}
+        </div>
+      )}
+
       {/* Products Grid */}
-      <div
-        className={viewMode === "grid" ? "grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-4" : "flex flex-col gap-4"}
-      >
-        {products.map((product) => (
-          <ProductCard
-            key={product.id}
-            id={product.id}
-            name={product.name}
-            price={Number(product.price)}
-            image_url={product.image_url}
-            description={product.description}
-            layout={viewMode}
-          />
-        ))}
-      </div>
+      {!noResults && (
+        <div
+          className={viewMode === "grid" ? "grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-4" : "flex flex-col gap-4"}
+        >
+          {products.map((product) => (
+            <ProductCard
+              key={product.id}
+              id={product.id}
+              name={product.name}
+              price={Number(product.price)}
+              image_url={product.image_url}
+              description={product.description}
+              layout={viewMode}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 };
