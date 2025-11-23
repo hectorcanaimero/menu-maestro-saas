@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import AdminLayout from "@/components/admin/AdminLayout";
 import DashboardStats from "@/components/admin/DashboardStats";
+import { H2, Body } from "@/components/ui/typography";
 
 /**
  * AdminDashboard Component
@@ -27,10 +28,10 @@ const AdminDashboard = () => {
     <AdminLayout userEmail={userEmail}>
       <div className="space-y-6">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
-          <p className="text-muted-foreground">
+          <H2>Dashboard</H2>
+          <Body className="text-muted-foreground">
             Bienvenido al panel de administración
-          </p>
+          </Body>
         </div>
         <DashboardStats />
       </div>

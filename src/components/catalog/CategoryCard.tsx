@@ -1,5 +1,6 @@
 import { Card } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
+import { H3, Body } from "@/components/ui/typography";
 
 interface CategoryCardProps {
   id: string;
@@ -31,13 +32,13 @@ export const CategoryCard = ({ id, name, description, imageUrl }: CategoryCardPr
         )}
       </div>
       <div className="p-4 text-center">
-        <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">
+        <H3 className="text-foreground group-hover:text-primary transition-colors">
           {name}
-        </h3>
+        </H3>
         {description && (
-          <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
+          <Body size="small" className="text-muted-foreground mt-1 line-clamp-2">
             {description}
-          </p>
+          </Body>
         )}
       </div>
     </Card>

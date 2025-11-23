@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Minus, Trash2, ShoppingCart } from "lucide-react";
 import { useProductPromotions, getBestPromotion } from "@/hooks/usePromotions";
+import { H4, Body, Caption } from "@/components/ui/typography";
 
 interface CartItemExtra {
   id: string;
@@ -64,16 +65,16 @@ export function CartItemDisplay({
       )}
 
       <div className="flex-1 min-w-0">
-        <h4 className="font-semibold text-sm sm:text-base">{name}</h4>
+        <H4 className="text-sm sm:text-base">{name}</H4>
 
         {/* Extras display */}
         {extras && extras.length > 0 && (
           <div className="mt-1 space-y-0.5">
             {extras.map((extra) => (
-              <p key={extra.id} className="text-xs text-muted-foreground">
+              <Caption key={extra.id}>
                 + {extra.name}{" "}
                 <span className="font-medium">(${extra.price.toFixed(2)})</span>
-              </p>
+              </Caption>
             ))}
           </div>
         )}
