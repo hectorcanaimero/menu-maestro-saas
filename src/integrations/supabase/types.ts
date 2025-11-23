@@ -426,6 +426,62 @@ export type Database = {
         }
         Relationships: []
       }
+      promotions: {
+        Row: {
+          category_ids: string[] | null
+          created_at: string | null
+          description: string | null
+          end_date: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          product_ids: string[] | null
+          start_date: string | null
+          store_id: string
+          type: string
+          updated_at: string | null
+          value: number
+        }
+        Insert: {
+          category_ids?: string[] | null
+          created_at?: string | null
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          product_ids?: string[] | null
+          start_date?: string | null
+          store_id: string
+          type: string
+          updated_at?: string | null
+          value: number
+        }
+        Update: {
+          category_ids?: string[] | null
+          created_at?: string | null
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          product_ids?: string[] | null
+          start_date?: string | null
+          store_id?: string
+          type?: string
+          updated_at?: string | null
+          value?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "promotions_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       store_hours: {
         Row: {
           close_time: string

@@ -23,6 +23,7 @@ import AdminReports from "./pages/admin/AdminReports";
 import AdminCategories from "./pages/admin/AdminCategories";
 import AdminMenuItems from "./pages/admin/AdminMenuItems";
 import AdminCustomers from "./pages/admin/AdminCustomers";
+import AdminPromotions from "./pages/admin/AdminPromotions";
 import StoreSettings from "./pages/admin/StoreSettings";
 
 const queryClient = new QueryClient();
@@ -101,6 +102,14 @@ const App = () => (
                 element={
                   <ProtectedRoute>
                     <AdminCustomers />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/promotions"
+                element={
+                  <ProtectedRoute>
+                    <AdminPromotions />
                   </ProtectedRoute>
                 }
               />

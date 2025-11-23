@@ -15,6 +15,7 @@ interface CartItem {
   image_url: string | null;
   extras?: CartItemExtra[];
   cartItemId?: string; // Unique ID for cart items with different extras
+  categoryId?: string | null; // Category ID for promotion calculation
 }
 
 interface CartContextType {

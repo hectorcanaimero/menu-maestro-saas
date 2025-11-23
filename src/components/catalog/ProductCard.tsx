@@ -1,11 +1,13 @@
 import { useState } from "react";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ShoppingCart, Eye } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { ShoppingCart, Eye, Tag } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { ProductExtrasDialog } from "./ProductExtrasDialog";
+import { useProductPromotions, getBestPromotion } from "@/hooks/usePromotions";
 
 interface ProductCardProps {
   id: string;
@@ -15,6 +17,7 @@ interface ProductCardProps {
   description?: string | null;
   layout?: "grid" | "list";
   compact?: boolean;
+  categoryId?: string | null;
 }
 
 export const ProductCard = ({
@@ -25,10 +28,15 @@ export const ProductCard = ({
   description,
   layout = "list",
   compact = false,
+  categoryId,
 }: ProductCardProps) => {
   const { addItem } = useCart();
   const navigate = useNavigate();
   const [showExtrasDialog, setShowExtrasDialog] = useState(false);
+
+  // Get applicable promotions for this product
+  const productPromotions = useProductPromotions(id, categoryId);
+  const bestDeal = getBestPromotion(productPromotions, price);
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -36,10 +44,11 @@ export const ProductCard = ({
   };
 
   const handleConfirmWithExtras = (extras: any[]) => {
-    addItem({ id, name, price, image_url, extras });
+    addItem({ id, name, price, image_url, extras, categoryId });
   };
 
   const isGridView = layout === "grid";
+  const hasDiscount = !!bestDeal;
 
   return (
     <>
@@ -61,10 +70,10 @@ export const ProductCard = ({
         <div
           className={
             isGridView
-              ? "w-full aspect-square overflow-hidden bg-muted/30"
+              ? "w-full aspect-square overflow-hidden bg-muted/30 relative"
               : compact
-                ? "w-full aspect-[3/2] overflow-hidden bg-muted/30"
-                : "w-full sm:w-48 aspect-square sm:aspect-auto overflow-hidden bg-muted/30 flex-shrink-0"
+                ? "w-full aspect-[3/2] overflow-hidden bg-muted/30 relative"
+                : "w-full sm:w-48 aspect-square sm:aspect-auto overflow-hidden bg-muted/30 flex-shrink-0 relative"
           }
         >
           {image_url ? (
@@ -79,6 +88,17 @@ export const ProductCard = ({
               <Eye className="w-12 h-12 text-muted-foreground/30" />
             </div>
           )}
+
+          {/* Sale Badge */}
+          {hasDiscount && (
+            <Badge className="absolute top-2 left-2 bg-destructive text-destructive-foreground shadow-md flex items-center gap-1">
+              <Tag className="w-3 h-3" />
+              {bestDeal.promotion.type === 'percentage'
+                ? `-${bestDeal.promotion.value}%`
+                : `-$${bestDeal.promotion.value.toFixed(2)}`
+              }
+            </Badge>
+          )}
         </div>
 
         {/* Content Container */}
@@ -91,12 +111,33 @@ export const ProductCard = ({
                 {description}
               </p>
             )}
-            <p
-              className="text-base sm:text-lg font-bold pt-1"
-              style={{ color: `hsl(var(--price-color, var(--foreground)))` }}
-            >
-              ${price.toFixed(2)}
-            </p>
+
+            {/* Price Display with Discount */}
+            <div className="pt-1">
+              {hasDiscount ? (
+                <div className="flex items-center gap-2 flex-wrap">
+                  <p
+                    className="text-base sm:text-lg font-bold"
+                    style={{ color: `hsl(var(--price-color, var(--foreground)))` }}
+                  >
+                    ${bestDeal.discountedPrice.toFixed(2)}
+                  </p>
+                  <p className="text-xs sm:text-sm text-muted-foreground line-through">
+                    ${price.toFixed(2)}
+                  </p>
+                  <Badge variant="secondary" className="text-xs">
+                    Ahorra ${bestDeal.savings.toFixed(2)}
+                  </Badge>
+                </div>
+              ) : (
+                <p
+                  className="text-base sm:text-lg font-bold"
+                  style={{ color: `hsl(var(--price-color, var(--foreground)))` }}
+                >
+                  ${price.toFixed(2)}
+                </p>
+              )}
+            </div>
           </div>
         </div>
 
