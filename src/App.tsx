@@ -18,6 +18,7 @@ const CreateStore = lazy(() => import("./pages/CreateStore"));
 const Checkout = lazy(() => import("./pages/Checkout"));
 const ConfirmOrder = lazy(() => import("./pages/ConfirmOrder"));
 const MyOrders = lazy(() => import("./pages/MyOrders"));
+const TrackOrder = lazy(() => import("./pages/TrackOrder"));
 const ProductDetail = lazy(() => import("./pages/ProductDetail"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
@@ -54,6 +55,7 @@ const App = () => (
                   <Route path="/checkout" element={<Checkout />} />
                   <Route path="/confirm-order" element={<ConfirmOrder />} />
                   <Route path="/my-orders" element={<MyOrders />} />
+                  <Route path="/track/:orderId" element={<TrackOrder />} />
                   <Route path="/products/:id" element={<ProductDetail />} />
 
                   {/* Protected Admin Routes */}

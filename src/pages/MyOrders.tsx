@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Package } from "lucide-react";
+import { ArrowLeft, Package, MapPin } from "lucide-react";
 import { toast } from "sonner";
 
 interface OrderItem {
@@ -174,6 +174,18 @@ const MyOrders = () => {
                       <p className="text-sm text-muted-foreground">
                         <span className="font-semibold">Notas:</span> {order.notes}
                       </p>
+                    </div>
+                  )}
+
+                  {/* Track Order Button */}
+                  {order.status !== 'delivered' && order.status !== 'cancelled' && (
+                    <div className="pt-2">
+                      <Link to={`/track/${order.id}`}>
+                        <Button variant="outline" className="w-full">
+                          <MapPin className="h-4 w-4 mr-2" />
+                          Rastrear Pedido
+                        </Button>
+                      </Link>
                     </div>
                   )}
                 </CardContent>
