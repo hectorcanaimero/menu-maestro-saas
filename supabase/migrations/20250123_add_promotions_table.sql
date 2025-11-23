@@ -31,7 +31,7 @@ CREATE POLICY "Store owners can view their promotions"
   ON promotions FOR SELECT
   USING (
     store_id IN (
-      SELECT id FROM stores WHERE user_id = auth.uid()
+      SELECT id FROM stores WHERE owner_id = auth.uid()
     )
   );
 
@@ -39,7 +39,7 @@ CREATE POLICY "Store owners can insert their promotions"
   ON promotions FOR INSERT
   WITH CHECK (
     store_id IN (
-      SELECT id FROM stores WHERE user_id = auth.uid()
+      SELECT id FROM stores WHERE owner_id = auth.uid()
     )
   );
 
@@ -47,7 +47,7 @@ CREATE POLICY "Store owners can update their promotions"
   ON promotions FOR UPDATE
   USING (
     store_id IN (
-      SELECT id FROM stores WHERE user_id = auth.uid()
+      SELECT id FROM stores WHERE owner_id = auth.uid()
     )
   );
 
@@ -55,7 +55,7 @@ CREATE POLICY "Store owners can delete their promotions"
   ON promotions FOR DELETE
   USING (
     store_id IN (
-      SELECT id FROM stores WHERE user_id = auth.uid()
+      SELECT id FROM stores WHERE owner_id = auth.uid()
     )
   );
 
