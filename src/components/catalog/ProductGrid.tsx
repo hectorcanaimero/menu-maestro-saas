@@ -6,21 +6,25 @@ import { useSearchParams } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { LayoutGrid, List, Search as SearchIcon, ArrowUpDown } from "lucide-react";
+import { LayoutGrid, List, Search as SearchIcon, ArrowUpDown, ChevronLeft, ChevronRight } from "lucide-react";
 import { useStore } from "@/contexts/StoreContext";
 import { SearchBar } from "./SearchBar";
 import { useDebounce } from "@/hooks/useDebounce";
 
 type SortOption = "default" | "price-asc" | "price-desc" | "name-asc" | "name-desc" | "newest";
 
+const PRODUCTS_PER_PAGE = 12;
+
 export const ProductGrid = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const categoryFilter = searchParams.get("category");
   const searchQuery = searchParams.get("search") || "";
   const sortParam = searchParams.get("sort") as SortOption || "default";
+  const pageParam = parseInt(searchParams.get("page") || "1", 10);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [localSearchQuery, setLocalSearchQuery] = useState(searchQuery);
   const [sortBy, setSortBy] = useState<SortOption>(sortParam);
+  const [currentPage, setCurrentPage] = useState(pageParam);
   const debouncedSearchQuery = useDebounce(localSearchQuery, 400);
   const { store } = useStore();
 
@@ -32,6 +36,9 @@ export const ProductGrid = () => {
     } else {
       newParams.delete("search");
     }
+    // Reset to page 1 when search changes
+    newParams.delete("page");
+    setCurrentPage(1);
     setSearchParams(newParams, { replace: true });
   }, [debouncedSearchQuery]);
 
@@ -45,6 +52,11 @@ export const ProductGrid = () => {
     setSortBy(sortParam);
   }, [sortParam]);
 
+  // Sync page with URL
+  useEffect(() => {
+    setCurrentPage(pageParam);
+  }, [pageParam]);
+
   // Update URL when sort changes
   useEffect(() => {
     const newParams = new URLSearchParams(searchParams);
@@ -53,19 +65,75 @@ export const ProductGrid = () => {
     } else {
       newParams.delete("sort");
     }
+    // Reset to page 1 when sort changes
+    newParams.delete("page");
+    setCurrentPage(1);
     setSearchParams(newParams, { replace: true });
   }, [sortBy]);
 
+  // Update URL when page changes
+  useEffect(() => {
+    const newParams = new URLSearchParams(searchParams);
+    if (currentPage > 1) {
+      newParams.set("page", currentPage.toString());
+    } else {
+      newParams.delete("page");
+    }
+    setSearchParams(newParams, { replace: true });
+    // Scroll to top of products section when page changes
+    document.getElementById("productos")?.scrollIntoView({ behavior: "smooth" });
+  }, [currentPage]);
+
+  // Reset to page 1 when category filter changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [categoryFilter]);
+
+  // Fetch total count for pagination
+  const { data: totalCount } = useQuery({
+    queryKey: ["menu-items-count", categoryFilter, debouncedSearchQuery, store?.id],
+    queryFn: async () => {
+      if (!store?.id) return 0;
+      let query = supabase
+        .from("menu_items")
+        .select("*", { count: "exact", head: true })
+        .eq("store_id", store.id)
+        .eq("is_available", true)
+        .eq("is_featured", false);
+
+      if (categoryFilter) {
+        query = query.eq("category_id", categoryFilter);
+      }
+
+      if (debouncedSearchQuery) {
+        query = query.or(
+          `name.ilike.%${debouncedSearchQuery}%,description.ilike.%${debouncedSearchQuery}%`
+        );
+      }
+
+      const { count, error } = await query;
+      if (error) throw error;
+      return count || 0;
+    },
+    enabled: !!store?.id,
+  });
+
+  // Fetch paginated products
   const { data: products, isLoading } = useQuery({
-    queryKey: ["menu-items", categoryFilter, debouncedSearchQuery, sortBy, store?.id],
+    queryKey: ["menu-items", categoryFilter, debouncedSearchQuery, sortBy, currentPage, store?.id],
     queryFn: async () => {
       if (!store?.id) return [];
+
+      const from = (currentPage - 1) * PRODUCTS_PER_PAGE;
+      const to = from + PRODUCTS_PER_PAGE - 1;
+
       let query = supabase
         .from("menu_items")
         .select("*")
         .eq("store_id", store.id)
         .eq("is_available", true)
-        .eq("is_featured", false);
+        .eq("is_featured", false)
+        .range(from, to);
 
       if (categoryFilter) {
         query = query.eq("category_id", categoryFilter);
@@ -105,6 +173,8 @@ export const ProductGrid = () => {
     },
     enabled: !!store?.id,
   });
+
+  const totalPages = Math.ceil((totalCount || 0) / PRODUCTS_PER_PAGE);
 
   if (isLoading) {
     return (
@@ -213,25 +283,102 @@ export const ProductGrid = () => {
 
       {/* Products Grid */}
       {!noResults && (
-        <div
-          className={
-            viewMode === "grid"
-              ? "grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4"
-              : "flex flex-col gap-3 sm:gap-4"
-          }
-        >
-          {products.map((product) => (
-            <ProductCard
-              key={product.id}
-              id={product.id}
-              name={product.name}
-              price={Number(product.price)}
-              image_url={product.image_url}
-              description={product.description}
-              layout={viewMode}
-            />
-          ))}
-        </div>
+        <>
+          <div
+            className={
+              viewMode === "grid"
+                ? "grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4"
+                : "flex flex-col gap-3 sm:gap-4"
+            }
+          >
+            {products.map((product) => (
+              <ProductCard
+                key={product.id}
+                id={product.id}
+                name={product.name}
+                price={Number(product.price)}
+                image_url={product.image_url}
+                description={product.description}
+                layout={viewMode}
+              />
+            ))}
+          </div>
+
+          {/* Pagination Controls */}
+          {totalPages > 1 && (
+            <div className="flex flex-col items-center gap-4 mt-8">
+              {/* Page Info */}
+              <p className="text-sm text-muted-foreground">
+                Página {currentPage} de {totalPages} ({totalCount} productos)
+              </p>
+
+              {/* Pagination Buttons */}
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="default"
+                  onClick={() => setCurrentPage(currentPage - 1)}
+                  disabled={currentPage === 1}
+                  className="h-11 md:h-10 px-4"
+                  aria-label="Página anterior"
+                >
+                  <ChevronLeft className="h-4 w-4 mr-1" />
+                  Anterior
+                </Button>
+
+                {/* Page Numbers - Show max 5 pages */}
+                <div className="hidden sm:flex items-center gap-1">
+                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                    // Calculate which pages to show
+                    let pageNumber;
+                    if (totalPages <= 5) {
+                      pageNumber = i + 1;
+                    } else if (currentPage <= 3) {
+                      pageNumber = i + 1;
+                    } else if (currentPage >= totalPages - 2) {
+                      pageNumber = totalPages - 4 + i;
+                    } else {
+                      pageNumber = currentPage - 2 + i;
+                    }
+
+                    return (
+                      <Button
+                        key={pageNumber}
+                        variant={currentPage === pageNumber ? "default" : "outline"}
+                        size="icon"
+                        onClick={() => setCurrentPage(pageNumber)}
+                        className="h-10 w-10"
+                        aria-label={`Ir a página ${pageNumber}`}
+                        aria-current={currentPage === pageNumber ? "page" : undefined}
+                      >
+                        {pageNumber}
+                      </Button>
+                    );
+                  })}
+                </div>
+
+                {/* Mobile - Current page indicator */}
+                <div className="sm:hidden flex items-center justify-center min-w-[60px]">
+                  <span className="text-sm font-medium">
+                    {currentPage} / {totalPages}
+                  </span>
+                </div>
+
+                <Button
+                  variant="outline"
+                  size="default"
+                  onClick={() => setCurrentPage(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                  className="h-11 md:h-10 px-4"
+                  aria-label="Página siguiente"
+                >
+                  Siguiente
+                  <ChevronRight className="h-4 w-4 ml-1" />
+                </Button>
+              </div>
+            </div>
+          )}
+        </>
       )}
     </div>
   );
