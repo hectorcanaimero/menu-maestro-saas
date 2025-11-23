@@ -162,50 +162,79 @@ const Index = () => {
             ) : (
               <>
                 <div className="flex-1 overflow-y-auto space-y-4 pr-2">
-                  {items.map((item) => (
-                    <div key={item.id} className="flex gap-4 p-4 rounded-lg border bg-card">
-                      {item.image_url ? (
-                        <img src={item.image_url} alt={item.name} className="w-20 h-20 object-cover rounded" />
-                      ) : (
-                        <div className="w-20 h-20 bg-muted rounded flex items-center justify-center">
-                          <ShoppingCart className="w-8 h-8 text-muted-foreground" />
-                        </div>
-                      )}
+                  {items.map((item) => {
+                    const extrasTotal = item.extras?.reduce((sum, extra) => sum + extra.price, 0) || 0;
+                    const itemTotal = (item.price + extrasTotal) * item.quantity;
 
-                      <div className="flex-1">
-                        <h4 className="font-semibold">{item.name}</h4>
-                        <p className="text-sm font-semibold mt-1" style={{ color: `hsl(var(--price-color, var(--foreground)))` }}>${item.price.toFixed(2)}</p>
+                    return (
+                      <div key={item.cartItemId || item.id} className="flex gap-3 sm:gap-4 p-3 sm:p-4 rounded-lg border bg-card">
+                        {item.image_url ? (
+                          <img src={item.image_url} alt={item.name} className="w-16 h-16 sm:w-20 sm:h-20 object-cover rounded flex-shrink-0" />
+                        ) : (
+                          <div className="w-16 h-16 sm:w-20 sm:h-20 bg-muted rounded flex items-center justify-center flex-shrink-0">
+                            <ShoppingCart className="w-6 h-6 sm:w-8 sm:h-8 text-muted-foreground" />
+                          </div>
+                        )}
 
-                        <div className="flex items-center gap-2 mt-2">
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            className="h-8 w-8"
-                            onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                          >
-                            <Minus className="w-3 h-3" />
-                          </Button>
-                          <span className="w-8 text-center font-medium">{item.quantity}</span>
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            className="h-8 w-8"
-                            onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                          >
-                            <Plus className="w-3 h-3" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 ml-auto"
-                            onClick={() => removeItem(item.id)}
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-semibold text-sm sm:text-base">{item.name}</h4>
+
+                          {/* Extras display */}
+                          {item.extras && item.extras.length > 0 && (
+                            <div className="mt-1 space-y-0.5">
+                              {item.extras.map((extra) => (
+                                <p key={extra.id} className="text-xs text-muted-foreground">
+                                  + {extra.name} <span className="font-medium">(${extra.price.toFixed(2)})</span>
+                                </p>
+                              ))}
+                            </div>
+                          )}
+
+                          {/* Price display */}
+                          <div className="mt-1 sm:mt-2">
+                            <p className="text-xs sm:text-sm font-semibold" style={{ color: `hsl(var(--price-color, var(--foreground)))` }}>
+                              ${itemTotal.toFixed(2)}
+                              {item.quantity > 1 && (
+                                <span className="text-muted-foreground font-normal ml-1">
+                                  (${(item.price + extrasTotal).toFixed(2)} c/u)
+                                </span>
+                              )}
+                            </p>
+                          </div>
+
+                          {/* Quantity controls */}
+                          <div className="flex items-center gap-2 mt-2 sm:mt-3">
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              className="h-8 w-8"
+                              onClick={() => updateQuantity(item.cartItemId || item.id, item.quantity - 1)}
+                            >
+                              <Minus className="w-3 h-3" />
+                            </Button>
+                            <span className="w-8 text-center font-medium text-sm">{item.quantity}</span>
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              className="h-8 w-8"
+                              onClick={() => updateQuantity(item.cartItemId || item.id, item.quantity + 1)}
+                            >
+                              <Plus className="w-3 h-3" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 ml-auto"
+                              onClick={() => removeItem(item.cartItemId || item.id)}
+                              aria-label="Eliminar item"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
 
                 <div className="border-t pt-4 mt-4 space-y-4">

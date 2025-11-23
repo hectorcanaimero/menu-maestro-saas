@@ -39,12 +39,24 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     localStorage.setItem("cart", JSON.stringify(items));
   }, [items]);
 
+  const generateCartItemId = (productId: string, extras?: CartItemExtra[]): string => {
+    if (!extras || extras.length === 0) {
+      return productId;
+    }
+    // Sort extras by ID to ensure deterministic order
+    const sortedExtrasIds = extras
+      .map(e => e.id)
+      .sort()
+      .join(',');
+    return `${productId}::${sortedExtrasIds}`;
+  };
+
   const addItem = (item: Omit<CartItem, "quantity">) => {
     setItems((current) => {
-      // Create unique cart item ID based on product and extras
-      const cartItemId = item.cartItemId || `${item.id}-${JSON.stringify(item.extras || [])}`;
+      // Create unique cart item ID based on product and sorted extras IDs
+      const cartItemId = item.cartItemId || generateCartItemId(item.id, item.extras);
       const itemWithId = { ...item, cartItemId };
-      
+
       const existing = current.find((i) => i.cartItemId === cartItemId);
       if (existing) {
         toast.success("Cantidad actualizada");
@@ -57,18 +69,18 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     });
   };
 
-  const removeItem = (id: string) => {
-    setItems((current) => current.filter((item) => item.id !== id));
+  const removeItem = (cartItemId: string) => {
+    setItems((current) => current.filter((item) => item.cartItemId !== cartItemId));
     toast.success("Platillo eliminado");
   };
 
-  const updateQuantity = (id: string, quantity: number) => {
+  const updateQuantity = (cartItemId: string, quantity: number) => {
     if (quantity <= 0) {
-      removeItem(id);
+      removeItem(cartItemId);
       return;
     }
     setItems((current) =>
-      current.map((item) => (item.id === id ? { ...item, quantity } : item))
+      current.map((item) => (item.cartItemId === cartItemId ? { ...item, quantity } : item))
     );
   };
 
