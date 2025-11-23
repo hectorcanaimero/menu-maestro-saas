@@ -9,8 +9,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { toast } from "sonner";
-import { Package, RefreshCw, Eye, Filter, Download, ExternalLink, FileImage } from "lucide-react";
+import { Package, RefreshCw, Eye, Filter, Download, ExternalLink, FileImage, X } from "lucide-react";
 import { OrderCard } from "./OrderCard";
 
 interface OrderItemExtra {
@@ -51,12 +53,13 @@ const OrdersManager = () => {
   const [loading, setLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
-  
+
   // Filter states
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState<string>("");
-  
+  const [filtersOpen, setFiltersOpen] = useState(false);
+
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const ordersPerPage = 10;
@@ -178,6 +181,19 @@ const OrdersManager = () => {
     setCurrentPage(Math.max(1, Math.min(page, totalPages)));
   };
 
+  // Count active filters
+  const activeFiltersCount = [
+    statusFilter !== "all",
+    typeFilter !== "all",
+  ].filter(Boolean).length;
+
+  // Clear all filters
+  const clearFilters = () => {
+    setStatusFilter("all");
+    setTypeFilter("all");
+    setSearchQuery("");
+  };
+
   if (loading) {
     return <div className="text-center py-8">Cargando pedidos...</div>;
   }
@@ -198,59 +214,103 @@ const OrdersManager = () => {
           </div>
         </CardHeader>
         <CardContent>
-          {/* Filters */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-            <div className="space-y-2">
-              <label className="text-sm font-medium flex items-center gap-2">
-                <Filter className="w-4 h-4" />
-                Buscar
-              </label>
+          {/* Search and Filters - Progressive Disclosure */}
+          <div className="space-y-4 mb-6">
+            {/* Search bar and filter button */}
+            <div className="flex flex-col sm:flex-row gap-3">
               <Input
-                placeholder="Cliente, email, teléfono..."
+                placeholder="Buscar pedidos por cliente, email, teléfono..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
+                className="flex-1 h-11 md:h-10 text-base md:text-sm"
               />
-            </div>
-            
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Estado</label>
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos</SelectItem>
-                  <SelectItem value="pending">Pendiente</SelectItem>
-                  <SelectItem value="confirmed">Confirmado</SelectItem>
-                  <SelectItem value="preparing">Preparando</SelectItem>
-                  <SelectItem value="ready">Listo</SelectItem>
-                  <SelectItem value="delivered">Entregado</SelectItem>
-                  <SelectItem value="cancelled">Cancelado</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
 
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Tipo</label>
-              <Select value={typeFilter} onValueChange={setTypeFilter}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos</SelectItem>
-                  <SelectItem value="delivery">Entrega</SelectItem>
-                  <SelectItem value="pickup">Recoger</SelectItem>
-                  <SelectItem value="digital_menu">En Tienda</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+              <div className="flex gap-2">
+                <Collapsible open={filtersOpen} onOpenChange={setFiltersOpen}>
+                  <CollapsibleTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="default"
+                      className="h-11 md:h-10 whitespace-nowrap"
+                    >
+                      <Filter className="h-4 w-4 mr-2" />
+                      Filtros
+                      {activeFiltersCount > 0 && (
+                        <Badge variant="secondary" className="ml-2 h-5 min-w-[20px] px-1">
+                          {activeFiltersCount}
+                        </Badge>
+                      )}
+                    </Button>
+                  </CollapsibleTrigger>
 
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Resultados</label>
-              <div className="h-10 flex items-center px-3 border rounded-md bg-muted/50">
-                <span className="text-sm text-muted-foreground">
-                  {filteredOrders.length} pedido{filteredOrders.length !== 1 ? 's' : ''}
-                </span>
+                  <CollapsibleContent className="absolute z-10 mt-2 right-0 w-full sm:w-auto">
+                    <Card className="shadow-lg border-2 min-w-[320px]">
+                      <CardHeader className="pb-3">
+                        <div className="flex items-center justify-between">
+                          <CardTitle className="text-base">Filtrar Pedidos</CardTitle>
+                          {activeFiltersCount > 0 && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={clearFilters}
+                              className="h-8 text-xs"
+                            >
+                              <X className="h-3 w-3 mr-1" />
+                              Limpiar
+                            </Button>
+                          )}
+                        </div>
+                      </CardHeader>
+                      <CardContent className="space-y-4 pb-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="status-filter" className="text-sm font-medium">
+                            Estado
+                          </Label>
+                          <Select value={statusFilter} onValueChange={setStatusFilter}>
+                            <SelectTrigger id="status-filter" className="h-10">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="all">Todos</SelectItem>
+                              <SelectItem value="pending">Pendiente</SelectItem>
+                              <SelectItem value="confirmed">Confirmado</SelectItem>
+                              <SelectItem value="preparing">Preparando</SelectItem>
+                              <SelectItem value="ready">Listo</SelectItem>
+                              <SelectItem value="delivered">Entregado</SelectItem>
+                              <SelectItem value="cancelled">Cancelado</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor="type-filter" className="text-sm font-medium">
+                            Tipo de Pedido
+                          </Label>
+                          <Select value={typeFilter} onValueChange={setTypeFilter}>
+                            <SelectTrigger id="type-filter" className="h-10">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="all">Todos</SelectItem>
+                              <SelectItem value="delivery">Entrega</SelectItem>
+                              <SelectItem value="pickup">Recoger</SelectItem>
+                              <SelectItem value="digital_menu">En Tienda</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        <div className="pt-2 border-t">
+                          <div className="flex items-center justify-between text-sm">
+                            <span className="text-muted-foreground">Resultados:</span>
+                            <span className="font-medium">
+                              {filteredOrders.length} pedido{filteredOrders.length !== 1 ? 's' : ''}
+                            </span>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </CollapsibleContent>
+                </Collapsible>
               </div>
             </div>
           </div>

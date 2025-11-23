@@ -6,10 +6,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Switch } from "@/components/ui/switch";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { toast } from "sonner";
 import { Plus, Pencil, Trash2, Image as ImageIcon, Star, Settings } from "lucide-react";
 import { ProductExtrasManager } from "./ProductExtrasManager";
@@ -250,119 +251,155 @@ const MenuItemsManager = () => {
                 {editingItem ? "Editar Platillo" : "Nuevo Platillo"}
               </DialogTitle>
             </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Nombre</Label>
-                <Input
-                  id="name"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="description">Descripción</Label>
-                <Textarea
-                  id="description"
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
+            <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6">
+              {/* Essential Fields - Always Visible */}
+              <div className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="price">Precio</Label>
+                  <Label htmlFor="name" className="text-sm md:text-base">Nombre del Platillo</Label>
                   <Input
-                    id="price"
-                    type="number"
-                    step="0.01"
-                    value={formData.price}
-                    onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                    id="name"
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     required
+                    placeholder="Ej: Hamburguesa Clásica"
+                    className="h-11 md:h-10 text-base md:text-sm"
                   />
                 </div>
+
                 <div className="space-y-2">
-                  <Label htmlFor="category">Categoría</Label>
-                  <Select
-                    value={formData.category_id}
-                    onValueChange={(value) => setFormData({ ...formData, category_id: value })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecciona categoría" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {categories.map((category) => (
-                        <SelectItem key={category.id} value={category.id}>
-                          {category.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="image">Imagen</Label>
-                <div className="flex gap-2">
-                  <Input
-                    id="image"
-                    type="file"
-                    accept="image/*"
-                    onChange={handleImageUpload}
-                    disabled={uploading}
-                  />
-                  {formData.image_url && (
-                    <div className="w-20 h-20 border rounded overflow-hidden">
-                      <img
-                        src={formData.image_url}
-                        alt="Preview"
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                  )}
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="order">Orden</Label>
-                  <Input
-                    id="order"
-                    type="number"
-                    value={formData.display_order}
-                    onChange={(e) => setFormData({ ...formData, display_order: parseInt(e.target.value) })}
+                  <Label htmlFor="description" className="text-sm md:text-base">Descripción</Label>
+                  <Textarea
+                    id="description"
+                    value={formData.description}
+                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    placeholder="Describe brevemente el platillo..."
+                    className="min-h-20 text-base md:text-sm"
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="available">Estado</Label>
-                  <Select
-                    value={formData.is_available.toString()}
-                    onValueChange={(value) => setFormData({ ...formData, is_available: value === "true" })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="true">Disponible</SelectItem>
-                      <SelectItem value="false">No disponible</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label htmlFor="featured">Producto Destacado</Label>
-                    <p className="text-sm text-muted-foreground">
-                      Los productos destacados aparecen en el carrusel principal
-                    </p>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="price" className="text-sm md:text-base">Precio</Label>
+                    <Input
+                      id="price"
+                      type="number"
+                      step="0.01"
+                      value={formData.price}
+                      onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                      required
+                      placeholder="0.00"
+                      className="h-11 md:h-10 text-base md:text-sm"
+                    />
                   </div>
-                  <Switch
-                    id="featured"
-                    checked={formData.is_featured}
-                    onCheckedChange={(checked) => setFormData({ ...formData, is_featured: checked })}
-                  />
+                  <div className="space-y-2">
+                    <Label htmlFor="category" className="text-sm md:text-base">Categoría</Label>
+                    <Select
+                      value={formData.category_id}
+                      onValueChange={(value) => setFormData({ ...formData, category_id: value })}
+                    >
+                      <SelectTrigger className="h-11 md:h-10">
+                        <SelectValue placeholder="Selecciona categoría" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {categories.map((category) => (
+                          <SelectItem key={category.id} value={category.id}>
+                            {category.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
               </div>
-              <Button type="submit" className="w-full" disabled={uploading}>
-                {uploading ? "Subiendo imagen..." : editingItem ? "Actualizar" : "Crear"}
+
+              {/* Advanced Options - Accordion */}
+              <Accordion type="single" collapsible className="border rounded-lg">
+                <AccordionItem value="advanced" className="border-0">
+                  <AccordionTrigger className="px-4 hover:no-underline">
+                    <span className="text-sm font-medium">Opciones Avanzadas</span>
+                  </AccordionTrigger>
+                  <AccordionContent className="px-4 pb-4 space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="image" className="text-sm md:text-base">Imagen del Producto</Label>
+                      <div className="flex flex-col sm:flex-row gap-3">
+                        <Input
+                          id="image"
+                          type="file"
+                          accept="image/*"
+                          onChange={handleImageUpload}
+                          disabled={uploading}
+                          className="h-11 md:h-10 text-base md:text-sm"
+                        />
+                        {formData.image_url && (
+                          <div className="w-20 h-20 border rounded overflow-hidden flex-shrink-0">
+                            <img
+                              src={formData.image_url}
+                              alt="Preview"
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                        )}
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        Sube una imagen del platillo (opcional)
+                      </p>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="available" className="text-sm md:text-base">Disponibilidad</Label>
+                        <Select
+                          value={formData.is_available.toString()}
+                          onValueChange={(value) => setFormData({ ...formData, is_available: value === "true" })}
+                        >
+                          <SelectTrigger className="h-11 md:h-10">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="true">Disponible</SelectItem>
+                            <SelectItem value="false">No disponible</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="order" className="text-sm md:text-base">Orden de Visualización</Label>
+                        <Input
+                          id="order"
+                          type="number"
+                          value={formData.display_order}
+                          onChange={(e) => setFormData({ ...formData, display_order: parseInt(e.target.value) || 0 })}
+                          placeholder="0"
+                          className="h-11 md:h-10 text-base md:text-sm"
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          Número menor aparece primero
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2 pt-2 border-t">
+                      <div className="flex items-center justify-between gap-4">
+                        <div className="space-y-0.5">
+                          <Label htmlFor="featured" className="text-sm md:text-base">Producto Destacado</Label>
+                          <p className="text-xs text-muted-foreground">
+                            Los productos destacados aparecen en el carrusel principal
+                          </p>
+                        </div>
+                        <Switch
+                          id="featured"
+                          checked={formData.is_featured}
+                          onCheckedChange={(checked) => setFormData({ ...formData, is_featured: checked })}
+                          className="flex-shrink-0"
+                        />
+                      </div>
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
+
+              <Button type="submit" className="w-full h-11 md:h-10 text-base md:text-sm" disabled={uploading}>
+                {uploading ? "Subiendo imagen..." : editingItem ? "Actualizar Platillo" : "Crear Platillo"}
               </Button>
             </form>
           </DialogContent>
