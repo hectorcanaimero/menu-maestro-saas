@@ -8,6 +8,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { ProductExtrasDialog } from "./ProductExtrasDialog";
 import { useProductPromotions, getBestPromotion } from "@/hooks/usePromotions";
+import { useQuickView } from "@/hooks/useQuickView";
 
 interface ProductCardProps {
   id: string;
@@ -18,6 +19,15 @@ interface ProductCardProps {
   layout?: "grid" | "list";
   compact?: boolean;
   categoryId?: string | null;
+  index?: number;
+  allProducts?: Array<{
+    id: string;
+    name: string;
+    price: number;
+    image_url: string | null;
+    description?: string | null;
+    categoryId?: string | null;
+  }>;
 }
 
 export const ProductCard = ({
@@ -29,9 +39,12 @@ export const ProductCard = ({
   layout = "list",
   compact = false,
   categoryId,
+  index = 0,
+  allProducts = [],
 }: ProductCardProps) => {
   const { addItem } = useCart();
   const navigate = useNavigate();
+  const { openQuickView } = useQuickView();
   const [showExtrasDialog, setShowExtrasDialog] = useState(false);
 
   // Get applicable promotions for this product
@@ -41,6 +54,12 @@ export const ProductCard = ({
   const handleAddToCart = (e: React.MouseEvent) => {
     e.stopPropagation();
     setShowExtrasDialog(true);
+  };
+
+  const handleQuickView = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const products = allProducts.length > 0 ? allProducts : [{ id, name, price, image_url, description, categoryId }];
+    openQuickView({ id, name, price, image_url, description, categoryId }, products, index);
   };
 
   const handleConfirmWithExtras = (extras: any[]) => {
@@ -99,6 +118,17 @@ export const ProductCard = ({
               }
             </Badge>
           )}
+
+          {/* Quick View Button - Shows on hover (desktop) or always (mobile) */}
+          <Button
+            size="icon"
+            variant="secondary"
+            onClick={handleQuickView}
+            className="absolute top-2 right-2 h-9 w-9 rounded-full shadow-md opacity-0 group-hover:opacity-100 sm:opacity-100 transition-opacity bg-background/80 backdrop-blur-sm hover:bg-background z-10"
+            aria-label={`Vista rápida de ${name}`}
+          >
+            <Eye className="h-4 w-4" />
+          </Button>
         </div>
 
         {/* Content Container */}

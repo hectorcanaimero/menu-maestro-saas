@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { ProductCard } from './ProductCard';
+import { QuickViewModal } from './QuickViewModal';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useSearchParams } from 'react-router-dom';
 import { useState, useEffect } from 'react';
@@ -272,6 +273,7 @@ export const ProductGrid = () => {
       {/* Products Grid */}
       {!noResults && (
         <>
+          <QuickViewModal />
           <div
             className={
               viewMode === 'grid'
@@ -279,7 +281,7 @@ export const ProductGrid = () => {
                 : 'flex flex-col gap-3 sm:gap-4'
             }
           >
-            {products.map((product) => (
+            {products.map((product, index) => (
               <ProductCard
                 key={product.id}
                 id={product.id}
@@ -289,6 +291,15 @@ export const ProductGrid = () => {
                 description={product.description}
                 layout={viewMode}
                 categoryId={product.category_id}
+                index={index}
+                allProducts={products.map((p) => ({
+                  id: p.id,
+                  name: p.name,
+                  price: Number(p.price),
+                  image_url: p.image_url,
+                  description: p.description,
+                  categoryId: p.category_id,
+                }))}
               />
             ))}
           </div>
