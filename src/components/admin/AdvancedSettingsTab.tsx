@@ -64,20 +64,20 @@ export const AdvancedSettingsTab = ({ storeId, initialData }: AdvancedSettingsTa
   };
 
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Ajustes avanzados</CardTitle>
-          <CardDescription>En esta sección puede configurar algunos ajustes avanzados.</CardDescription>
+    <div className="space-y-4 md:space-y-6">
+      <Card className="border-0 shadow-none md:border md:shadow-sm">
+        <CardHeader className="px-4 md:px-6">
+          <CardTitle className="text-xl md:text-2xl">Ajustes avanzados</CardTitle>
+          <CardDescription className="text-sm">En esta sección puede configurar algunos ajustes avanzados.</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-6">
+        <CardContent className="px-4 md:px-6 space-y-4 md:space-y-6">
           <div className="space-y-4">
-            <div className="flex items-center justify-between space-x-4">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 md:space-x-4">
               <div className="flex-1">
-                <Label htmlFor="remove-zipcode" className="text-base">
+                <Label htmlFor="remove-zipcode" className="text-sm md:text-base">
                   Eliminar código postal
                 </Label>
-                <p className="text-sm text-muted-foreground mt-1">
+                <p className="text-xs md:text-sm text-muted-foreground mt-1">
                   Sí, eliminar la entrada del código postal. Elimine la entrada y la verificación del campo Código
                   postal.
                 </p>
@@ -86,15 +86,16 @@ export const AdvancedSettingsTab = ({ storeId, initialData }: AdvancedSettingsTa
                 id="remove-zipcode"
                 checked={removeZipcode}
                 onCheckedChange={setRemoveZipcode}
+                className="self-start md:self-auto"
               />
             </div>
 
-            <div className="flex items-center justify-between space-x-4">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 md:space-x-4">
               <div className="flex-1">
-                <Label htmlFor="remove-address-number" className="text-base">
+                <Label htmlFor="remove-address-number" className="text-sm md:text-base">
                   Eliminar número de dirección
                 </Label>
-                <p className="text-sm text-muted-foreground mt-1">
+                <p className="text-xs md:text-sm text-muted-foreground mt-1">
                   Sí, elimine la entrada de número de dirección. Elimine la entrada y la verificación del campo de
                   número de dirección.
                 </p>
@@ -103,26 +104,27 @@ export const AdvancedSettingsTab = ({ storeId, initialData }: AdvancedSettingsTa
                 id="remove-address-number"
                 checked={removeAddressNumber}
                 onCheckedChange={setRemoveAddressNumber}
+                className="self-start md:self-auto"
               />
             </div>
           </div>
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Notification Settings</CardTitle>
-          <CardDescription>
+      <Card className="border-0 shadow-none md:border md:shadow-sm">
+        <CardHeader className="px-4 md:px-6">
+          <CardTitle className="text-xl md:text-2xl">Notification Settings</CardTitle>
+          <CardDescription className="text-sm">
             Configure audio notifications for new orders in the admin panel.
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="flex items-center justify-between space-x-4">
+        <CardContent className="px-4 md:px-6 space-y-4 md:space-y-6">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 md:space-x-4">
             <div className="flex-1">
-              <Label htmlFor="audio-notifications" className="text-base">
+              <Label htmlFor="audio-notifications" className="text-sm md:text-base">
                 Audio Notifications
               </Label>
-              <p className="text-sm text-muted-foreground mt-1">
+              <p className="text-xs md:text-sm text-muted-foreground mt-1">
                 Enable audio notifications for new orders. Play a sound alert when new orders are received in the
                 admin panel.
               </p>
@@ -131,17 +133,18 @@ export const AdvancedSettingsTab = ({ storeId, initialData }: AdvancedSettingsTa
               id="audio-notifications"
               checked={enableAudioNotifications}
               onCheckedChange={setEnableAudioNotifications}
+              className="self-start md:self-auto"
             />
           </div>
 
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <Label htmlFor="notification-volume" className="text-base">
+              <Label htmlFor="notification-volume" className="text-sm md:text-base">
                 Notification Volume
               </Label>
-              <span className="text-sm text-muted-foreground">{notificationVolume}%</span>
+              <span className="text-xs md:text-sm text-muted-foreground">{notificationVolume}%</span>
             </div>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-xs md:text-sm text-muted-foreground">
               Set the volume level for notification sounds (0-100%).
             </p>
             <Slider
@@ -158,14 +161,14 @@ export const AdvancedSettingsTab = ({ storeId, initialData }: AdvancedSettingsTa
 
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <Label htmlFor="notification-repeat" className="text-base">
+              <Label htmlFor="notification-repeat" className="text-sm md:text-base">
                 Repeat Count
               </Label>
-              <span className="text-sm text-muted-foreground">
+              <span className="text-xs md:text-sm text-muted-foreground">
                 {notificationRepeatCount} {notificationRepeatCount === 1 ? "time" : "times"}
               </span>
             </div>
-            <p className="text-sm text-muted-foreground">How many times to repeat the notification sound.</p>
+            <p className="text-xs md:text-sm text-muted-foreground">How many times to repeat the notification sound.</p>
             <Slider
               id="notification-repeat"
               value={[notificationRepeatCount]}
@@ -178,25 +181,25 @@ export const AdvancedSettingsTab = ({ storeId, initialData }: AdvancedSettingsTa
             />
           </div>
 
-          <div className="pt-4">
+          <div className="pt-3 md:pt-4">
             <Button
               type="button"
               variant="outline"
               onClick={handleTestSound}
               disabled={!enableAudioNotifications}
-              className="w-full"
+              className="w-full h-11 md:h-10 text-base md:text-sm"
             >
               <Volume2 className="w-4 h-4 mr-2" />
               Probar sonido de notificación
             </Button>
-            <p className="text-xs text-muted-foreground mt-2 text-center">
+            <p className="text-xs md:text-xs text-muted-foreground mt-2 text-center">
               Haz clic para escuchar cómo sonarán las notificaciones con la configuración actual
             </p>
           </div>
         </CardContent>
       </Card>
 
-      <Button onClick={handleSave} disabled={saving}>
+      <Button onClick={handleSave} disabled={saving} className="w-full md:w-auto h-11 md:h-10 text-base md:text-sm">
         {saving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
         Guardar cambios
       </Button>

@@ -1,8 +1,8 @@
-import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { useStore } from "@/contexts/StoreContext";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ShoppingCart, DollarSign, TrendingUp } from "lucide-react";
+import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useStore } from '@/contexts/StoreContext';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { ShoppingCart, DollarSign, TrendingUp } from 'lucide-react';
 
 interface Stats {
   totalOrders: number;
@@ -12,6 +12,7 @@ interface Stats {
 
 const DashboardStats = () => {
   const { store } = useStore();
+  const [userEmail, setUserEmail] = useState('');
   const [stats, setStats] = useState<Stats>({
     totalOrders: 0,
     totalSales: 0,
@@ -20,20 +21,30 @@ const DashboardStats = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    getUserEmail();
     if (store?.id) {
       fetchStats();
     }
   }, [store?.id]);
 
+  const getUserEmail = async () => {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    if (session?.user?.email) {
+      setUserEmail(session.user.email);
+    }
+  };
+
   const fetchStats = async () => {
     if (!store?.id) return;
-    
+
     try {
       // Get total orders and sales for this store
       const { data: ordersData, error: ordersError } = await supabase
-        .from("orders")
-        .select("id, total_amount")
-        .eq("store_id", store.id);
+        .from('orders')
+        .select('id, total_amount')
+        .eq('store_id', store.id);
 
       if (ordersError) throw ordersError;
 
@@ -41,8 +52,8 @@ const DashboardStats = () => {
       const totalSales = ordersData?.reduce((sum, order) => sum + Number(order.total_amount), 0) || 0;
 
       // Get top selling products for this store
-      const orderIds = ordersData?.map(o => o.id) || [];
-      
+      const orderIds = ordersData?.map((o) => o.id) || [];
+
       if (orderIds.length === 0) {
         setStats({ totalOrders, totalSales, topProducts: [] });
         setLoading(false);
@@ -50,9 +61,9 @@ const DashboardStats = () => {
       }
 
       const { data: itemsData, error: itemsError } = await supabase
-        .from("order_items")
-        .select("item_name, quantity")
-        .in("order_id", orderIds);
+        .from('order_items')
+        .select('item_name, quantity')
+        .in('order_id', orderIds);
 
       if (itemsError) throw itemsError;
 
@@ -75,7 +86,7 @@ const DashboardStats = () => {
         topProducts,
       });
     } catch (error) {
-      console.error("Error fetching stats:", error);
+      console.error('Error fetching stats:', error);
     } finally {
       setLoading(false);
     }
@@ -126,9 +137,7 @@ const DashboardStats = () => {
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {stats.topProducts.reduce((sum, p) => sum + p.quantity, 0)}
-            </div>
+            <div className="text-2xl font-bold">{stats.topProducts.reduce((sum, p) => sum + p.quantity, 0)}</div>
             <p className="text-xs text-muted-foreground">Unidades totales</p>
           </CardContent>
         </Card>
@@ -149,9 +158,7 @@ const DashboardStats = () => {
                     </div>
                     <span className="font-medium">{product.name}</span>
                   </div>
-                  <span className="text-sm text-muted-foreground">
-                    {product.quantity} vendidos
-                  </span>
+                  <span className="text-sm text-muted-foreground">{product.quantity} vendidos</span>
                 </div>
               ))}
             </div>

@@ -1,13 +1,13 @@
-import { ReactNode } from "react";
-import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
-import { useStore } from "@/contexts/StoreContext";
-import { Button } from "@/components/ui/button";
-import { toast } from "sonner";
-import { LogOut, ChefHat, Store as StoreIcon } from "lucide-react";
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
-import { AppSidebar } from "./AppSidebar";
-import { useOrderNotifications } from "@/hooks/useOrderNotifications";
+import { ReactNode } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
+import { useStore } from '@/contexts/StoreContext';
+import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
+import { LogOut, ChefHat, Store as StoreIcon } from 'lucide-react';
+import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
+import { AppSidebar } from './AppSidebar';
+import { useOrderNotifications } from '@/hooks/useOrderNotifications';
 
 interface AdminLayoutProps {
   children: ReactNode;
@@ -17,16 +17,15 @@ interface AdminLayoutProps {
 const AdminLayout = ({ children, userEmail }: AdminLayoutProps) => {
   const navigate = useNavigate();
   const { store, loading: storeLoading, isStoreOwner } = useStore();
-  
+
   // Initialize order notifications
   useOrderNotifications();
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
-    toast.success("Sesión cerrada");
-    navigate("/");
+    toast.success('Sesión cerrada');
+    navigate('/');
   };
-
 
   if (storeLoading) {
     return (
@@ -45,8 +44,10 @@ const AdminLayout = ({ children, userEmail }: AdminLayoutProps) => {
         <div className="text-center max-w-md mx-auto px-4">
           <StoreIcon className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
           <h1 className="text-2xl font-bold mb-2">No tienes una tienda</h1>
-          <p className="text-muted-foreground mb-6">Necesitas crear una tienda para acceder al panel de administración.</p>
-          <Button onClick={() => navigate("/create-store")}>Crear mi tienda</Button>
+          <p className="text-muted-foreground mb-6">
+            Necesitas crear una tienda para acceder al panel de administración.
+          </p>
+          <Button onClick={() => navigate('/create-store')}>Crear mi tienda</Button>
         </div>
       </div>
     );
@@ -59,7 +60,7 @@ const AdminLayout = ({ children, userEmail }: AdminLayoutProps) => {
           <StoreIcon className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
           <h1 className="text-2xl font-bold mb-2">Acceso denegado</h1>
           <p className="text-muted-foreground mb-6">No tienes permisos para administrar esta tienda.</p>
-          <Button onClick={() => navigate("/")}>Volver al inicio</Button>
+          <Button onClick={() => navigate('/')}>Volver al inicio</Button>
         </div>
       </div>
     );
@@ -69,13 +70,13 @@ const AdminLayout = ({ children, userEmail }: AdminLayoutProps) => {
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-background">
         <AppSidebar />
-        
+
         <div className="flex-1 flex flex-col">
           <header className="border-b bg-card sticky top-0 z-50">
             <div className="px-3 sm:px-6 py-3 sm:py-4 flex justify-between items-center gap-2">
               <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
                 <SidebarTrigger />
-                <ChefHat className="w-6 h-6 sm:w-8 sm:h-8 text-primary flex-shrink-0" />
+                <ChefHat className="w-10 h-10 sm:w-8 sm:h-8 text-primary flex-shrink-0" />
                 <div className="min-w-0 flex-1">
                   <h1 className="text-sm sm:text-xl font-bold truncate">Panel Admin</h1>
                   <p className="text-xs sm:text-sm text-muted-foreground truncate">{store.name}</p>
@@ -83,7 +84,7 @@ const AdminLayout = ({ children, userEmail }: AdminLayoutProps) => {
                 </div>
               </div>
               <div className="flex gap-1 sm:gap-2 flex-shrink-0">
-                <Button variant="outline" size="sm" onClick={() => navigate("/")} className="hidden sm:flex">
+                <Button variant="outline" size="sm" onClick={() => navigate('/')} className="hidden sm:flex">
                   Ver Sitio
                 </Button>
                 <Button variant="outline" size="sm" onClick={handleLogout} className="sm:flex">

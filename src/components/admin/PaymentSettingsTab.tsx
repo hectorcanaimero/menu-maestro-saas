@@ -105,19 +105,19 @@ export function PaymentSettingsTab({ storeId, initialData }: PaymentSettingsTabP
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Configuración de pagos</CardTitle>
-        <CardDescription>
+    <Card className="border-0 shadow-none md:border md:shadow-sm">
+      <CardHeader className="px-4 md:px-6">
+        <CardTitle className="text-xl md:text-2xl">Configuración de pagos</CardTitle>
+        <CardDescription className="text-sm">
           En esta sección puede configurar los métodos de pago y otros ajustes.
         </CardDescription>
       </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      <CardContent className="px-4 md:px-6">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 md:space-y-6">
           <div className="space-y-2">
-            <Label htmlFor="currency">Moneda</Label>
+            <Label htmlFor="currency" className="text-sm md:text-base">Moneda</Label>
             <Select value={currency} onValueChange={(value) => setValue("currency", value)}>
-              <SelectTrigger>
+              <SelectTrigger className="h-11 md:h-10 text-base md:text-sm">
                 <SelectValue placeholder="Seleccionar" />
               </SelectTrigger>
               <SelectContent>
@@ -129,66 +129,69 @@ export function PaymentSettingsTab({ storeId, initialData }: PaymentSettingsTabP
               </SelectContent>
             </Select>
             {errors.currency && (
-              <p className="text-sm text-destructive">{errors.currency.message}</p>
+              <p className="text-xs md:text-sm text-destructive">{errors.currency.message}</p>
             )}
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="decimal_places">Número de decimales</Label>
+            <Label htmlFor="decimal_places" className="text-sm md:text-base">Número de decimales</Label>
             <Input
               id="decimal_places"
               type="number"
               min="0"
               max="4"
               {...register("decimal_places", { valueAsNumber: true })}
+              className="h-11 md:h-10 text-base md:text-sm"
             />
-            <p className="text-sm text-muted-foreground">
+            <p className="text-xs md:text-sm text-muted-foreground">
               Esto establece el número de puntos decimales que se muestran en el precio mostrado.
             </p>
             {errors.decimal_places && (
-              <p className="text-sm text-destructive">{errors.decimal_places.message}</p>
+              <p className="text-xs md:text-sm text-destructive">{errors.decimal_places.message}</p>
             )}
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="decimal_separator">Separador decimal</Label>
+            <Label htmlFor="decimal_separator" className="text-sm md:text-base">Separador decimal</Label>
             <Input
               id="decimal_separator"
               {...register("decimal_separator")}
               placeholder=","
               maxLength={5}
+              className="h-11 md:h-10 text-base md:text-sm"
             />
-            <p className="text-sm text-muted-foreground">
+            <p className="text-xs md:text-sm text-muted-foreground">
               Esto establece el separador decimal de los precios mostrados.
             </p>
             {errors.decimal_separator && (
-              <p className="text-sm text-destructive">{errors.decimal_separator.message}</p>
+              <p className="text-xs md:text-sm text-destructive">{errors.decimal_separator.message}</p>
             )}
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="thousands_separator">Separador de miles</Label>
+            <Label htmlFor="thousands_separator" className="text-sm md:text-base">Separador de miles</Label>
             <Input
               id="thousands_separator"
               {...register("thousands_separator")}
               placeholder="."
               maxLength={5}
+              className="h-11 md:h-10 text-base md:text-sm"
             />
-            <p className="text-sm text-muted-foreground">
+            <p className="text-xs md:text-sm text-muted-foreground">
               Esto establece el separador de miles de los precios mostrados.
             </p>
             {errors.thousands_separator && (
-              <p className="text-sm text-destructive">{errors.thousands_separator.message}</p>
+              <p className="text-xs md:text-sm text-destructive">{errors.thousands_separator.message}</p>
             )}
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="accept_cash">¿Aceptar pago en efectivo?</Label>
+            <Label htmlFor="accept_cash" className="text-sm md:text-base">¿Aceptar pago en efectivo?</Label>
             <Select
               value={acceptCash ? "yes" : "no"}
               onValueChange={(value) => setValue("accept_cash", value === "yes")}
             >
-              <SelectTrigger>
+              <SelectTrigger className="h-11 md:h-10 text-base md:text-sm">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -198,33 +201,34 @@ export function PaymentSettingsTab({ storeId, initialData }: PaymentSettingsTabP
             </Select>
           </div>
 
-          <Separator className="my-6" />
+          <Separator className="my-4 md:my-6" />
 
           <PaymentMethodsManager storeId={storeId} />
 
-          <Separator className="my-6" />
+          <Separator className="my-4 md:my-6" />
 
           <div className="space-y-2">
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-3 py-1">
               <Checkbox
                 id="require_payment_proof"
                 checked={requirePaymentProof}
                 onCheckedChange={(checked) => setValue("require_payment_proof", checked as boolean)}
+                className="h-5 w-5 md:h-4 md:w-4"
               />
               <label
                 htmlFor="require_payment_proof"
-                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                className="text-sm md:text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
               >
                 Requerir comprobante de pago obligatorio en el checkout
               </label>
             </div>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-xs md:text-sm text-muted-foreground">
               Si está activado, el cliente deberá subir obligatoriamente un comprobante de pago al
               hacer el pedido. Si está desactivado, el campo de comprobante estará oculto.
             </p>
           </div>
 
-          <Button type="submit" disabled={isSubmitting}>
+          <Button type="submit" disabled={isSubmitting} className="w-full md:w-auto h-11 md:h-10 text-base md:text-sm">
             {isSubmitting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
             Guardar cambios
           </Button>

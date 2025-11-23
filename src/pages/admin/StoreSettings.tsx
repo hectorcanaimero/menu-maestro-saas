@@ -1,36 +1,36 @@
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { supabase } from "@/integrations/supabase/client";
-import { useStore } from "@/contexts/StoreContext";
-import AdminLayout from "@/components/admin/AdminLayout";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
-import { BusinessHoursTab } from "@/components/admin/BusinessHoursTab";
-import { PaymentSettingsTab } from "@/components/admin/PaymentSettingsTab";
-import { OrderSettingsTab } from "@/components/admin/OrderSettingsTab";
-import { DeliverySettingsTab } from "@/components/admin/DeliverySettingsTab";
-import { AdvancedSettingsTab } from "@/components/admin/AdvancedSettingsTab";
-import { DesignSettingsTab } from "@/components/admin/DesignSettingsTab";
-import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { supabase } from '@/integrations/supabase/client';
+import { useStore } from '@/contexts/StoreContext';
+import AdminLayout from '@/components/admin/AdminLayout';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
+import { BusinessHoursTab } from '@/components/admin/BusinessHoursTab';
+import { PaymentSettingsTab } from '@/components/admin/PaymentSettingsTab';
+import { OrderSettingsTab } from '@/components/admin/OrderSettingsTab';
+import { DeliverySettingsTab } from '@/components/admin/DeliverySettingsTab';
+import { AdvancedSettingsTab } from '@/components/admin/AdvancedSettingsTab';
+import { DesignSettingsTab } from '@/components/admin/DesignSettingsTab';
+import { toast } from 'sonner';
+import { Loader2 } from 'lucide-react';
 
 const storeSettingsSchema = z.object({
-  name: z.string().trim().min(1, "El nombre es requerido").max(100, "Máximo 100 caracteres"),
+  name: z.string().trim().min(1, 'El nombre es requerido').max(100, 'Máximo 100 caracteres'),
   phone: z
     .string()
     .trim()
-    .regex(/^\+(?:58|55)\d{10,11}$/, "Formato: +58 (Venezuela) o +55 (Brasil) seguido de 10-11 dígitos"),
-  email: z.string().trim().email("Email inválido").max(255),
+    .regex(/^\+(?:58|55)\d{10,11}$/, 'Formato: +58 (Venezuela) o +55 (Brasil) seguido de 10-11 dígitos'),
+  email: z.string().trim().email('Email inválido').max(255),
   operating_modes: z
-    .array(z.enum(["delivery", "pickup", "digital_menu"]))
-    .min(1, "Selecciona al menos un modo de funcionamiento"),
+    .array(z.enum(['delivery', 'pickup', 'digital_menu']))
+    .min(1, 'Selecciona al menos un modo de funcionamiento'),
 });
 
 type StoreSettingsForm = z.infer<typeof storeSettingsSchema>;
@@ -38,7 +38,7 @@ type StoreSettingsForm = z.infer<typeof storeSettingsSchema>;
 const StoreSettings = () => {
   const navigate = useNavigate();
   const { store } = useStore();
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -55,7 +55,7 @@ const StoreSettings = () => {
     },
   });
 
-  const operatingModes = watch("operating_modes");
+  const operatingModes = watch('operating_modes');
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -63,7 +63,7 @@ const StoreSettings = () => {
         data: { user },
       } = await supabase.auth.getUser();
       if (!user) {
-        navigate("/auth");
+        navigate('/auth');
         return;
       }
       setUser(user);
@@ -75,10 +75,10 @@ const StoreSettings = () => {
 
   useEffect(() => {
     if (store) {
-      setValue("name", store.name);
-      setValue("phone", store.phone || "");
-      setValue("email", store.email || "");
-      setValue("operating_modes", store.operating_modes || ["delivery"]);
+      setValue('name', store.name);
+      setValue('phone', store.phone || '');
+      setValue('email', store.email || '');
+      setValue('operating_modes', store.operating_modes || ['delivery']);
     }
   }, [store, setValue]);
 
@@ -88,7 +88,7 @@ const StoreSettings = () => {
     setSaving(true);
     try {
       const { error } = await supabase
-        .from("stores")
+        .from('stores')
         .update({
           name: data.name,
           phone: data.phone,
@@ -96,15 +96,15 @@ const StoreSettings = () => {
           operating_modes: data.operating_modes,
           updated_at: new Date().toISOString(),
         })
-        .eq("id", store.id);
+        .eq('id', store.id);
 
       if (error) throw error;
 
-      toast.success("Configuración guardada correctamente");
+      toast.success('Configuración guardada correctamente');
       window.location.reload();
-    } catch (error: any) {
-      console.error("Error saving settings:", error);
-      toast.error("Error al guardar la configuración");
+    } catch (error) {
+      console.error('Error saving settings:', error);
+      toast.error('Error al guardar la configuración');
     } finally {
       setSaving(false);
     }
@@ -113,7 +113,10 @@ const StoreSettings = () => {
   if (loading || !user || !store) {
     return (
       <AdminLayout userEmail="">
-        <div className="flex items-center justify-center min-h-[400px]">
+        {/* <div className="flex items-center justify-center min-h-[400px]">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        </div> */}
+        <div className="space-y-6">
           <Loader2 className="w-8 h-8 animate-spin text-primary" />
         </div>
       </AdminLayout>
@@ -121,99 +124,144 @@ const StoreSettings = () => {
   }
 
   return (
-    <AdminLayout userEmail={user.email || ""}>
-      <div>
-        <h1 className="text-3xl font-bold mb-6">Configuración de Tienda</h1>
-
+    <AdminLayout userEmail={user.email}>
+      <div className="space-y-4 md:space-y-6">
+        <div className="pb-2 border-b md:border-0">
+          <h1 className="text-2xl md:text-3xl font-bold">Configuración de Tienda</h1>
+        </div>
         <Tabs defaultValue="company" className="w-full">
-          <TabsList className="grid w-full grid-cols-7">
-            <TabsTrigger value="company">Empresa</TabsTrigger>
-            <TabsTrigger value="design">Diseño</TabsTrigger>
-            <TabsTrigger value="delivery">Entrega</TabsTrigger>
-            <TabsTrigger value="hours">Horario</TabsTrigger>
-            <TabsTrigger value="order">Orden</TabsTrigger>
-            <TabsTrigger value="payment">Pago</TabsTrigger>
-            <TabsTrigger value="advanced">Avanzado</TabsTrigger>
+          <TabsList className="inline-flex w-full overflow-x-auto overflow-y-hidden whitespace-nowrap rounded-lg bg-muted p-1 text-muted-foreground md:grid md:grid-cols-7 scrollbar-hide">
+            <TabsTrigger value="company" className="min-w-[100px] md:min-w-0">
+              Empresa
+            </TabsTrigger>
+            <TabsTrigger value="design" className="min-w-[100px] md:min-w-0">
+              Diseño
+            </TabsTrigger>
+            <TabsTrigger value="delivery" className="min-w-[100px] md:min-w-0">
+              Entrega
+            </TabsTrigger>
+            <TabsTrigger value="hours" className="min-w-[100px] md:min-w-0">
+              Horario
+            </TabsTrigger>
+            <TabsTrigger value="order" className="min-w-[100px] md:min-w-0">
+              Orden
+            </TabsTrigger>
+            <TabsTrigger value="payment" className="min-w-[100px] md:min-w-0">
+              Pago
+            </TabsTrigger>
+            <TabsTrigger value="advanced" className="min-w-[100px] md:min-w-0">
+              Avanzado
+            </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="company" className="mt-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Información de la Empresa</CardTitle>
-                <CardDescription>En esta sección puede configurar todos los ajustes de la empresa.</CardDescription>
+          <TabsContent value="company" className="mt-4 md:mt-6">
+            <Card className="border-0 shadow-none md:border md:shadow-sm">
+              <CardHeader className="px-4 md:px-6">
+                <CardTitle className="text-xl md:text-2xl">Información de la Empresa</CardTitle>
+                <CardDescription className="text-sm">
+                  En esta sección puede configurar todos los ajustes de la empresa.
+                </CardDescription>
               </CardHeader>
-              <CardContent>
-                <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+              <CardContent className="px-4 md:px-6">
+                <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 md:space-y-6">
                   <div className="space-y-2">
-                    <Label htmlFor="name">Nombre de la empresa</Label>
-                    <Input id="name" {...register("name")} placeholder="Mi Restaurante" />
-                    <p className="text-sm text-muted-foreground">
+                    <Label htmlFor="name" className="text-sm md:text-base">
+                      Nombre de la empresa
+                    </Label>
+                    <Input
+                      id="name"
+                      {...register('name')}
+                      placeholder="Mi Restaurante"
+                      className="h-11 md:h-10 text-base md:text-sm"
+                    />
+                    <p className="text-xs md:text-sm text-muted-foreground">
                       El nombre de la empresa se puede usar en mensajes personalizados u otras partes del sitio.
                     </p>
-                    {errors.name && <p className="text-sm text-destructive">{errors.name.message}</p>}
+                    {errors.name && <p className="text-xs md:text-sm text-destructive">{errors.name.message}</p>}
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="phone">WhatsApp</Label>
-                    <Input id="phone" {...register("phone")} placeholder="+5511999999999" />
-                    <p className="text-sm text-muted-foreground">
+                    <Label htmlFor="phone" className="text-sm md:text-base">
+                      WhatsApp
+                    </Label>
+                    <Input
+                      id="phone"
+                      {...register('phone')}
+                      placeholder="+5511999999999"
+                      type="tel"
+                      className="h-11 md:h-10 text-base md:text-sm"
+                    />
+                    <p className="text-xs md:text-sm text-muted-foreground">
                       Este teléfono se puede utilizar en mensajes personalizados u otras partes del sitio. Formato: +58
                       (Venezuela) o +55 (Brasil).
                     </p>
-                    {errors.phone && <p className="text-sm text-destructive">{errors.phone.message}</p>}
+                    {errors.phone && <p className="text-xs md:text-sm text-destructive">{errors.phone.message}</p>}
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="email">Email</Label>
-                    <Input id="email" type="email" {...register("email")} placeholder="contacto@mirestaurante.com" />
-                    <p className="text-sm text-muted-foreground">
+                    <Label htmlFor="email" className="text-sm md:text-base">
+                      Email
+                    </Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      {...register('email')}
+                      placeholder="contacto@mirestaurante.com"
+                      className="h-11 md:h-10 text-base md:text-sm"
+                    />
+                    <p className="text-xs md:text-sm text-muted-foreground">
                       Este correo electrónico se puede utilizar en mensajes personalizados u otras partes del sitio.
                     </p>
-                    {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
+                    {errors.email && <p className="text-xs md:text-sm text-destructive">{errors.email.message}</p>}
                   </div>
 
                   <div className="space-y-2">
-                    <Label>Modo de funcionamiento</Label>
-                    <div className="space-y-3">
+                    <Label className="text-sm md:text-base">Modo de funcionamiento</Label>
+                    <div className="space-y-3 md:space-y-2">
                       {[
-                        { value: "delivery", label: "Delivery" },
-                        { value: "pickup", label: "Entrega en tienda" },
-                        { value: "digital_menu", label: "Menú Digital" },
+                        { value: 'delivery', label: 'Delivery' },
+                        { value: 'pickup', label: 'Entrega en tienda' },
+                        { value: 'digital_menu', label: 'Menú Digital' },
                       ].map((mode) => (
-                        <div key={mode.value} className="flex items-center space-x-2">
+                        <div key={mode.value} className="flex items-center space-x-3 py-1">
                           <Checkbox
                             id={mode.value}
                             checked={operatingModes?.includes(mode.value as any)}
                             onCheckedChange={(checked) => {
                               const current = operatingModes || [];
                               if (checked) {
-                                setValue("operating_modes", [...current, mode.value as any]);
+                                setValue('operating_modes', [...current, mode.value as any]);
                               } else {
                                 setValue(
-                                  "operating_modes",
+                                  'operating_modes',
                                   current.filter((m) => m !== mode.value),
                                 );
                               }
                             }}
+                            className="h-5 w-5 md:h-4 md:w-4"
                           />
                           <label
                             htmlFor={mode.value}
-                            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                            className="text-sm md:text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
                           >
                             {mode.label}
                           </label>
                         </div>
                       ))}
                     </div>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-xs md:text-sm text-muted-foreground">
                       Selecciona los modos en que funciona tu negocio (puedes seleccionar varios).
                     </p>
                     {errors.operating_modes && (
-                      <p className="text-sm text-destructive">{errors.operating_modes.message}</p>
+                      <p className="text-xs md:text-sm text-destructive">{errors.operating_modes.message}</p>
                     )}
                   </div>
 
-                  <Button type="submit" disabled={saving}>
+                  <Button
+                    type="submit"
+                    disabled={saving}
+                    className="w-full md:w-auto h-11 md:h-10 text-base md:text-sm"
+                  >
                     {saving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                     Guardar cambios
                   </Button>
@@ -222,7 +270,7 @@ const StoreSettings = () => {
             </Card>
           </TabsContent>
 
-          <TabsContent value="design" className="mt-6">
+          <TabsContent value="design" className="mt-4 md:mt-6">
             <DesignSettingsTab
               storeId={store.id}
               initialData={{
@@ -234,11 +282,11 @@ const StoreSettings = () => {
             />
           </TabsContent>
 
-          <TabsContent value="hours" className="mt-6">
+          <TabsContent value="hours" className="mt-4 md:mt-6">
             <BusinessHoursTab storeId={store.id} forceStatus={store.force_status} />
           </TabsContent>
 
-          <TabsContent value="payment" className="mt-6">
+          <TabsContent value="payment" className="mt-4 md:mt-6">
             <PaymentSettingsTab
               storeId={store.id}
               initialData={{
@@ -252,7 +300,7 @@ const StoreSettings = () => {
             />
           </TabsContent>
 
-          <TabsContent value="order" className="mt-6">
+          <TabsContent value="order" className="mt-4 md:mt-6">
             <OrderSettingsTab
               storeId={store.id}
               initialData={{
@@ -266,19 +314,19 @@ const StoreSettings = () => {
             />
           </TabsContent>
 
-          <TabsContent value="delivery" className="mt-6">
+          <TabsContent value="delivery" className="mt-4 md:mt-6">
             <DeliverySettingsTab
               storeId={store.id}
               initialData={{
                 estimated_delivery_time: store.estimated_delivery_time,
                 skip_payment_digital_menu: store.skip_payment_digital_menu,
-                delivery_price_mode: (store.delivery_price_mode as "fixed" | "by_zone") || "fixed",
+                delivery_price_mode: (store.delivery_price_mode as 'fixed' | 'by_zone') || 'fixed',
                 fixed_delivery_price: store.fixed_delivery_price,
               }}
             />
           </TabsContent>
 
-          <TabsContent value="advanced" className="mt-6">
+          <TabsContent value="advanced" className="mt-4 md:mt-6">
             <AdvancedSettingsTab
               storeId={store.id}
               initialData={{

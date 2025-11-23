@@ -5,6 +5,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { CartProvider } from "@/contexts/CartContext";
 import { StoreProvider } from "@/contexts/StoreContext";
+import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import Index from "./pages/Index";
 import Welcome from "./pages/Welcome";
 import Auth from "./pages/Auth";
@@ -26,30 +28,91 @@ import StoreSettings from "./pages/admin/StoreSettings";
 const queryClient = new QueryClient();
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <StoreProvider>
-      <CartProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
+  <ErrorBoundary showDetails={import.meta.env.DEV}>
+    <QueryClientProvider client={queryClient}>
+      <StoreProvider>
+        <CartProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
             <Routes>
+              {/* Public Routes */}
               <Route path="/" element={<Index />} />
               <Route path="/welcome" element={<Welcome />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/create-store" element={<CreateStore />} />
-              <Route path="/admin" element={<AdminDashboard />} />
-              <Route path="/admin/orders" element={<AdminOrders />} />
-              <Route path="/admin/kitchen" element={<AdminKitchen />} />
-              <Route path="/admin/reports" element={<AdminReports />} />
-              <Route path="/admin/categories" element={<AdminCategories />} />
-              <Route path="/admin/menu-items" element={<AdminMenuItems />} />
-              <Route path="/admin/customers" element={<AdminCustomers />} />
-              <Route path="/admin/settings" element={<StoreSettings />} />
               <Route path="/checkout" element={<Checkout />} />
               <Route path="/confirm-order" element={<ConfirmOrder />} />
               <Route path="/my-orders" element={<MyOrders />} />
               <Route path="/products/:id" element={<ProductDetail />} />
+
+              {/* Protected Admin Routes */}
+              <Route
+                path="/admin"
+                element={
+                  <ProtectedRoute>
+                    <AdminDashboard />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/orders"
+                element={
+                  <ProtectedRoute>
+                    <AdminOrders />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/kitchen"
+                element={
+                  <ProtectedRoute>
+                    <AdminKitchen />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/reports"
+                element={
+                  <ProtectedRoute>
+                    <AdminReports />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/categories"
+                element={
+                  <ProtectedRoute>
+                    <AdminCategories />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/menu-items"
+                element={
+                  <ProtectedRoute>
+                    <AdminMenuItems />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/customers"
+                element={
+                  <ProtectedRoute>
+                    <AdminCustomers />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/settings"
+                element={
+                  <ProtectedRoute>
+                    <StoreSettings />
+                  </ProtectedRoute>
+                }
+              />
+
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
@@ -58,6 +121,7 @@ const App = () => (
       </CartProvider>
     </StoreProvider>
   </QueryClientProvider>
+  </ErrorBoundary>
 );
 
 export default App;

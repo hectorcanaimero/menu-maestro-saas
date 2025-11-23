@@ -7,11 +7,21 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Store, ArrowLeft } from "lucide-react";
+import { Store, ArrowLeft, CheckCircle2, XCircle, Loader2 } from "lucide-react";
+import {
+  validateSubdomainFormat,
+  generateSubdomainSuggestions,
+} from "@/lib/subdomain-validation";
 
 const CreateStore = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [validatingSubdomain, setValidatingSubdomain] = useState(false);
+  const [subdomainValidation, setSubdomainValidation] = useState<{
+    isValid: boolean;
+    message: string;
+  } | null>(null);
+  const [suggestions, setSuggestions] = useState<string[]>([]);
   const [formData, setFormData] = useState({
     subdomain: "",
     name: "",
@@ -21,9 +31,92 @@ const CreateStore = () => {
     address: "",
   });
 
+  const validateSubdomainServer = async (subdomain: string) => {
+    if (!subdomain || subdomain.length < 3) {
+      setSubdomainValidation(null);
+      return;
+    }
+
+    setValidatingSubdomain(true);
+    try {
+      // First, client-side validation
+      const clientValidation = validateSubdomainFormat(subdomain);
+      if (!clientValidation.isValid) {
+        setSubdomainValidation({
+          isValid: false,
+          message: clientValidation.errorMessage || "Subdomain inválido",
+        });
+        setValidatingSubdomain(false);
+        return;
+      }
+
+      // Then, server-side validation
+      const { data, error } = await supabase.rpc('validate_subdomain', {
+        p_subdomain: subdomain,
+      });
+
+      if (error) {
+        console.error("Error validating subdomain:", error);
+        setSubdomainValidation({
+          isValid: false,
+          message: "Error al validar el subdominio",
+        });
+        return;
+      }
+
+      const result = data?.[0];
+      setSubdomainValidation({
+        isValid: result?.is_valid || false,
+        message: result?.error_message || (result?.is_valid ? "✓ Disponible" : "No disponible"),
+      });
+
+      // Generate suggestions if invalid
+      if (!result?.is_valid && formData.name) {
+        const newSuggestions = generateSubdomainSuggestions(formData.name);
+        setSuggestions(newSuggestions);
+      }
+    } catch (error) {
+      console.error("Error validating subdomain:", error);
+      setSubdomainValidation({
+        isValid: false,
+        message: "Error al validar el subdominio",
+      });
+    } finally {
+      setValidatingSubdomain(false);
+    }
+  };
+
+  const handleSubdomainChange = (value: string) => {
+    const normalized = value.toLowerCase().trim();
+    setFormData({ ...formData, subdomain: normalized });
+
+    // Debounce validation
+    if (normalized.length >= 3) {
+      const timeoutId = setTimeout(() => {
+        validateSubdomainServer(normalized);
+      }, 500);
+      return () => clearTimeout(timeoutId);
+    } else {
+      setSubdomainValidation(null);
+    }
+  };
+
+  const handleNameChange = (value: string) => {
+    setFormData({ ...formData, name: value });
+
+    // Auto-generate subdomain suggestion
+    if (value.length >= 3 && !formData.subdomain) {
+      const newSuggestions = generateSubdomainSuggestions(value);
+      if (newSuggestions.length > 0) {
+        setFormData({ ...formData, name: value, subdomain: newSuggestions[0] });
+        validateSubdomainServer(newSuggestions[0]);
+      }
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) {
       toast.error("Debes iniciar sesión para crear una tienda");
@@ -31,14 +124,15 @@ const CreateStore = () => {
       return;
     }
 
-    // Validate subdomain format
-    if (!/^[a-z0-9-]+$/.test(formData.subdomain)) {
-      toast.error("El subdominio solo puede contener letras minúsculas, números y guiones");
+    // Final validation check
+    if (!subdomainValidation?.isValid) {
+      toast.error("Por favor, elige un subdominio válido");
       return;
     }
 
     setLoading(true);
     try {
+      // Server-side validation will also be enforced by DB constraints and triggers
       const { data, error } = await supabase
         .from("stores")
         .insert([
@@ -58,6 +152,10 @@ const CreateStore = () => {
       if (error) {
         if (error.code === "23505") {
           toast.error("Este subdominio ya está en uso");
+        } else if (error.message?.includes("reserved")) {
+          toast.error("Este subdominio está reservado y no puede ser usado");
+        } else if (error.message?.includes("format")) {
+          toast.error("El formato del subdominio no es válido");
         } else {
           throw error;
         }
@@ -66,7 +164,7 @@ const CreateStore = () => {
 
       // For development, save subdomain to localStorage
       localStorage.setItem("dev_subdomain", formData.subdomain);
-      
+
       toast.success("¡Tienda creada con éxito!");
       navigate("/admin/dashboard");
       window.location.reload(); // Reload to apply new store context
@@ -103,38 +201,86 @@ const CreateStore = () => {
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="subdomain">Subdominio *</Label>
-                <div className="flex items-center gap-2">
-                  <Input
-                    id="subdomain"
-                    value={formData.subdomain}
-                    onChange={(e) =>
-                      setFormData({ ...formData, subdomain: e.target.value.toLowerCase() })
-                    }
-                    placeholder="mitienda"
-                    required
-                    pattern="[a-z0-9-]+"
-                  />
-                  <span className="text-sm text-muted-foreground whitespace-nowrap">
-                    .pideai.com
-                  </span>
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  Solo letras minúsculas, números y guiones
-                </p>
-              </div>
-
-              <div className="space-y-2">
                 <Label htmlFor="name">Nombre de la Tienda *</Label>
                 <Input
                   id="name"
                   value={formData.name}
-                  onChange={(e) =>
-                    setFormData({ ...formData, name: e.target.value })
-                  }
+                  onChange={(e) => handleNameChange(e.target.value)}
                   placeholder="Mi Restaurante"
                   required
                 />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="subdomain">Subdominio *</Label>
+                <div className="flex items-center gap-2">
+                  <div className="relative flex-1">
+                    <Input
+                      id="subdomain"
+                      value={formData.subdomain}
+                      onChange={(e) => handleSubdomainChange(e.target.value)}
+                      placeholder="mitienda"
+                      required
+                      pattern="[a-z0-9-]+"
+                      className={
+                        subdomainValidation
+                          ? subdomainValidation.isValid
+                            ? "border-green-500"
+                            : "border-red-500"
+                          : ""
+                      }
+                    />
+                    {validatingSubdomain && (
+                      <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />
+                    )}
+                    {!validatingSubdomain && subdomainValidation && (
+                      <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                        {subdomainValidation.isValid ? (
+                          <CheckCircle2 className="h-4 w-4 text-green-500" />
+                        ) : (
+                          <XCircle className="h-4 w-4 text-red-500" />
+                        )}
+                      </div>
+                    )}
+                  </div>
+                  <span className="text-sm text-muted-foreground whitespace-nowrap">
+                    .pideai.com
+                  </span>
+                </div>
+                {subdomainValidation && (
+                  <p
+                    className={`text-xs ${
+                      subdomainValidation.isValid ? "text-green-600" : "text-red-600"
+                    }`}
+                  >
+                    {subdomainValidation.message}
+                  </p>
+                )}
+                {!subdomainValidation && (
+                  <p className="text-xs text-muted-foreground">
+                    Mínimo 3 caracteres. Solo letras minúsculas, números y guiones.
+                  </p>
+                )}
+                {suggestions.length > 0 && !subdomainValidation?.isValid && (
+                  <div className="mt-2">
+                    <p className="text-xs text-muted-foreground mb-1">Sugerencias:</p>
+                    <div className="flex flex-wrap gap-1">
+                      {suggestions.slice(0, 3).map((suggestion) => (
+                        <button
+                          key={suggestion}
+                          type="button"
+                          onClick={() => {
+                            setFormData({ ...formData, subdomain: suggestion });
+                            validateSubdomainServer(suggestion);
+                          }}
+                          className="text-xs px-2 py-1 bg-secondary hover:bg-secondary/80 rounded-md"
+                        >
+                          {suggestion}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -189,7 +335,12 @@ const CreateStore = () => {
                 />
               </div>
 
-              <Button type="submit" className="w-full" size="lg" disabled={loading}>
+              <Button
+                type="submit"
+                className="w-full"
+                size="lg"
+                disabled={loading || !subdomainValidation?.isValid || validatingSubdomain}
+              >
                 {loading ? "Creando..." : "Crear Tienda"}
               </Button>
             </form>

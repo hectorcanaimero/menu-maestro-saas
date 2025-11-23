@@ -2,16 +2,24 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useStore } from "@/contexts/StoreContext";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
+import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { BarChart3, DollarSign, ShoppingCart, Package, TrendingUp, Calendar as CalendarIcon } from "lucide-react";
+import { BarChart3, DollarSign, ShoppingCart, Package, TrendingUp, Calendar as CalendarIcon, Download, FileText } from "lucide-react";
 import { format, subDays, startOfDay, endOfDay } from "date-fns";
 import { es } from "date-fns/locale";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { cn } from "@/lib/utils";
+import {
+  exportToCSV,
+  exportToPDF,
+  prepareOrdersForExport,
+  prepareSalesSummaryForExport,
+  prepareTopProductsForExport
+} from "@/lib/exportUtils";
 
 interface OrderItem {
   item_name: string;
@@ -47,7 +55,7 @@ const ReportsManager = () => {
   const [period, setPeriod] = useState<string>("today");
   const [dateFrom, setDateFrom] = useState<Date>();
   const [dateTo, setDateTo] = useState<Date>();
-  
+
   // Stats
   const [totalSales, setTotalSales] = useState(0);
   const [totalOrders, setTotalOrders] = useState(0);
@@ -55,6 +63,30 @@ const ReportsManager = () => {
   const [averageDailySales, setAverageDailySales] = useState(0);
   const [topProducts, setTopProducts] = useState<TopProduct[]>([]);
   const [dailySalesData, setDailySalesData] = useState<DailySales[]>([]);
+
+  const getStatusVariant = (status: string) => {
+    const variants: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
+      pending: "outline",
+      confirmed: "secondary",
+      preparing: "default",
+      ready: "default",
+      delivered: "secondary",
+      cancelled: "destructive",
+    };
+    return variants[status] || "default";
+  };
+
+  const getStatusLabel = (status: string) => {
+    const labels: Record<string, string> = {
+      pending: "Pendiente",
+      confirmed: "Confirmado",
+      preparing: "Preparando",
+      ready: "Listo",
+      delivered: "Entregado",
+      cancelled: "Cancelado",
+    };
+    return labels[status] || status;
+  };
 
   useEffect(() => {
     if (store?.id) {
@@ -182,6 +214,53 @@ const ReportsManager = () => {
     setDailySalesData(chartData);
   };
 
+  // Export handlers
+  const handleExportOrdersCSV = () => {
+    const exportData = prepareOrdersForExport(orders);
+    exportToCSV(exportData, 'reporte-ordenes');
+    toast.success('Reporte exportado a CSV');
+  };
+
+  const handleExportOrdersPDF = () => {
+    const exportData = prepareOrdersForExport(orders);
+    exportToPDF({
+      title: 'Reporte de Órdenes',
+      storeName: store?.name,
+      subtitle: `Período: ${period === 'today' ? 'Hoy' : period === '7days' ? 'Últimos 7 días' : period === '30days' ? 'Últimos 30 días' : 'Personalizado'}`,
+      filename: 'reporte-ordenes',
+      columns: [
+        { header: 'Número', dataKey: 'Número' },
+        { header: 'Fecha', dataKey: 'Fecha', width: 35 },
+        { header: 'Cliente', dataKey: 'Cliente' },
+        { header: 'Teléfono', dataKey: 'Teléfono' },
+        { header: 'Total', dataKey: 'Total' },
+        { header: 'Estado', dataKey: 'Estado' },
+        { header: 'Productos', dataKey: 'Productos', width: 20 },
+      ],
+      data: exportData,
+      orientation: 'landscape',
+    });
+    toast.success('Reporte exportado a PDF');
+  };
+
+  const handleExportSummaryCSV = () => {
+    const exportData = prepareSalesSummaryForExport({
+      totalSales,
+      totalOrders,
+      totalProducts,
+      averageDailySales,
+      period: period === 'today' ? 'Hoy' : period === '7days' ? 'Últimos 7 días' : period === '30days' ? 'Últimos 30 días' : 'Personalizado',
+    });
+    exportToCSV(exportData, 'resumen-ventas');
+    toast.success('Resumen exportado a CSV');
+  };
+
+  const handleExportTopProductsCSV = () => {
+    const exportData = prepareTopProductsForExport(topProducts);
+    exportToCSV(exportData, 'top-productos');
+    toast.success('Top productos exportado a CSV');
+  };
+
   if (loading && orders.length === 0) {
     return <div className="text-center py-8">Cargando informes...</div>;
   }
@@ -190,10 +269,34 @@ const ReportsManager = () => {
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <BarChart3 className="w-5 h-5" />
-            Informes de Ventas
-          </CardTitle>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <CardTitle className="flex items-center gap-2">
+              <BarChart3 className="w-5 h-5" />
+              Informes de Ventas
+            </CardTitle>
+            <div className="flex flex-wrap gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleExportOrdersCSV}
+                disabled={orders.length === 0}
+              >
+                <Download className="h-4 w-4 mr-2" />
+                <span className="hidden sm:inline">Exportar CSV</span>
+                <span className="sm:hidden">CSV</span>
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleExportOrdersPDF}
+                disabled={orders.length === 0}
+              >
+                <FileText className="h-4 w-4 mr-2" />
+                <span className="hidden sm:inline">Exportar PDF</span>
+                <span className="sm:hidden">PDF</span>
+              </Button>
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
           {/* Filters */}
@@ -268,7 +371,7 @@ const ReportsManager = () => {
           </div>
 
           {/* Stats Cards */}
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-6">
+          <div className="grid gap-4 grid-cols-2 lg:grid-cols-4 mb-6">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Ventas Totales</CardTitle>
@@ -399,7 +502,7 @@ const ReportsManager = () => {
           {/* Orders List */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">
+              <CardTitle className="text-base md:text-lg">
                 Pedidos en el Período ({orders.length})
               </CardTitle>
             </CardHeader>
@@ -409,30 +512,68 @@ const ReportsManager = () => {
                   No hay pedidos en este período
                 </div>
               ) : (
-                <div className="space-y-3 max-h-96 overflow-y-auto">
-                  {orders.map((order) => (
-                    <div
-                      key={order.id}
-                      className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors"
-                    >
-                      <div className="space-y-1">
-                        <p className="font-medium">#{order.id.slice(0, 8)}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {order.customer_name}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {format(new Date(order.created_at), "dd/MM/yyyy HH:mm", { locale: es })}
-                        </p>
+                <>
+                  {/* Mobile view */}
+                  <div className="sm:hidden space-y-3 max-h-96 overflow-y-auto">
+                    {orders.map((order) => (
+                      <Card key={order.id} className="border-0 shadow-none bg-muted/50">
+                        <CardHeader className="pb-3">
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <p className="font-semibold text-base">#{order.id.slice(0, 8)}</p>
+                              <p className="text-sm text-muted-foreground">
+                                {format(new Date(order.created_at), "dd/MM/yyyy HH:mm", { locale: es })}
+                              </p>
+                            </div>
+                            <div className="text-right">
+                              <p className="font-bold text-lg">$ {Number(order.total_amount).toFixed(2)}</p>
+                              <Badge variant={getStatusVariant(order.status)} className="mt-1">
+                                {getStatusLabel(order.status)}
+                              </Badge>
+                            </div>
+                          </div>
+                        </CardHeader>
+                        <CardContent className="pt-0">
+                          <div className="space-y-1 text-sm">
+                            <p><strong>Cliente:</strong> {order.customer_name}</p>
+                            <p><strong>Productos:</strong> {order.order_items.reduce((sum, item) => sum + item.quantity, 0)} unidades</p>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+
+                  {/* Desktop view */}
+                  <div className="hidden sm:block space-y-3 max-h-96 overflow-y-auto">
+                    {orders.map((order) => (
+                      <div
+                        key={order.id}
+                        className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors"
+                      >
+                        <div className="space-y-1">
+                          <p className="font-medium">#{order.id.slice(0, 8)}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {order.customer_name}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {format(new Date(order.created_at), "dd/MM/yyyy HH:mm", { locale: es })}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-4">
+                          <Badge variant={getStatusVariant(order.status)}>
+                            {getStatusLabel(order.status)}
+                          </Badge>
+                          <div className="text-right">
+                            <p className="font-bold">$ {Number(order.total_amount).toFixed(2)}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {order.order_items.reduce((sum, item) => sum + item.quantity, 0)} productos
+                            </p>
+                          </div>
+                        </div>
                       </div>
-                      <div className="text-right">
-                        <p className="font-bold">$ {Number(order.total_amount).toFixed(2)}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {order.order_items.reduce((sum, item) => sum + item.quantity, 0)} productos
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                </>
               )}
             </CardContent>
           </Card>

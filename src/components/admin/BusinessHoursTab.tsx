@@ -136,18 +136,18 @@ export function BusinessHoursTab({ storeId, forceStatus }: BusinessHoursTabProps
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Configuración del horario de apertura</CardTitle>
-        <CardDescription>
+    <Card className="border-0 shadow-none md:border md:shadow-sm">
+      <CardHeader className="px-4 md:px-6">
+        <CardTitle className="text-xl md:text-2xl">Configuración del horario de apertura</CardTitle>
+        <CardDescription className="text-sm">
           Configura los horarios de atención de tu tienda por día de la semana.
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-8">
+      <CardContent className="px-4 md:px-6 space-y-4 md:space-y-8">
         <div className="space-y-2">
-          <Label>Forzar apertura/cierre de tienda</Label>
+          <Label className="text-sm md:text-base">Forzar apertura/cierre de tienda</Label>
           <Select value={currentForceStatus} onValueChange={setCurrentForceStatus}>
-            <SelectTrigger>
+            <SelectTrigger className="h-11 md:h-10 text-base md:text-sm">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -156,45 +156,45 @@ export function BusinessHoursTab({ storeId, forceStatus }: BusinessHoursTabProps
               <SelectItem value="force_closed">Forzar el cierre de la tienda</SelectItem>
             </SelectContent>
           </Select>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-xs md:text-sm text-muted-foreground">
             Las configuraciones a continuación se ignorarán si usa esto.
           </p>
         </div>
 
-        <div className="space-y-6">
+        <div className="space-y-4 md:space-y-6">
           {DAYS.map((day) => {
             const dayHours = hours.filter((h) => h.day_of_week === day.value);
             return (
               <div key={day.value} className="space-y-3">
-                <Label className="text-base font-semibold">{day.label}</Label>
+                <Label className="text-sm md:text-base font-semibold">{day.label}</Label>
                 {dayHours.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">Cerrado</p>
+                  <p className="text-xs md:text-sm text-muted-foreground">Cerrado</p>
                 ) : (
                   dayHours.map((hour, idx) => {
                     const globalIndex = hours.findIndex(
                       (h) => h.day_of_week === day.value && h.open_time === hour.open_time
                     );
                     return (
-                      <div key={idx} className="flex items-center gap-3">
-                        <span className="text-sm min-w-[100px]">Comenzar en</span>
+                      <div key={idx} className="flex flex-col md:flex-row md:items-center gap-2 md:gap-3">
+                        <span className="text-xs md:text-sm min-w-[100px]">Comenzar en</span>
                         <Input
                           type="time"
                           value={hour.open_time}
                           onChange={(e) => handleUpdateHour(globalIndex, "open_time", e.target.value)}
-                          className="w-32"
+                          className="h-11 md:h-10 text-base md:text-sm w-full md:w-32"
                         />
-                        <span className="text-sm">Fin</span>
+                        <span className="text-xs md:text-sm">Fin</span>
                         <Input
                           type="time"
                           value={hour.close_time}
                           onChange={(e) => handleUpdateHour(globalIndex, "close_time", e.target.value)}
-                          className="w-32"
+                          className="h-11 md:h-10 text-base md:text-sm w-full md:w-32"
                         />
                         <Button
                           variant="ghost"
                           size="sm"
                           onClick={() => handleRemoveHour(globalIndex)}
-                          className="text-destructive hover:text-destructive"
+                          className="text-destructive hover:text-destructive h-11 md:h-10 text-base md:text-sm w-full md:w-auto"
                         >
                           eliminar
                         </Button>
@@ -206,7 +206,7 @@ export function BusinessHoursTab({ storeId, forceStatus }: BusinessHoursTabProps
                   variant="outline"
                   size="sm"
                   onClick={() => handleAddHour(day.value)}
-                  className="gap-2"
+                  className="gap-2 h-11 md:h-10 text-base md:text-sm w-full md:w-auto"
                 >
                   <Plus className="w-4 h-4" />
                   Añadir más
@@ -216,7 +216,7 @@ export function BusinessHoursTab({ storeId, forceStatus }: BusinessHoursTabProps
           })}
         </div>
 
-        <Button onClick={handleSave} disabled={saving}>
+        <Button onClick={handleSave} disabled={saving} className="w-full md:w-auto h-11 md:h-10 text-base md:text-sm">
           {saving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
           Guardar cambios
         </Button>

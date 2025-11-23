@@ -213,18 +213,18 @@ export const DesignSettingsTab = ({ storeId, initialData }: DesignSettingsTabPro
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Diseño</CardTitle>
-        <CardDescription>
+    <Card className="border-0 shadow-none md:border md:shadow-sm">
+      <CardHeader className="px-4 md:px-6">
+        <CardTitle className="text-xl md:text-2xl">Diseño</CardTitle>
+        <CardDescription className="text-sm">
           En esta sección puede configurar algunas opciones de diseño.
         </CardDescription>
       </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      <CardContent className="px-4 md:px-6">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 md:space-y-6">
           {/* Logo Upload */}
           <div className="space-y-2">
-            <Label>Logo</Label>
+            <Label className="text-sm md:text-base">Logo</Label>
             {logoUrl ? (
               <div className="flex items-start gap-4">
                 <div className="relative">
@@ -267,14 +267,14 @@ export const DesignSettingsTab = ({ storeId, initialData }: DesignSettingsTabPro
                 />
               </div>
             )}
-            <p className="text-sm text-muted-foreground">
+            <p className="text-xs md:text-sm text-muted-foreground">
               Sube el logo de tu negocio (máximo 2MB, formato JPG, PNG o WEBP)
             </p>
           </div>
 
           {/* Banner Upload */}
-          <div className="space-y-2 border-t pt-6">
-            <Label>Banner / Imagen de Portada</Label>
+          <div className="space-y-2 border-t pt-4 md:pt-6">
+            <Label className="text-sm md:text-base">Banner / Imagen de Portada</Label>
             {bannerUrl ? (
               <div className="flex items-start gap-4">
                 <div className="relative w-full max-w-2xl">
@@ -317,66 +317,70 @@ export const DesignSettingsTab = ({ storeId, initialData }: DesignSettingsTabPro
                 />
               </div>
             )}
-            <p className="text-sm text-muted-foreground">
+            <p className="text-xs md:text-sm text-muted-foreground">
               Sube una imagen de portada para tu catálogo (máximo 5MB, formato JPG, PNG o WEBP). Recomendado: 1920x600px
             </p>
           </div>
 
-          <div className="border-t pt-6">
-            <h3 className="text-lg font-medium mb-4">Opciones de diseño</h3>
-            
+          <div className="border-t pt-4 md:pt-6">
+            <h3 className="text-base md:text-lg font-medium mb-4">Opciones de diseño</h3>
+
             {/* Primary Color */}
             <div className="space-y-2 mb-4">
-              <Label htmlFor="primary_color">Color principal</Label>
-              <div className="flex items-center gap-4">
+              <Label htmlFor="primary_color" className="text-sm md:text-base">Color principal</Label>
+              <div className="flex items-center gap-2 md:gap-4">
                 <Input
                   id="primary_color"
                   type="color"
                   {...register("primary_color")}
-                  className="w-20 h-10 cursor-pointer"
+                  className="w-16 h-11 md:w-20 md:h-10 cursor-pointer"
                 />
                 <Input
                   type="text"
                   {...register("primary_color")}
                   placeholder="#000000"
-                  className="flex-1"
+                  className="flex-1 h-11 md:h-10 text-base md:text-sm"
                 />
               </div>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-xs md:text-sm text-muted-foreground">
                 Define el color principal de tu tienda
               </p>
               {errors.primary_color && (
-                <p className="text-sm text-destructive">{errors.primary_color.message}</p>
+                <p className="text-xs md:text-sm text-destructive">{errors.primary_color.message}</p>
               )}
             </div>
 
             {/* Price Color */}
             <div className="space-y-2">
-              <Label htmlFor="price_color">Color del precio</Label>
-              <div className="flex items-center gap-4">
+              <Label htmlFor="price_color" className="text-sm md:text-base">Color del precio</Label>
+              <div className="flex items-center gap-2 md:gap-4">
                 <Input
                   id="price_color"
                   type="color"
                   {...register("price_color")}
-                  className="w-20 h-10 cursor-pointer"
+                  className="w-16 h-11 md:w-20 md:h-10 cursor-pointer"
                 />
                 <Input
                   type="text"
                   {...register("price_color")}
                   placeholder="#000000"
-                  className="flex-1"
+                  className="flex-1 h-11 md:h-10 text-base md:text-sm"
                 />
               </div>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-xs md:text-sm text-muted-foreground">
                 Define el color de los precios en tu catálogo
               </p>
               {errors.price_color && (
-                <p className="text-sm text-destructive">{errors.price_color.message}</p>
+                <p className="text-xs md:text-sm text-destructive">{errors.price_color.message}</p>
               )}
             </div>
           </div>
 
-          <Button type="submit" disabled={saving}>
+          <Button
+            type="submit"
+            disabled={saving}
+            className="w-full md:w-auto h-11 md:h-10 text-base md:text-sm"
+          >
             {saving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
             Guardar cambios
           </Button>

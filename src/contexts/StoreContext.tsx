@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { getSubdomainFromHostname } from "@/lib/subdomain-validation";
 
 interface Store {
   id: string;
@@ -45,6 +46,7 @@ interface StoreContextType {
   store: Store | null;
   loading: boolean;
   isStoreOwner: boolean;
+  reloadStore: () => Promise<void>;
 }
 
 const StoreContext = createContext<StoreContextType | undefined>(undefined);
@@ -56,42 +58,80 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     loadStore();
+
+    // Revalidate store ownership every 5 minutes
+    const interval = setInterval(() => {
+      revalidateOwnership();
+    }, 5 * 60 * 1000); // 5 minutes
+
+    // Listen for auth state changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (store) {
+        setIsStoreOwner(session?.user?.id === store.owner_id);
+      }
+    });
+
+    return () => {
+      clearInterval(interval);
+      subscription.unsubscribe();
+    };
   }, []);
 
   const loadStore = async () => {
     try {
-      // Extract subdomain from hostname
-      const hostname = window.location.hostname;
-      const parts = hostname.split(".");
+      setLoading(true);
 
-      // For development: if localhost, use a default subdomain or check localStorage
-      let subdomain = localStorage.getItem("dev_subdomain") || "totus";
+      // Extract subdomain using utility function
+      const subdomain = getSubdomainFromHostname();
 
-      // For production: extract subdomain (e.g., tienda1.pideai.com -> tienda1)
-      if (hostname.includes("pideai.com") && parts.length >= 3) {
-        subdomain = parts[0];
-      }
-
-      // Fetch store by subdomain
-      const { data, error } = await supabase
-        .from("stores")
-        .select("*")
-        .eq("subdomain", subdomain)
-        .eq("is_active", true)
-        .single();
+      // Use secure RPC function with rate limiting
+      const { data, error } = await supabase.rpc('get_store_by_subdomain_secure', {
+        p_subdomain: subdomain,
+        p_ip_address: null, // Browser doesn't have access to IP, server will handle
+      });
 
       if (error) {
-        console.error("Error loading store:", error);
-        setStore(null);
-      } else {
-        setStore(data);
+        console.error("Error loading store (RPC):", error);
 
-        // Check if current user is the store owner
-        const {
-          data: { session },
-        } = await supabase.auth.getSession();
-        setIsStoreOwner(session?.user?.id === data.owner_id);
+        // Fallback to direct query if RPC fails
+        console.warn("Falling back to direct query...");
+        const { data: fallbackData, error: fallbackError } = await supabase
+          .from("stores")
+          .select("*")
+          .eq("subdomain", subdomain)
+          .eq("is_active", true)
+          .single();
+
+        if (fallbackError) {
+          console.error("Error loading store (fallback):", fallbackError);
+          setStore(null);
+        } else {
+          setStore(fallbackData);
+          await checkOwnership(fallbackData);
+        }
+        return;
       }
+
+      // Handle RPC response
+      const result = data?.[0];
+
+      if (!result || !result.rate_limit_ok) {
+        console.error("Rate limit exceeded or store not found:", result?.error_message);
+        setStore(null);
+        return;
+      }
+
+      if (result.error_message) {
+        console.error("Store lookup error:", result.error_message);
+        setStore(null);
+        return;
+      }
+
+      // Parse store data from JSONB
+      const storeData = result.store_data as Store;
+      setStore(storeData);
+      setIsStoreOwner(result.is_owner || false);
+
     } catch (error) {
       console.error("Error in loadStore:", error);
       setStore(null);
@@ -100,7 +140,46 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  return <StoreContext.Provider value={{ store, loading, isStoreOwner }}>{children}</StoreContext.Provider>;
+  const checkOwnership = async (storeData: Store) => {
+    const { data: { session } } = await supabase.auth.getSession();
+    setIsStoreOwner(session?.user?.id === storeData.owner_id);
+  };
+
+  const revalidateOwnership = async () => {
+    if (!store) return;
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+
+      // Check server-side ownership
+      const { data, error } = await supabase.rpc('verify_store_ownership', {
+        p_store_id: store.id,
+      });
+
+      if (!error && data !== isStoreOwner) {
+        console.warn("Ownership status changed, updating...");
+        setIsStoreOwner(data);
+
+        // If ownership was revoked, reload the page to clear admin access
+        if (!data && isStoreOwner) {
+          console.warn("Store ownership revoked, reloading...");
+          window.location.href = '/';
+        }
+      }
+    } catch (error) {
+      console.error("Error revalidating ownership:", error);
+    }
+  };
+
+  const reloadStore = async () => {
+    await loadStore();
+  };
+
+  return (
+    <StoreContext.Provider value={{ store, loading, isStoreOwner, reloadStore }}>
+      {children}
+    </StoreContext.Provider>
+  );
 };
 
 export const useStore = () => {

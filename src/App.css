@@ -40,3 +40,145 @@
 .read-the-docs {
   color: #888;
 }
+
+/* Estilos adicionales para mejorar la responsividad de StoreSettings */
+
+/* Mejorar el scroll horizontal en móvil */
+@media (max-width: 768px) {
+  /* Ocultar scrollbar en móvil pero mantener funcionalidad */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Indicador visual de scroll */
+  .overflow-x-auto {
+    position: relative;
+  }
+
+  /* Sombra gradiente para indicar más contenido */
+  .overflow-x-auto::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 30px;
+    background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.8));
+    pointer-events: none;
+  }
+
+  /* Mejoras para el TabsList */
+  [role='tablist'] {
+    scroll-snap-type: x mandatory;
+    scroll-behavior: smooth;
+  }
+
+  [role='tab'] {
+    scroll-snap-align: start;
+    min-width: fit-content;
+  }
+
+  /* Mejorar tap area en móvil */
+  [role='tab'] {
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  /* Asegurar que los inputs sean fáciles de tocar */
+  input,
+  textarea,
+  select {
+    min-height: 44px;
+    font-size: 16px; /* Prevenir zoom en iOS */
+  }
+
+  /* Checkbox más grande en móvil */
+  input[type='checkbox'] {
+    min-width: 20px;
+    min-height: 20px;
+  }
+
+  /* Mejorar espaciado en Cards */
+  .card {
+    border-radius: 0;
+    border-left: 0;
+    border-right: 0;
+  }
+
+  /* Botones más grandes y accesibles */
+  button {
+    min-height: 44px;
+    font-size: 16px;
+  }
+
+  /* Prevenir zoom en focus de inputs */
+  input:focus,
+  textarea:focus,
+  select:focus {
+    font-size: 16px;
+  }
+}
+
+/* Mejoras generales de accesibilidad */
+label {
+  cursor: pointer;
+  user-select: none;
+}
+
+/* Focus visible para mejor navegación con teclado */
+*:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* Mejoras para el TabsContent */
+[role='tabpanel'] {
+  animation: fadeIn 0.2s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Mejora la legibilidad en pantallas pequeñas */
+@media (max-width: 640px) {
+  p {
+    line-height: 1.6;
+  }
+
+  /* Espaciado vertical mejorado */
+  .space-y-2 > * + * {
+    margin-top: 0.75rem;
+  }
+
+  .space-y-4 > * + * {
+    margin-top: 1.25rem;
+  }
+}
+
+/* Soporte para modo oscuro */
+@media (prefers-color-scheme: dark) {
+  .overflow-x-auto::after {
+    background: linear-gradient(to right, transparent, rgba(0, 0, 0, 0.8));
+  }
+}
+
+.data-\[state\=open\]\:duration-500[data-state='open'] {
+  background: white !important;
+  animation-duration: 500ms;
+}
