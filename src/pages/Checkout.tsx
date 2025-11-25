@@ -6,6 +6,7 @@ import * as z from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { useCart } from "@/contexts/CartContext";
 import { useStore } from "@/contexts/StoreContext";
+import { useStoreTheme } from "@/hooks/useStoreTheme";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -135,6 +136,10 @@ const Checkout = () => {
   const navigate = useNavigate();
   const { items, totalPrice } = useCart();
   const { store } = useStore();
+
+  // Apply store theme colors
+  useStoreTheme();
+
   const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [country, setCountry] = useState<"brazil" | "venezuela">("brazil");
@@ -714,7 +719,7 @@ const Checkout = () => {
                     {items.slice(0, 3).map((item) => (
                       <div key={item.cartItemId || item.id} className="flex justify-between text-sm">
                         <span>{item.quantity}x {item.name}</span>
-                        <span>${((item.price + (item.extras?.reduce((sum, e) => sum + e.price, 0) || 0)) * item.quantity).toFixed(2)}</span>
+                        <span className="text-price font-medium">${((item.price + (item.extras?.reduce((sum, e) => sum + e.price, 0) || 0)) * item.quantity).toFixed(2)}</span>
                       </div>
                     ))}
                     {items.length > 3 && (
@@ -723,7 +728,7 @@ const Checkout = () => {
                   </div>
                   <div className="pt-3 border-t flex justify-between font-bold">
                     <span>Total</span>
-                    <span className="text-primary">${totalPrice.toFixed(2)}</span>
+                    <span className="text-price text-lg">${totalPrice.toFixed(2)}</span>
                   </div>
                   {store?.minimum_order_price && totalPrice < store.minimum_order_price && (
                     <Badge variant="destructive" className="w-full justify-center">

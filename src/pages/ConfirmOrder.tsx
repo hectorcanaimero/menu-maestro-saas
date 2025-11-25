@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useCart } from "@/contexts/CartContext";
 import { useStore } from "@/contexts/StoreContext";
+import { useStoreTheme } from "@/hooks/useStoreTheme";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -32,6 +33,10 @@ const ConfirmOrder = () => {
   const navigate = useNavigate();
   const { items, totalPrice, clearCart } = useCart();
   const { store } = useStore();
+
+  // Apply store theme colors
+  useStoreTheme();
+
   const [loading, setLoading] = useState(false);
   const [orderData, setOrderData] = useState<OrderData | null>(null);
 

@@ -1,5 +1,6 @@
 import { useParams, Link } from 'react-router-dom';
 import { useEffect } from 'react';
+import { useStoreTheme } from '@/hooks/useStoreTheme';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -31,6 +32,9 @@ import { es } from 'date-fns/locale';
 export default function TrackOrder() {
   const { orderId } = useParams<{ orderId: string }>();
   const { order, isLoading, error } = useOrderTracking(orderId || '');
+
+  // Apply store theme colors
+  useStoreTheme();
 
   // Request notification permission on mount
   useEffect(() => {
