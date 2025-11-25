@@ -6,18 +6,24 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { X, ChevronLeft, ChevronRight, ShoppingCart, Eye, Tag } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
+import { useStore } from "@/contexts/StoreContext";
 import { ProductExtrasDialog } from "./ProductExtrasDialog";
 import { useProductPromotions, getBestPromotion } from "@/hooks/usePromotions";
 import { H3, Body } from "@/components/ui/typography";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
+import { getCurrencySymbol } from "@/lib/analytics";
 
 export function QuickViewModal() {
   const { isOpen, currentProduct, closeQuickView, nextProduct, previousProduct, currentIndex, allProducts } = useQuickView();
   const { addItem } = useCart();
+  const { store } = useStore();
   const [showExtrasDialog, setShowExtrasDialog] = useState(false);
   const isMobile = useMediaQuery("(max-width: 768px)");
   const [touchStart, setTouchStart] = useState(0);
   const [touchEnd, setTouchEnd] = useState(0);
+
+  // Get currency symbol from store
+  const currencySymbol = getCurrencySymbol((store as any)?.currency || 'USD');
 
   // Get applicable promotions for current product
   const productPromotions = useProductPromotions(
@@ -165,7 +171,7 @@ export function QuickViewModal() {
               <Tag className="w-4 h-4" />
               {bestDeal.promotion.type === 'percentage'
                 ? `-${bestDeal.promotion.value}%`
-                : `-$${bestDeal.promotion.value.toFixed(2)}`
+                : `-${currencySymbol}${bestDeal.promotion.value.toFixed(2)}`
               }
             </Badge>
           )}
@@ -199,14 +205,14 @@ export function QuickViewModal() {
                       className="text-3xl font-bold"
                       style={{ color: `hsl(var(--price-color, var(--foreground)))` }}
                     >
-                      ${bestDeal.discountedPrice.toFixed(2)}
+                      {currencySymbol}{bestDeal.discountedPrice.toFixed(2)}
                     </p>
                     <p className="text-lg text-muted-foreground line-through">
-                      ${currentProduct.price.toFixed(2)}
+                      {currencySymbol}{currentProduct.price.toFixed(2)}
                     </p>
                   </div>
                   <Badge variant="secondary" className="text-sm">
-                    Ahorra ${bestDeal.savings.toFixed(2)}
+                    Ahorra {currencySymbol}{bestDeal.savings.toFixed(2)}
                   </Badge>
                 </div>
               ) : (
@@ -214,7 +220,7 @@ export function QuickViewModal() {
                   className="text-3xl font-bold"
                   style={{ color: `hsl(var(--price-color, var(--foreground)))` }}
                 >
-                  ${currentProduct.price.toFixed(2)}
+                  {currencySymbol}{currentProduct.price.toFixed(2)}
                 </p>
               )}
             </div>

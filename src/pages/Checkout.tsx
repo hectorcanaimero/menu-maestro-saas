@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useCart } from "@/contexts/CartContext";
 import { useStore } from "@/contexts/StoreContext";
 import { useStoreTheme } from "@/hooks/useStoreTheme";
+import { getCurrencySymbol } from "@/lib/analytics";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -139,6 +140,9 @@ const Checkout = () => {
 
   // Apply store theme colors
   useStoreTheme();
+
+  // Get currency symbol from store
+  const currencySymbol = getCurrencySymbol((store as any)?.currency || 'USD');
 
   const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(false);
@@ -719,7 +723,7 @@ const Checkout = () => {
                     {items.slice(0, 3).map((item) => (
                       <div key={item.cartItemId || item.id} className="flex justify-between text-sm">
                         <span>{item.quantity}x {item.name}</span>
-                        <span className="text-price font-medium">${((item.price + (item.extras?.reduce((sum, e) => sum + e.price, 0) || 0)) * item.quantity).toFixed(2)}</span>
+                        <span className="text-price font-medium">{currencySymbol}{((item.price + (item.extras?.reduce((sum, e) => sum + e.price, 0) || 0)) * item.quantity).toFixed(2)}</span>
                       </div>
                     ))}
                     {items.length > 3 && (
@@ -728,11 +732,11 @@ const Checkout = () => {
                   </div>
                   <div className="pt-3 border-t flex justify-between font-bold">
                     <span>Total</span>
-                    <span className="text-price text-lg">${totalPrice.toFixed(2)}</span>
+                    <span className="text-price text-lg">{currencySymbol}{totalPrice.toFixed(2)}</span>
                   </div>
                   {store?.minimum_order_price && totalPrice < store.minimum_order_price && (
                     <Badge variant="destructive" className="w-full justify-center">
-                      Pedido mínimo: ${store.minimum_order_price.toFixed(2)}
+                      Pedido mínimo: {currencySymbol}{store.minimum_order_price.toFixed(2)}
                     </Badge>
                   )}
                 </div>

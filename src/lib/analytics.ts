@@ -52,11 +52,25 @@ export function getDateRangeFromPreset(preset: DateRange): DateRangeValue {
   }
 }
 
-export function formatCurrency(amount: number): string {
+export function formatCurrency(amount: number, currency: string = 'USD'): string {
   return new Intl.NumberFormat('es-ES', {
     style: 'currency',
-    currency: 'USD',
+    currency: currency,
   }).format(amount);
+}
+
+// Get currency symbol without formatting
+export function getCurrencySymbol(currency: string = 'USD'): string {
+  const symbols: Record<string, string> = {
+    USD: '$',
+    VES: 'Bs',
+    BRL: 'R$',
+    EUR: '€',
+    COP: '$',
+    ARS: '$',
+    MXN: '$',
+  };
+  return symbols[currency] || '$';
 }
 
 export function formatNumber(num: number): string {

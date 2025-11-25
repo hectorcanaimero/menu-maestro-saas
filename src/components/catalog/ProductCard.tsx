@@ -4,11 +4,13 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ShoppingCart, Eye, Tag } from 'lucide-react';
 import { useCart } from '@/contexts/CartContext';
+import { useStore } from '@/contexts/StoreContext';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { ProductExtrasDialog } from './ProductExtrasDialog';
 import { useProductPromotions, getBestPromotion } from '@/hooks/usePromotions';
 import { useQuickView } from '@/hooks/useQuickView';
+import { getCurrencySymbol } from '@/lib/analytics';
 
 interface ProductCardProps {
   id: string;
@@ -43,9 +45,13 @@ export const ProductCard = ({
   allProducts = [],
 }: ProductCardProps) => {
   const { addItem } = useCart();
+  const { store } = useStore();
   const navigate = useNavigate();
   const { openQuickView } = useQuickView();
   const [showExtrasDialog, setShowExtrasDialog] = useState(false);
+
+  // Get currency symbol from store
+  const currencySymbol = getCurrencySymbol((store as any)?.currency || 'USD');
 
   // Get applicable promotions for this product
   const productPromotions = useProductPromotions(id, categoryId);
@@ -116,7 +122,7 @@ export const ProductCard = ({
                 <Tag className="w-3 h-3" />
                 {bestDeal.promotion.type === 'percentage'
                   ? `-${bestDeal.promotion.value}%`
-                  : `-$${bestDeal.promotion.value.toFixed(2)}`}
+                  : `-${currencySymbol}${bestDeal.promotion.value.toFixed(2)}`}
               </Badge>
             )}
 
@@ -149,11 +155,11 @@ export const ProductCard = ({
                       className="text-base sm:text-lg font-bold"
                       style={{ color: `hsl(var(--price-color, var(--foreground)))` }}
                     >
-                      ${bestDeal.discountedPrice.toFixed(2)}
+                      {currencySymbol}{bestDeal.discountedPrice.toFixed(2)}
                     </p>
-                    <p className="text-xs sm:text-sm text-muted-foreground line-through">${price.toFixed(2)}</p>
+                    <p className="text-xs sm:text-sm text-muted-foreground line-through">{currencySymbol}{price.toFixed(2)}</p>
                     <Badge variant="secondary" className="text-xs">
-                      Ahorra ${bestDeal.savings.toFixed(2)}
+                      Ahorra {currencySymbol}{bestDeal.savings.toFixed(2)}
                     </Badge>
                   </div>
                 ) : (
@@ -161,7 +167,7 @@ export const ProductCard = ({
                     className="text-base sm:text-lg font-bold"
                     style={{ color: `hsl(var(--price-color, var(--foreground)))` }}
                   >
-                    ${price.toFixed(2)}
+                    {currencySymbol}{price.toFixed(2)}
                   </p>
                 )}
               </div>
