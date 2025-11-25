@@ -1,5 +1,5 @@
-import { useStore } from "@/contexts/StoreContext";
-import { Phone, Mail, MapPin } from "lucide-react";
+import { useStore } from '@/contexts/StoreContext';
+import { Phone, Mail, MapPin } from 'lucide-react';
 
 export const Footer = () => {
   const { store } = useStore();
@@ -8,16 +8,14 @@ export const Footer = () => {
 
   return (
     <footer className="bg-card border-t mt-8 md:mt-12">
-      <div className="container mx-auto px-4 md:px-6 py-8 md:py-10">
+      <div className="container mx-auto p-4 md:px-6 md:py-10">
         {/* Main Footer Content */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
           {/* Store Info Section */}
           <div className="space-y-3">
             <h3 className="font-bold text-lg md:text-xl">{store.name}</h3>
             {store.description && (
-              <p className="text-sm md:text-base text-muted-foreground leading-relaxed">
-                {store.description}
-              </p>
+              <p className="text-sm md:text-base text-muted-foreground leading-relaxed">{store.description}</p>
             )}
           </div>
 
@@ -57,23 +55,23 @@ export const Footer = () => {
               )}
             </div>
           </div>
-
-          {/* Hours Section */}
-          <div className="space-y-3">
-            <h3 className="font-bold text-lg md:text-xl">Horarios</h3>
-            <p className="text-sm md:text-base text-muted-foreground leading-relaxed">
-              Pedidos en línea disponibles 24/7
-            </p>
-          </div>
         </div>
 
         {/* Footer Bottom */}
-        <div className="border-t mt-8 md:mt-10 pt-6 md:pt-8 text-center">
+        <div className="border-t mt-4 md:mt-6 pt-6 md:pt-8 text-center">
           <p className="text-sm md:text-base text-muted-foreground">
             © {new Date().getFullYear()} {store.name}. Todos los derechos reservados.
           </p>
           <p className="mt-2 text-sm md:text-base text-muted-foreground">
-            Powered by PideAI
+            Powered by{' '}
+            <a
+              href="https://www.pideai.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline hover:text-foreground"
+            >
+              PideAI
+            </a>
           </p>
         </div>
       </div>

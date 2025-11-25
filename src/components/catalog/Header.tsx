@@ -1,12 +1,12 @@
-import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Menu, X, ShoppingCart, Package, User, Settings } from "lucide-react";
-import { useNavigate } from "react-router-dom";
-import { useCart } from "@/contexts/CartContext";
-import { useStore } from "@/contexts/StoreContext";
-import { supabase } from "@/integrations/supabase/client";
-import { CartSheet } from "@/components/cart/CartSheet";
-import { StoreHoursDisplay } from "./StoreHoursDisplay";
+import { useState, useEffect } from 'react';
+import { Button } from '@/components/ui/button';
+import { Menu, X, ShoppingCart, Package, User, Settings } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { useCart } from '@/contexts/CartContext';
+import { useStore } from '@/contexts/StoreContext';
+import { supabase } from '@/integrations/supabase/client';
+import { CartSheet } from '@/components/cart/CartSheet';
+import { StoreHoursDisplay } from './StoreHoursDisplay';
 
 export const Header = () => {
   const navigate = useNavigate();
@@ -20,12 +20,16 @@ export const Header = () => {
 
   useEffect(() => {
     const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       setIsAuthenticated(!!session);
     };
     checkAuth();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_, session) => {
       setIsAuthenticated(!!session);
     });
 
@@ -33,8 +37,8 @@ export const Header = () => {
   }, []);
 
   const menuItems = [
-    { label: "Inicio", href: "/" },
-    { label: "Productos", href: "/#productos" },
+    { label: 'Inicio', href: '/' },
+    { label: 'Productos', href: '/#productos' },
   ];
 
   return (
@@ -43,18 +47,18 @@ export const Header = () => {
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
           <button
-            onClick={() => navigate("/")}
+            onClick={() => navigate('/')}
             className="flex items-center space-x-2 font-bold text-xl text-foreground hover:text-primary transition-colors"
           >
             {logoUrl ? (
               <img src={logoUrl} alt={store?.name} className="h-10 w-auto object-contain" />
             ) : (
-              <span>{store?.name || "Tienda"}</span>
+              <span>{store?.name || 'Tienda'}</span>
             )}
           </button>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center space-x-4">
+          {/* <nav className="hidden md:flex items-center space-x-4">
             {menuItems.map((item) => (
               <a
                 key={item.href}
@@ -67,95 +71,14 @@ export const Header = () => {
             {store && (
               <StoreHoursDisplay storeId={store.id} forceStatus={store.force_status} />
             )}
-          </nav>
+          </nav> */}
 
           {/* Actions */}
           <div className="flex items-center gap-2">
             <CartSheet />
-            
-            {isAuthenticated && (
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => navigate("/my-orders")}
-                className="relative"
-                title="Mis Pedidos"
-              >
-                <Package className="w-5 h-5" />
-              </Button>
-            )}
-
-            {isStoreOwner && (
-              <Button
-                variant="default"
-                size="sm"
-                onClick={() => navigate("/admin")}
-                className="hidden md:flex items-center gap-2"
-              >
-                <Settings className="w-4 h-4" />
-                Admin
-              </Button>
-            )}
-
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => navigate(isAuthenticated ? "/auth" : "/auth")}
-              title={isAuthenticated ? "Mi Cuenta" : "Iniciar Sesión"}
-            >
-              <User className="w-5 h-5" />
-            </Button>
-
             {/* Mobile Menu Toggle */}
-            <Button
-              variant="ghost"
-              size="icon"
-              className="md:hidden"
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            >
-              {mobileMenuOpen ? (
-                <X className="w-5 h-5" />
-              ) : (
-                <Menu className="w-5 h-5" />
-              )}
-            </Button>
           </div>
         </div>
-
-        {/* Mobile Menu */}
-        {mobileMenuOpen && (
-          <nav className="md:hidden py-4 space-y-3 border-t border-border/40">
-            {menuItems.map((item) => (
-              <a
-                key={item.href}
-                href={item.href}
-                className="block text-sm font-medium text-muted-foreground hover:text-foreground transition-colors py-2"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                {item.label}
-              </a>
-            ))}
-            {store && (
-              <div className="py-2">
-                <StoreHoursDisplay storeId={store.id} forceStatus={store.force_status} />
-              </div>
-            )}
-            {isStoreOwner && (
-              <Button
-                variant="default"
-                size="sm"
-                onClick={() => {
-                  navigate("/admin");
-                  setMobileMenuOpen(false);
-                }}
-                className="w-full flex items-center gap-2 justify-center"
-              >
-                <Settings className="w-4 h-4" />
-                Panel Admin
-              </Button>
-            )}
-          </nav>
-        )}
       </div>
     </header>
   );

@@ -1,8 +1,8 @@
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Phone, User, Calendar, MapPin, Printer, DollarSign, CreditCard, Table as TableIcon } from "lucide-react";
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Phone, User, Calendar, MapPin, Printer, DollarSign, CreditCard, Table as TableIcon } from 'lucide-react';
 
 interface OrderItemExtra {
   id: string;
@@ -43,104 +43,94 @@ interface KitchenOrderCardProps {
   onPrintTicket: (order: Order) => void;
 }
 
-export const KitchenOrderCard = ({ 
-  order, 
-  orderNumber, 
-  onStatusChange, 
+export const KitchenOrderCard = ({
+  order,
+  orderNumber,
+  onStatusChange,
   onPrintOrder,
-  onPrintTicket 
+  onPrintTicket,
 }: KitchenOrderCardProps) => {
   const getStatusColor = (status: string) => {
     const colors: Record<string, string> = {
-      pending: "bg-yellow-500",
-      confirmed: "bg-blue-500",
-      preparing: "bg-purple-500",
-      ready: "bg-green-500",
-      delivered: "bg-gray-500",
-      cancelled: "bg-red-500",
+      pending: 'bg-yellow-500',
+      confirmed: 'bg-blue-500',
+      preparing: 'bg-purple-500',
+      ready: 'bg-green-500',
+      delivered: 'bg-gray-500',
+      cancelled: 'bg-red-500',
     };
-    return colors[status] || "bg-gray-500";
+    return colors[status] || 'bg-gray-500';
   };
 
   const getStatusLabel = (status: string) => {
     const labels: Record<string, string> = {
-      pending: "Pendiente",
-      confirmed: "Confirmado",
-      preparing: "En Proceso",
-      ready: "Listo",
-      delivered: "Entregado",
-      cancelled: "Cancelado",
+      pending: 'Pendiente',
+      confirmed: 'Confirmado',
+      preparing: 'En Proceso',
+      ready: 'Listo',
+      delivered: 'Entregado',
+      cancelled: 'Cancelado',
     };
     return labels[status] || status;
   };
 
   const getTypeLabel = (type: string) => {
     const labels: Record<string, string> = {
-      delivery: "Entrega",
-      pickup: "Recoger",
-      digital_menu: "Mesa"
+      delivery: 'Entrega',
+      pickup: 'Recoger',
+      digital_menu: 'Mesa',
     };
     return labels[type] || type;
   };
 
   // Extract table number from delivery_address for digital menu orders
-  const tableNumber = order.order_type === "digital_menu" && order.delivery_address 
-    ? order.delivery_address.replace("Mesa ", "") 
-    : null;
+  const tableNumber =
+    order.order_type === 'digital_menu' && order.delivery_address ? order.delivery_address.replace('Mesa ', '') : null;
 
   return (
     <Card className="overflow-hidden border-2 hover:shadow-lg transition-shadow">
       <div className={`h-2 ${getStatusColor(order.status)}`} />
-      
+
       <CardContent className="p-4 space-y-4">
         {/* Header */}
         <div className="flex items-start justify-between gap-2">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
-              <Badge variant="outline" className="text-lg font-bold px-3 py-1">
-                Orden {orderNumber}
-              </Badge>
-              <Badge className={getStatusColor(order.status) + " text-white"}>
-                {getStatusLabel(order.status)}
-              </Badge>
+              <h2>Orden #{orderNumber}</h2>
             </div>
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Calendar className="w-4 h-4" />
               <span>
-                {new Date(order.created_at).toLocaleDateString("es-ES", {
-                  day: "2-digit",
-                  month: "2-digit"
-                })} – {new Date(order.created_at).toLocaleTimeString("es-ES", {
-                  hour: "2-digit",
-                  minute: "2-digit"
+                {new Date(order.created_at).toLocaleDateString('es-ES', {
+                  day: '2-digit',
+                  month: '2-digit',
+                })}{' '}
+                –{' '}
+                {new Date(order.created_at).toLocaleTimeString('es-ES', {
+                  hour: '2-digit',
+                  minute: '2-digit',
                 })}
               </span>
             </div>
           </div>
+          <div className="flex gap-2 me-3">
+            <Badge className={getStatusColor(order.status) + ' text-white'}>{getStatusLabel(order.status)}</Badge>
+          </div>
 
           {/* Print Buttons */}
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => onPrintOrder(order)}
-              className="h-9"
-            >
+        </div>
+        <div className="space-y-2">
+          <div className="flex justify-content-center gap-2 me-3">
+            <Button variant="outline" size="sm" onClick={() => onPrintOrder(order)} className="h-9">
               <Printer className="w-4 h-4 mr-1" />
               Pedido
             </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => onPrintTicket(order)}
-              className="h-9"
-            >
+            <Button variant="outline" size="sm" onClick={() => onPrintTicket(order)} className="h-9">
               <Printer className="w-4 h-4 mr-1" />
               Comanda
             </Button>
           </div>
         </div>
-
         {/* Customer Info */}
         <div className="space-y-2 py-3 border-y">
           <div className="flex items-center gap-2">
@@ -153,7 +143,7 @@ export const KitchenOrderCard = ({
               <span>{order.customer_phone}</span>
             </div>
           )}
-          {order.order_type === "delivery" && order.delivery_address && (
+          {order.order_type === 'delivery' && order.delivery_address && (
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <MapPin className="w-4 h-4" />
               <span className="line-clamp-2">{order.delivery_address}</span>
@@ -213,7 +203,11 @@ export const KitchenOrderCard = ({
         <div className="space-y-1 text-sm">
           <div className="flex items-center gap-2 text-muted-foreground">
             <CreditCard className="w-4 h-4" />
-            <span>Método de Pago: {order.payment_method || "N/A"}</span>
+            <span>Tipo de Entrega: {order.order_type || 'N/A'}</span>
+          </div>
+          <div className="flex items-center gap-2 text-muted-foreground">
+            <CreditCard className="w-4 h-4" />
+            <span>Método de Pago: {order.payment_method || 'N/A'}</span>
           </div>
           {order.payment_proof_url && (
             <Badge variant="secondary" className="text-xs">
@@ -231,10 +225,7 @@ export const KitchenOrderCard = ({
 
         {/* Status Actions */}
         <div className="grid grid-cols-2 gap-2 pt-3">
-          <Select
-            value={order.status}
-            onValueChange={(value) => onStatusChange(order.id, value)}
-          >
+          <Select value={order.status} onValueChange={(value) => onStatusChange(order.id, value)}>
             <SelectTrigger className="h-10">
               <SelectValue />
             </SelectTrigger>
@@ -247,13 +238,9 @@ export const KitchenOrderCard = ({
               <SelectItem value="cancelled">Cancelado</SelectItem>
             </SelectContent>
           </Select>
-          
-          {order.status !== "cancelled" && (
-            <Button
-              variant="destructive"
-              size="sm"
-              onClick={() => onStatusChange(order.id, "cancelled")}
-            >
+
+          {order.status !== 'cancelled' && (
+            <Button variant="destructive" size="sm" onClick={() => onStatusChange(order.id, 'cancelled')}>
               Cancelar
             </Button>
           )}

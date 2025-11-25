@@ -12,6 +12,7 @@ import {
   Club,
   Tag,
   TrendingUp,
+  Brain,
 } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import {
@@ -41,6 +42,7 @@ const navItems = [
 
 const navIntegration = [
   { path: '/admin/whatsapp', label: 'Whatsapp', icon: Send },
+  { path: '/admin/ai', label: 'IA Imagen', icon: Brain },
   { path: '/admin/delivery', label: 'Delivery', icon: Package },
   { path: '/admin/fidelity', label: 'Fidelidad', icon: Club },
 ];

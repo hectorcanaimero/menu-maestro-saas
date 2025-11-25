@@ -1,25 +1,14 @@
-import { useState } from "react";
-import { ChevronRight, Clock } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { StoreRating } from "./StoreRating";
-import { StoreInfoExpanded } from "./StoreInfoExpanded";
-import { useStoreStatus } from "@/hooks/useStoreStatus";
-import { useMediaQuery } from "@/hooks/useMediaQuery";
-
+import { useState } from 'react';
+import { ChevronRight, Clock, Star, Dot } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { StoreRating } from './StoreRating';
+import { StoreInfoExpanded } from './StoreInfoExpanded';
+import { useStoreStatus } from '@/hooks/useStoreStatus';
+import { useMediaQuery } from '@/hooks/useMediaQuery';
 interface StoreHour {
   id: string;
   day_of_week: number;
@@ -35,7 +24,7 @@ interface StoreInfoWidgetProps {
   phone?: string | null;
   email?: string | null;
   description?: string | null;
-  forceStatus?: "normal" | "force_open" | "force_closed" | null;
+  forceStatus?: 'normal' | 'force_open' | 'force_closed' | null;
 }
 
 /**
@@ -66,11 +55,11 @@ export function StoreInfoWidget({
   phone,
   email,
   description,
-  forceStatus = "normal"
+  forceStatus = 'normal',
 }: StoreInfoWidgetProps) {
   const [open, setOpen] = useState(false);
   const { status, loading } = useStoreStatus(storeId, forceStatus);
-  const isMobile = useMediaQuery("(max-width: 768px)");
+  const isMobile = useMediaQuery('(max-width: 768px)');
 
   if (loading) {
     return null;
@@ -78,52 +67,51 @@ export function StoreInfoWidget({
 
   // Collapsed widget content
   const CollapsedContent = () => (
-    <Card className="border-0 shadow-sm md:border md:shadow-md">
-      <CardContent className="px-4 py-3 md:px-6 md:py-4">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 md:gap-4">
-          {/* Row 1: Name + Rating */}
-          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
-            <h2 className="text-lg md:text-xl font-semibold text-foreground">
-              {storeName}
-            </h2>
-            <StoreRating rating={4.7} reviewCount={124} variant="compact" size="md" />
-          </div>
+    // <Card className="border-0 shadow-sm md:border md:shadow-md">
+    //   <CardContent className="px-4 py-3 md:px-6 md:py-4">
 
-          {/* Row 2: Status + Delivery + Ver más */}
-          <div className="flex items-center gap-3 md:gap-4 flex-wrap">
-            {/* Open/Closed Status */}
-            <Badge
-              variant={status.isOpen ? "default" : "secondary"}
-              className={`font-semibold ${
-                status.isOpen
-                  ? "bg-green-600 hover:bg-green-700"
-                  : "bg-red-600 hover:bg-red-700"
-              }`}
-            >
-              {status.isOpen ? "Abierto" : "Cerrado"}
-            </Badge>
+    //   </CardContent>
+    // </Card>
+    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-0 md:gap-1">
+      {/* Row 1: Name + Rating */}
+      <div className="flex items-center gap-0 md:gap-1 flex-wrap">
+        <span className="text-lg md:text-xl font-semibold text-foreground">{storeName}</span>
+        <Dot />
+        <Star className={`fill-yellow-400 text-yellow-400 me-1`} />
+        <span className="text-mds md:text-xl text-foreground">4.7</span>
+        {/* <StoreRating rating={4.7} reviewCount={124} variant="compact" size="md" /> */}
+        {/* Open/Closed Status */}
+      </div>
 
-            {/* Delivery Time */}
-            {estimatedDeliveryTime && (
-              <div className="flex items-center gap-1.5 text-sm md:text-base text-muted-foreground">
-                <Clock className="w-4 h-4" />
-                <span>{estimatedDeliveryTime}</span>
-              </div>
-            )}
+      {/* Row 2: Status + Delivery + Ver más */}
+      <div className="flex items-center gap-0 md:gap-4 flex-wrap">
+        <Badge
+          variant={status.isOpen ? 'default' : 'secondary'}
+          className={`font-semibold ${
+            status.isOpen ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'
+          }`}
+        >
+          {status.isOpen ? 'Abierto' : 'Cerrado'}
+        </Badge>
+        <Dot />
+        {/* Delivery Time */}
+        {estimatedDeliveryTime && (
+          <>
+            <div className="flex items-center gap-1.5 text-sm md:text-base text-muted-foreground">
+              <Clock className="w-4 h-4" />
+              <span>{estimatedDeliveryTime}</span>
+            </div>
+            <Dot />
+          </>
+        )}
 
-            {/* Ver más button */}
-            <Button
-              variant="ghost"
-              className="h-11 md:h-10 text-base md:text-sm font-medium gap-1 hover:bg-accent"
-              onClick={() => setOpen(true)}
-            >
-              Ver más
-              <ChevronRight className="w-4 h-4" />
-            </Button>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
+        {/* Ver más button */}
+        <Button variant="ghost" className="h-11 md:h-10 text-base md:text-sm font-medium gap-0 hover:bg-accent">
+          Ver más
+          <ChevronRight className="w-4 h-4" />
+        </Button>
+      </div>
+    </div>
   );
 
   // Expanded content
@@ -150,9 +138,7 @@ export function StoreInfoWidget({
             <SheetHeader>
               <SheetTitle>{storeName}</SheetTitle>
             </SheetHeader>
-            <div className="overflow-y-auto h-[calc(100%-4rem)] pb-8">
-              {expandedContent}
-            </div>
+            <div className="overflow-y-auto h-[calc(100%-4rem)] pb-8">{expandedContent}</div>
           </SheetContent>
         </Sheet>
       </div>

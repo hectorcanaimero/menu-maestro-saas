@@ -202,16 +202,26 @@ export const ProductGrid = () => {
 
       {/* Section Header with Sort and View Toggle */}
       <div className="flex flex-col gap-3">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+        <div className="flex flex-col items-end sm:items-center gap-3">
           <div>
-            <h2 className="text-xl md:text-2xl font-bold text-foreground">
-              {categoryFilter ? 'Productos' : 'Todos los Productos'}
-            </h2>
             {hasSearchQuery && (
               <p className="text-sm text-muted-foreground mt-1">Resultados para: "{debouncedSearchQuery}"</p>
             )}
           </div>
-          <div className="flex gap-2">
+          <div className="flex justify-content-between gap-2 w-full">
+            <Select value={sortBy} onValueChange={(value) => setSortBy(value as SortOption)}>
+              <SelectTrigger className="w-full sm:w-[240px] h-10 md:h-9 text-sm">
+                <SelectValue placeholder="Ordenar por..." />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="default">Orden predeterminado</SelectItem>
+                <SelectItem value="price-asc">Precio: Menor a Mayor</SelectItem>
+                <SelectItem value="price-desc">Precio: Mayor a Menor</SelectItem>
+                <SelectItem value="name-asc">Nombre: A - Z</SelectItem>
+                <SelectItem value="name-desc">Nombre: Z - A</SelectItem>
+                <SelectItem value="newest">Más recientes</SelectItem>
+              </SelectContent>
+            </Select>
             <Button
               variant={viewMode === 'grid' ? 'default' : 'outline'}
               size="sm"
@@ -231,24 +241,6 @@ export const ProductGrid = () => {
               <span className="hidden sm:inline">Lista</span>
             </Button>
           </div>
-        </div>
-
-        {/* Sort Selector */}
-        <div className="flex items-center gap-2">
-          <ArrowUpDown className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-          <Select value={sortBy} onValueChange={(value) => setSortBy(value as SortOption)}>
-            <SelectTrigger className="w-full sm:w-[240px] h-10 md:h-9 text-sm">
-              <SelectValue placeholder="Ordenar por..." />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="default">Orden predeterminado</SelectItem>
-              <SelectItem value="price-asc">Precio: Menor a Mayor</SelectItem>
-              <SelectItem value="price-desc">Precio: Mayor a Menor</SelectItem>
-              <SelectItem value="name-asc">Nombre: A - Z</SelectItem>
-              <SelectItem value="name-desc">Nombre: Z - A</SelectItem>
-              <SelectItem value="newest">Más recientes</SelectItem>
-            </SelectContent>
-          </Select>
         </div>
       </div>
 
