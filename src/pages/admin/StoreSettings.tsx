@@ -9,6 +9,7 @@ import AdminLayout from '@/components/admin/AdminLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -21,6 +22,16 @@ import { DesignSettingsTab } from '@/components/admin/DesignSettingsTab';
 import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
 
+const CURRENCIES = [
+  { value: 'USD', label: 'Dólar Estadounidense (USD)' },
+  { value: 'VES', label: 'Bolívar Venezolano (VES)' },
+  { value: 'BRL', label: 'Real Brasileño (BRL)' },
+  { value: 'EUR', label: 'Euro (EUR)' },
+  { value: 'COP', label: 'Peso Colombiano (COP)' },
+  { value: 'ARS', label: 'Peso Argentino (ARS)' },
+  { value: 'MXN', label: 'Peso Mexicano (MXN)' },
+];
+
 const storeSettingsSchema = z.object({
   name: z.string().trim().min(1, 'El nombre es requerido').max(100, 'Máximo 100 caracteres'),
   phone: z
@@ -28,6 +39,7 @@ const storeSettingsSchema = z.object({
     .trim()
     .regex(/^\+(?:58|55)\d{10,11}$/, 'Formato: +58 (Venezuela) o +55 (Brasil) seguido de 10-11 dígitos'),
   email: z.string().trim().email('Email inválido').max(255),
+  currency: z.enum(['USD', 'VES', 'BRL', 'EUR', 'COP', 'ARS', 'MXN']).optional(),
   operating_modes: z
     .array(z.enum(['delivery', 'pickup', 'digital_menu']))
     .min(1, 'Selecciona al menos un modo de funcionamiento'),
@@ -78,6 +90,7 @@ const StoreSettings = () => {
       setValue('name', store.name);
       setValue('phone', store.phone || '');
       setValue('email', store.email || '');
+      setValue('currency', (store as any).currency || 'USD');
       setValue('operating_modes', store.operating_modes || ['delivery']);
     }
   }, [store, setValue]);
@@ -93,6 +106,7 @@ const StoreSettings = () => {
           name: data.name,
           phone: data.phone,
           email: data.email,
+          currency: data.currency,
           operating_modes: data.operating_modes,
           updated_at: new Date().toISOString(),
         })
@@ -213,6 +227,31 @@ const StoreSettings = () => {
                       Este correo electrónico se puede utilizar en mensajes personalizados u otras partes del sitio.
                     </p>
                     {errors.email && <p className="text-xs md:text-sm text-destructive">{errors.email.message}</p>}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="currency" className="text-sm md:text-base">
+                      Moneda
+                    </Label>
+                    <Select
+                      value={watch('currency')}
+                      onValueChange={(value) => setValue('currency', value as any)}
+                    >
+                      <SelectTrigger className="h-11 md:h-10 text-base md:text-sm">
+                        <SelectValue placeholder="Selecciona una moneda" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {CURRENCIES.map((currency) => (
+                          <SelectItem key={currency.value} value={currency.value}>
+                            {currency.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs md:text-sm text-muted-foreground">
+                      Moneda utilizada para mostrar los precios en tu tienda.
+                    </p>
+                    {errors.currency && <p className="text-xs md:text-sm text-destructive">{errors.currency.message}</p>}
                   </div>
 
                   <div className="space-y-2">
