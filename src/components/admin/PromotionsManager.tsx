@@ -78,7 +78,7 @@ const PromotionsManager = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setPromotions(data || []);
+      setPromotions((data || []) as Promotion[]);
     } catch (error) {
       console.error('Error fetching promotions:', error);
       toast.error('Error al cargar promociones');

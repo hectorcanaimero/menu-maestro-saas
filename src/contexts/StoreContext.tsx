@@ -133,7 +133,7 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
       }
 
       // Parse store data from JSONB
-      const storeData = result.store_data as Store;
+      const storeData = result.store_data as unknown as Store;
       setStore(storeData);
       setIsStoreOwner(result.is_owner || false);
 

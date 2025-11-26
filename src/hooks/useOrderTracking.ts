@@ -6,17 +6,16 @@ import { getStatusLabel } from '@/lib/orderTracking';
 
 interface Order {
   id: string;
-  order_number: string;
   status: string;
-  total: number;
+  total_amount: number;
   order_type: string;
   delivery_address: string | null;
   customer_name: string;
   customer_phone: string;
-  customer_email: string | null;
-  items: any[];
+  customer_email: string;
   created_at: string;
   updated_at: string;
+  order_items?: any[];
 }
 
 export function useOrderTracking(orderId: string) {
@@ -28,12 +27,24 @@ export function useOrderTracking(orderId: string) {
     queryFn: async (): Promise<Order> => {
       const { data, error } = await supabase
         .from('orders')
-        .select('*')
+        .select(`
+          *,
+          order_items (
+            id,
+            item_name,
+            quantity,
+            price_at_time,
+            order_item_extras (
+              extra_name,
+              extra_price
+            )
+          )
+        `)
         .eq('id', orderId)
         .single();
 
       if (error) throw error;
-      return data as Order;
+      return data;
     },
     enabled: !!orderId,
   });
@@ -65,7 +76,7 @@ export function useOrderTracking(orderId: string) {
             // Browser notification (if permission granted)
             if ('Notification' in window && Notification.permission === 'granted') {
               new Notification('Actualización de Pedido', {
-                body: `Tu pedido #${newOrder.order_number} está ${getStatusLabel(newOrder.status).toLowerCase()}`,
+                body: `Tu pedido está ${getStatusLabel(newOrder.status).toLowerCase()}`,
                 icon: '/logo.png',
               });
             }

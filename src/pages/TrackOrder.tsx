@@ -75,7 +75,7 @@ export default function TrackOrder() {
     );
   }
 
-  const estimatedTime = calculateEstimatedDelivery(order);
+  const estimatedTime = calculateEstimatedDelivery({ ...order, items: order.order_items || [] });
   const progress = getProgressPercentage(order.status);
   const isDelivered = order.status === 'delivered';
   const isCancelled = order.status === 'cancelled';
@@ -93,7 +93,7 @@ export default function TrackOrder() {
           <div className="flex-1">
             <H1 className="text-2xl sm:text-3xl">Seguimiento de Pedido</H1>
             <Caption className="text-muted-foreground">
-              Pedido #{order.order_number}
+              Pedido #{order.id.substring(0, 8)}
             </Caption>
           </div>
         </div>
@@ -182,26 +182,26 @@ export default function TrackOrder() {
             {/* Items */}
             <div className="border-t pt-4 space-y-3">
               <H4>Productos</H4>
-              {order.items?.map((item: any, index: number) => (
+              {order.order_items?.map((item: any, index: number) => (
                 <div key={index} className="flex justify-between items-start gap-4">
                   <div className="flex-1">
                     <Body size="small" className="font-medium">
-                      {item.quantity}x {item.name}
+                      {item.quantity}x {item.item_name}
                     </Body>
-                    {item.extras && item.extras.length > 0 && (
+                    {item.order_item_extras && item.order_item_extras.length > 0 && (
                       <Caption className="text-muted-foreground">
-                        + {item.extras.map((e: any) => e.name).join(', ')}
+                        + {item.order_item_extras.map((e: any) => e.extra_name).join(', ')}
                       </Caption>
                     )}
                   </div>
                   <Body size="small" className="font-medium">
-                    {formatCurrency(item.price * item.quantity)}
+                    {formatCurrency(item.price_at_time * item.quantity)}
                   </Body>
                 </div>
               ))}
               <div className="border-t pt-3 flex justify-between items-center">
                 <H4>Total</H4>
-                <H3>{formatCurrency(Number(order.total))}</H3>
+                <H3>{formatCurrency(Number(order.total_amount))}</H3>
               </div>
             </div>
           </CardContent>
