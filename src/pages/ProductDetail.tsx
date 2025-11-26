@@ -7,9 +7,9 @@ import { Button } from "@/components/ui/button";
 import { ShoppingCart, ArrowLeft } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ProductCard } from "@/components/catalog/ProductCard";
 import { toast } from "sonner";
 import { useStoreTheme } from "@/hooks/useStoreTheme";
+import { ProductExtrasDialog } from "@/components/catalog/ProductExtrasDialog";
 
 interface Product {
   id: string;
@@ -26,9 +26,8 @@ export default function ProductDetail() {
   const navigate = useNavigate();
   const { addItem } = useCart();
   const [product, setProduct] = useState<Product | null>(null);
-  const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
-  const [quantity, setQuantity] = useState(1);
+  const [showExtrasDialog, setShowExtrasDialog] = useState(false);
   
   // Apply store theme colors
   useStoreTheme();
@@ -53,22 +52,6 @@ export default function ProductDetail() {
       }
 
       setProduct(productData);
-
-      // Fetch related products from same category
-      if (productData.category_id) {
-        const { data: relatedData } = await supabase
-          .from("menu_items")
-          .select("*")
-          .eq("category_id", productData.category_id)
-          .eq("is_available", true)
-          .neq("id", id)
-          .limit(4);
-
-        if (relatedData) {
-          setRelatedProducts(relatedData);
-        }
-      }
-
       setLoading(false);
     };
 
@@ -76,16 +59,21 @@ export default function ProductDetail() {
   }, [id, navigate]);
 
   const handleAddToCart = () => {
+    setShowExtrasDialog(true);
+  };
+
+  const handleConfirmWithExtras = (extras: any[]) => {
     if (product) {
-      for (let i = 0; i < quantity; i++) {
-        addItem({
-          id: product.id,
-          name: product.name,
-          price: product.price,
-          image_url: product.image_url,
-        });
-      }
+      addItem({
+        id: product.id,
+        name: product.name,
+        price: product.price,
+        image_url: product.image_url,
+        extras,
+        categoryId: product.category_id,
+      });
     }
+    setShowExtrasDialog(false);
   };
 
   if (loading) {
@@ -169,33 +157,6 @@ export default function ProductDetail() {
               </div>
             )}
 
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground">
-                Cantidad
-              </label>
-              <div className="flex items-center gap-3">
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                  className="h-10 w-10"
-                >
-                  -
-                </Button>
-                <span className="text-xl font-semibold w-12 text-center">
-                  {quantity}
-                </span>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={() => setQuantity(quantity + 1)}
-                  className="h-10 w-10"
-                >
-                  +
-                </Button>
-              </div>
-            </div>
-
             <div className="space-y-3 pt-4">
               <Button
                 onClick={handleAddToCart}
@@ -215,29 +176,21 @@ export default function ProductDetail() {
           </div>
         </div>
 
-        {/* Related Products */}
-        {relatedProducts.length > 0 && (
-          <div className="border-t border-border pt-12">
-            <h2 className="text-2xl font-bold text-foreground mb-6">
-              Productos Relacionados
-            </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {relatedProducts.map((relatedProduct) => (
-                <ProductCard
-                  key={relatedProduct.id}
-                  id={relatedProduct.id}
-                  name={relatedProduct.name}
-                  price={relatedProduct.price}
-                  image_url={relatedProduct.image_url}
-                  description={relatedProduct.description}
-                />
-              ))}
-            </div>
-          </div>
-        )}
       </main>
 
       <Footer />
+      
+      {/* Product Extras Dialog */}
+      {product && (
+        <ProductExtrasDialog
+          open={showExtrasDialog}
+          onOpenChange={setShowExtrasDialog}
+          productId={product.id}
+          productName={product.name}
+          productPrice={product.price}
+          onConfirm={handleConfirmWithExtras}
+        />
+      )}
     </div>
   );
 }
