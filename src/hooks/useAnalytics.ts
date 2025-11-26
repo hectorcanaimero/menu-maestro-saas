@@ -21,14 +21,14 @@ export function useAnalytics(dateRange: DateRangeValue) {
 
       const { data: orders, error } = await supabase
         .from('orders')
-        .select('total, status')
+        .select('total_amount, status')
         .eq('store_id', store.id)
         .gte('created_at', dateRange.from.toISOString())
         .lte('created_at', dateRange.to.toISOString());
 
       if (error) throw error;
 
-      const totalRevenue = orders?.reduce((sum, order) => sum + Number(order.total), 0) || 0;
+      const totalRevenue = orders?.reduce((sum, order) => sum + Number(order.total_amount), 0) || 0;
       const totalOrders = orders?.length || 0;
       const completedOrders = orders?.filter((o) => o.status === 'completed').length || 0;
       const pendingOrders = orders?.filter((o) => o.status === 'pending').length || 0;
@@ -54,7 +54,7 @@ export function useAnalytics(dateRange: DateRangeValue) {
 
       const { data: orders, error } = await supabase
         .from('orders')
-        .select('total, created_at, status')
+        .select('total_amount, created_at, status')
         .eq('store_id', store.id)
         .gte('created_at', dateRange.from.toISOString())
         .lte('created_at', dateRange.to.toISOString())
@@ -78,7 +78,7 @@ export function useAnalytics(dateRange: DateRangeValue) {
         const existing = dailyData.get(dateKey) || { revenue: 0, orders: 0 };
 
         // Only count completed orders in revenue
-        const revenue = order.status === 'completed' ? Number(order.total) : 0;
+        const revenue = order.status === 'completed' ? Number(order.total_amount) : 0;
 
         dailyData.set(dateKey, {
           revenue: existing.revenue + revenue,
@@ -104,7 +104,20 @@ export function useAnalytics(dateRange: DateRangeValue) {
 
       const { data: orders, error } = await supabase
         .from('orders')
-        .select('items, status')
+        .select(`
+          id,
+          status,
+          order_items (
+            id,
+            item_name,
+            quantity,
+            price_at_time,
+            menu_item_id,
+            menu_items (
+              image_url
+            )
+          )
+        `)
         .eq('store_id', store.id)
         .eq('status', 'completed')
         .gte('created_at', dateRange.from.toISOString())
@@ -115,21 +128,21 @@ export function useAnalytics(dateRange: DateRangeValue) {
       // Aggregate product sales
       const productMap = new Map<string, { name: string; quantity: number; revenue: number; image_url: string | null }>();
 
-      orders?.forEach((order) => {
-        const items = order.items as any[];
-        items?.forEach((item) => {
-          const existing = productMap.get(item.id) || {
-            name: item.name,
+      orders?.forEach((order: any) => {
+        const items = order.order_items || [];
+        items?.forEach((item: any) => {
+          const existing = productMap.get(item.menu_item_id) || {
+            name: item.item_name,
             quantity: 0,
             revenue: 0,
-            image_url: item.image_url,
+            image_url: item.menu_items?.image_url || null,
           };
 
-          productMap.set(item.id, {
-            name: item.name,
+          productMap.set(item.menu_item_id, {
+            name: item.item_name,
             quantity: existing.quantity + item.quantity,
-            revenue: existing.revenue + item.price * item.quantity,
-            image_url: item.image_url,
+            revenue: existing.revenue + (item.price_at_time * item.quantity),
+            image_url: item.menu_items?.image_url || null,
           });
         });
       });
@@ -151,8 +164,7 @@ export function useAnalytics(dateRange: DateRangeValue) {
 
       const { data: customers, error } = await supabase
         .from('customers')
-        .select('id, created_at')
-        .eq('store_id', store.id);
+        .select('id, created_at');
 
       if (error) throw error;
 

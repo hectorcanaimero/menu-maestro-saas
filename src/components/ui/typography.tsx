@@ -136,7 +136,7 @@ export function Link({
   ...props
 }: TypographyProps & React.AnchorHTMLAttributes<HTMLAnchorElement>) {
   return (
-    <Component className={cn(typography.link, className)} {...props}>
+    <Component className={cn(typography.link, className)} {...(props as any)}>
       {children}
     </Component>
   );

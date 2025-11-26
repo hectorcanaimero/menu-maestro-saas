@@ -71,28 +71,20 @@ export function logError(error: Error | AppError, context?: ErrorContext): void 
     console.error('Production Error:', errorData);
   }
 
-  // Optionally log to Supabase for internal tracking
-  // Note: This is fire-and-forget, errors here won't break the app
-  try {
-    supabase.from('error_logs').insert({
-      message: errorData.message,
-      name: errorData.name,
-      stack: errorData.stack,
-      context: errorData.context,
-      user_agent: errorData.userAgent,
-      url: errorData.url,
-      created_at: errorData.timestamp,
-    }).then(({ error: logError }) => {
-      if (logError && import.meta.env.DEV) {
-        console.warn('Failed to log error to database:', logError);
-      }
-    });
-  } catch (e) {
-    // Silently fail - we don't want error logging to break the app
-    if (import.meta.env.DEV) {
-      console.warn('Error logging failed:', e);
-    }
-  }
+  // Optionally log errors locally (commented out since error_logs table doesn't exist)
+  // try {
+  //   supabase.from('error_logs').insert({
+  //     message: errorData.message,
+  //     name: errorData.name,
+  //     stack: errorData.stack,
+  //     context: errorData.context,
+  //     user_agent: errorData.userAgent,
+  //     url: errorData.url,
+  //     created_at: errorData.timestamp,
+  //   });
+  // } catch (e) {
+  //   // Silently fail
+  // }
 }
 
 /**

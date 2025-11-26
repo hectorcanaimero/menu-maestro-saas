@@ -11,10 +11,10 @@ import { useOrderNotifications } from '@/hooks/useOrderNotifications';
 
 interface AdminLayoutProps {
   children: ReactNode;
-  userEmail: string;
+  userEmail?: string;
 }
 
-const AdminLayout = ({ children, userEmail }: AdminLayoutProps) => {
+const AdminLayout = ({ children, userEmail = '' }: AdminLayoutProps) => {
   const navigate = useNavigate();
   const { store, loading: storeLoading, isStoreOwner } = useStore();
 
