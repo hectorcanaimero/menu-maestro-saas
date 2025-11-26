@@ -248,6 +248,57 @@ export type Database = {
           },
         ]
       }
+      order_status_history: {
+        Row: {
+          changed_at: string | null
+          changed_by: string | null
+          created_at: string | null
+          from_status: string | null
+          id: string
+          notes: string | null
+          order_id: string
+          store_id: string
+          to_status: string
+        }
+        Insert: {
+          changed_at?: string | null
+          changed_by?: string | null
+          created_at?: string | null
+          from_status?: string | null
+          id?: string
+          notes?: string | null
+          order_id: string
+          store_id: string
+          to_status: string
+        }
+        Update: {
+          changed_at?: string | null
+          changed_by?: string | null
+          created_at?: string | null
+          from_status?: string | null
+          id?: string
+          notes?: string | null
+          order_id?: string
+          store_id?: string
+          to_status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_status_history_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_status_history_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       orders: {
         Row: {
           created_at: string | null
@@ -482,6 +533,110 @@ export type Database = {
           },
         ]
       }
+      rate_limit_log: {
+        Row: {
+          action_type: string
+          attempt_count: number | null
+          blocked_until: string | null
+          id: string
+          identifier: string
+          identifier_type: string
+          is_blocked: boolean | null
+          last_attempt: string | null
+          window_start: string | null
+        }
+        Insert: {
+          action_type: string
+          attempt_count?: number | null
+          blocked_until?: string | null
+          id?: string
+          identifier: string
+          identifier_type: string
+          is_blocked?: boolean | null
+          last_attempt?: string | null
+          window_start?: string | null
+        }
+        Update: {
+          action_type?: string
+          attempt_count?: number | null
+          blocked_until?: string | null
+          id?: string
+          identifier?: string
+          identifier_type?: string
+          is_blocked?: boolean | null
+          last_attempt?: string | null
+          window_start?: string | null
+        }
+        Relationships: []
+      }
+      reserved_subdomains: {
+        Row: {
+          created_at: string | null
+          reason: string
+          subdomain: string
+        }
+        Insert: {
+          created_at?: string | null
+          reason: string
+          subdomain: string
+        }
+        Update: {
+          created_at?: string | null
+          reason?: string
+          subdomain?: string
+        }
+        Relationships: []
+      }
+      store_access_log: {
+        Row: {
+          access_type: string
+          created_at: string | null
+          failure_reason: string | null
+          id: string
+          ip_address: string | null
+          session_id: string | null
+          store_id: string | null
+          subdomain: string
+          success: boolean
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          access_type: string
+          created_at?: string | null
+          failure_reason?: string | null
+          id?: string
+          ip_address?: string | null
+          session_id?: string | null
+          store_id?: string | null
+          subdomain: string
+          success?: boolean
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          access_type?: string
+          created_at?: string | null
+          failure_reason?: string | null
+          id?: string
+          ip_address?: string | null
+          session_id?: string | null
+          store_id?: string | null
+          subdomain?: string
+          success?: boolean
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "store_access_log_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       store_hours: {
         Row: {
           close_time: string
@@ -680,9 +835,99 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      order_status_analytics: {
+        Row: {
+          avg_minutes_in_status: number | null
+          max_minutes_in_status: number | null
+          min_minutes_in_status: number | null
+          status_count: number | null
+          store_id: string | null
+          to_status: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_status_history_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
+      can_access_admin_routes: {
+        Args: { p_store_id?: string }
+        Returns: {
+          can_access: boolean
+          reason: string
+          store_id: string
+          store_name: string
+          user_id: string
+        }[]
+      }
+      check_rate_limit: {
+        Args: {
+          p_action_type: string
+          p_identifier: string
+          p_identifier_type: string
+          p_max_attempts?: number
+          p_window_minutes?: number
+        }
+        Returns: {
+          allowed: boolean
+          reason: string
+          remaining_attempts: number
+          reset_at: string
+        }[]
+      }
+      cleanup_old_security_logs: { Args: never; Returns: undefined }
+      get_current_user_info: {
+        Args: never
+        Returns: {
+          email: string
+          has_admin_role: boolean
+          owned_store_id: string
+          owned_store_name: string
+          user_id: string
+        }[]
+      }
+      get_store_by_subdomain_secure: {
+        Args: { p_ip_address?: string; p_subdomain: string }
+        Returns: {
+          error_message: string
+          is_owner: boolean
+          rate_limit_ok: boolean
+          store_data: Json
+          store_id: string
+        }[]
+      }
+      get_suspicious_access_patterns: {
+        Args: { p_hours?: number; p_store_id: string }
+        Returns: {
+          count: number
+          details: Json
+          pattern_type: string
+        }[]
+      }
+      get_user_owned_store: {
+        Args: never
+        Returns: {
+          address: string
+          description: string
+          email: string
+          force_status: string
+          id: string
+          is_active: boolean
+          logo_url: string
+          name: string
+          operating_mode: string
+          phone: string
+          subdomain: string
+          whatsapp_number: string
+          whatsapp_redirect: boolean
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -690,6 +935,28 @@ export type Database = {
         }
         Returns: boolean
       }
+      log_store_access: {
+        Args: {
+          p_access_type: string
+          p_failure_reason?: string
+          p_ip_address?: string
+          p_store_id: string
+          p_subdomain: string
+          p_success: boolean
+          p_user_agent?: string
+        }
+        Returns: string
+      }
+      user_owns_store: { Args: { target_store_id: string }; Returns: boolean }
+      validate_subdomain: {
+        Args: { p_subdomain: string }
+        Returns: {
+          error_message: string
+          is_valid: boolean
+        }[]
+      }
+      verify_admin_access: { Args: { p_store_id: string }; Returns: boolean }
+      verify_store_ownership: { Args: { p_store_id: string }; Returns: boolean }
     }
     Enums: {
       app_role: "admin" | "user"
