@@ -13,6 +13,7 @@ import {
   Tag,
   TrendingUp,
   Brain,
+  Bot,
 } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import {
@@ -42,9 +43,12 @@ const navItems = [
 
 const navIntegration = [
   { path: '/admin/whatsapp', label: 'Whatsapp', icon: Send },
+  { path: '/admin/whatsapp', label: 'Lis Bot', icon: Bot },
   { path: '/admin/ai', label: 'IA Imagen', icon: Brain },
   { path: '/admin/delivery', label: 'Delivery', icon: Package },
   { path: '/admin/fidelity', label: 'Fidelidad', icon: Club },
+  { path: '/admin/point-sale', label: 'Ponto de Venda', icon: Club },
+  { path: '/admin/point-sale', label: 'Dominio Propio', icon: Club },
 ];
 
 export function AppSidebar() {

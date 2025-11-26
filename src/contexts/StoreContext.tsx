@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { getSubdomainFromHostname } from "@/lib/subdomain-validation";
+import posthog from "posthog-js";
 
 interface Store {
   id: string;
@@ -67,7 +68,11 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
     // Listen for auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (store) {
-        setIsStoreOwner(session?.user?.id === store.owner_id);
+        const isOwner = session?.user?.id === store.owner_id;
+        setIsStoreOwner(isOwner);
+
+        // Identify user in PostHog when auth state changes
+        identifyUserInPostHog(session, store, isOwner);
       }
     });
 
@@ -142,7 +147,49 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
 
   const checkOwnership = async (storeData: Store) => {
     const { data: { session } } = await supabase.auth.getSession();
-    setIsStoreOwner(session?.user?.id === storeData.owner_id);
+    const isOwner = session?.user?.id === storeData.owner_id;
+    setIsStoreOwner(isOwner);
+
+    // Identify user in PostHog after checking ownership
+    identifyUserInPostHog(session, storeData, isOwner);
+  };
+
+  // Helper function to identify users in PostHog
+  const identifyUserInPostHog = (session: any, storeData: Store, isOwner: boolean) => {
+    try {
+      if (session?.user) {
+        // Identify user with their user ID and store context
+        posthog.identify(session.user.id, {
+          email: session.user.email,
+          store_id: storeData.id,
+          store_name: storeData.name,
+          is_store_owner: isOwner,
+          role: isOwner ? 'owner' : 'customer',
+          store_subdomain: storeData.subdomain,
+        });
+
+        if (import.meta.env.DEV) {
+          console.log('[PostHog] User identified:', {
+            user_id: session.user.id,
+            email: session.user.email,
+            store_id: storeData.id,
+            is_store_owner: isOwner,
+          });
+        }
+      } else {
+        // Reset identification when user logs out
+        posthog.reset();
+
+        // Set anonymous user properties with store context
+        posthog.register({
+          store_id: storeData.id,
+          store_name: storeData.name,
+          store_subdomain: storeData.subdomain,
+        });
+      }
+    } catch (error) {
+      console.error('[PostHog] Error identifying user:', error);
+    }
   };
 
   const revalidateOwnership = async () => {

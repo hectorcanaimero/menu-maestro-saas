@@ -18,6 +18,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { toast } from "sonner";
 import { ArrowLeft, ArrowRight, Upload, X, Check } from "lucide-react";
 import InputMask from "react-input-mask";
+import posthog from "posthog-js";
 
 interface PaymentMethod {
   id: string;
@@ -151,9 +152,28 @@ const Checkout = () => {
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
   const [deliveryZones, setDeliveryZones] = useState<DeliveryZone[]>([]);
   const [orderType, setOrderType] = useState<"delivery" | "pickup" | "digital_menu">("delivery");
+  const [deliveryPrice, setDeliveryPrice] = useState(0);
 
   const totalSteps = orderType === "pickup" ? 3 : 3; // Same steps for all types
   const progress = (currentStep / totalSteps) * 100;
+  const grandTotal = totalPrice + (orderType === "delivery" ? deliveryPrice : 0);
+
+  // Track checkout_started event when component mounts
+  useEffect(() => {
+    if (items.length > 0 && store?.id) {
+      try {
+        posthog.capture('checkout_started', {
+          store_id: store.id,
+          items_count: items.length,
+          total_items: items.reduce((sum, item) => sum + item.quantity, 0),
+          cart_value: totalPrice,
+          order_type: orderType,
+        });
+      } catch (error) {
+        console.error('[PostHog] Error tracking checkout_started:', error);
+      }
+    }
+  }, []); // Only track once on mount
 
   // Create form with validation
   const form = useForm<CheckoutFormData>({
@@ -223,11 +243,43 @@ const Checkout = () => {
     loadDeliveryZones();
   }, [store?.id, form]);
 
+  // Calculate delivery price based on selected zone
+  useEffect(() => {
+    if (orderType !== "delivery") {
+      setDeliveryPrice(0);
+      return;
+    }
+
+    const selectedZoneName = form.watch("delivery_address");
+    if (!selectedZoneName || deliveryZones.length === 0) {
+      setDeliveryPrice(0);
+      return;
+    }
+
+    const selectedZone = deliveryZones.find(zone => zone.zone_name === selectedZoneName);
+    if (selectedZone) {
+      setDeliveryPrice(selectedZone.delivery_price);
+    }
+  }, [form.watch("delivery_address"), deliveryZones, orderType, form]);
+
   const handleNext = async () => {
     const isValid = await form.trigger();
     if (!isValid) return;
 
     if (currentStep < totalSteps) {
+      // Track checkout step completion
+      try {
+        posthog.capture('checkout_step_completed', {
+          store_id: store?.id,
+          step: currentStep,
+          order_type: orderType,
+          items_count: items.length,
+          cart_value: totalPrice,
+        });
+      } catch (error) {
+        console.error('[PostHog] Error tracking checkout_step_completed:', error);
+      }
+
       setCurrentStep(currentStep + 1);
     } else {
       handleSubmit();
@@ -290,15 +342,16 @@ const Checkout = () => {
       }
 
       const formData = form.getValues();
-      
+
       // Save order data to sessionStorage and navigate to confirmation
       const orderData = {
         ...formData,
         order_type: orderType,
         payment_proof_url: paymentProofUrl,
         country: country,
+        delivery_price: orderType === "delivery" ? deliveryPrice : 0,
       };
-      
+
       sessionStorage.setItem("pendingOrder", JSON.stringify(orderData));
       navigate("/confirm-order");
     } catch (error) {
@@ -730,12 +783,24 @@ const Checkout = () => {
                       <p className="text-xs text-muted-foreground">+{items.length - 3} artículos más</p>
                     )}
                   </div>
-                  <div className="pt-3 border-t flex justify-between font-bold">
-                    <span>Total</span>
-                    <span className="text-price text-lg">{currencySymbol}{totalPrice.toFixed(2)}</span>
+                  <div className="pt-3 border-t space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span>Subtotal</span>
+                      <span>{currencySymbol}{totalPrice.toFixed(2)}</span>
+                    </div>
+                    {orderType === "delivery" && deliveryPrice > 0 && (
+                      <div className="flex justify-between text-sm">
+                        <span>Costo de entrega</span>
+                        <span>{currencySymbol}{deliveryPrice.toFixed(2)}</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between font-bold text-lg pt-2 border-t">
+                      <span>Total</span>
+                      <span className="text-price">{currencySymbol}{grandTotal.toFixed(2)}</span>
+                    </div>
                   </div>
                   {store?.minimum_order_price && totalPrice < store.minimum_order_price && (
-                    <Badge variant="destructive" className="w-full justify-center">
+                    <Badge variant="destructive" className="w-full justify-center mt-3">
                       Pedido mínimo: {currencySymbol}{store.minimum_order_price.toFixed(2)}
                     </Badge>
                   )}

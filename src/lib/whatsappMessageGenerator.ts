@@ -24,6 +24,7 @@ interface OrderData {
   decimalPlaces?: number;
   decimalSeparator?: string;
   thousandsSeparator?: string;
+  trackingUrl?: string;
 }
 
 interface StoreTemplates {
@@ -53,6 +54,7 @@ export const generateWhatsAppMessage = (
     decimalPlaces = 2,
     decimalSeparator = ".",
     thousandsSeparator = ",",
+    trackingUrl = "",
   } = orderData;
 
   // Format price function
@@ -119,7 +121,7 @@ export const generateWhatsAppMessage = (
   finalMessage = finalMessage.replace(/{payment-method}/g, paymentMethod || "N/A");
   finalMessage = finalMessage.replace(/{order-coupon-code}/g, ""); // Not implemented
   finalMessage = finalMessage.replace(/{order-table}/g, ""); // Not implemented
-  finalMessage = finalMessage.replace(/{order-track-page}/g, ""); // Not implemented
+  finalMessage = finalMessage.replace(/{order-track-page}/g, trackingUrl);
   finalMessage = finalMessage.replace(/{payment-type}/g, ""); // Not implemented
   finalMessage = finalMessage.replace(/{payment-status}/g, "Pendiente");
   finalMessage = finalMessage.replace(/{payment-change}/g, ""); // Not implemented

@@ -99,8 +99,7 @@ export const ProductGrid = () => {
         .from('menu_items')
         .select('*', { count: 'exact', head: true })
         .eq('store_id', store.id)
-        .eq('is_available', true)
-        .eq('is_featured', false);
+        .eq('is_available', true);
 
       if (categoryFilter) {
         query = query.eq('category_id', categoryFilter);
@@ -131,7 +130,6 @@ export const ProductGrid = () => {
         .select('*')
         .eq('store_id', store.id)
         .eq('is_available', true)
-        .eq('is_featured', false)
         .range(from, to);
 
       if (categoryFilter) {

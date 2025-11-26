@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { toast } from "sonner";
+import posthog from "posthog-js";
 
 interface CartItemExtra {
   id: string;
@@ -59,6 +60,27 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       const itemWithId = { ...item, cartItemId };
 
       const existing = current.find((i) => i.cartItemId === cartItemId);
+
+      // Track event in PostHog
+      try {
+        const extrasPrice = item.extras?.reduce((sum, extra) => sum + extra.price, 0) || 0;
+        const totalPrice = item.price + extrasPrice;
+
+        posthog.capture('product_added_to_cart', {
+          product_id: item.id,
+          product_name: item.name,
+          product_price: item.price,
+          extras_count: item.extras?.length || 0,
+          extras_price: extrasPrice,
+          total_price: totalPrice,
+          category_id: item.categoryId,
+          has_extras: (item.extras?.length || 0) > 0,
+          quantity: existing ? existing.quantity + 1 : 1,
+        });
+      } catch (error) {
+        console.error('[PostHog] Error tracking add to cart:', error);
+      }
+
       if (existing) {
         toast.success("Cantidad actualizada");
         return current.map((i) =>
@@ -71,7 +93,32 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const removeItem = (cartItemId: string) => {
-    setItems((current) => current.filter((item) => item.cartItemId !== cartItemId));
+    setItems((current) => {
+      const itemToRemove = current.find((item) => item.cartItemId === cartItemId);
+
+      // Track event in PostHog
+      if (itemToRemove) {
+        try {
+          const extrasPrice = itemToRemove.extras?.reduce((sum, extra) => sum + extra.price, 0) || 0;
+          const totalPrice = (itemToRemove.price + extrasPrice) * itemToRemove.quantity;
+
+          posthog.capture('product_removed_from_cart', {
+            product_id: itemToRemove.id,
+            product_name: itemToRemove.name,
+            product_price: itemToRemove.price,
+            quantity: itemToRemove.quantity,
+            extras_count: itemToRemove.extras?.length || 0,
+            extras_price: extrasPrice,
+            total_price: totalPrice,
+            category_id: itemToRemove.categoryId,
+          });
+        } catch (error) {
+          console.error('[PostHog] Error tracking remove from cart:', error);
+        }
+      }
+
+      return current.filter((item) => item.cartItemId !== cartItemId);
+    });
     toast.success("Platillo eliminado");
   };
 

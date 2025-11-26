@@ -27,6 +27,7 @@ interface OrderData {
   order_type: "delivery" | "pickup" | "digital_menu";
   payment_proof_url?: string;
   country?: string;
+  delivery_price?: number;
 }
 
 const ConfirmOrder = () => {
@@ -39,6 +40,10 @@ const ConfirmOrder = () => {
 
   const [loading, setLoading] = useState(false);
   const [orderData, setOrderData] = useState<OrderData | null>(null);
+
+  // Calculate grand total including delivery
+  const deliveryPrice = orderData?.delivery_price || 0;
+  const grandTotal = totalPrice + deliveryPrice;
 
   useEffect(() => {
     // Load order data from sessionStorage
@@ -161,13 +166,14 @@ const ConfirmOrder = () => {
             store_id: store.id,
             user_id: session?.user?.id || null,
             customer_id: customerId,
-            total_amount: totalPrice,
+            total_amount: grandTotal,
+            delivery_price: deliveryPrice,
             customer_name: orderData.customer_name,
             customer_email: orderData.customer_email,
             customer_phone: orderData.customer_phone,
             delivery_address: fullAddress,
-            notes: orderData.order_type === "digital_menu" && orderData.table_number 
-              ? `Mesa: ${orderData.table_number}${orderData.notes ? `\n${orderData.notes}` : ''}` 
+            notes: orderData.order_type === "digital_menu" && orderData.table_number
+              ? `Mesa: ${orderData.table_number}${orderData.notes ? `\n${orderData.notes}` : ''}`
               : orderData.notes || null,
             payment_proof_url: orderData.payment_proof_url || null,
             payment_method: orderData.payment_method || null,
@@ -221,6 +227,9 @@ const ConfirmOrder = () => {
 
       // Generate WhatsApp message
       if (store.phone && (store.order_product_template || store.order_message_template_delivery)) {
+        // Generate tracking URL
+        const trackingUrl = `${window.location.origin}/track/${order.id}`;
+
         const whatsappMessage = generateWhatsAppMessage(
           {
             orderNumber: order.id.substring(0, 8).toUpperCase(),
@@ -241,10 +250,11 @@ const ConfirmOrder = () => {
             decimalPlaces: store.decimal_places || 2,
             decimalSeparator: store.decimal_separator || ".",
             thousandsSeparator: store.thousands_separator || ",",
+            trackingUrl: trackingUrl,
           },
           {
             orderProductTemplate: store.order_product_template || "{product-qty} {product-name}",
-            orderMessageTemplateDelivery: store.order_message_template_delivery || "Pedido #{order-number}\n\n{order-products}\n\nTotal: {order-total}",
+            orderMessageTemplateDelivery: store.order_message_template_delivery || "Pedido #{order-number}\n\n{order-products}\n\nSubtotal: {subtotal}\nEntrega: {delivery-fee}\nTotal: {order-total}",
             orderMessageTemplatePickup: store.order_message_template_pickup || "Pedido #{order-number}\n\n{order-products}\n\nTotal: {order-total}",
             orderMessageTemplateDigitalMenu: store.order_message_template_digital_menu || "Pedido #{order-number}\n\n{order-products}\n\nTotal: {order-total}",
           },
@@ -496,10 +506,23 @@ const ConfirmOrder = () => {
               ))}
 
               <Separator />
-              
-              <div className="flex justify-between items-center text-lg font-bold">
-                <span>Total:</span>
-                <span className="text-primary text-2xl">${totalPrice.toFixed(2)}</span>
+
+              <div className="space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span>Subtotal:</span>
+                  <span>${totalPrice.toFixed(2)}</span>
+                </div>
+                {orderData?.order_type === "delivery" && deliveryPrice > 0 && (
+                  <div className="flex justify-between text-sm">
+                    <span>Costo de entrega:</span>
+                    <span>${deliveryPrice.toFixed(2)}</span>
+                  </div>
+                )}
+                <Separator />
+                <div className="flex justify-between items-center text-lg font-bold">
+                  <span>Total:</span>
+                  <span className="text-primary text-2xl">${grandTotal.toFixed(2)}</span>
+                </div>
               </div>
             </CardContent>
           </Card>

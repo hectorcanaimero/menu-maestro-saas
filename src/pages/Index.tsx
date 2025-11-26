@@ -8,6 +8,7 @@ import { useStore } from '@/contexts/StoreContext';
 import { useNavigate } from 'react-router-dom';
 import { useStoreTheme } from '@/hooks/useStoreTheme';
 import { StoreInfoWidget } from '@/components/catalog/StoreInfoWidget';
+import { FeaturedProducts } from '@/components/catalog/FeaturedProducts';
 
 const Index = () => {
   const { store, loading: storeLoading } = useStore();
@@ -55,7 +56,7 @@ const Index = () => {
       <div className="container mx-auto px-4">
         {/* Store Info Widget */}
         {store && (
-          <section className="py-4 md:py-6">
+          <section className="pt-4 md:pt-6">
             <StoreInfoWidget
               storeId={store.id}
               storeName={store.name}
@@ -68,6 +69,9 @@ const Index = () => {
             />
           </section>
         )}
+
+        {/* Featured Products Section */}
+        <FeaturedProducts />
 
         {/* All Products Section with Grid/List Toggle */}
         <section id="productos">

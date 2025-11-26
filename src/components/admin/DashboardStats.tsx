@@ -107,8 +107,8 @@ const DashboardStats = () => {
   }
 
   return (
-    <div className="space-y-6 mb-8">
-      <div className="grid gap-4 md:grid-cols-3">
+    <div className="space-y-4 sm:space-y-6 mb-6 sm:mb-8">
+      <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Pedidos</CardTitle>
@@ -131,7 +131,7 @@ const DashboardStats = () => {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="sm:col-span-2 lg:col-span-1">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Productos Vendidos</CardTitle>
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
@@ -146,19 +146,19 @@ const DashboardStats = () => {
       {stats.topProducts.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle>Productos Más Vendidos</CardTitle>
+            <CardTitle className="text-base sm:text-lg">Productos Más Vendidos</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-3">
+            <div className="space-y-2 sm:space-y-3">
               {stats.topProducts.map((product, index) => (
-                <div key={product.name} className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-sm font-bold text-primary">
+                <div key={product.name} className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                    <div className="flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-full bg-primary/10 text-xs sm:text-sm font-bold text-primary flex-shrink-0">
                       {index + 1}
                     </div>
-                    <span className="font-medium">{product.name}</span>
+                    <span className="font-medium text-sm sm:text-base truncate">{product.name}</span>
                   </div>
-                  <span className="text-sm text-muted-foreground">{product.quantity} vendidos</span>
+                  <span className="text-xs sm:text-sm text-muted-foreground whitespace-nowrap flex-shrink-0">{product.quantity} vendidos</span>
                 </div>
               ))}
             </div>
