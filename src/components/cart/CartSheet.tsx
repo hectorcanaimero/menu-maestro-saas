@@ -5,11 +5,13 @@ import { useCart } from "@/contexts/CartContext";
 import { useNavigate } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { useCartTotals } from "@/hooks/useCartTotals";
+import { useFormatPrice } from "@/lib/priceFormatter";
 
 export const CartSheet = () => {
   const { items, updateQuantity, removeItem, totalItems } = useCart();
   const { originalTotal, discountedTotal, totalSavings } = useCartTotals(items);
   const navigate = useNavigate();
+  const formatPrice = useFormatPrice();
 
   return (
     <Sheet>
@@ -45,17 +47,17 @@ export const CartSheet = () => {
                   <>
                     <div className="flex justify-between items-center text-sm">
                       <span className="text-muted-foreground">Subtotal:</span>
-                      <span className="line-through text-muted-foreground">${originalTotal.toFixed(2)}</span>
+                      <span className="line-through text-muted-foreground">{formatPrice(originalTotal)}</span>
                     </div>
                     <div className="flex justify-between items-center text-sm">
                       <span className="text-green-600">Descuento:</span>
-                      <span className="text-green-600">-${totalSavings.toFixed(2)}</span>
+                      <span className="text-green-600">-{formatPrice(totalSavings)}</span>
                     </div>
                   </>
                 )}
                 <div className="flex justify-between items-center text-lg font-bold">
                   <span>Total:</span>
-                  <span style={{ color: `hsl(var(--price-color, var(--primary)))` }}>${discountedTotal.toFixed(2)}</span>
+                  <span style={{ color: `hsl(var(--price-color, var(--primary)))` }}>{formatPrice(discountedTotal)}</span>
                 </div>
               </div>
               <Button className="w-full" size="lg" onClick={() => navigate("/checkout")}>
@@ -76,7 +78,7 @@ export const CartSheet = () => {
 
                       <div className="flex-1">
                         <h4 className="font-semibold">{item.name}</h4>
-                        <p className="text-sm font-semibold mt-1" style={{ color: `hsl(var(--price-color, var(--primary)))` }}>${item.price.toFixed(2)}</p>
+                        <p className="text-sm font-semibold mt-1" style={{ color: `hsl(var(--price-color, var(--primary)))` }}>{formatPrice(item.price)}</p>
 
                         <div className="flex items-center gap-2 mt-2">
                           <Button
@@ -108,7 +110,7 @@ export const CartSheet = () => {
                       </div>
                       <div className="text-right">
                         <p className="font-semibold">
-                          ${((item.price + (item.extras?.reduce((sum, e) => sum + e.price, 0) || 0)) * item.quantity).toFixed(2)}
+                          {formatPrice((item.price + (item.extras?.reduce((sum, e) => sum + e.price, 0) || 0)) * item.quantity)}
                         </p>
                         {item.extras && item.extras.length > 0 && (
                           <p className="text-xs text-muted-foreground mt-1">
@@ -122,7 +124,7 @@ export const CartSheet = () => {
                         {item.extras.map((extra, idx) => (
                           <div key={idx} className="flex justify-between">
                             <span>+ {extra.name}</span>
-                            <span>${extra.price.toFixed(2)}</span>
+                            <span>{formatPrice(extra.price)}</span>
                           </div>
                         ))}
                       </div>

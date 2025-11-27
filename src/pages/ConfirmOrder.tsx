@@ -12,6 +12,7 @@ import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import { ArrowLeft, Edit, Loader2, MapPin, User, Mail, Phone, CreditCard, FileText, Hash, Ticket } from "lucide-react";
 import { generateWhatsAppMessage, redirectToWhatsApp } from "@/lib/whatsappMessageGenerator";
+import { useFormatPrice } from "@/lib/priceFormatter";
 
 interface OrderData {
   customer_name: string;
@@ -39,6 +40,7 @@ const ConfirmOrder = () => {
   const { items, clearCart } = useCart();
   const { store } = useStore();
   const { originalTotal, discountedTotal, totalSavings } = useCartTotals(items);
+  const formatPrice = useFormatPrice();
 
   // Apply store theme colors
   useStoreTheme();
@@ -491,7 +493,7 @@ const ConfirmOrder = () => {
                     {orderData.coupon_code}
                   </Badge>
                   <span className="text-green-600 font-semibold">
-                    -${couponDiscount.toFixed(2)}
+                    -{formatPrice(couponDiscount)}
                   </span>
                 </div>
               </CardContent>
@@ -540,7 +542,7 @@ const ConfirmOrder = () => {
                             {item.extras.map((extra, idx) => (
                               <div key={idx} className="flex justify-between">
                                 <span>+ {extra.name}</span>
-                                <span>${extra.price.toFixed(2)}</span>
+                                <span>{formatPrice(extra.price)}</span>
                               </div>
                             ))}
                           </div>
@@ -549,7 +551,7 @@ const ConfirmOrder = () => {
                     </div>
                     <div className="text-right">
                       <p className="font-semibold">
-                        ${((item.price + (item.extras?.reduce((sum, e) => sum + e.price, 0) || 0)) * item.quantity).toFixed(2)}
+                        {formatPrice((item.price + (item.extras?.reduce((sum, e) => sum + e.price, 0) || 0)) * item.quantity)}
                       </p>
                     </div>
                   </div>
@@ -560,37 +562,37 @@ const ConfirmOrder = () => {
 
               <div className="space-y-2">
                 {totalSavings > 0 && (
-                  <>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Subtotal original:</span>
-                      <span className="line-through text-muted-foreground">${originalTotal.toFixed(2)}</span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-green-600">Descuento:</span>
-                      <span className="text-green-600">-${totalSavings.toFixed(2)}</span>
-                    </div>
-                  </>
-                )}
+                    <>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Subtotal original:</span>
+                        <span className="line-through text-muted-foreground">{formatPrice(originalTotal)}</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-green-600">Descuento:</span>
+                        <span className="text-green-600">-{formatPrice(totalSavings)}</span>
+                      </div>
+                    </>
+                  )}
                 <div className="flex justify-between text-sm">
                   <span>Subtotal:</span>
-                  <span>${discountedTotal.toFixed(2)}</span>
+                  <span>{formatPrice(discountedTotal)}</span>
                 </div>
                 {couponDiscount > 0 && (
                   <div className="flex justify-between text-sm">
                     <span className="text-green-600">Cupón ({orderData.coupon_code}):</span>
-                    <span className="text-green-600">-${couponDiscount.toFixed(2)}</span>
+                    <span className="text-green-600">-{formatPrice(couponDiscount)}</span>
                   </div>
                 )}
                 {orderData?.order_type === "delivery" && deliveryPrice > 0 && (
                   <div className="flex justify-between text-sm">
                     <span>Costo de entrega:</span>
-                    <span>${deliveryPrice.toFixed(2)}</span>
+                    <span>{formatPrice(deliveryPrice)}</span>
                   </div>
                 )}
                 <Separator />
                 <div className="flex justify-between items-center text-lg font-bold">
                   <span>Total:</span>
-                  <span className="text-primary text-2xl">${grandTotal.toFixed(2)}</span>
+                  <span className="text-primary text-2xl">{formatPrice(grandTotal)}</span>
                 </div>
               </div>
             </CardContent>

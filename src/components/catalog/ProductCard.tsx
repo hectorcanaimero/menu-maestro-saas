@@ -10,7 +10,7 @@ import { toast } from 'sonner';
 import { ProductExtrasDialog } from './ProductExtrasDialog';
 import { useProductPromotions, getBestPromotion } from '@/hooks/usePromotions';
 import { useQuickView } from '@/hooks/useQuickView';
-import { getCurrencySymbol } from '@/lib/analytics';
+import { useFormatPrice } from '@/lib/priceFormatter';
 
 interface ProductCardProps {
   id: string;
@@ -49,9 +49,7 @@ export const ProductCard = ({
   const navigate = useNavigate();
   const { openQuickView } = useQuickView();
   const [showExtrasDialog, setShowExtrasDialog] = useState(false);
-
-  // Get currency symbol from store
-  const currencySymbol = getCurrencySymbol((store as any)?.currency || 'USD');
+  const formatPrice = useFormatPrice();
 
   // Get applicable promotions for this product
   const productPromotions = useProductPromotions(id, categoryId);
@@ -122,7 +120,7 @@ export const ProductCard = ({
                 <Tag className="w-3 h-3" />
                 {bestDeal.promotion.type === 'percentage'
                   ? `-${bestDeal.promotion.value}%`
-                  : `-${currencySymbol}${bestDeal.promotion.value.toFixed(2)}`}
+                  : `-${formatPrice(bestDeal.promotion.value)}`}
               </Badge>
             )}
 
@@ -155,11 +153,11 @@ export const ProductCard = ({
                       className="text-base sm:text-lg font-bold"
                       style={{ color: `hsl(var(--price-color, var(--foreground)))` }}
                     >
-                      {currencySymbol}{bestDeal.discountedPrice.toFixed(2)}
+                      {formatPrice(bestDeal.discountedPrice)}
                     </p>
-                    <p className="text-xs sm:text-sm text-muted-foreground line-through">{currencySymbol}{price.toFixed(2)}</p>
+                    <p className="text-xs sm:text-sm text-muted-foreground line-through">{formatPrice(price)}</p>
                     <Badge variant="secondary" className="text-xs">
-                      Ahorra {currencySymbol}{bestDeal.savings.toFixed(2)}
+                      Ahorra {formatPrice(bestDeal.savings)}
                     </Badge>
                   </div>
                 ) : (
@@ -167,7 +165,7 @@ export const ProductCard = ({
                     className="text-base sm:text-lg font-bold"
                     style={{ color: `hsl(var(--price-color, var(--foreground)))` }}
                   >
-                    {currencySymbol}{price.toFixed(2)}
+                    {formatPrice(price)}
                   </p>
                 )}
               </div>

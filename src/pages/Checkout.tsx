@@ -7,9 +7,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useCart } from "@/contexts/CartContext";
 import { useStore } from "@/contexts/StoreContext";
 import { useStoreTheme } from "@/hooks/useStoreTheme";
-import { getCurrencySymbol } from "@/lib/analytics";
 import { useCartTotals } from "@/hooks/useCartTotals";
 import { validateCouponCode, applyCouponDiscount, type Coupon } from "@/hooks/useCoupons";
+import { useFormatPrice } from "@/lib/priceFormatter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -135,12 +135,10 @@ const Checkout = () => {
   const { items } = useCart();
   const { store } = useStore();
   const { originalTotal, discountedTotal, totalSavings } = useCartTotals(items);
+  const formatPrice = useFormatPrice();
 
   // Apply store theme colors
   useStoreTheme();
-
-  // Get currency symbol from store
-  const currencySymbol = getCurrencySymbol((store as any)?.currency || "USD");
 
   const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(false);
@@ -220,15 +218,24 @@ const Checkout = () => {
       if (error) {
         console.error("Error loading payment methods:", error);
       } else if (data) {
-        setPaymentMethods(data);
-        if (data.length === 1) {
-          form.setValue("payment_method", data[0].name);
+        // Filter out cash if accept_cash is false
+        let filteredMethods = data;
+        if (store.accept_cash === false) {
+          filteredMethods = data.filter(method => 
+            !method.name.toLowerCase().includes('efectivo') && 
+            !method.name.toLowerCase().includes('cash')
+          );
+        }
+        
+        setPaymentMethods(filteredMethods);
+        if (filteredMethods.length === 1) {
+          form.setValue("payment_method", filteredMethods[0].name);
         }
       }
     };
 
     const loadDeliveryZones = async () => {
-      if (!store?.id) return;
+      if (!store?.id || store.delivery_price_mode !== 'by_zone') return;
 
       const { data, error } = await supabase
         .from("delivery_zones")
@@ -245,26 +252,33 @@ const Checkout = () => {
 
     loadPaymentMethods();
     loadDeliveryZones();
-  }, [store?.id, form]);
+  }, [store?.id, store?.accept_cash, store?.delivery_price_mode, form]);
 
-  // Calculate delivery price based on selected zone
+  // Calculate delivery price based on mode (fixed or by zone)
   useEffect(() => {
-    if (orderType !== "delivery") {
+    if (orderType !== "delivery" || !store) {
       setDeliveryPrice(0);
       return;
     }
 
-    const selectedZoneName = form.watch("address_neighborhood");
-    if (!selectedZoneName || deliveryZones.length === 0) {
-      setDeliveryPrice(0);
-      return;
-    }
+    // Check delivery price mode
+    if (store.delivery_price_mode === 'fixed') {
+      setDeliveryPrice(store.fixed_delivery_price || 0);
+    } else if (store.delivery_price_mode === 'by_zone') {
+      const selectedZoneName = form.watch("address_neighborhood");
+      if (!selectedZoneName || deliveryZones.length === 0) {
+        setDeliveryPrice(0);
+        return;
+      }
 
-    const selectedZone = deliveryZones.find((zone) => zone.zone_name === selectedZoneName);
-    if (selectedZone) {
-      setDeliveryPrice(selectedZone.delivery_price);
+      const selectedZone = deliveryZones.find((zone) => zone.zone_name === selectedZoneName);
+      if (selectedZone) {
+        setDeliveryPrice(selectedZone.delivery_price);
+      }
+    } else {
+      setDeliveryPrice(0);
     }
-  }, [form.watch("address_neighborhood"), deliveryZones, orderType, form]);
+  }, [form.watch("address_neighborhood"), deliveryZones, orderType, store, form]);
 
   const handleNext = async () => {
     const isValid = await form.trigger();
@@ -306,7 +320,7 @@ const Checkout = () => {
 
     // Validate minimum order price
     if (store.minimum_order_price && discountedTotal < store.minimum_order_price) {
-      toast.error(`El pedido mínimo es $${store.minimum_order_price.toFixed(2)}`);
+      toast.error(`El pedido mínimo es ${formatPrice(store.minimum_order_price)}`);
       return;
     }
 
@@ -421,7 +435,7 @@ const Checkout = () => {
       const discount = applyCouponDiscount(result.coupon, discountedTotal);
       setAppliedCoupon(result.coupon);
       setCouponDiscount(discount);
-      toast.success(`¡Cupón aplicado! Ahorraste ${currencySymbol}${discount.toFixed(2)}`);
+      toast.success(`¡Cupón aplicado! Ahorraste ${formatPrice(discount)}`);
     } catch (error) {
       console.error("Error validating coupon:", error);
       setCouponError("Error al validar el cupón");
@@ -641,7 +655,7 @@ const Checkout = () => {
                             <SelectContent>
                               {deliveryZones.map((zone) => (
                                 <SelectItem key={zone.id} value={zone.zone_name}>
-                                  {zone.zone_name} - ${zone.delivery_price.toFixed(2)}
+                                  {zone.zone_name} - {formatPrice(zone.delivery_price)}
                                 </SelectItem>
                               ))}
                             </SelectContent>
@@ -783,7 +797,7 @@ const Checkout = () => {
                             <code className="font-mono font-bold text-green-600">{appliedCoupon.code}</code>
                           </div>
                           <p className="text-sm text-green-600 mt-1">
-                            Ahorraste {currencySymbol}{couponDiscount.toFixed(2)}
+                            Ahorraste {formatPrice(couponDiscount)}
                           </p>
                         </div>
                         <Button
@@ -854,11 +868,7 @@ const Checkout = () => {
                           {item.quantity}x {item.name}
                         </span>
                         <span className="text-price font-medium">
-                          {currencySymbol}
-                          {(
-                            (item.price + (item.extras?.reduce((sum, e) => sum + e.price, 0) || 0)) *
-                            item.quantity
-                          ).toFixed(2)}
+                          {formatPrice((item.price + (item.extras?.reduce((sum, e) => sum + e.price, 0) || 0)) * item.quantity)}
                         </span>
                       </div>
                     ))}
@@ -871,8 +881,7 @@ const Checkout = () => {
                       <div className="flex justify-between text-sm">
                         <span>Subtotal original</span>
                         <span className="line-through text-muted-foreground">
-                          {currencySymbol}
-                          {originalTotal.toFixed(2)}
+                          {formatPrice(originalTotal)}
                         </span>
                       </div>
                     )}
@@ -880,24 +889,21 @@ const Checkout = () => {
                       <div className="flex justify-between text-sm">
                         <span className="text-green-600">Descuento promociones</span>
                         <span className="text-green-600">
-                          -{currencySymbol}
-                          {totalSavings.toFixed(2)}
+                          -{formatPrice(totalSavings)}
                         </span>
                       </div>
                     )}
                     <div className="flex justify-between text-sm">
                       <span>Subtotal</span>
                       <span>
-                        {currencySymbol}
-                        {discountedTotal.toFixed(2)}
+                        {formatPrice(discountedTotal)}
                       </span>
                     </div>
                     {couponDiscount > 0 && (
                       <div className="flex justify-between text-sm">
                         <span className="text-green-600">Descuento cupón</span>
                         <span className="text-green-600">
-                          -{currencySymbol}
-                          {couponDiscount.toFixed(2)}
+                          -{formatPrice(couponDiscount)}
                         </span>
                       </div>
                     )}
@@ -905,23 +911,20 @@ const Checkout = () => {
                       <div className="flex justify-between text-sm">
                         <span>Costo de entrega</span>
                         <span>
-                          {currencySymbol}
-                          {deliveryPrice.toFixed(2)}
+                          {formatPrice(deliveryPrice)}
                         </span>
                       </div>
                     )}
                     <div className="flex justify-between font-bold text-lg pt-2 border-t">
                       <span>Total</span>
                       <span className="text-price">
-                        {currencySymbol}
-                        {grandTotal.toFixed(2)}
+                        {formatPrice(grandTotal)}
                       </span>
                     </div>
                   </div>
                   {store?.minimum_order_price && discountedTotal < store.minimum_order_price && (
                     <Badge variant="destructive" className="w-full justify-center mt-3">
-                      Pedido mínimo: {currencySymbol}
-                      {store.minimum_order_price.toFixed(2)}
+                      Pedido mínimo: {formatPrice(store.minimum_order_price)}
                     </Badge>
                   )}
                 </div>

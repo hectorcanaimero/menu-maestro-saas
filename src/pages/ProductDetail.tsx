@@ -12,7 +12,7 @@ import { toast } from "sonner";
 import { useStoreTheme } from "@/hooks/useStoreTheme";
 import { useProductPromotions, getBestPromotion } from "@/hooks/usePromotions";
 import { useStore } from "@/contexts/StoreContext";
-import { getCurrencySymbol } from "@/lib/analytics";
+import { useFormatPrice } from "@/lib/priceFormatter";
 
 interface Product {
   id: string;
@@ -40,6 +40,7 @@ export default function ProductDetail() {
   const [extras, setExtras] = useState<ProductExtra[]>([]);
   const [selectedExtras, setSelectedExtras] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
+  const formatPrice = useFormatPrice();
   
   // Apply store theme colors
   useStoreTheme();
@@ -47,7 +48,6 @@ export default function ProductDetail() {
   // Get promotions for this product
   const productPromotions = useProductPromotions(id || "", product?.category_id);
   const bestDeal = product ? getBestPromotion(productPromotions, product.price) : null;
-  const currencySymbol = getCurrencySymbol(store?.currency || "USD");
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -196,7 +196,7 @@ export default function ProductDetail() {
                   <Tag className="w-3 h-3" />
                   {bestDeal.promotion.type === "percentage"
                     ? `-${bestDeal.promotion.value}%`
-                    : `-${currencySymbol}${bestDeal.savings.toFixed(2)}`}
+                    : `-${formatPrice(bestDeal.savings)}`}
                 </Badge>
               )}
             </div>
@@ -212,21 +212,21 @@ export default function ProductDetail() {
                 {bestDeal ? (
                   <>
                     <p className="text-2xl text-muted-foreground line-through">
-                      {currencySymbol}{product.price.toFixed(2)}
+                      {formatPrice(product.price)}
                     </p>
                     <p className="text-3xl font-bold" style={{ color: `hsl(var(--price-color, var(--primary)))` }}>
-                      {currencySymbol}{calculateTotalPrice().toFixed(2)}
+                      {formatPrice(calculateTotalPrice())}
                     </p>
                   </>
                 ) : (
                   <p className="text-3xl font-bold" style={{ color: `hsl(var(--price-color, var(--primary)))` }}>
-                    {currencySymbol}{calculateTotalPrice().toFixed(2)}
+                    {formatPrice(calculateTotalPrice())}
                   </p>
                 )}
               </div>
               {bestDeal && (
                 <Badge variant="secondary" className="mt-2">
-                  Ahorra {currencySymbol}{bestDeal.savings.toFixed(2)}
+                  Ahorra {formatPrice(bestDeal.savings)}
                 </Badge>
               )}
             </div>
@@ -264,7 +264,7 @@ export default function ProductDetail() {
                         <span className="text-foreground font-medium">{extra.name}</span>
                       </div>
                       <span className="text-sm font-semibold" style={{ color: `hsl(var(--price-color, var(--primary)))` }}>
-                        +${extra.price.toFixed(2)}
+                        +{formatPrice(extra.price)}
                       </span>
                     </label>
                   ))}
