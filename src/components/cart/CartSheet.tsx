@@ -4,9 +4,11 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import { useCart } from "@/contexts/CartContext";
 import { useNavigate } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
+import { useCartTotals } from "@/hooks/useCartTotals";
 
 export const CartSheet = () => {
-  const { items, updateQuantity, removeItem, totalItems, totalPrice } = useCart();
+  const { items, updateQuantity, removeItem, totalItems } = useCart();
+  const { originalTotal, discountedTotal, totalSavings } = useCartTotals(items);
   const navigate = useNavigate();
 
   return (
@@ -38,9 +40,23 @@ export const CartSheet = () => {
             </div>
           ) : (
             <>
-              <div className="flex justify-between items-center text-lg font-bold mb-4">
-                <span>Total:</span>
-                <span style={{ color: `hsl(var(--price-color, var(--primary)))` }}>${totalPrice.toFixed(2)}</span>
+              <div className="space-y-2 mb-4">
+                {totalSavings > 0 && (
+                  <>
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-muted-foreground">Subtotal:</span>
+                      <span className="line-through text-muted-foreground">${originalTotal.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-green-600">Descuento:</span>
+                      <span className="text-green-600">-${totalSavings.toFixed(2)}</span>
+                    </div>
+                  </>
+                )}
+                <div className="flex justify-between items-center text-lg font-bold">
+                  <span>Total:</span>
+                  <span style={{ color: `hsl(var(--price-color, var(--primary)))` }}>${discountedTotal.toFixed(2)}</span>
+                </div>
               </div>
               <Button className="w-full" size="lg" onClick={() => navigate("/checkout")}>
                 Realizar Pedido
