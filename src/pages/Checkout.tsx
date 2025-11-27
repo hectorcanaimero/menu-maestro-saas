@@ -244,7 +244,7 @@ const Checkout = () => {
       return;
     }
 
-    const selectedZoneName = form.watch("delivery_address");
+    const selectedZoneName = form.watch("address_neighborhood");
     if (!selectedZoneName || deliveryZones.length === 0) {
       setDeliveryPrice(0);
       return;
@@ -254,7 +254,7 @@ const Checkout = () => {
     if (selectedZone) {
       setDeliveryPrice(selectedZone.delivery_price);
     }
-  }, [form.watch("delivery_address"), deliveryZones, orderType, form]);
+  }, [form.watch("address_neighborhood"), deliveryZones, orderType, form]);
 
   const handleNext = async () => {
     const isValid = await form.trigger();
