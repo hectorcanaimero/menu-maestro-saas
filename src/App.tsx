@@ -9,6 +9,7 @@ import { StoreProvider } from "@/contexts/StoreContext";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { LoadingScreen } from "@/components/LoadingScreen";
+import { ScrollToTop } from "@/components/ScrollToTop";
 
 // Lazy load all route components
 const Index = lazy(() => import("./pages/Index"));
@@ -46,6 +47,7 @@ const App = () => (
             <Toaster />
             <Sonner />
             <BrowserRouter>
+              <ScrollToTop />
               <Suspense fallback={<LoadingScreen />}>
                 <Routes>
                   {/* Public Routes */}

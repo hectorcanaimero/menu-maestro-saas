@@ -56,7 +56,9 @@ export const ProductCard = ({
   const bestDeal = getBestPromotion(productPromotions, price);
 
   const handleAddToCart = (e: React.MouseEvent) => {
+    console.log('object');
     e.stopPropagation();
+
     setShowExtrasDialog(true);
   };
 
@@ -125,7 +127,7 @@ export const ProductCard = ({
             )}
 
             {/* Quick View Button - Shows on hover (desktop) or always (mobile) */}
-            <Button
+            {/* <Button
               size="icon"
               variant="secondary"
               onClick={handleQuickView}
@@ -133,7 +135,7 @@ export const ProductCard = ({
               aria-label={`Vista rápida de ${name}`}
             >
               <Eye className="h-4 w-4" />
-            </Button>
+            </Button> */}
           </div>
 
           {/* Content Container */}
@@ -175,7 +177,8 @@ export const ProductCard = ({
           {/* Floating Add Button - Touch-friendly on mobile */}
           <Button
             size="icon"
-            onClick={handleAddToCart}
+            onClick={() => navigate(`/products/${id}`)}
+            // onClick={handleAddToCart}
             className="absolute bottom-2 right-2 sm:bottom-3 sm:right-3 h-9 w-9 sm:h-9 sm:w-9 rounded-full shadow-md bg-primary hover:bg-primary/90 z-10"
             aria-label={`Agregar ${name} al carrito`}
           >
