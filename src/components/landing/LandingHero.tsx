@@ -1,13 +1,25 @@
 import { Button } from '@/components/ui/button';
 import { ArrowRight, CheckCircle2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, useScroll, useTransform } from 'framer-motion';
+import { useRef } from 'react';
 
 export const LandingHero = () => {
   const navigate = useNavigate();
+  const ref = useRef(null);
+  
+  const { scrollYProgress } = useScroll({
+    target: ref,
+    offset: ["start start", "end start"]
+  });
+  
+  // Parallax effects - different speeds for depth
+  const yContent = useTransform(scrollYProgress, [0, 1], [0, -50]);
+  const yStats = useTransform(scrollYProgress, [0, 1], [0, 150]);
+  const opacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
 
   return (
-    <section className="pt-32 pb-20 px-4">
+    <section ref={ref} className="pt-32 pb-20 px-4 relative overflow-hidden">
       <div className="container mx-auto">
         <div className="grid md:grid-cols-2 gap-12 items-center">
           {/* Content */}
@@ -16,6 +28,7 @@ export const LandingHero = () => {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
+            style={{ y: yContent, opacity }}
           >
             <div className="space-y-4">
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight">
@@ -61,6 +74,7 @@ export const LandingHero = () => {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
+            style={{ y: yStats, opacity }}
           >
             <div className="bg-card p-6 rounded-lg border border-border hover:border-primary transition-colors">
               <div className="text-3xl font-bold text-primary mb-2">500+</div>
