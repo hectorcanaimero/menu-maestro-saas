@@ -64,11 +64,19 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
         return; // Wait for store to load
       }
 
-      // If no store, redirect to create store
+      // If no store after login, wait for StoreContext to reload
       if (!store) {
-        setAuthError("no_store");
-        setIsVerifying(false);
-        return;
+        console.log("[ProtectedRoute] No store found, waiting for reload...");
+        // Give StoreContext time to reload after SIGNED_IN event
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        // Check again after waiting
+        if (!store) {
+          console.warn("[ProtectedRoute] Still no store after waiting");
+          setAuthError("no_store");
+          setIsVerifying(false);
+          return;
+        }
       }
 
       // LAYER 3: Server-side authorization verification (most secure)

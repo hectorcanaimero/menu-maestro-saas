@@ -66,8 +66,17 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
     }, 5 * 60 * 1000); // 5 minutes
 
     // Listen for auth state changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (store) {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      // Reload store when user signs in to get correct ownership status
+      if (event === 'SIGNED_IN') {
+        console.log('[StoreContext] User signed in, reloading store...');
+        await loadStore();
+      } else if (event === 'SIGNED_OUT') {
+        console.log('[StoreContext] User signed out');
+        setIsStoreOwner(false);
+        posthog.reset();
+      } else if (store) {
+        // Update ownership for other events
         const isOwner = session?.user?.id === store.owner_id;
         setIsStoreOwner(isOwner);
 
