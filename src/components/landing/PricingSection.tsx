@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { Check } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 
 export const PricingSection = () => {
   const navigate = useNavigate();
@@ -57,23 +58,33 @@ export const PricingSection = () => {
   return (
     <section id="pricing" className="py-20 px-4">
       <div className="container mx-auto">
-        <div className="text-center mb-16">
+        <motion.div 
+          className="text-center mb-16"
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5 }}
+        >
           <h2 className="text-3xl md:text-4xl font-bold mb-4">Precios Simples y Claros</h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
             Elige el plan perfecto para tu negocio. Todos los planes incluyen 14 días de
             prueba gratis.
           </p>
-        </div>
+        </motion.div>
 
         <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
           {plans.map((plan, index) => (
-            <div
+            <motion.div
               key={index}
               className={`relative bg-card rounded-lg border ${
                 plan.popular
                   ? 'border-primary shadow-lg scale-105'
                   : 'border-border hover:border-primary'
               } p-8 transition-all`}
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: index * 0.15 }}
             >
               {plan.popular && (
                 <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground px-4 py-1 rounded-full text-sm font-semibold">
@@ -106,7 +117,7 @@ export const PricingSection = () => {
               >
                 {plan.cta}
               </Button>
-            </div>
+            </motion.div>
           ))}
         </div>
       </div>
