@@ -215,3 +215,13 @@ export function generateSubdomainSuggestions(storeName: string): string[] {
 export function formatSubdomainDisplay(subdomain: string): string {
   return `${subdomain}.pideai.com`;
 }
+
+/**
+ * Check if current hostname is the main domain (www or empty subdomain)
+ *
+ * @returns True if the current domain is www.pideai.com or pideai.com
+ */
+export function isMainDomain(): boolean {
+  const subdomain = getSubdomainFromHostname();
+  return subdomain === 'www' || subdomain === '';
+}
