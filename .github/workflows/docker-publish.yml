@@ -77,22 +77,9 @@ jobs:
           echo "docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest" >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
 
-      - name: Create release comment
+      - name: Docker image published
         if: github.event_name == 'release'
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const tag = context.ref.replace('refs/tags/', '');
-            const body = `🐳 **Docker image published successfully!**\n\n` +
-                        `**Pull command:**\n` +
-                        `\`\`\`bash\n` +
-                        `docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${tag}\n` +
-                        `\`\`\`\n\n` +
-                        `**Available tags:** latest, ${tag}`;
-
-            github.rest.issues.createComment({
-              issue_number: context.payload.release.id,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: body
-            });
+        run: |
+          echo "✅ Docker image published successfully!"
+          echo "📦 Pull command: docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.ref_name }}"
+          echo "🔗 View release: ${{ github.server_url }}/${{ github.repository }}/releases/tag/${{ github.ref_name }}"
