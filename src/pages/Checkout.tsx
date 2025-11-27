@@ -141,7 +141,7 @@ const Checkout = () => {
 
   const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(false);
-  const [country, setCountry] = useState<"brazil" | "venezuela">("brazil");
+  const [country, setCountry] = useState<"brazil" | "venezuela">("venezuela");
   const [paymentProofFile, setPaymentProofFile] = useState<File | null>(null);
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
   const [deliveryZones, setDeliveryZones] = useState<DeliveryZone[]>([]);
@@ -443,7 +443,7 @@ const Checkout = () => {
                       <Button
                         type="button"
                         variant={orderType === "delivery" ? "default" : "outline"}
-                        className="h-auto py-4"
+                        className="h-auto py-3 whitespace-normal text-center leading-tight min-h-[56px]"
                         onClick={() => setOrderType("delivery")}
                       >
                         Entrega
@@ -453,7 +453,7 @@ const Checkout = () => {
                       <Button
                         type="button"
                         variant={orderType === "pickup" ? "default" : "outline"}
-                        className="h-auto py-4"
+                        className="h-auto py-3 whitespace-normal text-center leading-tight min-h-[56px]"
                         onClick={() => setOrderType("pickup")}
                       >
                         Pickup
@@ -463,7 +463,7 @@ const Checkout = () => {
                       <Button
                         type="button"
                         variant={orderType === "digital_menu" ? "default" : "outline"}
-                        className="h-auto py-2"
+                        className="h-auto py-3 whitespace-normal text-center leading-tight min-h-[56px]"
                         onClick={() => setOrderType("digital_menu")}
                       >
                         Servicio en Tienda
@@ -500,26 +500,6 @@ const Checkout = () => {
                   )}
                 />
 
-                <div className="space-y-2">
-                  <FormLabel>País *</FormLabel>
-                  <div className="grid grid-cols-2 gap-3">
-                    <Button
-                      type="button"
-                      variant={country === "brazil" ? "default" : "outline"}
-                      onClick={() => setCountry("brazil")}
-                    >
-                      Brasil
-                    </Button>
-                    <Button
-                      type="button"
-                      variant={country === "venezuela" ? "default" : "outline"}
-                      onClick={() => setCountry("venezuela")}
-                    >
-                      Venezuela
-                    </Button>
-                  </div>
-                </div>
-
                 <FormField
                   control={form.control}
                   name="customer_phone"
@@ -533,7 +513,7 @@ const Checkout = () => {
                             <Input
                               {...inputProps}
                               type="tel"
-                              placeholder={country === "brazil" ? "+55 (00) 00000-0000" : "+58 (000) 000-0000"}
+                              placeholder="+58 (000) 000-0000"
                             />
                           )}
                         </InputMask>
