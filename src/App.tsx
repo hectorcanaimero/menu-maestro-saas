@@ -15,6 +15,7 @@ const Index = lazy(() => import("./pages/Index"));
 const Welcome = lazy(() => import("./pages/Welcome"));
 const Auth = lazy(() => import("./pages/Auth"));
 const CreateStore = lazy(() => import("./pages/CreateStore"));
+const LandingPage = lazy(() => import("./pages/LandingPage"));
 const Checkout = lazy(() => import("./pages/Checkout"));
 const ConfirmOrder = lazy(() => import("./pages/ConfirmOrder"));
 const MyOrders = lazy(() => import("./pages/MyOrders"));
@@ -49,9 +50,10 @@ const App = () => (
                 <Routes>
                   {/* Public Routes */}
                   <Route path="/" element={<Index />} />
-                  <Route path="/welcome" element={<Welcome />} />
-                  <Route path="/auth" element={<Auth />} />
-                  <Route path="/create-store" element={<CreateStore />} />
+            <Route path="/welcome" element={<Welcome />} />
+            <Route path="/auth" element={<Auth />} />
+            <Route path="/create-store" element={<CreateStore />} />
+            <Route path="/landing" element={<LandingPage />} />
                   <Route path="/checkout" element={<Checkout />} />
                   <Route path="/confirm-order" element={<ConfirmOrder />} />
                   <Route path="/my-orders" element={<MyOrders />} />

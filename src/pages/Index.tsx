@@ -9,6 +9,10 @@ import { useNavigate } from 'react-router-dom';
 import { useStoreTheme } from '@/hooks/useStoreTheme';
 import { StoreInfoWidget } from '@/components/catalog/StoreInfoWidget';
 import { FeaturedProducts } from '@/components/catalog/FeaturedProducts';
+import { isMainDomain } from '@/lib/subdomain-validation';
+import { lazy, Suspense } from 'react';
+
+const LandingPage = lazy(() => import('./LandingPage'));
 
 const Index = () => {
   const { store, loading: storeLoading } = useStore();
@@ -29,6 +33,22 @@ const Index = () => {
   }
 
   if (!store) {
+    // Show landing page for www.pideai.com
+    if (isMainDomain()) {
+      return (
+        <Suspense
+          fallback={
+            <div className="min-h-screen bg-background flex items-center justify-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+            </div>
+          }
+        >
+          <LandingPage />
+        </Suspense>
+      );
+    }
+
+    // Show store not found for other subdomains
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center max-w-md mx-auto px-4">
