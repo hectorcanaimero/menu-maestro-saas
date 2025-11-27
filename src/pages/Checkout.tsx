@@ -9,6 +9,7 @@ import { useStore } from "@/contexts/StoreContext";
 import { useStoreTheme } from "@/hooks/useStoreTheme";
 import { getCurrencySymbol } from "@/lib/analytics";
 import { useCartTotals } from "@/hooks/useCartTotals";
+import { validateCouponCode, applyCouponDiscount, type Coupon } from "@/hooks/useCoupons";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -17,7 +18,7 @@ import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { toast } from "sonner";
-import { ArrowLeft, ArrowRight, Upload, X, Check } from "lucide-react";
+import { ArrowLeft, ArrowRight, Upload, X, Check, Tag } from "lucide-react";
 import InputMask from "react-input-mask";
 import posthog from "posthog-js";
 
@@ -149,10 +150,17 @@ const Checkout = () => {
   const [deliveryZones, setDeliveryZones] = useState<DeliveryZone[]>([]);
   const [orderType, setOrderType] = useState<"delivery" | "pickup" | "digital_menu">("delivery");
   const [deliveryPrice, setDeliveryPrice] = useState(0);
+  
+  // Coupon state
+  const [couponCode, setCouponCode] = useState("");
+  const [appliedCoupon, setAppliedCoupon] = useState<Coupon | null>(null);
+  const [couponDiscount, setCouponDiscount] = useState(0);
+  const [validatingCoupon, setValidatingCoupon] = useState(false);
+  const [couponError, setCouponError] = useState("");
 
   const totalSteps = orderType === "pickup" ? 3 : 3; // Same steps for all types
   const progress = (currentStep / totalSteps) * 100;
-  const grandTotal = discountedTotal + (orderType === "delivery" ? deliveryPrice : 0);
+  const grandTotal = discountedTotal + (orderType === "delivery" ? deliveryPrice : 0) - couponDiscount;
 
   // Track checkout_started event when component mounts
   useEffect(() => {
@@ -346,6 +354,9 @@ const Checkout = () => {
         payment_proof_url: paymentProofUrl,
         country: country,
         delivery_price: orderType === "delivery" ? deliveryPrice : 0,
+        coupon_code: appliedCoupon?.code || null,
+        coupon_discount: couponDiscount,
+        coupon_id: appliedCoupon?.id || null,
       };
 
       sessionStorage.setItem("pendingOrder", JSON.stringify(orderData));
@@ -374,6 +385,59 @@ const Checkout = () => {
 
       setPaymentProofFile(file);
     }
+  };
+
+  // Validate and apply coupon
+  const handleApplyCoupon = async () => {
+    if (!couponCode.trim()) {
+      toast.error("Ingresa un código de cupón");
+      return;
+    }
+
+    if (!store?.id) {
+      toast.error("Error al validar el cupón");
+      return;
+    }
+
+    const email = form.getValues("customer_email");
+    if (!email) {
+      toast.error("Ingresa tu email primero");
+      return;
+    }
+
+    setValidatingCoupon(true);
+    setCouponError("");
+
+    try {
+      const result = await validateCouponCode(couponCode.trim(), store.id, email, discountedTotal);
+
+      if (!result.valid || !result.coupon) {
+        setCouponError(result.error || "Cupón inválido");
+        toast.error(result.error || "Cupón inválido");
+        setValidatingCoupon(false);
+        return;
+      }
+
+      const discount = applyCouponDiscount(result.coupon, discountedTotal);
+      setAppliedCoupon(result.coupon);
+      setCouponDiscount(discount);
+      toast.success(`¡Cupón aplicado! Ahorraste ${currencySymbol}${discount.toFixed(2)}`);
+    } catch (error) {
+      console.error("Error validating coupon:", error);
+      setCouponError("Error al validar el cupón");
+      toast.error("Error al validar el cupón");
+    } finally {
+      setValidatingCoupon(false);
+    }
+  };
+
+  // Remove applied coupon
+  const handleRemoveCoupon = () => {
+    setAppliedCoupon(null);
+    setCouponDiscount(0);
+    setCouponCode("");
+    setCouponError("");
+    toast.info("Cupón removido");
   };
 
   const phoneMask = country === "brazil" ? "+55 (99) 99999-9999" : "+58 (999) 999-9999";
@@ -699,22 +763,82 @@ const Checkout = () => {
                         </Button>
                       </div>
                     )}
-                    <p className="text-xs text-muted-foreground">Formatos: JPG, PNG, WEBP, PDF. Máximo 5MB</p>
+                  <p className="text-xs text-muted-foreground">Formatos: JPG, PNG, WEBP, PDF. Máximo 5MB</p>
                   </div>
                 )}
 
+                {/* Coupon Input */}
+                <div className="space-y-3">
+                  <FormLabel className="flex items-center gap-2">
+                    <Tag className="h-4 w-4" />
+                    Cupón de Descuento
+                  </FormLabel>
+                  
+                  {appliedCoupon ? (
+                    <div className="p-4 bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-lg">
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2">
+                            <Check className="h-4 w-4 text-green-600" />
+                            <code className="font-mono font-bold text-green-600">{appliedCoupon.code}</code>
+                          </div>
+                          <p className="text-sm text-green-600 mt-1">
+                            Ahorraste {currencySymbol}{couponDiscount.toFixed(2)}
+                          </p>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={handleRemoveCoupon}
+                          className="text-green-600 hover:text-green-700"
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <div className="flex gap-2">
+                        <Input
+                          value={couponCode}
+                          onChange={(e) => {
+                            setCouponCode(e.target.value.toUpperCase());
+                            setCouponError("");
+                          }}
+                          placeholder="INGRESA TU CÓDIGO"
+                          className="flex-1 font-mono"
+                          disabled={validatingCoupon}
+                        />
+                        <Button
+                          type="button"
+                          onClick={handleApplyCoupon}
+                          disabled={validatingCoupon || !couponCode.trim()}
+                          variant="outline"
+                        >
+                          {validatingCoupon ? "Validando..." : "Aplicar"}
+                        </Button>
+                      </div>
+                      {couponError && (
+                        <p className="text-sm text-destructive">{couponError}</p>
+                      )}
+                      <p className="text-xs text-muted-foreground">
+                        Si tienes un cupón de descuento, ingrésalo aquí.
+                      </p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Notes Field */}
                 <FormField
                   control={form.control}
                   name="notes"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Cupón</FormLabel>
+                      <FormLabel>Notas Adicionales</FormLabel>
                       <FormControl>
-                        <Input {...field} placeholder="Si tienes un cupón de descuento, añádelo aquí" />
+                        <Textarea {...field} placeholder="Añade instrucciones especiales (opcional)" rows={3} />
                       </FormControl>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        Si tienes un cupón de descuento, añádelo aquí.
-                      </p>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -754,7 +878,7 @@ const Checkout = () => {
                     )}
                     {totalSavings > 0 && (
                       <div className="flex justify-between text-sm">
-                        <span className="text-green-600">Descuento</span>
+                        <span className="text-green-600">Descuento promociones</span>
                         <span className="text-green-600">
                           -{currencySymbol}
                           {totalSavings.toFixed(2)}
@@ -768,6 +892,15 @@ const Checkout = () => {
                         {discountedTotal.toFixed(2)}
                       </span>
                     </div>
+                    {couponDiscount > 0 && (
+                      <div className="flex justify-between text-sm">
+                        <span className="text-green-600">Descuento cupón</span>
+                        <span className="text-green-600">
+                          -{currencySymbol}
+                          {couponDiscount.toFixed(2)}
+                        </span>
+                      </div>
+                    )}
                     {orderType === "delivery" && deliveryPrice > 0 && (
                       <div className="flex justify-between text-sm">
                         <span>Costo de entrega</span>

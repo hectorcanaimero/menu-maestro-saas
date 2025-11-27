@@ -25,6 +25,10 @@ interface OrderData {
   decimalSeparator?: string;
   thousandsSeparator?: string;
   trackingUrl?: string;
+  couponCode?: string;
+  couponDiscount?: number;
+  deliveryPrice?: number;
+  tableNumber?: string;
 }
 
 interface StoreTemplates {
@@ -55,6 +59,10 @@ export const generateWhatsAppMessage = (
     decimalSeparator = ".",
     thousandsSeparator = ",",
     trackingUrl = "",
+    couponCode = "",
+    couponDiscount = 0,
+    deliveryPrice = 0,
+    tableNumber = "",
   } = orderData;
 
   // Format price function
@@ -119,8 +127,9 @@ export const generateWhatsAppMessage = (
   finalMessage = finalMessage.replace(/{customer-phone}/g, customerPhone);
   finalMessage = finalMessage.replace(/{customer-address}/g, deliveryAddress);
   finalMessage = finalMessage.replace(/{payment-method}/g, paymentMethod || "N/A");
-  finalMessage = finalMessage.replace(/{order-coupon-code}/g, ""); // Not implemented
-  finalMessage = finalMessage.replace(/{order-table}/g, ""); // Not implemented
+  finalMessage = finalMessage.replace(/{order-coupon-code}/g, couponCode || "Sin cupón");
+  finalMessage = finalMessage.replace(/{order-coupon-discount}/g, couponDiscount > 0 ? `-${formatPrice(couponDiscount)}` : "$0.00");
+  finalMessage = finalMessage.replace(/{order-table}/g, tableNumber || "N/A");
   finalMessage = finalMessage.replace(/{order-track-page}/g, trackingUrl);
   finalMessage = finalMessage.replace(/{payment-type}/g, ""); // Not implemented
   finalMessage = finalMessage.replace(/{payment-status}/g, "Pendiente");
@@ -130,7 +139,7 @@ export const generateWhatsAppMessage = (
   finalMessage = finalMessage.replace(/{customer-address-complement}/g, ""); // Not implemented
   finalMessage = finalMessage.replace(/{customer-address-neighborhood}/g, ""); // Not implemented
   finalMessage = finalMessage.replace(/{customer-address-zipcode}/g, ""); // Not implemented
-  finalMessage = finalMessage.replace(/{shipping-price}/g, ""); // Not implemented
+  finalMessage = finalMessage.replace(/{shipping-price}/g, deliveryPrice > 0 ? formatPrice(deliveryPrice) : "$0.00");
   finalMessage = finalMessage.replace(/{shipping-price-bolivares}/g, ""); // Not implemented
   finalMessage = finalMessage.replace(/{order-total-bolivares}/g, ""); // Not implemented
   finalMessage = finalMessage.replace(/{order-subtotal-bolivares}/g, ""); // Not implemented
