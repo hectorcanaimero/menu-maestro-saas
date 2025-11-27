@@ -4,6 +4,9 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar as CalendarComponent } from '@/components/ui/calendar';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import {
   TrendingUp,
   TrendingDown,
@@ -12,9 +15,13 @@ import {
   Users,
   Package,
   Download,
-  Calendar
+  Calendar,
+  Filter,
+  X,
+  ChevronDown
 } from 'lucide-react';
 import { useAnalytics } from '@/hooks/useAnalytics';
+import { usePaymentMethods } from '@/hooks/usePaymentMethods';
 import { AnalyticsCharts } from './AnalyticsCharts';
 import {
   DateRange,
@@ -22,13 +29,45 @@ import {
   formatCurrency,
   formatNumber,
   exportToCSV,
+  ORDER_STATUSES,
+  AnalyticsFilters,
 } from '@/lib/analytics';
 import { H2, H4, Body, Caption } from '@/components/ui/typography';
+import { format } from 'date-fns';
+import { cn } from '@/lib/utils';
 
 export function AnalyticsDashboard() {
   const [dateRangePreset, setDateRangePreset] = useState<DateRange>('30d');
-  const dateRange = getDateRangeFromPreset(dateRangePreset);
-  const { salesMetrics, chartData, topProducts, customerStats, isLoading } = useAnalytics(dateRange);
+  const [customDateRange, setCustomDateRange] = useState<{ from?: Date; to?: Date }>({});
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [paymentMethodFilter, setPaymentMethodFilter] = useState<string>('all');
+  const [filtersOpen, setFiltersOpen] = useState(false);
+
+  const { data: paymentMethods } = usePaymentMethods();
+
+  const dateRange = dateRangePreset === 'custom' && customDateRange.from && customDateRange.to
+    ? { from: customDateRange.from, to: customDateRange.to }
+    : getDateRangeFromPreset(dateRangePreset);
+
+  const filters: AnalyticsFilters = {
+    dateRange,
+    status: statusFilter !== 'all' ? statusFilter : undefined,
+    paymentMethod: paymentMethodFilter !== 'all' ? paymentMethodFilter : undefined,
+  };
+
+  const { salesMetrics, chartData, topProducts, customerStats, isLoading } = useAnalytics(filters);
+
+  const activeFiltersCount = 
+    (statusFilter !== 'all' ? 1 : 0) + 
+    (paymentMethodFilter !== 'all' ? 1 : 0) +
+    (dateRangePreset === 'custom' ? 1 : 0);
+
+  const clearFilters = () => {
+    setDateRangePreset('30d');
+    setCustomDateRange({});
+    setStatusFilter('all');
+    setPaymentMethodFilter('all');
+  };
 
   const handleExportSales = () => {
     if (!chartData) return;
@@ -112,26 +151,151 @@ export function AnalyticsDashboard() {
         </div>
 
         <div className="flex items-center gap-3">
-          {/* Date Range Selector */}
-          <Select value={dateRangePreset} onValueChange={(v) => setDateRangePreset(v as DateRange)}>
-            <SelectTrigger className="w-[180px]">
-              <Calendar className="h-4 w-4 mr-2" />
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="7d">Últimos 7 días</SelectItem>
-              <SelectItem value="30d">Últimos 30 días</SelectItem>
-              <SelectItem value="90d">Últimos 90 días</SelectItem>
-            </SelectContent>
-          </Select>
-
-          {/* Export Button */}
           <Button variant="outline" size="sm" onClick={handleExportSales}>
             <Download className="h-4 w-4 mr-2" />
             Exportar
           </Button>
         </div>
       </div>
+
+      {/* Filters Section */}
+      <Card>
+        <Collapsible open={filtersOpen} onOpenChange={setFiltersOpen}>
+          <CollapsibleTrigger asChild>
+            <Button variant="ghost" className="w-full justify-between p-4 h-auto">
+              <div className="flex items-center gap-2">
+                <Filter className="h-4 w-4" />
+                <span className="font-medium">Filtros</span>
+                {activeFiltersCount > 0 && (
+                  <Badge variant="secondary" className="ml-2">
+                    {activeFiltersCount}
+                  </Badge>
+                )}
+              </div>
+              <ChevronDown className={cn(
+                "h-4 w-4 transition-transform",
+                filtersOpen && "transform rotate-180"
+              )} />
+            </Button>
+          </CollapsibleTrigger>
+          
+          <CollapsibleContent>
+            <CardContent className="pt-0 space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                {/* Date Range */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Período</label>
+                  <Select value={dateRangePreset} onValueChange={(v) => setDateRangePreset(v as DateRange)}>
+                    <SelectTrigger>
+                      <Calendar className="h-4 w-4 mr-2" />
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="7d">Últimos 7 días</SelectItem>
+                      <SelectItem value="30d">Últimos 30 días</SelectItem>
+                      <SelectItem value="90d">Últimos 90 días</SelectItem>
+                      <SelectItem value="custom">Personalizado</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Custom Date Range Picker */}
+                {dateRangePreset === 'custom' && (
+                  <>
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Fecha inicio</label>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button variant="outline" className="w-full justify-start text-left font-normal">
+                            <Calendar className="h-4 w-4 mr-2" />
+                            {customDateRange.from ? format(customDateRange.from, 'PPP') : 'Seleccionar'}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <CalendarComponent
+                            mode="single"
+                            selected={customDateRange.from}
+                            onSelect={(date) => setCustomDateRange(prev => ({ ...prev, from: date }))}
+                            initialFocus
+                            className="pointer-events-auto"
+                          />
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Fecha fin</label>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button variant="outline" className="w-full justify-start text-left font-normal">
+                            <Calendar className="h-4 w-4 mr-2" />
+                            {customDateRange.to ? format(customDateRange.to, 'PPP') : 'Seleccionar'}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <CalendarComponent
+                            mode="single"
+                            selected={customDateRange.to}
+                            onSelect={(date) => setCustomDateRange(prev => ({ ...prev, to: date }))}
+                            disabled={(date) => customDateRange.from ? date < customDateRange.from : false}
+                            initialFocus
+                            className="pointer-events-auto"
+                          />
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+                  </>
+                )}
+
+                {/* Order Status */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Estado</label>
+                  <Select value={statusFilter} onValueChange={setStatusFilter}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {ORDER_STATUSES.map((status) => (
+                        <SelectItem key={status.value} value={status.value}>
+                          {status.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Payment Method */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Método de Pago</label>
+                  <Select value={paymentMethodFilter} onValueChange={setPaymentMethodFilter}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todos los métodos</SelectItem>
+                      {paymentMethods?.map((method) => (
+                        <SelectItem key={method.id} value={method.name}>
+                          {method.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              {/* Clear Filters */}
+              {activeFiltersCount > 0 && (
+                <div className="flex justify-end pt-2">
+                  <Button variant="ghost" size="sm" onClick={clearFilters}>
+                    <X className="h-4 w-4 mr-2" />
+                    Limpiar filtros
+                  </Button>
+                </div>
+              )}
+            </CardContent>
+          </CollapsibleContent>
+        </Collapsible>
+      </Card>
 
       {/* Metrics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">

@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useStore } from '@/contexts/StoreContext';
 import {
-  DateRangeValue,
+  AnalyticsFilters,
   SalesMetrics,
   ChartDataPoint,
   TopProduct,
@@ -10,21 +10,32 @@ import {
 } from '@/lib/analytics';
 import { format, eachDayOfInterval } from 'date-fns';
 
-export function useAnalytics(dateRange: DateRangeValue) {
+export function useAnalytics(filters: AnalyticsFilters) {
   const { store } = useStore();
+  const { dateRange, status, paymentMethod } = filters;
 
   // Sales metrics
   const { data: salesMetrics, isLoading: loadingMetrics } = useQuery({
-    queryKey: ['analytics-metrics', store?.id, dateRange],
+    queryKey: ['analytics-metrics', store?.id, dateRange, status, paymentMethod],
     queryFn: async (): Promise<SalesMetrics> => {
       if (!store?.id) throw new Error('Store ID required');
 
-      const { data: orders, error } = await supabase
+      let query = supabase
         .from('orders')
         .select('total_amount, status')
         .eq('store_id', store.id)
         .gte('created_at', dateRange.from.toISOString())
         .lte('created_at', dateRange.to.toISOString());
+
+      if (status && status !== 'all') {
+        query = query.eq('status', status);
+      }
+
+      if (paymentMethod && paymentMethod !== 'all') {
+        query = query.eq('payment_method', paymentMethod);
+      }
+
+      const { data: orders, error } = await query;
 
       if (error) throw error;
 
@@ -48,17 +59,27 @@ export function useAnalytics(dateRange: DateRangeValue) {
 
   // Chart data (daily revenue)
   const { data: chartData, isLoading: loadingChart } = useQuery({
-    queryKey: ['analytics-chart', store?.id, dateRange],
+    queryKey: ['analytics-chart', store?.id, dateRange, status, paymentMethod],
     queryFn: async (): Promise<ChartDataPoint[]> => {
       if (!store?.id) throw new Error('Store ID required');
 
-      const { data: orders, error } = await supabase
+      let query = supabase
         .from('orders')
-        .select('total_amount, created_at, status')
+        .select('total_amount, created_at, status, payment_method')
         .eq('store_id', store.id)
         .gte('created_at', dateRange.from.toISOString())
         .lte('created_at', dateRange.to.toISOString())
         .order('created_at', { ascending: true });
+
+      if (status && status !== 'all') {
+        query = query.eq('status', status);
+      }
+
+      if (paymentMethod && paymentMethod !== 'all') {
+        query = query.eq('payment_method', paymentMethod);
+      }
+
+      const { data: orders, error } = await query;
 
       if (error) throw error;
 
@@ -98,15 +119,16 @@ export function useAnalytics(dateRange: DateRangeValue) {
 
   // Top selling products
   const { data: topProducts, isLoading: loadingProducts } = useQuery({
-    queryKey: ['analytics-top-products', store?.id, dateRange],
+    queryKey: ['analytics-top-products', store?.id, dateRange, status, paymentMethod],
     queryFn: async (): Promise<TopProduct[]> => {
       if (!store?.id) throw new Error('Store ID required');
 
-      const { data: orders, error } = await supabase
+      let query = supabase
         .from('orders')
         .select(`
           id,
           status,
+          payment_method,
           order_items (
             id,
             item_name,
@@ -119,9 +141,21 @@ export function useAnalytics(dateRange: DateRangeValue) {
           )
         `)
         .eq('store_id', store.id)
-        .eq('status', 'completed')
         .gte('created_at', dateRange.from.toISOString())
         .lte('created_at', dateRange.to.toISOString());
+
+      // Only filter by completed if no status filter is set or if status is 'completed'
+      if (!status || status === 'all' || status === 'completed') {
+        query = query.eq('status', 'completed');
+      } else {
+        query = query.eq('status', status);
+      }
+
+      if (paymentMethod && paymentMethod !== 'all') {
+        query = query.eq('payment_method', paymentMethod);
+      }
+
+      const { data: orders, error } = await query;
 
       if (error) throw error;
 
@@ -158,7 +192,7 @@ export function useAnalytics(dateRange: DateRangeValue) {
 
   // Customer statistics
   const { data: customerStats, isLoading: loadingCustomers } = useQuery({
-    queryKey: ['analytics-customers', store?.id, dateRange],
+    queryKey: ['analytics-customers', store?.id, dateRange, status, paymentMethod],
     queryFn: async (): Promise<CustomerStats> => {
       if (!store?.id) throw new Error('Store ID required');
 

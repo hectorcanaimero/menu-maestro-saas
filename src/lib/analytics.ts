@@ -7,6 +7,23 @@ export interface DateRangeValue {
   to: Date;
 }
 
+export interface AnalyticsFilters {
+  dateRange: DateRangeValue;
+  status?: string;
+  paymentMethod?: string;
+}
+
+export const ORDER_STATUSES = [
+  { value: 'all', label: 'Todos los estados' },
+  { value: 'pending', label: 'Pendiente' },
+  { value: 'confirmed', label: 'Confirmado' },
+  { value: 'in_process', label: 'En Proceso' },
+  { value: 'ready', label: 'Listo' },
+  { value: 'in_delivery', label: 'En Delivery' },
+  { value: 'completed', label: 'Completado' },
+  { value: 'cancelled', label: 'Cancelado' },
+];
+
 export interface SalesMetrics {
   totalRevenue: number;
   totalOrders: number;
