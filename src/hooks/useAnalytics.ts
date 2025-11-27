@@ -22,7 +22,13 @@ export function useAnalytics(filters: AnalyticsFilters) {
 
       let query = supabase
         .from('orders')
-        .select('total_amount, status')
+        .select(`
+          total_amount, 
+          status,
+          order_items (
+            quantity
+          )
+        `)
         .eq('store_id', store.id)
         .gte('created_at', dateRange.from.toISOString())
         .lte('created_at', dateRange.to.toISOString());
@@ -45,6 +51,16 @@ export function useAnalytics(filters: AnalyticsFilters) {
       const pendingOrders = orders?.filter((o) => o.status === 'pending').length || 0;
       const cancelledOrders = orders?.filter((o) => o.status === 'cancelled').length || 0;
 
+      // Calculate total products sold
+      const totalProductsSold = orders?.reduce((sum, order: any) => {
+        const items = order.order_items || [];
+        return sum + items.reduce((itemSum: number, item: any) => itemSum + item.quantity, 0);
+      }, 0) || 0;
+
+      // Calculate average daily sales
+      const daysDiff = Math.ceil((dateRange.to.getTime() - dateRange.from.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+      const averageDailySales = daysDiff > 0 ? totalRevenue / daysDiff : 0;
+
       return {
         totalRevenue,
         totalOrders,
@@ -52,6 +68,8 @@ export function useAnalytics(filters: AnalyticsFilters) {
         completedOrders,
         pendingOrders,
         cancelledOrders,
+        totalProductsSold,
+        averageDailySales,
       };
     },
     enabled: !!store?.id,
@@ -217,11 +235,41 @@ export function useAnalytics(filters: AnalyticsFilters) {
     enabled: !!store?.id,
   });
 
+  // Orders list
+  const { data: orders, isLoading: loadingOrders } = useQuery({
+    queryKey: ['analytics-orders', store?.id, dateRange, status, paymentMethod],
+    queryFn: async () => {
+      if (!store?.id) throw new Error('Store ID required');
+
+      let query = supabase
+        .from('orders')
+        .select('*')
+        .eq('store_id', store.id)
+        .gte('created_at', dateRange.from.toISOString())
+        .lte('created_at', dateRange.to.toISOString())
+        .order('created_at', { ascending: false });
+
+      if (status && status !== 'all') {
+        query = query.eq('status', status);
+      }
+
+      if (paymentMethod && paymentMethod !== 'all') {
+        query = query.eq('payment_method', paymentMethod);
+      }
+
+      const { data, error } = await query;
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!store?.id,
+  });
+
   return {
     salesMetrics,
     chartData,
     topProducts,
     customerStats,
-    isLoading: loadingMetrics || loadingChart || loadingProducts || loadingCustomers,
+    orders,
+    isLoading: loadingMetrics || loadingChart || loadingProducts || loadingCustomers || loadingOrders,
   };
 }

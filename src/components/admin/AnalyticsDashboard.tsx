@@ -18,7 +18,9 @@ import {
   Calendar,
   Filter,
   X,
-  ChevronDown
+  ChevronDown,
+  FileText,
+  ShoppingCart
 } from 'lucide-react';
 import { useAnalytics } from '@/hooks/useAnalytics';
 import { usePaymentMethods } from '@/hooks/usePaymentMethods';
@@ -32,6 +34,12 @@ import {
   ORDER_STATUSES,
   AnalyticsFilters,
 } from '@/lib/analytics';
+import {
+  exportToPDF,
+  prepareOrdersForExport,
+  prepareSalesSummaryForExport,
+  prepareTopProductsForExport
+} from '@/lib/exportUtils';
 import { H2, H4, Body, Caption } from '@/components/ui/typography';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -42,6 +50,7 @@ export function AnalyticsDashboard() {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [paymentMethodFilter, setPaymentMethodFilter] = useState<string>('all');
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [ordersExpanded, setOrdersExpanded] = useState(false);
 
   const { data: paymentMethods } = usePaymentMethods();
 
@@ -55,7 +64,7 @@ export function AnalyticsDashboard() {
     paymentMethod: paymentMethodFilter !== 'all' ? paymentMethodFilter : undefined,
   };
 
-  const { salesMetrics, chartData, topProducts, customerStats, isLoading } = useAnalytics(filters);
+  const { salesMetrics, chartData, topProducts, customerStats, orders, isLoading } = useAnalytics(filters);
 
   const activeFiltersCount = 
     (statusFilter !== 'all' ? 1 : 0) + 
@@ -76,14 +85,69 @@ export function AnalyticsDashboard() {
 
   const handleExportProducts = () => {
     if (!topProducts) return;
-    exportToCSV(
-      topProducts.map((p) => ({
-        Producto: p.name,
-        Cantidad: p.quantity,
-        Ingresos: p.revenue,
-      })),
-      'top_products'
-    );
+    const exportData = prepareTopProductsForExport(topProducts);
+    exportToCSV(exportData, 'top-productos');
+  };
+
+  const handleExportOrdersCSV = () => {
+    if (!orders) return;
+    const exportData = prepareOrdersForExport(orders);
+    exportToCSV(exportData, 'reporte-ordenes');
+  };
+
+  const handleExportOrdersPDF = () => {
+    if (!orders) return;
+    const exportData = prepareOrdersForExport(orders);
+    exportToPDF({
+      title: 'Reporte de Órdenes',
+      subtitle: `Período: ${dateRangePreset === '7d' ? 'Últimos 7 días' : dateRangePreset === '30d' ? 'Últimos 30 días' : dateRangePreset === '90d' ? 'Últimos 90 días' : 'Personalizado'}`,
+      filename: 'reporte-ordenes',
+      columns: [
+        { header: 'Número', dataKey: 'Número' },
+        { header: 'Fecha', dataKey: 'Fecha', width: 35 },
+        { header: 'Cliente', dataKey: 'Cliente' },
+        { header: 'Total', dataKey: 'Total' },
+        { header: 'Estado', dataKey: 'Estado' },
+      ],
+      data: exportData,
+      orientation: 'landscape',
+    });
+  };
+
+  const handleExportSummaryCSV = () => {
+    if (!salesMetrics) return;
+    const exportData = prepareSalesSummaryForExport({
+      totalSales: salesMetrics.totalRevenue,
+      totalOrders: salesMetrics.totalOrders,
+      totalProducts: salesMetrics.totalProductsSold || 0,
+      averageDailySales: salesMetrics.averageDailySales || 0,
+      period: dateRangePreset === '7d' ? 'Últimos 7 días' : dateRangePreset === '30d' ? 'Últimos 30 días' : dateRangePreset === '90d' ? 'Últimos 90 días' : 'Personalizado',
+    });
+    exportToCSV(exportData, 'resumen-ventas');
+  };
+
+  const getStatusVariant = (status: string): "default" | "secondary" | "destructive" | "outline" => {
+    const variants: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
+      pending: "outline",
+      confirmed: "secondary",
+      preparing: "default",
+      ready: "default",
+      delivered: "secondary",
+      cancelled: "destructive",
+    };
+    return variants[status] || "default";
+  };
+
+  const getStatusLabel = (status: string) => {
+    const labels: Record<string, string> = {
+      pending: "Pendiente",
+      confirmed: "Confirmado",
+      preparing: "Preparando",
+      ready: "Listo",
+      delivered: "Entregado",
+      cancelled: "Cancelado",
+    };
+    return labels[status] || status;
   };
 
   const MetricCard = ({
@@ -144,16 +208,27 @@ export function AnalyticsDashboard() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <H2>Análisis y Estadísticas</H2>
+          <H2>Análisis y Reportes</H2>
           <Body size="small" className="text-muted-foreground">
-            Resumen del rendimiento de tu tienda
+            Resumen completo del rendimiento de tu tienda
           </Body>
         </div>
 
-        <div className="flex items-center gap-3">
-          <Button variant="outline" size="sm" onClick={handleExportSales}>
+        <div className="flex flex-wrap items-center gap-2">
+          <Button variant="outline" size="sm" onClick={handleExportSummaryCSV}>
             <Download className="h-4 w-4 mr-2" />
-            Exportar
+            <span className="hidden sm:inline">Resumen CSV</span>
+            <span className="sm:hidden">CSV</span>
+          </Button>
+          <Button variant="outline" size="sm" onClick={handleExportOrdersCSV}>
+            <FileText className="h-4 w-4 mr-2" />
+            <span className="hidden sm:inline">Órdenes CSV</span>
+            <span className="sm:hidden">CSV</span>
+          </Button>
+          <Button variant="outline" size="sm" onClick={handleExportOrdersPDF}>
+            <FileText className="h-4 w-4 mr-2" />
+            <span className="hidden sm:inline">Órdenes PDF</span>
+            <span className="sm:hidden">PDF</span>
           </Button>
         </div>
       </div>
@@ -298,12 +373,12 @@ export function AnalyticsDashboard() {
       </Card>
 
       {/* Metrics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
         <MetricCard
           title="Ingresos Totales"
           value={formatCurrency(salesMetrics?.totalRevenue || 0)}
           icon={DollarSign}
-          subtitle={`${salesMetrics?.completedOrders || 0} pedidos completados`}
+          subtitle={`${salesMetrics?.completedOrders || 0} completados`}
         />
         <MetricCard
           title="Total de Pedidos"
@@ -322,6 +397,18 @@ export function AnalyticsDashboard() {
           value={formatNumber(customerStats?.totalCustomers || 0)}
           icon={Users}
           subtitle={`${customerStats?.newCustomers || 0} nuevos`}
+        />
+        <MetricCard
+          title="Productos Vendidos"
+          value={formatNumber(salesMetrics?.totalProductsSold || 0)}
+          icon={ShoppingCart}
+          subtitle="Unidades totales"
+        />
+        <MetricCard
+          title="Promedio Diario"
+          value={formatCurrency(salesMetrics?.averageDailySales || 0)}
+          icon={TrendingUp}
+          subtitle="Ventas por día"
         />
       </div>
 
@@ -438,6 +525,121 @@ export function AnalyticsDashboard() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Orders List */}
+      <Card>
+        <Collapsible open={ordersExpanded} onOpenChange={setOrdersExpanded}>
+          <CollapsibleTrigger asChild>
+            <Button variant="ghost" className="w-full justify-between p-4 h-auto">
+              <div className="flex items-center gap-2">
+                <ShoppingBag className="h-4 w-4" />
+                <span className="font-medium">Lista de Pedidos del Período</span>
+                {orders && orders.length > 0 && (
+                  <Badge variant="secondary" className="ml-2">
+                    {orders.length}
+                  </Badge>
+                )}
+              </div>
+              <ChevronDown className={cn(
+                "h-4 w-4 transition-transform",
+                ordersExpanded && "transform rotate-180"
+              )} />
+            </Button>
+          </CollapsibleTrigger>
+          
+          <CollapsibleContent>
+            <CardContent className="pt-0">
+              {orders && orders.length > 0 ? (
+                <>
+                  <div className="flex justify-end gap-2 mb-4">
+                    <Button variant="outline" size="sm" onClick={handleExportOrdersCSV}>
+                      <Download className="h-4 w-4 mr-2" />
+                      CSV
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={handleExportOrdersPDF}>
+                      <FileText className="h-4 w-4 mr-2" />
+                      PDF
+                    </Button>
+                  </div>
+
+                  {/* Mobile View */}
+                  <div className="block md:hidden space-y-3">
+                    {orders.map((order) => (
+                      <Card key={order.id}>
+                        <CardContent className="p-4">
+                          <div className="space-y-2">
+                            <div className="flex justify-between items-start">
+                              <div>
+                                <Body className="font-medium">#{order.id.slice(0, 8)}</Body>
+                                <Caption className="text-muted-foreground">
+                                  {format(new Date(order.created_at), 'dd/MM/yyyy HH:mm')}
+                                </Caption>
+                              </div>
+                              <Badge variant={getStatusVariant(order.status)}>
+                                {getStatusLabel(order.status)}
+                              </Badge>
+                            </div>
+                            <div>
+                              <Caption className="text-muted-foreground">Cliente</Caption>
+                              <Body size="small">{order.customer_name}</Body>
+                            </div>
+                            <div className="flex justify-between items-center pt-2 border-t">
+                              <Caption className="text-muted-foreground">Total</Caption>
+                              <Body className="font-semibold">{formatCurrency(order.total_amount)}</Body>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+
+                  {/* Desktop View */}
+                  <div className="hidden md:block overflow-x-auto">
+                    <table className="w-full">
+                      <thead>
+                        <tr className="border-b">
+                          <th className="text-left py-3 px-4">Orden</th>
+                          <th className="text-left py-3 px-4">Fecha</th>
+                          <th className="text-left py-3 px-4">Cliente</th>
+                          <th className="text-left py-3 px-4">Estado</th>
+                          <th className="text-right py-3 px-4">Total</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {orders.map((order) => (
+                          <tr key={order.id} className="border-b hover:bg-muted/50">
+                            <td className="py-3 px-4">
+                              <Body size="small" className="font-mono">#{order.id.slice(0, 8)}</Body>
+                            </td>
+                            <td className="py-3 px-4">
+                              <Body size="small">{format(new Date(order.created_at), 'dd/MM/yyyy HH:mm')}</Body>
+                            </td>
+                            <td className="py-3 px-4">
+                              <Body size="small">{order.customer_name}</Body>
+                            </td>
+                            <td className="py-3 px-4">
+                              <Badge variant={getStatusVariant(order.status)}>
+                                {getStatusLabel(order.status)}
+                              </Badge>
+                            </td>
+                            <td className="py-3 px-4 text-right">
+                              <Body size="small" className="font-semibold">{formatCurrency(order.total_amount)}</Body>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </>
+              ) : (
+                <Body className="text-center text-muted-foreground py-8">
+                  No hay pedidos en este período
+                </Body>
+              )}
+            </CardContent>
+          </CollapsibleContent>
+        </Collapsible>
+      </Card>
     </div>
   );
 }
