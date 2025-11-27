@@ -8,16 +8,27 @@ interface AnalyticsChartsProps {
 }
 
 export function AnalyticsCharts({ data }: AnalyticsChartsProps) {
-  const CustomTooltip = ({ active, payload }: any) => {
-    if (active && payload && payload.length) {
+  const RevenueTooltip = ({ active, payload }: any) => {
+    if (active && payload && payload.length > 0) {
       return (
         <div className="bg-background border border-border rounded-lg shadow-lg p-3">
-          <p className="text-sm font-medium mb-1">{payload[0].payload.date}</p>
+          <p className="text-sm font-medium mb-1">{payload[0]?.payload?.date}</p>
           <p className="text-sm text-primary">
-            Ingresos: {formatCurrency(payload[0].value)}
+            Ingresos: {formatCurrency(payload[0]?.value || 0)}
           </p>
-          <p className="text-sm text-secondary">
-            Pedidos: {payload[1].value}
+        </div>
+      );
+    }
+    return null;
+  };
+
+  const OrdersTooltip = ({ active, payload }: any) => {
+    if (active && payload && payload.length > 0) {
+      return (
+        <div className="bg-background border border-border rounded-lg shadow-lg p-3">
+          <p className="text-sm font-medium mb-1">{payload[0]?.payload?.date}</p>
+          <p className="text-sm text-muted-foreground">
+            Pedidos: {payload[0]?.value || 0}
           </p>
         </div>
       );
@@ -48,7 +59,7 @@ export function AnalyticsCharts({ data }: AnalyticsChartsProps) {
                 tickLine={false}
                 tickFormatter={(value) => `$${value}`}
               />
-              <Tooltip content={<CustomTooltip />} />
+              <Tooltip content={<RevenueTooltip />} />
               <Legend />
               <Line
                 type="monotone"
@@ -84,14 +95,7 @@ export function AnalyticsCharts({ data }: AnalyticsChartsProps) {
                 fontSize={12}
                 tickLine={false}
               />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: 'hsl(var(--background))',
-                  border: '1px solid hsl(var(--border))',
-                  borderRadius: '8px',
-                }}
-                cursor={{ fill: 'hsl(var(--muted))' }}
-              />
+              <Tooltip content={<OrdersTooltip />} />
               <Legend />
               <Bar
                 dataKey="orders"
