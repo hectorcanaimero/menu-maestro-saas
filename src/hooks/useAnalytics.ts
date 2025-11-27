@@ -7,12 +7,19 @@ import {
   ChartDataPoint,
   TopProduct,
   CustomerStats,
+  MetricsComparison,
+  calculatePercentageChange,
+  getPreviousPeriod,
 } from '@/lib/analytics';
 import { format, eachDayOfInterval } from 'date-fns';
+import { useMemo } from 'react';
 
 export function useAnalytics(filters: AnalyticsFilters) {
   const { store } = useStore();
   const { dateRange, status, paymentMethod } = filters;
+
+  // Calculate previous period
+  const previousDateRange = useMemo(() => getPreviousPeriod(dateRange), [dateRange]);
 
   // Sales metrics
   const { data: salesMetrics, isLoading: loadingMetrics } = useQuery({
@@ -264,12 +271,85 @@ export function useAnalytics(filters: AnalyticsFilters) {
     enabled: !!store?.id,
   });
 
+  // Previous period metrics for comparison
+  const { data: previousMetrics } = useQuery({
+    queryKey: ['analytics-previous-metrics', store?.id, previousDateRange, status, paymentMethod],
+    queryFn: async (): Promise<SalesMetrics> => {
+      if (!store?.id) throw new Error('Store ID required');
+
+      let query = supabase
+        .from('orders')
+        .select(`
+          total_amount, 
+          status,
+          order_items (
+            quantity
+          )
+        `)
+        .eq('store_id', store.id)
+        .gte('created_at', previousDateRange.from.toISOString())
+        .lte('created_at', previousDateRange.to.toISOString());
+
+      if (status && status !== 'all') {
+        query = query.eq('status', status);
+      }
+
+      if (paymentMethod && paymentMethod !== 'all') {
+        query = query.eq('payment_method', paymentMethod);
+      }
+
+      const { data: orders, error } = await query;
+
+      if (error) throw error;
+
+      const totalRevenue = orders?.reduce((sum, order) => sum + Number(order.total_amount), 0) || 0;
+      const totalOrders = orders?.length || 0;
+      const completedOrders = orders?.filter((o) => o.status === 'completed').length || 0;
+      const pendingOrders = orders?.filter((o) => o.status === 'pending').length || 0;
+      const cancelledOrders = orders?.filter((o) => o.status === 'cancelled').length || 0;
+
+      const totalProductsSold = orders?.reduce((sum, order: any) => {
+        const items = order.order_items || [];
+        return sum + items.reduce((itemSum: number, item: any) => itemSum + item.quantity, 0);
+      }, 0) || 0;
+
+      const daysDiff = Math.ceil((previousDateRange.to.getTime() - previousDateRange.from.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+      const averageDailySales = daysDiff > 0 ? totalRevenue / daysDiff : 0;
+
+      return {
+        totalRevenue,
+        totalOrders,
+        averageOrderValue: totalOrders > 0 ? totalRevenue / totalOrders : 0,
+        completedOrders,
+        pendingOrders,
+        cancelledOrders,
+        totalProductsSold,
+        averageDailySales,
+      };
+    },
+    enabled: !!store?.id && !!salesMetrics,
+  });
+
+  // Calculate comparison metrics
+  const comparison = useMemo((): MetricsComparison | null => {
+    if (!salesMetrics || !previousMetrics) return null;
+    
+    return {
+      revenue: calculatePercentageChange(salesMetrics.totalRevenue, previousMetrics.totalRevenue),
+      orders: calculatePercentageChange(salesMetrics.totalOrders, previousMetrics.totalOrders),
+      averageOrderValue: calculatePercentageChange(salesMetrics.averageOrderValue, previousMetrics.averageOrderValue),
+      productsSold: calculatePercentageChange(salesMetrics.totalProductsSold || 0, previousMetrics.totalProductsSold || 0),
+      averageDailySales: calculatePercentageChange(salesMetrics.averageDailySales || 0, previousMetrics.averageDailySales || 0),
+    };
+  }, [salesMetrics, previousMetrics]);
+
   return {
     salesMetrics,
     chartData,
     topProducts,
     customerStats,
     orders,
+    comparison,
     isLoading: loadingMetrics || loadingChart || loadingProducts || loadingCustomers || loadingOrders,
   };
 }
