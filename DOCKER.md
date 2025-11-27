@@ -2,6 +2,8 @@
 
 This document explains how to use Docker with this application and how the automated CI/CD pipeline works.
 
+**For production deployment with Traefik and Docker Swarm, see [DEPLOYMENT.md](DEPLOYMENT.md)**
+
 ## Quick Start
 
 ### Development (with hot reload)

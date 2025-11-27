@@ -1,0 +1,66 @@
+version: '3.8'
+
+services:
+  pideai-app:
+    image: ghcr.io/hectorcanaimero/menu-maestro-saas:v3.0.0-alpha
+
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+
+      labels:
+        # Enable Traefik
+        - "traefik.enable=true"
+
+        # HTTP Router - Redirect to HTTPS
+        - "traefik.http.routers.pideai-http.rule=HostRegexp(`{subdomain:[a-z0-9-]+}.pideai.com`) || Host(`pideai.com`)"
+        - "traefik.http.routers.pideai-http.entrypoints=web"
+        - "traefik.http.routers.pideai-http.middlewares=redirect-to-https"
+
+        # HTTPS Router - Dynamic Subdomain Routing
+        - "traefik.http.routers.pideai-https.rule=HostRegexp(`{subdomain:[a-z0-9-]+}.pideai.com`) || Host(`pideai.com`)"
+        - "traefik.http.routers.pideai-https.entrypoints=websecure"
+        - "traefik.http.routers.pideai-https.tls=true"
+        - "traefik.http.routers.pideai-https.tls.certresolver=letsencryptresolver"
+
+        # Service - Correct port (80 for nginx)
+        - "traefik.http.services.pideai.loadbalancer.server.port=80"
+
+        # Middleware: Redirect HTTP to HTTPS
+        - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
+        - "traefik.http.middlewares.redirect-to-https.redirectscheme.permanent=true"
+
+        # Middleware: Forward original host to backend
+        - "traefik.http.middlewares.forward-headers.headers.customrequestheaders.X-Forwarded-Host={host}"
+        - "traefik.http.middlewares.forward-headers.headers.customrequestheaders.X-Forwarded-Proto=https"
+        - "traefik.http.middlewares.forward-headers.headers.customrequestheaders.X-Real-IP={remote_addr}"
+
+        # Apply middlewares to HTTPS router
+        - "traefik.http.routers.pideai-https.middlewares=forward-headers"
+
+    environment:
+      # Supabase Configuration (REQUIRED)
+      - VITE_SUPABASE_URL=${VITE_SUPABASE_URL}
+      - VITE_SUPABASE_ANON_KEY=${VITE_SUPABASE_ANON_KEY}
+
+      # PostHog Analytics (OPTIONAL)
+      - VITE_POSTHOG_KEY=${VITE_POSTHOG_KEY:-}
+      - VITE_POSTHOG_HOST=${VITE_POSTHOG_HOST:-https://app.posthog.com}
+
+      # Node Environment
+      - NODE_ENV=production
+
+    networks:
+      - network_public
+
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:80/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+
+networks:
+  network_public:
+    external: true
