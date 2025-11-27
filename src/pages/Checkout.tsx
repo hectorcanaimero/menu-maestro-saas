@@ -38,7 +38,7 @@ const createStepSchema = (
   orderType: "delivery" | "pickup" | "digital_menu",
   removeZipcode: boolean,
   removeAddressNumber: boolean,
-  requirePaymentMethod: boolean
+  requirePaymentMethod: boolean,
 ) => {
   if (step === 1) {
     // Step 1: Order type + Customer info
@@ -69,11 +69,9 @@ const createStepSchema = (
           .min(5, { message: "La dirección debe tener al menos 5 caracteres" })
           .max(200, { message: "La dirección no puede exceder 200 caracteres" }),
         address_complement: z.string().optional(),
-        address_neighborhood: z
-          .string()
-          .min(1, { message: "Debes seleccionar un barrio" }),
+        address_neighborhood: z.string().min(1, { message: "Debes seleccionar un barrio" }),
       };
-      
+
       if (!removeAddressNumber) {
         schema.address_number = z
           .string()
@@ -81,7 +79,7 @@ const createStepSchema = (
           .min(1, { message: "El número es requerido" })
           .max(20, { message: "El número no puede exceder 20 caracteres" });
       }
-      
+
       if (!removeZipcode) {
         schema.address_zipcode = z
           .string()
@@ -89,7 +87,7 @@ const createStepSchema = (
           .min(4, { message: "El código postal debe tener al menos 4 caracteres" })
           .max(20, { message: "El código postal no puede exceder 20 caracteres" });
       }
-      
+
       return z.object(schema);
     } else if (orderType === "digital_menu") {
       return z.object({
@@ -103,20 +101,16 @@ const createStepSchema = (
   } else if (step === 3) {
     // Step 3: Payment + notes
     const schema: any = {
-      notes: z
-        .string()
-        .trim()
-        .max(500, { message: "Las notas no pueden exceder 500 caracteres" })
-        .optional(),
+      notes: z.string().trim().max(500, { message: "Las notas no pueden exceder 500 caracteres" }).optional(),
     };
-    
+
     if (requirePaymentMethod) {
       schema.payment_method = z.string().min(1, { message: "Debes seleccionar un método de pago" });
     }
-    
+
     return z.object(schema);
   }
-  
+
   return z.object({});
 };
 
@@ -143,7 +137,7 @@ const Checkout = () => {
   useStoreTheme();
 
   // Get currency symbol from store
-  const currencySymbol = getCurrencySymbol((store as any)?.currency || 'USD');
+  const currencySymbol = getCurrencySymbol((store as any)?.currency || "USD");
 
   const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(false);
@@ -162,7 +156,7 @@ const Checkout = () => {
   useEffect(() => {
     if (items.length > 0 && store?.id) {
       try {
-        posthog.capture('checkout_started', {
+        posthog.capture("checkout_started", {
           store_id: store.id,
           items_count: items.length,
           total_items: items.reduce((sum, item) => sum + item.quantity, 0),
@@ -170,7 +164,7 @@ const Checkout = () => {
           order_type: orderType,
         });
       } catch (error) {
-        console.error('[PostHog] Error tracking checkout_started:', error);
+        console.error("[PostHog] Error tracking checkout_started:", error);
       }
     }
   }, []); // Only track once on mount
@@ -183,8 +177,8 @@ const Checkout = () => {
         orderType,
         store?.remove_zipcode || false,
         store?.remove_address_number || false,
-        paymentMethods.length > 0
-      )
+        paymentMethods.length > 0,
+      ),
     ),
     defaultValues: {
       customer_name: "",
@@ -256,7 +250,7 @@ const Checkout = () => {
       return;
     }
 
-    const selectedZone = deliveryZones.find(zone => zone.zone_name === selectedZoneName);
+    const selectedZone = deliveryZones.find((zone) => zone.zone_name === selectedZoneName);
     if (selectedZone) {
       setDeliveryPrice(selectedZone.delivery_price);
     }
@@ -269,7 +263,7 @@ const Checkout = () => {
     if (currentStep < totalSteps) {
       // Track checkout step completion
       try {
-        posthog.capture('checkout_step_completed', {
+        posthog.capture("checkout_step_completed", {
           store_id: store?.id,
           step: currentStep,
           order_type: orderType,
@@ -277,7 +271,7 @@ const Checkout = () => {
           cart_value: totalPrice,
         });
       } catch (error) {
-        console.error('[PostHog] Error tracking checkout_step_completed:', error);
+        console.error("[PostHog] Error tracking checkout_step_completed:", error);
       }
 
       setCurrentStep(currentStep + 1);
@@ -314,30 +308,30 @@ const Checkout = () => {
 
     setLoading(true);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
       let paymentProofUrl = null;
 
       // Upload payment proof if provided
       if (paymentProofFile) {
-        const fileExt = paymentProofFile.name.split('.').pop();
-        const fileName = `${session?.user?.id || 'anonymous'}/${Date.now()}.${fileExt}`;
-        
+        const fileExt = paymentProofFile.name.split(".").pop();
+        const fileName = `${session?.user?.id || "anonymous"}/${Date.now()}.${fileExt}`;
+
         const { data: uploadData, error: uploadError } = await supabase.storage
-          .from('payment-proofs')
+          .from("payment-proofs")
           .upload(fileName, paymentProofFile);
 
         if (uploadError) {
-          console.error('Error uploading payment proof:', uploadError);
-          toast.error('Error al subir el comprobante de pago');
+          console.error("Error uploading payment proof:", uploadError);
+          toast.error("Error al subir el comprobante de pago");
           setLoading(false);
           return;
         }
 
-        const { data: urlData } = supabase.storage
-          .from('payment-proofs')
-          .getPublicUrl(uploadData.path);
-        
+        const { data: urlData } = supabase.storage.from("payment-proofs").getPublicUrl(uploadData.path);
+
         paymentProofUrl = urlData.publicUrl;
       }
 
@@ -369,13 +363,13 @@ const Checkout = () => {
         toast.error("El archivo debe ser menor a 5MB");
         return;
       }
-      
-      const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'];
+
+      const allowedTypes = ["image/jpeg", "image/png", "image/webp", "application/pdf"];
       if (!allowedTypes.includes(file.type)) {
         toast.error("Solo se permiten imágenes (JPG, PNG, WEBP) y PDF");
         return;
       }
-      
+
       setPaymentProofFile(file);
     }
   };
@@ -402,14 +396,10 @@ const Checkout = () => {
       <div className="sticky top-0 z-10 bg-background border-b">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between mb-4">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handleBack}
-            >
+            <Button variant="ghost" size="icon" onClick={handleBack}>
               <ArrowLeft className="w-5 h-5" />
             </Button>
-            
+
             <div className="flex items-center gap-2">
               {[1, 2, 3].map((step) => (
                 <div
@@ -418,8 +408,8 @@ const Checkout = () => {
                     step < currentStep
                       ? "bg-primary text-primary-foreground"
                       : step === currentStep
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-muted text-muted-foreground"
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-muted text-muted-foreground"
                   }`}
                 >
                   {step < currentStep ? <Check className="w-4 h-4" /> : step}
@@ -427,15 +417,11 @@ const Checkout = () => {
               ))}
             </div>
 
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => navigate("/")}
-            >
+            <Button variant="ghost" size="icon" onClick={() => navigate("/")}>
               <X className="w-5 h-5" />
             </Button>
           </div>
-          
+
           <Progress value={progress} className="h-1" />
         </div>
       </div>
@@ -477,7 +463,7 @@ const Checkout = () => {
                       <Button
                         type="button"
                         variant={orderType === "digital_menu" ? "default" : "outline"}
-                        className="h-auto py-4"
+                        className="h-auto py-2"
                         onClick={() => setOrderType("digital_menu")}
                       >
                         Servicio en Tienda
@@ -541,11 +527,7 @@ const Checkout = () => {
                     <FormItem>
                       <FormLabel>Teléfono *</FormLabel>
                       <FormControl>
-                        <InputMask
-                          mask={phoneMask}
-                          value={field.value}
-                          onChange={field.onChange}
-                        >
+                        <InputMask mask={phoneMask} value={field.value} onChange={field.onChange}>
                           {/* @ts-ignore */}
                           {(inputProps: any) => (
                             <Input
@@ -673,9 +655,7 @@ const Checkout = () => {
 
                 {orderType === "pickup" && (
                   <div className="text-center py-8">
-                    <p className="text-muted-foreground">
-                      Podrás recoger tu pedido en la tienda
-                    </p>
+                    <p className="text-muted-foreground">Podrás recoger tu pedido en la tienda</p>
                     <p className="text-sm text-muted-foreground mt-2">
                       {store?.address || "Dirección disponible en la confirmación"}
                     </p>
@@ -706,9 +686,7 @@ const Checkout = () => {
                               <div className="text-left">
                                 <div className="font-semibold">{method.name}</div>
                                 {method.description && (
-                                  <div className="text-xs opacity-80 mt-1">
-                                    {method.description}
-                                  </div>
+                                  <div className="text-xs opacity-80 mt-1">{method.description}</div>
                                 )}
                               </div>
                             </Button>
@@ -722,9 +700,7 @@ const Checkout = () => {
 
                 {store?.require_payment_proof && (orderType === "delivery" || orderType === "pickup") && (
                   <div className="space-y-2">
-                    <FormLabel>
-                      Comprobante de Pago *
-                    </FormLabel>
+                    <FormLabel>Comprobante de Pago *</FormLabel>
                     <Input
                       type="file"
                       accept="image/jpeg,image/png,image/webp,application/pdf"
@@ -736,19 +712,12 @@ const Checkout = () => {
                       <div className="flex items-center gap-2 p-3 bg-muted rounded-md">
                         <Upload className="w-4 h-4 text-primary" />
                         <span className="text-sm flex-1">{paymentProofFile.name}</span>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setPaymentProofFile(null)}
-                        >
+                        <Button type="button" variant="ghost" size="sm" onClick={() => setPaymentProofFile(null)}>
                           <X className="w-4 h-4" />
                         </Button>
                       </div>
                     )}
-                    <p className="text-xs text-muted-foreground">
-                      Formatos: JPG, PNG, WEBP, PDF. Máximo 5MB
-                    </p>
+                    <p className="text-xs text-muted-foreground">Formatos: JPG, PNG, WEBP, PDF. Máximo 5MB</p>
                   </div>
                 )}
 
@@ -775,8 +744,16 @@ const Checkout = () => {
                   <div className="space-y-2">
                     {items.slice(0, 3).map((item) => (
                       <div key={item.cartItemId || item.id} className="flex justify-between text-sm">
-                        <span>{item.quantity}x {item.name}</span>
-                        <span className="text-price font-medium">{currencySymbol}{((item.price + (item.extras?.reduce((sum, e) => sum + e.price, 0) || 0)) * item.quantity).toFixed(2)}</span>
+                        <span>
+                          {item.quantity}x {item.name}
+                        </span>
+                        <span className="text-price font-medium">
+                          {currencySymbol}
+                          {(
+                            (item.price + (item.extras?.reduce((sum, e) => sum + e.price, 0) || 0)) *
+                            item.quantity
+                          ).toFixed(2)}
+                        </span>
                       </div>
                     ))}
                     {items.length > 3 && (
@@ -786,22 +763,32 @@ const Checkout = () => {
                   <div className="pt-3 border-t space-y-2">
                     <div className="flex justify-between text-sm">
                       <span>Subtotal</span>
-                      <span>{currencySymbol}{totalPrice.toFixed(2)}</span>
+                      <span>
+                        {currencySymbol}
+                        {totalPrice.toFixed(2)}
+                      </span>
                     </div>
                     {orderType === "delivery" && deliveryPrice > 0 && (
                       <div className="flex justify-between text-sm">
                         <span>Costo de entrega</span>
-                        <span>{currencySymbol}{deliveryPrice.toFixed(2)}</span>
+                        <span>
+                          {currencySymbol}
+                          {deliveryPrice.toFixed(2)}
+                        </span>
                       </div>
                     )}
                     <div className="flex justify-between font-bold text-lg pt-2 border-t">
                       <span>Total</span>
-                      <span className="text-price">{currencySymbol}{grandTotal.toFixed(2)}</span>
+                      <span className="text-price">
+                        {currencySymbol}
+                        {grandTotal.toFixed(2)}
+                      </span>
                     </div>
                   </div>
                   {store?.minimum_order_price && totalPrice < store.minimum_order_price && (
                     <Badge variant="destructive" className="w-full justify-center mt-3">
-                      Pedido mínimo: {currencySymbol}{store.minimum_order_price.toFixed(2)}
+                      Pedido mínimo: {currencySymbol}
+                      {store.minimum_order_price.toFixed(2)}
                     </Badge>
                   )}
                 </div>
