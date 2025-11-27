@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Plus, Minus, Trash2, ShoppingCart } from "lucide-react";
 import { useProductPromotions, getBestPromotion } from "@/hooks/usePromotions";
 import { H4, Body, Caption } from "@/components/ui/typography";
+import { useFormatPrice } from "@/lib/priceFormatter";
 
 interface CartItemExtra {
   id: string;
@@ -38,6 +39,7 @@ export function CartItemDisplay({
   // Get applicable promotions for this product
   const productPromotions = useProductPromotions(id, categoryId);
   const bestDeal = getBestPromotion(productPromotions, price);
+  const formatPrice = useFormatPrice();
 
   const extrasTotal = extras?.reduce((sum, extra) => sum + extra.price, 0) || 0;
 
@@ -73,7 +75,7 @@ export function CartItemDisplay({
             {extras.map((extra) => (
               <Caption key={extra.id}>
                 + {extra.name}{" "}
-                <span className="font-medium">(${extra.price.toFixed(2)})</span>
+                <span className="font-medium">({formatPrice(extra.price)})</span>
               </Caption>
             ))}
           </div>
@@ -84,7 +86,7 @@ export function CartItemDisplay({
           <Badge variant="destructive" className="mt-1 text-xs">
             {bestDeal.promotion.type === 'percentage'
               ? `-${bestDeal.promotion.value}%`
-              : `-$${bestDeal.promotion.value.toFixed(2)}`}
+              : `-${formatPrice(bestDeal.promotion.value)}`}
           </Badge>
         )}
 
@@ -96,19 +98,19 @@ export function CartItemDisplay({
                 className="text-xs sm:text-sm font-semibold"
                 style={{ color: `hsl(var(--price-color, var(--foreground)))` }}
               >
-                ${itemTotal.toFixed(2)}
+                {formatPrice(itemTotal)}
                 {quantity > 1 && (
                   <span className="text-muted-foreground font-normal ml-1">
-                    (${discountedBasePrice.toFixed(2)} c/u)
+                    ({formatPrice(discountedBasePrice)} c/u)
                   </span>
                 )}
               </p>
               <div className="flex items-center gap-2 flex-wrap">
                 <p className="text-xs text-muted-foreground line-through">
-                  ${(basePrice * quantity).toFixed(2)}
+                  {formatPrice(basePrice * quantity)}
                 </p>
                 <Badge variant="secondary" className="text-xs">
-                  Ahorras ${savings.toFixed(2)}
+                  Ahorras {formatPrice(savings)}
                 </Badge>
               </div>
             </div>
@@ -117,10 +119,10 @@ export function CartItemDisplay({
               className="text-xs sm:text-sm font-semibold"
               style={{ color: `hsl(var(--price-color, var(--foreground)))` }}
             >
-              ${itemTotal.toFixed(2)}
+              {formatPrice(itemTotal)}
               {quantity > 1 && (
                 <span className="text-muted-foreground font-normal ml-1">
-                  (${basePrice.toFixed(2)} c/u)
+                  ({formatPrice(basePrice)} c/u)
                 </span>
               )}
             </p>
