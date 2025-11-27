@@ -38,8 +38,7 @@ const navItems = [
   { path: '/admin/customers', label: 'Clientes', icon: Users },
   { path: '/admin/promotions', label: 'Promociones', icon: Tag },
   { path: '/admin/coupons', label: 'Cupones', icon: Ticket },
-  { path: '/admin/analytics', label: 'Análisis', icon: TrendingUp },
-  { path: '/admin/reports', label: 'Informes', icon: BarChart3 },
+  { path: '/admin/analytics', label: 'Análisis y Reportes', icon: BarChart3 },
   { path: '/admin/settings', label: 'Configuración', icon: Settings },
 ];
 

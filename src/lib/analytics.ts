@@ -31,6 +31,8 @@ export interface SalesMetrics {
   completedOrders: number;
   pendingOrders: number;
   cancelledOrders: number;
+  totalProductsSold?: number;
+  averageDailySales?: number;
 }
 
 export interface ChartDataPoint {
