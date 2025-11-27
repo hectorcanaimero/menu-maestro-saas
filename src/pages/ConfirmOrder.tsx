@@ -10,7 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
-import { ArrowLeft, Edit, Loader2, MapPin, User, Mail, Phone, CreditCard, FileText, Hash } from "lucide-react";
+import { ArrowLeft, Edit, Loader2, MapPin, User, Mail, Phone, CreditCard, FileText, Hash, Ticket } from "lucide-react";
 import { generateWhatsAppMessage, redirectToWhatsApp } from "@/lib/whatsappMessageGenerator";
 
 interface OrderData {
@@ -264,7 +264,7 @@ const ConfirmOrder = () => {
               price: item.price,
               extras: item.extras,
             })),
-            totalAmount: discountedTotal,
+            totalAmount: grandTotal,
             customerName: orderData.customer_name,
             customerEmail: orderData.customer_email,
             customerPhone: orderData.customer_phone,
@@ -276,6 +276,10 @@ const ConfirmOrder = () => {
             decimalSeparator: store.decimal_separator || ".",
             thousandsSeparator: store.thousands_separator || ",",
             trackingUrl: trackingUrl,
+            couponCode: orderData.coupon_code || "",
+            couponDiscount: couponDiscount,
+            deliveryPrice: deliveryPrice,
+            tableNumber: orderData.table_number || "",
           },
           {
             orderProductTemplate: store.order_product_template || "{product-qty} {product-name}",
@@ -472,6 +476,28 @@ const ConfirmOrder = () => {
             </Card>
           )}
 
+          {/* Applied Coupon */}
+          {orderData.coupon_code && couponDiscount > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Ticket className="w-5 h-5" />
+                  Cupón Aplicado
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center justify-between">
+                  <Badge variant="secondary" className="text-base px-3 py-1">
+                    {orderData.coupon_code}
+                  </Badge>
+                  <span className="text-green-600 font-semibold">
+                    -${couponDiscount.toFixed(2)}
+                  </span>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           {/* Notes */}
           {orderData.notes && (
             <Card>
@@ -549,6 +575,12 @@ const ConfirmOrder = () => {
                   <span>Subtotal:</span>
                   <span>${discountedTotal.toFixed(2)}</span>
                 </div>
+                {couponDiscount > 0 && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-green-600">Cupón ({orderData.coupon_code}):</span>
+                    <span className="text-green-600">-${couponDiscount.toFixed(2)}</span>
+                  </div>
+                )}
                 {orderData?.order_type === "delivery" && deliveryPrice > 0 && (
                   <div className="flex justify-between text-sm">
                     <span>Costo de entrega:</span>
