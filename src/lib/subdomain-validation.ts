@@ -151,7 +151,7 @@ export function getSubdomainFromHostname(): string {
   }
 
   // Fallback
-  return localStorage.getItem("dev_subdomain") || "www";
+  return localStorage.getItem("dev_subdomain") || "totus";
 }
 
 /**
