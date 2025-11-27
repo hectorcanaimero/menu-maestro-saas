@@ -1,4 +1,5 @@
 import { Star } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 export const TestimonialsSection = () => {
   const testimonials = [
@@ -28,20 +29,30 @@ export const TestimonialsSection = () => {
   return (
     <section className="py-20 px-4 bg-muted/30">
       <div className="container mx-auto">
-        <div className="text-center mb-16">
+        <motion.div 
+          className="text-center mb-16"
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5 }}
+        >
           <h2 className="text-3xl md:text-4xl font-bold mb-4">
             Lo Que Dicen Nuestros Clientes
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
             Miles de negocios confían en PideAI para digitalizar sus operaciones
           </p>
-        </div>
+        </motion.div>
 
         <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
           {testimonials.map((testimonial, index) => (
-            <div
+            <motion.div
               key={index}
               className="bg-card p-6 rounded-lg border border-border hover:border-primary transition-colors"
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: index * 0.15 }}
             >
               <div className="flex gap-1 mb-4">
                 {[...Array(testimonial.rating)].map((_, i) => (
@@ -53,7 +64,7 @@ export const TestimonialsSection = () => {
                 <div className="font-semibold">{testimonial.name}</div>
                 <div className="text-sm text-muted-foreground">{testimonial.business}</div>
               </div>
-            </div>
+            </motion.div>
           ))}
         </div>
       </div>

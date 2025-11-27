@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { ArrowRight, CheckCircle2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 
 export const LandingHero = () => {
   const navigate = useNavigate();
@@ -10,7 +11,12 @@ export const LandingHero = () => {
       <div className="container mx-auto">
         <div className="grid md:grid-cols-2 gap-12 items-center">
           {/* Content */}
-          <div className="space-y-8">
+          <motion.div 
+            className="space-y-8"
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+          >
             <div className="space-y-4">
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight">
                 Digitaliza tu Negocio con{' '}
@@ -47,10 +53,15 @@ export const LandingHero = () => {
                 <span>Soporte 24/7 incluido</span>
               </div>
             </div>
-          </div>
+          </motion.div>
 
           {/* Stats */}
-          <div className="grid grid-cols-2 gap-6">
+          <motion.div 
+            className="grid grid-cols-2 gap-6"
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+          >
             <div className="bg-card p-6 rounded-lg border border-border hover:border-primary transition-colors">
               <div className="text-3xl font-bold text-primary mb-2">500+</div>
               <div className="text-muted-foreground">Restaurantes Activos</div>
@@ -67,7 +78,7 @@ export const LandingHero = () => {
               <div className="text-3xl font-bold text-primary mb-2">24/7</div>
               <div className="text-muted-foreground">Soporte</div>
             </div>
-          </div>
+          </motion.div>
         </div>
       </div>
     </section>
