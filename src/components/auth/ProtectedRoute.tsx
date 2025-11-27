@@ -43,6 +43,9 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
   const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
   const [authError, setAuthError] = useState<string | null>(null);
   const [isVerifying, setIsVerifying] = useState(true);
+  const [verificationStep, setVerificationStep] = useState<
+    'session' | 'store' | 'authorization' | 'complete'
+  >('session');
 
   useEffect(() => {
     verifyAccess();
@@ -51,6 +54,7 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
   const verifyAccess = async () => {
     try {
       // LAYER 1: Quick client-side session check
+      setVerificationStep('session');
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
 
       if (sessionError || !session) {
@@ -60,6 +64,7 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
       }
 
       // LAYER 2: Wait for StoreContext to load
+      setVerificationStep('store');
       if (storeLoading) {
         return; // Wait for store to load
       }
@@ -80,6 +85,7 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
       }
 
       // LAYER 3: Server-side authorization verification (most secure)
+      setVerificationStep('authorization');
       const { data, error } = await supabase.rpc('can_access_admin_routes', {
         p_store_id: store.id
       }) as { data: AuthorizationResult[] | null; error: any };
@@ -121,6 +127,7 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
       }
 
       // Success: User is authorized
+      setVerificationStep('complete');
       setIsAuthorized(true);
       setAuthError(null);
 
@@ -137,7 +144,23 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
 
   // Show loading screen while verifying
   if (storeLoading || isVerifying || isAuthorized === null) {
-    return <LoadingScreen message="Verificando permisos..." />;
+    return (
+      <LoadingScreen 
+        variant="auth"
+        message="Verificando acceso al panel de administración"
+        currentStep={
+          verificationStep === 'session' ? 'Verificando sesión...' :
+          verificationStep === 'store' ? 'Cargando datos de tienda...' :
+          verificationStep === 'authorization' ? 'Verificando permisos de acceso...' :
+          'Completado'
+        }
+        steps={[
+          { label: "Verificar sesión", completed: verificationStep !== 'session' },
+          { label: "Cargar tienda", completed: ['authorization', 'complete'].includes(verificationStep) },
+          { label: "Verificar permisos", completed: verificationStep === 'complete' },
+        ]}
+      />
+    );
   }
 
   // Show "no store" screen
