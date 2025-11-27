@@ -8,6 +8,7 @@ import { useCart } from "@/contexts/CartContext";
 import { useStore } from "@/contexts/StoreContext";
 import { useStoreTheme } from "@/hooks/useStoreTheme";
 import { getCurrencySymbol } from "@/lib/analytics";
+import { useCartTotals } from "@/hooks/useCartTotals";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -130,8 +131,9 @@ type CheckoutFormData = {
 
 const Checkout = () => {
   const navigate = useNavigate();
-  const { items, totalPrice } = useCart();
+  const { items } = useCart();
   const { store } = useStore();
+  const { originalTotal, discountedTotal, totalSavings } = useCartTotals(items);
 
   // Apply store theme colors
   useStoreTheme();
@@ -150,7 +152,7 @@ const Checkout = () => {
 
   const totalSteps = orderType === "pickup" ? 3 : 3; // Same steps for all types
   const progress = (currentStep / totalSteps) * 100;
-  const grandTotal = totalPrice + (orderType === "delivery" ? deliveryPrice : 0);
+  const grandTotal = discountedTotal + (orderType === "delivery" ? deliveryPrice : 0);
 
   // Track checkout_started event when component mounts
   useEffect(() => {
@@ -160,7 +162,7 @@ const Checkout = () => {
           store_id: store.id,
           items_count: items.length,
           total_items: items.reduce((sum, item) => sum + item.quantity, 0),
-          cart_value: totalPrice,
+          cart_value: discountedTotal,
           order_type: orderType,
         });
       } catch (error) {
@@ -268,7 +270,7 @@ const Checkout = () => {
           step: currentStep,
           order_type: orderType,
           items_count: items.length,
-          cart_value: totalPrice,
+          cart_value: discountedTotal,
         });
       } catch (error) {
         console.error("[PostHog] Error tracking checkout_step_completed:", error);
@@ -295,7 +297,7 @@ const Checkout = () => {
     }
 
     // Validate minimum order price
-    if (store.minimum_order_price && totalPrice < store.minimum_order_price) {
+    if (store.minimum_order_price && discountedTotal < store.minimum_order_price) {
       toast.error(`El pedido mínimo es $${store.minimum_order_price.toFixed(2)}`);
       return;
     }
@@ -741,11 +743,29 @@ const Checkout = () => {
                     )}
                   </div>
                   <div className="pt-3 border-t space-y-2">
+                    {totalSavings > 0 && (
+                      <div className="flex justify-between text-sm">
+                        <span>Subtotal original</span>
+                        <span className="line-through text-muted-foreground">
+                          {currencySymbol}
+                          {originalTotal.toFixed(2)}
+                        </span>
+                      </div>
+                    )}
+                    {totalSavings > 0 && (
+                      <div className="flex justify-between text-sm">
+                        <span className="text-green-600">Descuento</span>
+                        <span className="text-green-600">
+                          -{currencySymbol}
+                          {totalSavings.toFixed(2)}
+                        </span>
+                      </div>
+                    )}
                     <div className="flex justify-between text-sm">
                       <span>Subtotal</span>
                       <span>
                         {currencySymbol}
-                        {totalPrice.toFixed(2)}
+                        {discountedTotal.toFixed(2)}
                       </span>
                     </div>
                     {orderType === "delivery" && deliveryPrice > 0 && (
@@ -765,7 +785,7 @@ const Checkout = () => {
                       </span>
                     </div>
                   </div>
-                  {store?.minimum_order_price && totalPrice < store.minimum_order_price && (
+                  {store?.minimum_order_price && discountedTotal < store.minimum_order_price && (
                     <Badge variant="destructive" className="w-full justify-center mt-3">
                       Pedido mínimo: {currencySymbol}
                       {store.minimum_order_price.toFixed(2)}
@@ -783,7 +803,7 @@ const Checkout = () => {
         <div className="container mx-auto max-w-2xl">
           <Button
             onClick={handleNext}
-            disabled={loading || (store?.minimum_order_price ? totalPrice < store.minimum_order_price : false)}
+            disabled={loading || (store?.minimum_order_price ? discountedTotal < store.minimum_order_price : false)}
             className="w-full h-14 text-lg"
             size="lg"
           >

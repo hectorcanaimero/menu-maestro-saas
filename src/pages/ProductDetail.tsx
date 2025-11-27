@@ -4,11 +4,15 @@ import { supabase } from "@/integrations/supabase/client";
 import { Header } from "@/components/catalog/Header";
 import { Footer } from "@/components/catalog/Footer";
 import { Button } from "@/components/ui/button";
-import { ShoppingCart, ArrowLeft } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { ShoppingCart, ArrowLeft, Tag } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { useStoreTheme } from "@/hooks/useStoreTheme";
+import { useProductPromotions, getBestPromotion } from "@/hooks/usePromotions";
+import { useStore } from "@/contexts/StoreContext";
+import { getCurrencySymbol } from "@/lib/analytics";
 
 interface Product {
   id: string;
@@ -31,6 +35,7 @@ export default function ProductDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { addItem } = useCart();
+  const { store } = useStore();
   const [product, setProduct] = useState<Product | null>(null);
   const [extras, setExtras] = useState<ProductExtra[]>([]);
   const [selectedExtras, setSelectedExtras] = useState<Set<string>>(new Set());
@@ -38,6 +43,11 @@ export default function ProductDetail() {
   
   // Apply store theme colors
   useStoreTheme();
+
+  // Get promotions for this product
+  const productPromotions = useProductPromotions(id || "", product?.category_id);
+  const bestDeal = product ? getBestPromotion(productPromotions, product.price) : null;
+  const currencySymbol = getCurrencySymbol(store?.currency || "USD");
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -92,10 +102,11 @@ export default function ProductDetail() {
 
   const calculateTotalPrice = () => {
     if (!product) return 0;
+    const basePrice = bestDeal ? bestDeal.discountedPrice : product.price;
     const extrasTotal = extras
       .filter(extra => selectedExtras.has(extra.id))
       .reduce((sum, extra) => sum + extra.price, 0);
-    return product.price + extrasTotal;
+    return basePrice + extrasTotal;
   };
 
   const handleAddToCart = () => {
@@ -165,7 +176,7 @@ export default function ProductDetail() {
         <div className="grid md:grid-cols-2 gap-8 lg:gap-12 mb-16">
           {/* Image Gallery - For now single image, can be enhanced later */}
           <div className="space-y-4">
-            <div className="aspect-square overflow-hidden rounded-lg border border-border bg-muted/30">
+            <div className="aspect-square overflow-hidden rounded-lg border border-border bg-muted/30 relative">
               {product.image_url ? (
                 <img
                   src={product.image_url}
@@ -177,6 +188,17 @@ export default function ProductDetail() {
                   <span className="text-muted-foreground">Sin imagen</span>
                 </div>
               )}
+              {bestDeal && (
+                <Badge
+                  variant="destructive"
+                  className="absolute top-3 left-3 flex items-center gap-1 px-2 py-1"
+                >
+                  <Tag className="w-3 h-3" />
+                  {bestDeal.promotion.type === "percentage"
+                    ? `-${bestDeal.promotion.value}%`
+                    : `-${currencySymbol}${bestDeal.savings.toFixed(2)}`}
+                </Badge>
+              )}
             </div>
           </div>
 
@@ -186,9 +208,27 @@ export default function ProductDetail() {
               <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2">
                 {product.name}
               </h1>
-              <p className="text-3xl font-bold" style={{ color: `hsl(var(--price-color, var(--primary)))` }}>
-                ${calculateTotalPrice().toFixed(2)}
-              </p>
+              <div className="flex items-center gap-3">
+                {bestDeal ? (
+                  <>
+                    <p className="text-2xl text-muted-foreground line-through">
+                      {currencySymbol}{product.price.toFixed(2)}
+                    </p>
+                    <p className="text-3xl font-bold" style={{ color: `hsl(var(--price-color, var(--primary)))` }}>
+                      {currencySymbol}{calculateTotalPrice().toFixed(2)}
+                    </p>
+                  </>
+                ) : (
+                  <p className="text-3xl font-bold" style={{ color: `hsl(var(--price-color, var(--primary)))` }}>
+                    {currencySymbol}{calculateTotalPrice().toFixed(2)}
+                  </p>
+                )}
+              </div>
+              {bestDeal && (
+                <Badge variant="secondary" className="mt-2">
+                  Ahorra {currencySymbol}{bestDeal.savings.toFixed(2)}
+                </Badge>
+              )}
             </div>
 
             {product.description && (

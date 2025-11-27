@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useCart } from "@/contexts/CartContext";
 import { useStore } from "@/contexts/StoreContext";
 import { useStoreTheme } from "@/hooks/useStoreTheme";
+import { useCartTotals } from "@/hooks/useCartTotals";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -32,8 +33,9 @@ interface OrderData {
 
 const ConfirmOrder = () => {
   const navigate = useNavigate();
-  const { items, totalPrice, clearCart } = useCart();
+  const { items, clearCart } = useCart();
   const { store } = useStore();
+  const { originalTotal, discountedTotal, totalSavings } = useCartTotals(items);
 
   // Apply store theme colors
   useStoreTheme();
@@ -43,7 +45,7 @@ const ConfirmOrder = () => {
 
   // Calculate grand total including delivery
   const deliveryPrice = orderData?.delivery_price || 0;
-  const grandTotal = totalPrice + deliveryPrice;
+  const grandTotal = discountedTotal + deliveryPrice;
 
   useEffect(() => {
     // Load order data from sessionStorage
@@ -239,7 +241,7 @@ const ConfirmOrder = () => {
               price: item.price,
               extras: item.extras,
             })),
-            totalAmount: totalPrice,
+            totalAmount: discountedTotal,
             customerName: orderData.customer_name,
             customerEmail: orderData.customer_email,
             customerPhone: orderData.customer_phone,
@@ -508,9 +510,21 @@ const ConfirmOrder = () => {
               <Separator />
 
               <div className="space-y-2">
+                {totalSavings > 0 && (
+                  <>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Subtotal original:</span>
+                      <span className="line-through text-muted-foreground">${originalTotal.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-green-600">Descuento:</span>
+                      <span className="text-green-600">-${totalSavings.toFixed(2)}</span>
+                    </div>
+                  </>
+                )}
                 <div className="flex justify-between text-sm">
                   <span>Subtotal:</span>
-                  <span>${totalPrice.toFixed(2)}</span>
+                  <span>${discountedTotal.toFixed(2)}</span>
                 </div>
                 {orderData?.order_type === "delivery" && deliveryPrice > 0 && (
                   <div className="flex justify-between text-sm">
