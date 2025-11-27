@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import { useAnalytics } from '@/hooks/useAnalytics';
 import { usePaymentMethods } from '@/hooks/usePaymentMethods';
+import { useStore } from '@/contexts/StoreContext';
 import { AnalyticsCharts } from './AnalyticsCharts';
 import {
   DateRange,
@@ -45,6 +46,7 @@ import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 
 export function AnalyticsDashboard() {
+  const { store } = useStore();
   const [dateRangePreset, setDateRangePreset] = useState<DateRange>('30d');
   const [customDateRange, setCustomDateRange] = useState<{ from?: Date; to?: Date }>({});
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -64,7 +66,7 @@ export function AnalyticsDashboard() {
     paymentMethod: paymentMethodFilter !== 'all' ? paymentMethodFilter : undefined,
   };
 
-  const { salesMetrics, chartData, topProducts, customerStats, orders, isLoading } = useAnalytics(filters);
+  const { salesMetrics, chartData, topProducts, customerStats, orders, comparison, isLoading } = useAnalytics(filters);
 
   const activeFiltersCount = 
     (statusFilter !== 'all' ? 1 : 0) + 
@@ -373,23 +375,31 @@ export function AnalyticsDashboard() {
       </Card>
 
       {/* Metrics Cards */}
+      {comparison && (
+        <p className="text-sm text-muted-foreground">
+          Comparado con el período anterior
+        </p>
+      )}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
         <MetricCard
           title="Ingresos Totales"
-          value={formatCurrency(salesMetrics?.totalRevenue || 0)}
+          value={formatCurrency(salesMetrics?.totalRevenue || 0, store?.currency)}
           icon={DollarSign}
+          trend={comparison?.revenue}
           subtitle={`${salesMetrics?.completedOrders || 0} completados`}
         />
         <MetricCard
           title="Total de Pedidos"
           value={formatNumber(salesMetrics?.totalOrders || 0)}
           icon={ShoppingBag}
+          trend={comparison?.orders}
           subtitle={`${salesMetrics?.pendingOrders || 0} pendientes`}
         />
         <MetricCard
           title="Valor Promedio"
-          value={formatCurrency(salesMetrics?.averageOrderValue || 0)}
+          value={formatCurrency(salesMetrics?.averageOrderValue || 0, store?.currency)}
           icon={Package}
+          trend={comparison?.averageOrderValue}
           subtitle="Por pedido"
         />
         <MetricCard
@@ -402,12 +412,14 @@ export function AnalyticsDashboard() {
           title="Productos Vendidos"
           value={formatNumber(salesMetrics?.totalProductsSold || 0)}
           icon={ShoppingCart}
+          trend={comparison?.productsSold}
           subtitle="Unidades totales"
         />
         <MetricCard
           title="Promedio Diario"
-          value={formatCurrency(salesMetrics?.averageDailySales || 0)}
+          value={formatCurrency(salesMetrics?.averageDailySales || 0, store?.currency)}
           icon={TrendingUp}
+          trend={comparison?.averageDailySales}
           subtitle="Ventas por día"
         />
       </div>

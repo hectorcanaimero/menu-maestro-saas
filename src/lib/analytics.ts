@@ -35,6 +35,14 @@ export interface SalesMetrics {
   averageDailySales?: number;
 }
 
+export interface MetricsComparison {
+  revenue: number;
+  orders: number;
+  averageOrderValue: number;
+  productsSold: number;
+  averageDailySales: number;
+}
+
 export interface ChartDataPoint {
   date: string;
   revenue: number;
@@ -69,6 +77,16 @@ export function getDateRangeFromPreset(preset: DateRange): DateRangeValue {
     default:
       return { from: startOfDay(subDays(today, 29)), to };
   }
+}
+
+export function getPreviousPeriod(dateRange: DateRangeValue): DateRangeValue {
+  const duration = dateRange.to.getTime() - dateRange.from.getTime();
+  const previousTo = new Date(dateRange.from.getTime() - 1); // One day before current start
+  const previousFrom = new Date(previousTo.getTime() - duration);
+  return { 
+    from: startOfDay(previousFrom), 
+    to: endOfDay(previousTo) 
+  };
 }
 
 export function formatCurrency(amount: number, currency: string = 'USD'): string {
