@@ -14,6 +14,7 @@ import {
   TrendingUp,
   Brain,
   Bot,
+  Ticket,
 } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import {
@@ -36,6 +37,7 @@ const navItems = [
   { path: '/admin/menu-items', label: 'Productos', icon: UtensilsCrossed },
   { path: '/admin/customers', label: 'Clientes', icon: Users },
   { path: '/admin/promotions', label: 'Promociones', icon: Tag },
+  { path: '/admin/coupons', label: 'Cupones', icon: Ticket },
   { path: '/admin/analytics', label: 'Análisis', icon: TrendingUp },
   { path: '/admin/reports', label: 'Informes', icon: BarChart3 },
   { path: '/admin/settings', label: 'Configuración', icon: Settings },

@@ -29,6 +29,9 @@ interface OrderData {
   payment_proof_url?: string;
   country?: string;
   delivery_price?: number;
+  coupon_code?: string;
+  coupon_discount?: number;
+  coupon_id?: string;
 }
 
 const ConfirmOrder = () => {
@@ -43,9 +46,10 @@ const ConfirmOrder = () => {
   const [loading, setLoading] = useState(false);
   const [orderData, setOrderData] = useState<OrderData | null>(null);
 
-  // Calculate grand total including delivery
+  // Calculate grand total including delivery and coupon discount
   const deliveryPrice = orderData?.delivery_price || 0;
-  const grandTotal = discountedTotal + deliveryPrice;
+  const couponDiscount = orderData?.coupon_discount || 0;
+  const grandTotal = discountedTotal + deliveryPrice - couponDiscount;
 
   useEffect(() => {
     // Load order data from sessionStorage
@@ -170,6 +174,8 @@ const ConfirmOrder = () => {
             customer_id: customerId,
             total_amount: grandTotal,
             delivery_price: deliveryPrice,
+            coupon_code: orderData.coupon_code || null,
+            coupon_discount: couponDiscount,
             customer_name: orderData.customer_name,
             customer_email: orderData.customer_email,
             customer_phone: orderData.customer_phone,
@@ -186,6 +192,23 @@ const ConfirmOrder = () => {
         .single();
 
       if (orderError) throw orderError;
+
+      // Record coupon usage if applied
+      if (orderData.coupon_id && couponDiscount > 0) {
+        const { recordCouponUsage } = await import("@/hooks/useCoupons");
+        try {
+          await recordCouponUsage(
+            orderData.coupon_id,
+            store.id,
+            orderData.customer_email,
+            order.id,
+            couponDiscount
+          );
+        } catch (couponError) {
+          console.error("Error recording coupon usage:", couponError);
+          // Don't fail the order if coupon recording fails
+        }
+      }
 
       // Create order items
       const orderItems = items.map((item) => ({

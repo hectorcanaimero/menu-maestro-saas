@@ -49,6 +49,126 @@ export type Database = {
           },
         ]
       }
+      coupon_usages: {
+        Row: {
+          coupon_id: string
+          customer_email: string
+          discount_applied: number
+          id: string
+          order_id: string | null
+          store_id: string
+          used_at: string | null
+        }
+        Insert: {
+          coupon_id: string
+          customer_email: string
+          discount_applied: number
+          id?: string
+          order_id?: string | null
+          store_id: string
+          used_at?: string | null
+        }
+        Update: {
+          coupon_id?: string
+          customer_email?: string
+          discount_applied?: number
+          id?: string
+          order_id?: string | null
+          store_id?: string
+          used_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "coupon_usages_coupon_id_fkey"
+            columns: ["coupon_id"]
+            isOneToOne: false
+            referencedRelation: "coupons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "coupon_usages_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "coupon_usages_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      coupons: {
+        Row: {
+          code: string
+          created_at: string | null
+          description: string | null
+          end_date: string | null
+          id: string
+          is_active: boolean | null
+          maximum_discount: number | null
+          minimum_order_amount: number | null
+          name: string
+          per_customer_limit: number | null
+          start_date: string | null
+          store_id: string
+          type: string
+          updated_at: string | null
+          usage_count: number | null
+          usage_limit: number | null
+          value: number
+        }
+        Insert: {
+          code: string
+          created_at?: string | null
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          is_active?: boolean | null
+          maximum_discount?: number | null
+          minimum_order_amount?: number | null
+          name: string
+          per_customer_limit?: number | null
+          start_date?: string | null
+          store_id: string
+          type: string
+          updated_at?: string | null
+          usage_count?: number | null
+          usage_limit?: number | null
+          value: number
+        }
+        Update: {
+          code?: string
+          created_at?: string | null
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          is_active?: boolean | null
+          maximum_discount?: number | null
+          minimum_order_amount?: number | null
+          name?: string
+          per_customer_limit?: number | null
+          start_date?: string | null
+          store_id?: string
+          type?: string
+          updated_at?: string | null
+          usage_count?: number | null
+          usage_limit?: number | null
+          value?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "coupons_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       customers: {
         Row: {
           country: string | null
@@ -301,6 +421,8 @@ export type Database = {
       }
       orders: {
         Row: {
+          coupon_code: string | null
+          coupon_discount: number | null
           created_at: string | null
           customer_email: string
           customer_id: string | null
@@ -320,6 +442,8 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
+          coupon_code?: string | null
+          coupon_discount?: number | null
           created_at?: string | null
           customer_email: string
           customer_id?: string | null
@@ -339,6 +463,8 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
+          coupon_code?: string | null
+          coupon_discount?: number | null
           created_at?: string | null
           customer_email?: string
           customer_id?: string | null

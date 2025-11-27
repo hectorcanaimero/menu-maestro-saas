@@ -33,6 +33,7 @@ const AdminCategories = lazy(() => import("./pages/admin/AdminCategories"));
 const AdminMenuItems = lazy(() => import("./pages/admin/AdminMenuItems"));
 const AdminCustomers = lazy(() => import("./pages/admin/AdminCustomers"));
 const AdminPromotions = lazy(() => import("./pages/admin/AdminPromotions"));
+const AdminCoupons = lazy(() => import("./pages/admin/AdminCoupons"));
 const StoreSettings = lazy(() => import("./pages/admin/StoreSettings"));
 
 const queryClient = new QueryClient();
@@ -130,6 +131,14 @@ const App = () => (
                     element={
                       <ProtectedRoute>
                         <AdminPromotions />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/admin/coupons"
+                    element={
+                      <ProtectedRoute>
+                        <AdminCoupons />
                       </ProtectedRoute>
                     }
                   />
