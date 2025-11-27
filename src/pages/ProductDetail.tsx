@@ -9,7 +9,6 @@ import { useCart } from "@/contexts/CartContext";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { useStoreTheme } from "@/hooks/useStoreTheme";
-import { ProductExtrasDialog } from "@/components/catalog/ProductExtrasDialog";
 
 interface Product {
   id: string;
@@ -21,13 +20,21 @@ interface Product {
   is_available: boolean;
 }
 
+interface ProductExtra {
+  id: string;
+  name: string;
+  price: number;
+  is_available: boolean;
+}
+
 export default function ProductDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { addItem } = useCart();
   const [product, setProduct] = useState<Product | null>(null);
+  const [extras, setExtras] = useState<ProductExtra[]>([]);
+  const [selectedExtras, setSelectedExtras] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
-  const [showExtrasDialog, setShowExtrasDialog] = useState(false);
   
   // Apply store theme colors
   useStoreTheme();
@@ -52,28 +59,66 @@ export default function ProductDetail() {
       }
 
       setProduct(productData);
+
+      // Fetch product extras
+      const { data: extrasData } = await supabase
+        .from("product_extras")
+        .select("*")
+        .eq("menu_item_id", id)
+        .eq("is_available", true)
+        .order("display_order", { ascending: true });
+
+      if (extrasData) {
+        setExtras(extrasData);
+      }
+
       setLoading(false);
     };
 
     fetchProduct();
   }, [id, navigate]);
 
-  const handleAddToCart = () => {
-    setShowExtrasDialog(true);
+  const toggleExtra = (extraId: string) => {
+    setSelectedExtras(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(extraId)) {
+        newSet.delete(extraId);
+      } else {
+        newSet.add(extraId);
+      }
+      return newSet;
+    });
   };
 
-  const handleConfirmWithExtras = (extras: any[]) => {
-    if (product) {
-      addItem({
-        id: product.id,
-        name: product.name,
-        price: product.price,
-        image_url: product.image_url,
-        extras,
-        categoryId: product.category_id,
-      });
-    }
-    setShowExtrasDialog(false);
+  const calculateTotalPrice = () => {
+    if (!product) return 0;
+    const extrasTotal = extras
+      .filter(extra => selectedExtras.has(extra.id))
+      .reduce((sum, extra) => sum + extra.price, 0);
+    return product.price + extrasTotal;
+  };
+
+  const handleAddToCart = () => {
+    if (!product) return;
+
+    const selectedExtrasArray = extras
+      .filter(extra => selectedExtras.has(extra.id))
+      .map(extra => ({
+        id: extra.id,
+        name: extra.name,
+        price: extra.price,
+      }));
+
+    addItem({
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      image_url: product.image_url,
+      extras: selectedExtrasArray,
+      categoryId: product.category_id,
+    });
+
+    toast.success("Producto agregado al carrito");
   };
 
   if (loading) {
@@ -142,7 +187,7 @@ export default function ProductDetail() {
                 {product.name}
               </h1>
               <p className="text-3xl font-bold" style={{ color: `hsl(var(--price-color, var(--primary)))` }}>
-                ${product.price.toFixed(2)}
+                ${calculateTotalPrice().toFixed(2)}
               </p>
             </div>
 
@@ -154,6 +199,36 @@ export default function ProductDetail() {
                 <p className="text-muted-foreground leading-relaxed">
                   {product.description}
                 </p>
+              </div>
+            )}
+
+            {/* Extras Section */}
+            {extras.length > 0 && (
+              <div className="space-y-3 border-t border-border pt-4">
+                <h2 className="text-lg font-semibold text-foreground">
+                  Personaliza tu pedido
+                </h2>
+                <div className="space-y-2">
+                  {extras.map((extra) => (
+                    <label
+                      key={extra.id}
+                      className="flex items-center justify-between p-3 rounded-lg border border-border hover:bg-muted/50 cursor-pointer transition-colors"
+                    >
+                      <div className="flex items-center gap-3">
+                        <input
+                          type="checkbox"
+                          checked={selectedExtras.has(extra.id)}
+                          onChange={() => toggleExtra(extra.id)}
+                          className="w-4 h-4 rounded border-border text-primary focus:ring-primary"
+                        />
+                        <span className="text-foreground font-medium">{extra.name}</span>
+                      </div>
+                      <span className="text-sm font-semibold" style={{ color: `hsl(var(--price-color, var(--primary)))` }}>
+                        +${extra.price.toFixed(2)}
+                      </span>
+                    </label>
+                  ))}
+                </div>
               </div>
             )}
 
@@ -179,18 +254,6 @@ export default function ProductDetail() {
       </main>
 
       <Footer />
-      
-      {/* Product Extras Dialog */}
-      {product && (
-        <ProductExtrasDialog
-          open={showExtrasDialog}
-          onOpenChange={setShowExtrasDialog}
-          productId={product.id}
-          productName={product.name}
-          productPrice={product.price}
-          onConfirm={handleConfirmWithExtras}
-        />
-      )}
     </div>
   );
 }
