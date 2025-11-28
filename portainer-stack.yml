@@ -6,7 +6,11 @@ version: '3.8'
 services:
   pideai-app:
     # Imagen pre-built desde GitHub Container Registry
-    image: ghcr.io/hectorcanaimero/menu-maestro-saas:3.0.0-alpha
+    # Opciones de imagen (usar una):
+    # - 3.0.0-alpha: Version tag sin 'v' prefix
+    # - sha-a0cf9a1: Commit SHA específico (más estable)
+    # - latest: Última versión (main branch)
+    image: ghcr.io/hectorcanaimero/menu-maestro-saas:sha-a0cf9a1
 
     deploy:
       # Número de réplicas (ajustar según necesidad)
