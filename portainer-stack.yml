@@ -1,0 +1,90 @@
+# Stack para Portainer - PideAI Multi-tenant Food Ordering Platform
+# Copiar y pegar este archivo completo en Portainer UI
+
+version: '3.8'
+
+services:
+  pideai-app:
+    # Imagen pre-built desde GitHub Container Registry
+    image: ghcr.io/hectorcanaimero/menu-maestro-saas:3.0.0-alpha
+
+    deploy:
+      # Número de réplicas (ajustar según necesidad)
+      replicas: 2
+
+      # Restart policy
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+
+      # Rolling update configuration (zero downtime)
+      update_config:
+        parallelism: 1       # Actualizar 1 container a la vez
+        delay: 10s           # Esperar 10s entre actualizaciones
+        failure_action: rollback
+        monitor: 30s
+        max_failure_ratio: 0.3
+
+      # Resource limits (ajustar según servidor)
+      resources:
+        limits:
+          cpus: '0.5'        # Máximo 0.5 CPU por container
+          memory: 256M       # Máximo 256MB RAM por container
+        reservations:
+          cpus: '0.25'       # Mínimo garantizado
+          memory: 128M
+
+      # Traefik labels para routing dinámico
+      labels:
+        # ========================================
+        # IMPORTANTE: Cambiar "pideai.com" por tu dominio
+        # ========================================
+
+        # Enable Traefik
+        - "traefik.enable=true"
+
+        # HTTP Router - Redirect to HTTPS
+        - "traefik.http.routers.pideai-http.rule=HostRegexp(`{subdomain:[a-z0-9-]+}.pideai.com`) || Host(`pideai.com`)"
+        - "traefik.http.routers.pideai-http.entrypoints=web"
+        - "traefik.http.routers.pideai-http.middlewares=redirect-to-https"
+
+        # HTTPS Router - Dynamic Subdomain Routing
+        # Soporta: tienda1.pideai.com, tienda2.pideai.com, pideai.com, etc.
+        - "traefik.http.routers.pideai-https.rule=HostRegexp(`{subdomain:[a-z0-9-]+}.pideai.com`) || Host(`pideai.com`)"
+        - "traefik.http.routers.pideai-https.entrypoints=websecure"
+        - "traefik.http.routers.pideai-https.tls=true"
+        - "traefik.http.routers.pideai-https.tls.certresolver=letsencryptresolver"
+
+        # Service - nginx listens on port 80
+        - "traefik.http.services.pideai.loadbalancer.server.port=80"
+
+        # Middleware: Redirect HTTP to HTTPS
+        - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
+        - "traefik.http.middlewares.redirect-to-https.redirectscheme.permanent=true"
+
+        # Middleware: Forward original headers to backend
+        - "traefik.http.middlewares.pideai-headers.headers.customrequestheaders.X-Forwarded-Host={host}"
+        - "traefik.http.middlewares.pideai-headers.headers.customrequestheaders.X-Forwarded-Proto=https"
+        - "traefik.http.middlewares.pideai-headers.headers.customrequestheaders.X-Real-IP={remote_addr}"
+
+        # Apply middlewares to HTTPS router
+        - "traefik.http.routers.pideai-https.middlewares=pideai-headers"
+
+    networks:
+      - network_public
+
+    # Health check (verifica que el container esté funcionando)
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:80/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+
+networks:
+  # Network externa que debe existir previamente
+  # Si no existe, crear con: docker network create --driver=overlay network_public
+  network_public:
+    external: true
