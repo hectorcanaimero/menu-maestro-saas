@@ -61,22 +61,24 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
     loadStore();
 
     // Revalidate store ownership every 5 minutes
-    const interval = setInterval(() => {
-      revalidateOwnership();
-    }, 5 * 60 * 1000); // 5 minutes
+    // const interval = setInterval(() => {
+    //   revalidateOwnership();
+    // }, 5 * 60 * 1000); // 5 minutes
 
     // Listen for auth state changes
     // IMPORTANT: Don't use async directly in callback to avoid Supabase deadlock
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
       // Reload store when user signs in to get correct ownership status
-      if (event === 'SIGNED_IN') {
-        console.log('[StoreContext] User signed in, scheduling store reload...');
+      if (event === "SIGNED_IN") {
+        console.log("[StoreContext] User signed in, scheduling store reload...");
         // Defer loadStore to avoid deadlock - this is a Supabase best practice
         setTimeout(() => {
           loadStore();
         }, 0);
-      } else if (event === 'SIGNED_OUT') {
-        console.log('[StoreContext] User signed out');
+      } else if (event === "SIGNED_OUT") {
+        console.log("[StoreContext] User signed out");
         setIsStoreOwner(false);
         posthog.reset();
       } else if (store) {
@@ -103,7 +105,7 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
       const subdomain = getSubdomainFromHostname();
 
       // Use secure RPC function with rate limiting
-      const { data, error } = await supabase.rpc('get_store_by_subdomain_secure', {
+      const { data, error } = await supabase.rpc("get_store_by_subdomain_secure", {
         p_subdomain: subdomain,
         p_ip_address: null, // Browser doesn't have access to IP, server will handle
       });
@@ -149,7 +151,6 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
       const storeData = result.store_data as unknown as Store;
       setStore(storeData);
       setIsStoreOwner(result.is_owner || false);
-
     } catch (error) {
       console.error("Error in loadStore:", error);
       setStore(null);
@@ -159,7 +160,9 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const checkOwnership = async (storeData: Store) => {
-    const { data: { session } } = await supabase.auth.getSession();
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
     const isOwner = session?.user?.id === storeData.owner_id;
     setIsStoreOwner(isOwner);
 
@@ -177,12 +180,12 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
           store_id: storeData.id,
           store_name: storeData.name,
           is_store_owner: isOwner,
-          role: isOwner ? 'owner' : 'customer',
+          role: isOwner ? "owner" : "customer",
           store_subdomain: storeData.subdomain,
         });
 
         if (import.meta.env.DEV) {
-          console.log('[PostHog] User identified:', {
+          console.log("[PostHog] User identified:", {
             user_id: session.user.id,
             email: session.user.email,
             store_id: storeData.id,
@@ -201,7 +204,7 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
         });
       }
     } catch (error) {
-      console.error('[PostHog] Error identifying user:', error);
+      console.error("[PostHog] Error identifying user:", error);
     }
   };
 
@@ -209,10 +212,12 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
     if (!store) return;
 
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
 
       // Check server-side ownership
-      const { data, error } = await supabase.rpc('verify_store_ownership', {
+      const { data, error } = await supabase.rpc("verify_store_ownership", {
         p_store_id: store.id,
       });
 
@@ -223,7 +228,7 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
         // If ownership was revoked, reload the page to clear admin access
         if (!data && isStoreOwner) {
           console.warn("Store ownership revoked, reloading...");
-          window.location.href = '/';
+          window.location.href = "/";
         }
       }
     } catch (error) {
@@ -236,9 +241,7 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <StoreContext.Provider value={{ store, loading, isStoreOwner, reloadStore }}>
-      {children}
-    </StoreContext.Provider>
+    <StoreContext.Provider value={{ store, loading, isStoreOwner, reloadStore }}>{children}</StoreContext.Provider>
   );
 };
 
