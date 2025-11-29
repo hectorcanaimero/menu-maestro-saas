@@ -45,10 +45,25 @@ serve(async (req) => {
 
     console.log(`[WhatsApp] Sending ${messageType} message to ${customerPhone} for store ${storeId}`);
 
-    // 1. Get WhatsApp settings for the store
+    // Get Evolution API credentials from environment
+    const evolutionApiUrl = Deno.env.get('EVOLUTION_API_URL');
+    const evolutionApiKey = Deno.env.get('EVOLUTION_API_KEY');
+
+    if (!evolutionApiUrl || !evolutionApiKey) {
+      console.error('[WhatsApp] Evolution API credentials not configured');
+      return new Response(JSON.stringify({ 
+        success: false, 
+        error: 'Evolution API not configured' 
+      }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // 1. Get WhatsApp settings and store subdomain
     const { data: settings, error: settingsError } = await supabase
       .from('whatsapp_settings')
-      .select('*')
+      .select('*, stores!inner(subdomain)')
       .eq('store_id', storeId)
       .single();
 
@@ -57,6 +72,20 @@ serve(async (req) => {
       return new Response(JSON.stringify({ 
         success: false, 
         error: 'WhatsApp not configured for this store' 
+      }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Use store subdomain as instance name
+    const instanceName = (settings as any).stores?.subdomain;
+
+    if (!instanceName) {
+      console.error('[WhatsApp] Store subdomain not found');
+      return new Response(JSON.stringify({ 
+        success: false, 
+        error: 'Store subdomain not found' 
       }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -132,7 +161,7 @@ serve(async (req) => {
     }
 
     // 5. Send via Evolution API
-    const evolutionUrl = `${settings.evolution_api_url}/message/sendText/${settings.instance_name}`;
+    const evolutionUrl = `${evolutionApiUrl}/message/sendText/${instanceName}`;
     
     const evolutionPayload: any = {
       number: formattedPhone,
@@ -141,7 +170,7 @@ serve(async (req) => {
 
     // If there's an image, use sendMedia instead
     const endpoint = imageUrl 
-      ? `${settings.evolution_api_url}/message/sendMedia/${settings.instance_name}`
+      ? `${evolutionApiUrl}/message/sendMedia/${instanceName}`
       : evolutionUrl;
 
     if (imageUrl) {
@@ -157,7 +186,7 @@ serve(async (req) => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'apikey': settings.evolution_api_key,
+        'apikey': evolutionApiKey,
       },
       body: JSON.stringify(evolutionPayload),
     });
