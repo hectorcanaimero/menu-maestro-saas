@@ -16,7 +16,10 @@ import {
   Palette,
   Minimize2,
   Crown,
-  Brush
+  Brush,
+  Square,
+  RectangleVertical,
+  Smartphone
 } from "lucide-react";
 import { useAICredits } from "@/hooks/useAICredits";
 import { useStore } from "@/contexts/StoreContext";
@@ -37,6 +40,7 @@ interface AIPhotoStudioProps {
 }
 
 type StyleType = 'realistic' | 'premium' | 'animated' | 'minimalist' | 'white_bg' | 'dark_mode';
+type AspectRatio = '1:1' | '4:5' | '9:16';
 
 interface StyleOption {
   id: StyleType;
@@ -44,6 +48,13 @@ interface StyleOption {
   description: string;
   icon: React.ReactNode;
   gradient: string;
+}
+
+interface AspectRatioOption {
+  id: AspectRatio;
+  name: string;
+  description: string;
+  icon: React.ReactNode;
 }
 
 const STYLE_OPTIONS: StyleOption[] = [
@@ -91,11 +102,42 @@ const STYLE_OPTIONS: StyleOption[] = [
   },
 ];
 
+const ASPECT_RATIO_OPTIONS: AspectRatioOption[] = [
+  {
+    id: '1:1',
+    name: 'Cuadrado',
+    description: 'Feed Instagram',
+    icon: <Square className="w-4 h-4" />,
+  },
+  {
+    id: '4:5',
+    name: 'Portrait',
+    description: 'Mejor engagement',
+    icon: <RectangleVertical className="w-4 h-4" />,
+  },
+  {
+    id: '9:16',
+    name: 'Stories',
+    description: 'Stories y Reels',
+    icon: <Smartphone className="w-4 h-4" />,
+  },
+];
+
+const getAspectRatioClass = (ratio: AspectRatio) => {
+  switch (ratio) {
+    case '1:1': return 'aspect-square';
+    case '4:5': return 'aspect-[4/5]';
+    case '9:16': return 'aspect-[9/16]';
+    default: return 'aspect-square';
+  }
+};
+
 export const AIPhotoStudio = ({ open, onOpenChange, menuItem, onImageUpdated }: AIPhotoStudioProps) => {
   const { store } = useStore();
   const { availableCredits, monthlyRemaining, monthlyTotal, extraCredits, useCredit, refetch } = useAICredits();
   
   const [selectedStyle, setSelectedStyle] = useState<StyleType>('realistic');
+  const [aspectRatio, setAspectRatio] = useState<AspectRatio>('1:1');
   const [isProcessing, setIsProcessing] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isApplying, setIsApplying] = useState(false);
@@ -119,6 +161,7 @@ export const AIPhotoStudio = ({ open, onOpenChange, menuItem, onImageUpdated }: 
         body: {
           imageUrl: menuItem.image_url,
           style: selectedStyle,
+          aspectRatio: aspectRatio,
           menuItemId: menuItem.id,
           menuItemName: menuItem.name,
           storeId: store?.id,
@@ -130,7 +173,6 @@ export const AIPhotoStudio = ({ open, onOpenChange, menuItem, onImageUpdated }: 
       }
 
       if (response.data?.error) {
-        // Check for rate limit or payment errors
         if (response.data.status === 429) {
           toast.error("Límite de solicitudes excedido. Intenta de nuevo más tarde.");
         } else if (response.data.status === 402) {
@@ -149,7 +191,6 @@ export const AIPhotoStudio = ({ open, onOpenChange, menuItem, onImageUpdated }: 
 
       setPreviewUrl(enhancedImageUrl);
       
-      // Use a credit
       const creditResult = await useCredit();
       if (!creditResult.success) {
         console.warn("Could not deduct credit");
@@ -191,6 +232,7 @@ export const AIPhotoStudio = ({ open, onOpenChange, menuItem, onImageUpdated }: 
   const handleClose = () => {
     setPreviewUrl(null);
     setSelectedStyle('realistic');
+    setAspectRatio('1:1');
     onOpenChange(false);
   };
 
@@ -227,6 +269,35 @@ export const AIPhotoStudio = ({ open, onOpenChange, menuItem, onImageUpdated }: 
             </div>
           </div>
 
+          {/* Aspect Ratio Selection */}
+          {!previewUrl && (
+            <div className="space-y-2">
+              <p className="text-sm font-medium">📐 Formato de salida (Instagram)</p>
+              <div className="flex gap-2">
+                {ASPECT_RATIO_OPTIONS.map((option) => (
+                  <button
+                    key={option.id}
+                    onClick={() => setAspectRatio(option.id)}
+                    className={`flex-1 flex items-center justify-center gap-2 p-3 rounded-lg border-2 transition-all ${
+                      aspectRatio === option.id
+                        ? 'border-primary bg-primary/5'
+                        : 'border-border hover:border-primary/50'
+                    }`}
+                  >
+                    {option.icon}
+                    <div className="text-left">
+                      <p className="text-sm font-medium">{option.name}</p>
+                      <p className="text-xs text-muted-foreground">{option.description}</p>
+                    </div>
+                    {aspectRatio === option.id && (
+                      <Check className="w-4 h-4 text-primary ml-auto" />
+                    )}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Current vs Preview */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Current Image */}
@@ -255,9 +326,9 @@ export const AIPhotoStudio = ({ open, onOpenChange, menuItem, onImageUpdated }: 
             <Card>
               <CardContent className="p-4">
                 <p className="text-sm font-medium mb-2 text-muted-foreground">
-                  {previewUrl ? 'Resultado' : 'Vista Previa'}
+                  {previewUrl ? 'Resultado' : 'Vista Previa'} ({aspectRatio})
                 </p>
-                <div className="aspect-square bg-muted rounded-lg overflow-hidden flex items-center justify-center relative">
+                <div className={`${getAspectRatioClass(aspectRatio)} max-h-[400px] bg-muted rounded-lg overflow-hidden flex items-center justify-center relative mx-auto`}>
                   <AnimatePresence mode="wait">
                     {isProcessing ? (
                       <motion.div
@@ -286,7 +357,7 @@ export const AIPhotoStudio = ({ open, onOpenChange, menuItem, onImageUpdated }: 
                         key="empty"
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
-                        className="text-center text-muted-foreground"
+                        className="text-center text-muted-foreground p-4"
                       >
                         <Wand2 className="w-12 h-12 mx-auto mb-2 opacity-50" />
                         <p className="text-sm">Selecciona un estilo y genera</p>
@@ -301,7 +372,7 @@ export const AIPhotoStudio = ({ open, onOpenChange, menuItem, onImageUpdated }: 
           {/* Style Selection */}
           {!previewUrl && (
             <div className="space-y-3">
-              <p className="text-sm font-medium">Selecciona un estilo</p>
+              <p className="text-sm font-medium">🎨 Selecciona un estilo</p>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                 {STYLE_OPTIONS.map((style) => (
                   <motion.button
