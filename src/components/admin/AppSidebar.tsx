@@ -44,12 +44,12 @@ const navItems = [
 
 const navIntegration = [
   { path: '/admin/whatsapp', label: 'Whatsapp', icon: Send },
-  { path: '/admin/whatsapp', label: 'Lis Bot', icon: Bot },
-  { path: '/admin/ai', label: 'IA Imagen', icon: Brain },
+  // { path: '/admin/chatbot', label: 'Lis Bot', icon: Bot },
+  { path: '/admin/ai', label: 'Estudio Imagen IA', icon: Brain },
   { path: '/admin/delivery', label: 'Delivery', icon: Package },
-  { path: '/admin/fidelity', label: 'Fidelidad', icon: Club },
-  { path: '/admin/point-sale', label: 'Ponto de Venda', icon: Club },
-  { path: '/admin/point-sale', label: 'Dominio Propio', icon: Club },
+  // { path: '/admin/fidelity', label: 'Fidelidad', icon: Club },
+  // { path: '/admin/point-sale', label: 'Punto de Venta', icon: Club },
+  // { path: '/admin/custom-domain', label: 'Dominio Propio', icon: Club },
 ];
 
 export function AppSidebar() {

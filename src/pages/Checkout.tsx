@@ -373,8 +373,8 @@ const Checkout = () => {
         coupon_id: appliedCoupon?.id || null,
       };
 
-      sessionStorage.setItem("pendingOrder", JSON.stringify(orderData));
-      navigate("/confirm-order");
+      // Pass order data through navigation state instead of sessionStorage (security)
+      navigate("/confirm-order", { state: { orderData } });
     } catch (error) {
       console.error("Error preparing order:", error);
       toast.error("Error al preparar el pedido");

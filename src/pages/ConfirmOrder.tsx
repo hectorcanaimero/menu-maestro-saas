@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useCart } from "@/contexts/CartContext";
 import { useStore } from "@/contexts/StoreContext";
@@ -37,6 +37,7 @@ interface OrderData {
 
 const ConfirmOrder = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { items, clearCart } = useCart();
   const { store } = useStore();
   const { originalTotal, discountedTotal, totalSavings } = useCartTotals(items);
@@ -54,16 +55,17 @@ const ConfirmOrder = () => {
   const grandTotal = discountedTotal + deliveryPrice - couponDiscount;
 
   useEffect(() => {
-    // Load order data from sessionStorage
-    const savedData = sessionStorage.getItem("pendingOrder");
-    if (savedData) {
-      setOrderData(JSON.parse(savedData));
+    // Get order data from navigation state (more secure than sessionStorage)
+    const stateOrderData = location.state?.orderData;
+
+    if (stateOrderData) {
+      setOrderData(stateOrderData);
     } else {
       // If no data, redirect back to checkout
       toast.error("No se encontraron datos del pedido");
       navigate("/checkout");
     }
-  }, [navigate]);
+  }, [location.state, navigate]);
 
   const handleEdit = () => {
     navigate("/checkout");
@@ -296,8 +298,7 @@ const ConfirmOrder = () => {
         if (store.redirect_to_whatsapp) {
           toast.success("¡Pedido realizado! Redirigiendo a WhatsApp...");
           clearCart();
-          sessionStorage.removeItem("pendingOrder");
-          
+
           setTimeout(() => {
             redirectToWhatsApp(store.phone!, whatsappMessage);
             navigate("/");
@@ -317,7 +318,6 @@ const ConfirmOrder = () => {
       }
 
       clearCart();
-      sessionStorage.removeItem("pendingOrder");
       navigate("/");
     } catch (error) {
       console.error("Error creating order:", error);

@@ -1,7 +1,7 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { getSubdomainFromHostname } from "@/lib/subdomain-validation";
-import posthog from "posthog-js";
+import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { getSubdomainFromHostname } from '@/lib/subdomain-validation';
+import posthog from 'posthog-js';
 
 interface Store {
   id: string;
@@ -15,8 +15,8 @@ interface Store {
   email: string | null;
   address: string | null;
   is_active: boolean;
-  operating_modes: Array<"delivery" | "pickup" | "digital_menu"> | null;
-  force_status: "normal" | "force_open" | "force_closed" | null;
+  operating_modes: Array<'delivery' | 'pickup' | 'digital_menu'> | null;
+  force_status: 'normal' | 'force_open' | 'force_closed' | null;
   currency: string | null;
   decimal_places: number | null;
   decimal_separator: string | null;
@@ -71,14 +71,14 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
       // Reload store when user signs in to get correct ownership status
-      if (event === "SIGNED_IN") {
-        console.log("[StoreContext] User signed in, scheduling store reload...");
+      if (event === 'SIGNED_IN') {
+        console.log('[StoreContext] User signed in, scheduling store reload...');
         // Defer loadStore to avoid deadlock - this is a Supabase best practice
         setTimeout(() => {
           loadStore();
         }, 0);
-      } else if (event === "SIGNED_OUT") {
-        console.log("[StoreContext] User signed out");
+      } else if (event === 'SIGNED_OUT') {
+        console.log('[StoreContext] User signed out');
         setIsStoreOwner(false);
         posthog.reset();
       } else if (store) {
@@ -103,27 +103,27 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
 
       // Extract subdomain using utility function
       const subdomain = getSubdomainFromHostname();
-
+      console.log(subdomain);
       // Use secure RPC function with rate limiting
-      const { data, error } = await supabase.rpc("get_store_by_subdomain_secure", {
+      const { data, error } = await supabase.rpc('get_store_by_subdomain_secure', {
         p_subdomain: subdomain,
         p_ip_address: null, // Browser doesn't have access to IP, server will handle
       });
 
       if (error) {
-        console.error("Error loading store (RPC):", error);
+        console.error('Error loading store (RPC):', error);
 
         // Fallback to direct query if RPC fails
-        console.warn("Falling back to direct query...");
+        console.warn('Falling back to direct query...');
         const { data: fallbackData, error: fallbackError } = await supabase
-          .from("stores")
-          .select("*")
-          .eq("subdomain", subdomain)
-          .eq("is_active", true)
+          .from('stores')
+          .select('*')
+          .eq('subdomain', subdomain)
+          .eq('is_active', true)
           .single();
 
         if (fallbackError) {
-          console.error("Error loading store (fallback):", fallbackError);
+          console.error('Error loading store (fallback):', fallbackError);
           setStore(null);
         } else {
           setStore(fallbackData);
@@ -136,13 +136,13 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
       const result = data?.[0];
 
       if (!result || !result.rate_limit_ok) {
-        console.error("Rate limit exceeded or store not found:", result?.error_message);
+        console.error('Rate limit exceeded or store not found:', result?.error_message);
         setStore(null);
         return;
       }
 
       if (result.error_message) {
-        console.error("Store lookup error:", result.error_message);
+        console.error('Store lookup error:', result.error_message);
         setStore(null);
         return;
       }
@@ -152,7 +152,7 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
       setStore(storeData);
       setIsStoreOwner(result.is_owner || false);
     } catch (error) {
-      console.error("Error in loadStore:", error);
+      console.error('Error in loadStore:', error);
       setStore(null);
     } finally {
       setLoading(false);
@@ -180,12 +180,12 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
           store_id: storeData.id,
           store_name: storeData.name,
           is_store_owner: isOwner,
-          role: isOwner ? "owner" : "customer",
+          role: isOwner ? 'owner' : 'customer',
           store_subdomain: storeData.subdomain,
         });
 
         if (import.meta.env.DEV) {
-          console.log("[PostHog] User identified:", {
+          console.log('[PostHog] User identified:', {
             user_id: session.user.id,
             email: session.user.email,
             store_id: storeData.id,
@@ -204,7 +204,7 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
         });
       }
     } catch (error) {
-      console.error("[PostHog] Error identifying user:", error);
+      console.error('[PostHog] Error identifying user:', error);
     }
   };
 
@@ -217,22 +217,22 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
       } = await supabase.auth.getSession();
 
       // Check server-side ownership
-      const { data, error } = await supabase.rpc("verify_store_ownership", {
+      const { data, error } = await supabase.rpc('verify_store_ownership', {
         p_store_id: store.id,
       });
 
       if (!error && data !== isStoreOwner) {
-        console.warn("Ownership status changed, updating...");
+        console.warn('Ownership status changed, updating...');
         setIsStoreOwner(data);
 
         // If ownership was revoked, reload the page to clear admin access
         if (!data && isStoreOwner) {
-          console.warn("Store ownership revoked, reloading...");
-          window.location.href = "/";
+          console.warn('Store ownership revoked, reloading...');
+          window.location.href = '/';
         }
       }
     } catch (error) {
-      console.error("Error revalidating ownership:", error);
+      console.error('Error revalidating ownership:', error);
     }
   };
 
@@ -248,7 +248,7 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
 export const useStore = () => {
   const context = useContext(StoreContext);
   if (context === undefined) {
-    throw new Error("useStore must be used within a StoreProvider");
+    throw new Error('useStore must be used within a StoreProvider');
   }
   return context;
 };

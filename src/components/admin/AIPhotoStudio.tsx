@@ -1,15 +1,15 @@
-import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { toast } from "sonner";
-import { 
-  Sparkles, 
-  Wand2, 
-  ImageIcon, 
-  Check, 
-  X, 
+import { useState } from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { toast } from 'sonner';
+import {
+  Sparkles,
+  Wand2,
+  ImageIcon,
+  Check,
+  X,
   Loader2,
   Sun,
   Moon,
@@ -19,12 +19,12 @@ import {
   Brush,
   Square,
   RectangleVertical,
-  Smartphone
-} from "lucide-react";
-import { useAICredits } from "@/hooks/useAICredits";
-import { useStore } from "@/contexts/StoreContext";
-import { supabase } from "@/integrations/supabase/client";
-import { motion, AnimatePresence } from "framer-motion";
+  Smartphone,
+} from 'lucide-react';
+import { useAICredits } from '@/hooks/useAICredits';
+import { useStore } from '@/contexts/StoreContext';
+import { supabase } from '@/integrations/supabase/client';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface MenuItem {
   id: string;
@@ -125,17 +125,21 @@ const ASPECT_RATIO_OPTIONS: AspectRatioOption[] = [
 
 const getAspectRatioClass = (ratio: AspectRatio) => {
   switch (ratio) {
-    case '1:1': return 'aspect-square';
-    case '4:5': return 'aspect-[4/5]';
-    case '9:16': return 'aspect-[9/16]';
-    default: return 'aspect-square';
+    case '1:1':
+      return 'aspect-square';
+    case '4:5':
+      return 'aspect-[4/5]';
+    case '9:16':
+      return 'aspect-[9/16]';
+    default:
+      return 'aspect-square';
   }
 };
 
 export const AIPhotoStudio = ({ open, onOpenChange, menuItem, onImageUpdated }: AIPhotoStudioProps) => {
   const { store } = useStore();
   const { availableCredits, monthlyRemaining, monthlyTotal, extraCredits, useCredit, refetch } = useAICredits();
-  
+
   const [selectedStyle, setSelectedStyle] = useState<StyleType>('realistic');
   const [aspectRatio, setAspectRatio] = useState<AspectRatio>('1:1');
   const [isProcessing, setIsProcessing] = useState(false);
@@ -144,12 +148,12 @@ export const AIPhotoStudio = ({ open, onOpenChange, menuItem, onImageUpdated }: 
 
   const handleGenerate = async () => {
     if (!menuItem?.image_url) {
-      toast.error("Este producto no tiene imagen para mejorar");
+      toast.error('Este producto no tiene imagen para mejorar');
       return;
     }
 
     if (availableCredits <= 0) {
-      toast.error("No tienes créditos disponibles");
+      toast.error('No tienes créditos disponibles');
       return;
     }
 
@@ -163,7 +167,7 @@ export const AIPhotoStudio = ({ open, onOpenChange, menuItem, onImageUpdated }: 
           style: selectedStyle,
           aspectRatio: aspectRatio,
           menuItemId: menuItem.id,
-          menuItemName: menuItem.name,
+          menuItemName: '',
           storeId: store?.id,
         },
       });
@@ -174,9 +178,9 @@ export const AIPhotoStudio = ({ open, onOpenChange, menuItem, onImageUpdated }: 
 
       if (response.data?.error) {
         if (response.data.status === 429) {
-          toast.error("Límite de solicitudes excedido. Intenta de nuevo más tarde.");
+          toast.error('Límite de solicitudes excedido. Intenta de nuevo más tarde.');
         } else if (response.data.status === 402) {
-          toast.error("Se requiere agregar créditos. Contacta al soporte.");
+          toast.error('Se requiere agregar créditos. Contacta al soporte.');
         } else {
           throw new Error(response.data.error);
         }
@@ -184,23 +188,23 @@ export const AIPhotoStudio = ({ open, onOpenChange, menuItem, onImageUpdated }: 
       }
 
       const { enhancedImageUrl } = response.data;
-      
+
       if (!enhancedImageUrl) {
         throw new Error('No se recibió imagen mejorada');
       }
 
       setPreviewUrl(enhancedImageUrl);
-      
+
       const creditResult = await useCredit();
       if (!creditResult.success) {
-        console.warn("Could not deduct credit");
+        console.warn('Could not deduct credit');
       }
-      
+
       refetch();
-      toast.success("¡Imagen mejorada con éxito!");
+      toast.success('¡Imagen mejorada con éxito!');
     } catch (error) {
-      console.error("Error enhancing image:", error);
-      toast.error(error instanceof Error ? error.message : "Error al mejorar imagen");
+      console.error('Error enhancing image:', error);
+      toast.error(error instanceof Error ? error.message : 'Error al mejorar imagen');
     } finally {
       setIsProcessing(false);
     }
@@ -211,19 +215,16 @@ export const AIPhotoStudio = ({ open, onOpenChange, menuItem, onImageUpdated }: 
 
     setIsApplying(true);
     try {
-      const { error } = await supabase
-        .from('menu_items')
-        .update({ image_url: previewUrl })
-        .eq('id', menuItem.id);
+      const { error } = await supabase.from('menu_items').update({ image_url: previewUrl }).eq('id', menuItem.id);
 
       if (error) throw error;
 
-      toast.success("Imagen aplicada al producto");
+      toast.success('Imagen aplicada al producto');
       onImageUpdated();
       handleClose();
     } catch (error) {
-      console.error("Error applying image:", error);
-      toast.error("Error al aplicar imagen");
+      console.error('Error applying image:', error);
+      toast.error('Error al aplicar imagen');
     } finally {
       setIsApplying(false);
     }
@@ -289,9 +290,7 @@ export const AIPhotoStudio = ({ open, onOpenChange, menuItem, onImageUpdated }: 
                       <p className="text-sm font-medium">{option.name}</p>
                       <p className="text-xs text-muted-foreground">{option.description}</p>
                     </div>
-                    {aspectRatio === option.id && (
-                      <Check className="w-4 h-4 text-primary ml-auto" />
-                    )}
+                    {aspectRatio === option.id && <Check className="w-4 h-4 text-primary ml-auto" />}
                   </button>
                 ))}
               </div>
@@ -306,11 +305,7 @@ export const AIPhotoStudio = ({ open, onOpenChange, menuItem, onImageUpdated }: 
                 <p className="text-sm font-medium mb-2 text-muted-foreground">Imagen Actual</p>
                 <div className="aspect-square bg-muted rounded-lg overflow-hidden flex items-center justify-center">
                   {menuItem?.image_url ? (
-                    <img 
-                      src={menuItem.image_url} 
-                      alt={menuItem.name}
-                      className="w-full h-full object-cover"
-                    />
+                    <img src={menuItem.image_url} alt={menuItem.name} className="w-full h-full object-cover" />
                   ) : (
                     <div className="text-center text-muted-foreground">
                       <ImageIcon className="w-12 h-12 mx-auto mb-2 opacity-50" />
@@ -328,7 +323,11 @@ export const AIPhotoStudio = ({ open, onOpenChange, menuItem, onImageUpdated }: 
                 <p className="text-sm font-medium mb-2 text-muted-foreground">
                   {previewUrl ? 'Resultado' : 'Vista Previa'} ({aspectRatio})
                 </p>
-                <div className={`${getAspectRatioClass(aspectRatio)} max-h-[400px] bg-muted rounded-lg overflow-hidden flex items-center justify-center relative mx-auto`}>
+                <div
+                  className={`${getAspectRatioClass(
+                    aspectRatio,
+                  )} max-h-[400px] bg-muted rounded-lg overflow-hidden flex items-center justify-center relative mx-auto`}
+                >
                   <AnimatePresence mode="wait">
                     {isProcessing ? (
                       <motion.div
@@ -386,7 +385,9 @@ export const AIPhotoStudio = ({ open, onOpenChange, menuItem, onImageUpdated }: 
                         : 'border-border hover:border-primary/50'
                     }`}
                   >
-                    <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${style.gradient} flex items-center justify-center text-white mb-2`}>
+                    <div
+                      className={`w-10 h-10 rounded-lg bg-gradient-to-br ${style.gradient} flex items-center justify-center text-white mb-2`}
+                    >
                       {style.icon}
                     </div>
                     <p className="font-medium text-sm">{style.name}</p>
@@ -406,38 +407,21 @@ export const AIPhotoStudio = ({ open, onOpenChange, menuItem, onImageUpdated }: 
           <div className="flex gap-3">
             {previewUrl ? (
               <>
-                <Button 
-                  variant="outline" 
-                  onClick={handleDiscard}
-                  className="flex-1"
-                  disabled={isApplying}
-                >
+                <Button variant="outline" onClick={handleDiscard} className="flex-1" disabled={isApplying}>
                   <X className="w-4 h-4 mr-2" />
                   Descartar
                 </Button>
-                <Button 
-                  onClick={handleApply}
-                  className="flex-1"
-                  disabled={isApplying}
-                >
-                  {isApplying ? (
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  ) : (
-                    <Check className="w-4 h-4 mr-2" />
-                  )}
+                <Button onClick={handleApply} className="flex-1" disabled={isApplying}>
+                  {isApplying ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Check className="w-4 h-4 mr-2" />}
                   Aplicar al Producto
                 </Button>
               </>
             ) : (
               <>
-                <Button 
-                  variant="outline" 
-                  onClick={handleClose}
-                  className="flex-1"
-                >
+                <Button variant="outline" onClick={handleClose} className="flex-1">
                   Cancelar
                 </Button>
-                <Button 
+                <Button
                   onClick={handleGenerate}
                   className="flex-1"
                   disabled={isProcessing || !menuItem?.image_url || availableCredits <= 0}

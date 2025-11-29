@@ -5,6 +5,7 @@
  */
 
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from './logger';
 
 /**
  * Error context for additional information
@@ -46,14 +47,12 @@ export function logError(error: Error | AppError, context?: ErrorContext): void 
     url: window.location.href,
   };
 
-  // Always log to console in development
-  if (import.meta.env.DEV) {
-    console.group('🔴 Error Logged');
-    console.error('Error:', error);
-    console.error('Context:', errorData.context);
-    console.error('Stack:', error.stack);
-    console.groupEnd();
-  }
+  // Log using logger utility (automatically handles dev/prod)
+  logger.group('🔴 Error Logged');
+  logger.error('Error:', error);
+  logger.error('Context:', errorData.context);
+  logger.error('Stack:', error.stack);
+  logger.groupEnd();
 
   // In production, send to error tracking service
   if (import.meta.env.PROD) {
@@ -66,9 +65,6 @@ export function logError(error: Error | AppError, context?: ErrorContext): void 
     //     action: errorData.context?.action,
     //   }
     // });
-
-    // For now, log to console in production too
-    console.error('Production Error:', errorData);
   }
 
   // Optionally log errors locally (commented out since error_logs table doesn't exist)
