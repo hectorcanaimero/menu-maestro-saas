@@ -7,7 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { CartProvider } from "@/contexts/CartContext";
 import { StoreProvider } from "@/contexts/StoreContext";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
-import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { ErrorBoundary, SectionErrorBoundary } from "@/components/ErrorBoundary";
 import { LoadingScreen } from "@/components/LoadingScreen";
 import { ScrollToTop } from "@/components/ScrollToTop";
 
@@ -53,23 +53,65 @@ const App = () => (
               <Suspense fallback={<LoadingScreen />}>
                 <Routes>
                   {/* Public Routes */}
-                  <Route path="/" element={<Index />} />
-            <Route path="/welcome" element={<Welcome />} />
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/create-store" element={<CreateStore />} />
-            <Route path="/landing" element={<LandingPage />} />
-                  <Route path="/checkout" element={<Checkout />} />
-                  <Route path="/confirm-order" element={<ConfirmOrder />} />
-                  <Route path="/my-orders" element={<MyOrders />} />
-                  <Route path="/track/:orderId" element={<TrackOrder />} />
-                  <Route path="/products/:id" element={<ProductDetail />} />
+                  <Route path="/" element={
+                    <SectionErrorBoundary>
+                      <Index />
+                    </SectionErrorBoundary>
+                  } />
+            <Route path="/welcome" element={
+              <SectionErrorBoundary>
+                <Welcome />
+              </SectionErrorBoundary>
+            } />
+            <Route path="/auth" element={
+              <SectionErrorBoundary>
+                <Auth />
+              </SectionErrorBoundary>
+            } />
+            <Route path="/create-store" element={
+              <SectionErrorBoundary>
+                <CreateStore />
+              </SectionErrorBoundary>
+            } />
+            <Route path="/landing" element={
+              <SectionErrorBoundary>
+                <LandingPage />
+              </SectionErrorBoundary>
+            } />
+                  <Route path="/checkout" element={
+                    <SectionErrorBoundary>
+                      <Checkout />
+                    </SectionErrorBoundary>
+                  } />
+                  <Route path="/confirm-order" element={
+                    <SectionErrorBoundary>
+                      <ConfirmOrder />
+                    </SectionErrorBoundary>
+                  } />
+                  <Route path="/my-orders" element={
+                    <SectionErrorBoundary>
+                      <MyOrders />
+                    </SectionErrorBoundary>
+                  } />
+                  <Route path="/track/:orderId" element={
+                    <SectionErrorBoundary>
+                      <TrackOrder />
+                    </SectionErrorBoundary>
+                  } />
+                  <Route path="/products/:id" element={
+                    <SectionErrorBoundary>
+                      <ProductDetail />
+                    </SectionErrorBoundary>
+                  } />
 
                   {/* Protected Admin Routes */}
                   <Route
                     path="/admin"
                     element={
                       <ProtectedRoute>
-                        <AdminDashboard />
+                        <SectionErrorBoundary>
+                          <AdminDashboard />
+                        </SectionErrorBoundary>
                       </ProtectedRoute>
                     }
                   />
@@ -77,7 +119,9 @@ const App = () => (
                     path="/admin/orders"
                     element={
                       <ProtectedRoute>
-                        <AdminOrders />
+                        <SectionErrorBoundary>
+                          <AdminOrders />
+                        </SectionErrorBoundary>
                       </ProtectedRoute>
                     }
                   />
@@ -85,7 +129,9 @@ const App = () => (
                     path="/admin/kitchen"
                     element={
                       <ProtectedRoute>
-                        <AdminKitchen />
+                        <SectionErrorBoundary>
+                          <AdminKitchen />
+                        </SectionErrorBoundary>
                       </ProtectedRoute>
                     }
                   />
@@ -93,7 +139,9 @@ const App = () => (
                     path="/admin/analytics"
                     element={
                       <ProtectedRoute>
-                        <AdminAnalytics />
+                        <SectionErrorBoundary>
+                          <AdminAnalytics />
+                        </SectionErrorBoundary>
                       </ProtectedRoute>
                     }
                   />
@@ -101,7 +149,9 @@ const App = () => (
                     path="/admin/categories"
                     element={
                       <ProtectedRoute>
-                        <AdminCategories />
+                        <SectionErrorBoundary>
+                          <AdminCategories />
+                        </SectionErrorBoundary>
                       </ProtectedRoute>
                     }
                   />
@@ -109,7 +159,9 @@ const App = () => (
                     path="/admin/menu-items"
                     element={
                       <ProtectedRoute>
-                        <AdminMenuItems />
+                        <SectionErrorBoundary>
+                          <AdminMenuItems />
+                        </SectionErrorBoundary>
                       </ProtectedRoute>
                     }
                   />
@@ -117,7 +169,9 @@ const App = () => (
                     path="/admin/customers"
                     element={
                       <ProtectedRoute>
-                        <AdminCustomers />
+                        <SectionErrorBoundary>
+                          <AdminCustomers />
+                        </SectionErrorBoundary>
                       </ProtectedRoute>
                     }
                   />
@@ -125,7 +179,9 @@ const App = () => (
                     path="/admin/promotions"
                     element={
                       <ProtectedRoute>
-                        <AdminPromotions />
+                        <SectionErrorBoundary>
+                          <AdminPromotions />
+                        </SectionErrorBoundary>
                       </ProtectedRoute>
                     }
                   />
@@ -133,7 +189,9 @@ const App = () => (
                     path="/admin/coupons"
                     element={
                       <ProtectedRoute>
-                        <AdminCoupons />
+                        <SectionErrorBoundary>
+                          <AdminCoupons />
+                        </SectionErrorBoundary>
                       </ProtectedRoute>
                     }
                   />
@@ -141,7 +199,9 @@ const App = () => (
                     path="/admin/ai"
                     element={
                       <ProtectedRoute>
-                        <AdminAI />
+                        <SectionErrorBoundary>
+                          <AdminAI />
+                        </SectionErrorBoundary>
                       </ProtectedRoute>
                     }
                   />
@@ -149,7 +209,9 @@ const App = () => (
                     path="/admin/whatsapp"
                     element={
                       <ProtectedRoute>
-                        <AdminWhatsApp />
+                        <SectionErrorBoundary>
+                          <AdminWhatsApp />
+                        </SectionErrorBoundary>
                       </ProtectedRoute>
                     }
                   />
@@ -157,7 +219,9 @@ const App = () => (
                     path="/admin/settings"
                     element={
                       <ProtectedRoute>
-                        <StoreSettings />
+                        <SectionErrorBoundary>
+                          <StoreSettings />
+                        </SectionErrorBoundary>
                       </ProtectedRoute>
                     }
                   />

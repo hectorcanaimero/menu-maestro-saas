@@ -119,7 +119,7 @@ export function calculatePercentageChange(current: number, previous: number): nu
   return ((current - previous) / previous) * 100;
 }
 
-export function exportToCSV(data: any[], filename: string) {
+export function exportToCSV(data: Record<string, unknown>[], filename: string) {
   if (!data || data.length === 0) return;
 
   const headers = Object.keys(data[0]);

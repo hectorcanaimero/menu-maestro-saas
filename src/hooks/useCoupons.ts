@@ -213,8 +213,11 @@ export function useCreateCoupon() {
       queryClient.invalidateQueries({ queryKey: ['coupons', data.store_id] });
       toast.success('Cupón creado exitosamente');
     },
-    onError: (error: any) => {
-      toast.error(error.message || 'Error al crear el cupón');
+    onError: (error: unknown) => {
+      const message = error && typeof error === 'object' && 'message' in error && typeof error.message === 'string'
+        ? error.message
+        : 'Error al crear el cupón';
+      toast.error(message);
     },
   });
 }
@@ -241,8 +244,11 @@ export function useUpdateCoupon() {
       queryClient.invalidateQueries({ queryKey: ['coupons', data.store_id] });
       toast.success('Cupón actualizado exitosamente');
     },
-    onError: (error: any) => {
-      toast.error(error.message || 'Error al actualizar el cupón');
+    onError: (error: unknown) => {
+      const message = error && typeof error === 'object' && 'message' in error && typeof error.message === 'string'
+        ? error.message
+        : 'Error al actualizar el cupón';
+      toast.error(message);
     },
   });
 }
@@ -264,8 +270,11 @@ export function useDeleteCoupon() {
       queryClient.invalidateQueries({ queryKey: ['coupons', data.storeId] });
       toast.success('Cupón eliminado exitosamente');
     },
-    onError: (error: any) => {
-      toast.error(error.message || 'Error al eliminar el cupón');
+    onError: (error: unknown) => {
+      const message = error && typeof error === 'object' && 'message' in error && typeof error.message === 'string'
+        ? error.message
+        : 'Error al eliminar el cupón';
+      toast.error(message);
     },
   });
 }

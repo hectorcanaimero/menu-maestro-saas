@@ -87,19 +87,20 @@ const CustomersManager = () => {
       // Aggregate customer data
       const customerMap = new Map<string, Customer>();
       
-      ordersData?.forEach((order: any) => {
-        if (order.customers) {
-          const customerId = order.customer_id;
-          
+      ordersData?.forEach((order) => {
+        const ord = order as { customer_id: string; total_amount: number; customers?: { id: string; name: string; email?: string; phone?: string } };
+        if (ord.customers) {
+          const customerId = ord.customer_id;
+
           if (customerMap.has(customerId)) {
             const existing = customerMap.get(customerId)!;
             existing.order_count = (existing.order_count || 0) + 1;
-            existing.total_spent = (existing.total_spent || 0) + Number(order.total_amount);
+            existing.total_spent = (existing.total_spent || 0) + Number(ord.total_amount);
           } else {
             customerMap.set(customerId, {
-              ...order.customers,
+              ...ord.customers,
               order_count: 1,
-              total_spent: Number(order.total_amount),
+              total_spent: Number(ord.total_amount),
             });
           }
         }
@@ -165,9 +166,10 @@ const CustomersManager = () => {
       toast.success("Cliente actualizado correctamente");
       setEditDialogOpen(false);
       fetchCustomers();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error updating customer:", error);
-      if (error.code === "23505") {
+      const err = error as { code?: string };
+      if (err.code === "23505") {
         toast.error("Este email ya está en uso por otro cliente");
       } else {
         toast.error("Error al actualizar cliente");

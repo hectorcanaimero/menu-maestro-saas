@@ -8,7 +8,7 @@ interface AnalyticsChartsProps {
 }
 
 export function AnalyticsCharts({ data }: AnalyticsChartsProps) {
-  const RevenueTooltip = ({ active, payload }: any) => {
+  const RevenueTooltip = ({ active, payload }: { active?: boolean; payload?: Array<{ value?: number; payload?: { date?: string } }> }) => {
     if (active && payload && payload.length > 0) {
       return (
         <div className="bg-background border border-border rounded-lg shadow-lg p-3">
@@ -22,7 +22,7 @@ export function AnalyticsCharts({ data }: AnalyticsChartsProps) {
     return null;
   };
 
-  const OrdersTooltip = ({ active, payload }: any) => {
+  const OrdersTooltip = ({ active, payload }: { active?: boolean; payload?: Array<{ value?: number; payload?: { date?: string } }> }) => {
     if (active && payload && payload.length > 0) {
       return (
         <div className="bg-background border border-border rounded-lg shadow-lg p-3">

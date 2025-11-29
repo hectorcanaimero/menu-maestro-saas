@@ -161,7 +161,7 @@ export function AnalyticsDashboard() {
   }: {
     title: string;
     value: string;
-    icon: any;
+    icon: React.ComponentType<{ className?: string }>;
     trend?: number;
     subtitle?: string;
   }) => (

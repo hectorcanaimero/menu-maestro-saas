@@ -15,7 +15,16 @@ interface Order {
   customer_email: string;
   created_at: string;
   updated_at: string;
-  order_items?: any[];
+  order_items?: Array<{
+    id: string;
+    item_name: string;
+    quantity: number;
+    price_at_time: number;
+    order_item_extras?: Array<{
+      extra_name: string;
+      extra_price: number;
+    }>;
+  }>;
 }
 
 export function useOrderTracking(orderId: string) {
@@ -68,7 +77,8 @@ export function useOrderTracking(orderId: string) {
           setRealtimeOrder(newOrder);
 
           // Show notification for status change
-          if (payload.old && (payload.old as any).status !== newOrder.status) {
+          const oldOrder = payload.old as { status?: string };
+          if (payload.old && oldOrder.status !== newOrder.status) {
             toast.success('Estado actualizado', {
               description: `Tu pedido está ${getStatusLabel(newOrder.status).toLowerCase()}`,
             });

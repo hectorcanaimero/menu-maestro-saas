@@ -15,7 +15,7 @@ export interface ErrorContext {
   action?: string;
   userId?: string;
   storeId?: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 /**
@@ -86,39 +86,42 @@ export function logError(error: Error | AppError, context?: ErrorContext): void 
 /**
  * Handle Supabase/PostgreSQL specific errors
  */
-export function handleDatabaseError(error: any): string {
+export function handleDatabaseError(error: unknown): string | null {
+  if (!error || typeof error !== 'object') return null;
+  const err = error as { code?: string; message?: string };
+
   // PostgreSQL error codes
-  if (error.code === '23505') {
+  if (err.code === '23505') {
     return 'Este registro ya existe. Por favor, usa un valor diferente.';
   }
 
-  if (error.code === '23503') {
+  if (err.code === '23503') {
     return 'No se puede eliminar porque está siendo usado por otros registros.';
   }
 
-  if (error.code === '23502') {
+  if (err.code === '23502') {
     return 'Falta un campo requerido. Por favor, completa todos los campos obligatorios.';
   }
 
-  if (error.code === '42P01') {
+  if (err.code === '42P01') {
     return 'Error de configuración de base de datos. Por favor, contacta al soporte.';
   }
 
   // Supabase/PostgREST specific errors
-  if (error.code === 'PGRST116') {
+  if (err.code === 'PGRST116') {
     return 'No se encontró el registro solicitado.';
   }
 
-  if (error.code === 'PGRST301') {
+  if (err.code === 'PGRST301') {
     return 'Error de autenticación. Por favor, inicia sesión nuevamente.';
   }
 
   // Row Level Security errors
-  if (error.message?.includes('row-level security')) {
+  if (err.message?.includes('row-level security')) {
     return 'No tienes permisos para realizar esta acción.';
   }
 
-  if (error.message?.includes('permission denied')) {
+  if (err.message?.includes('permission denied')) {
     return 'Permisos insuficientes. Contacta al administrador.';
   }
 
@@ -128,16 +131,19 @@ export function handleDatabaseError(error: any): string {
 /**
  * Handle network and connection errors
  */
-export function handleNetworkError(error: any): string {
-  if (error.message?.includes('fetch') || error.message?.includes('network')) {
+export function handleNetworkError(error: unknown): string | null {
+  if (!error || typeof error !== 'object') return null;
+  const err = error as { message?: string; name?: string };
+
+  if (err.message?.includes('fetch') || err.message?.includes('network')) {
     return 'Error de conexión. Por favor, verifica tu conexión a internet.';
   }
 
-  if (error.message?.includes('timeout')) {
+  if (err.message?.includes('timeout')) {
     return 'La solicitud tardó demasiado. Por favor, intenta de nuevo.';
   }
 
-  if (error.name === 'NetworkError' || error.name === 'TypeError') {
+  if (err.name === 'NetworkError' || err.name === 'TypeError') {
     return 'Problema de red. Por favor, revisa tu conexión.';
   }
 
@@ -147,20 +153,23 @@ export function handleNetworkError(error: any): string {
 /**
  * Handle authentication errors
  */
-export function handleAuthError(error: any): string {
-  if (error.message?.includes('JWT') || error.message?.includes('token')) {
+export function handleAuthError(error: unknown): string | null {
+  if (!error || typeof error !== 'object') return null;
+  const err = error as { message?: string };
+
+  if (err.message?.includes('JWT') || err.message?.includes('token')) {
     return 'Tu sesión ha expirado. Por favor, inicia sesión de nuevo.';
   }
 
-  if (error.message?.includes('Invalid login credentials')) {
+  if (err.message?.includes('Invalid login credentials')) {
     return 'Credenciales inválidas. Verifica tu email y contraseña.';
   }
 
-  if (error.message?.includes('Email not confirmed')) {
+  if (err.message?.includes('Email not confirmed')) {
     return 'Por favor, confirma tu email antes de iniciar sesión.';
   }
 
-  if (error.message?.includes('User not found')) {
+  if (err.message?.includes('User not found')) {
     return 'Usuario no encontrado. Verifica tu email.';
   }
 
@@ -170,7 +179,7 @@ export function handleAuthError(error: any): string {
 /**
  * Handle API errors with user-friendly messages
  */
-export function handleApiError(error: any): string {
+export function handleApiError(error: unknown): string {
   // Try specific error handlers first
   const dbError = handleDatabaseError(error);
   if (dbError) return dbError;
@@ -182,7 +191,7 @@ export function handleApiError(error: any): string {
   if (authError) return authError;
 
   // Generic fallback
-  if (error.message) {
+  if (error && typeof error === 'object' && 'message' in error && typeof error.message === 'string') {
     return error.message;
   }
 
@@ -217,11 +226,12 @@ export async function withRetry<T>(
       lastError = error as Error;
 
       // Don't retry on certain errors
+      const err = error as { code?: string; message?: string };
       if (
-        error.code === '23505' || // Unique violation
-        error.code === '23503' || // Foreign key violation
-        error.code === 'PGRST301' || // Auth error
-        error.message?.includes('JWT')
+        err.code === '23505' || // Unique violation
+        err.code === '23503' || // Foreign key violation
+        err.code === 'PGRST301' || // Auth error
+        err.message?.includes('JWT')
       ) {
         throw error;
       }
@@ -264,31 +274,35 @@ export async function safeAsync<T>(
 /**
  * Check if error is a known type
  */
-export function isAppError(error: any): error is AppError {
+export function isAppError(error: unknown): error is AppError {
   return error instanceof AppError;
 }
 
 /**
  * Check if error is network-related
  */
-export function isNetworkError(error: any): boolean {
+export function isNetworkError(error: unknown): boolean {
+  if (!error || typeof error !== 'object') return false;
+  const err = error as { message?: string; name?: string };
   return (
-    error.message?.includes('fetch') ||
-    error.message?.includes('network') ||
-    error.name === 'NetworkError' ||
-    error.name === 'TypeError'
+    err.message?.includes('fetch') ||
+    err.message?.includes('network') ||
+    err.name === 'NetworkError' ||
+    err.name === 'TypeError'
   );
 }
 
 /**
  * Check if error is auth-related
  */
-export function isAuthError(error: any): boolean {
+export function isAuthError(error: unknown): boolean {
+  if (!error || typeof error !== 'object') return false;
+  const err = error as { message?: string; code?: string };
   return (
-    error.message?.includes('JWT') ||
-    error.message?.includes('token') ||
-    error.message?.includes('auth') ||
-    error.code === 'PGRST301'
+    err.message?.includes('JWT') ||
+    err.message?.includes('token') ||
+    err.message?.includes('auth') ||
+    err.code === 'PGRST301'
   );
 }
 

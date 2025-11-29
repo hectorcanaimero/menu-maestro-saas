@@ -119,7 +119,7 @@ export function BusinessHoursTab({ storeId, forceStatus }: BusinessHoursTabProps
 
       toast.success("Horarios guardados correctamente");
       loadHours();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error saving hours:", error);
       toast.error("Error al guardar los horarios");
     } finally {

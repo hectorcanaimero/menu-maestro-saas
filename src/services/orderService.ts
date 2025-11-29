@@ -1,0 +1,291 @@
+/**
+ * Order Service
+ *
+ * Handles all order-related business logic including:
+ * - Order creation
+ * - Order items management
+ * - Order extras management
+ * - WhatsApp integration
+ */
+
+import { supabase } from '@/integrations/supabase/client';
+import { recordCouponUsage } from '@/hooks/useCoupons';
+import { generateWhatsAppMessage, redirectToWhatsApp } from '@/lib/whatsappMessageGenerator';
+import { CartItem } from '@/contexts/CartContext';
+import { Store } from '@/contexts/StoreContext';
+
+export interface OrderData {
+  customer_name: string;
+  customer_email: string;
+  customer_phone: string;
+  delivery_address?: string;
+  address_number?: string;
+  address_complement?: string;
+  address_neighborhood?: string;
+  address_zipcode?: string;
+  table_number?: string;
+  notes?: string;
+  payment_method?: string;
+  order_type: 'delivery' | 'pickup' | 'digital_menu';
+  payment_proof_url?: string;
+  country?: string;
+  delivery_price?: number;
+  coupon_code?: string;
+  coupon_discount?: number;
+  coupon_id?: string;
+}
+
+export interface CreateOrderParams {
+  orderData: OrderData;
+  customerId: string;
+  storeId: string;
+  grandTotal: number;
+  deliveryPrice: number;
+  couponDiscount: number;
+  store: Store;
+}
+
+export interface CreateOrderItemsParams {
+  orderId: string;
+  items: CartItem[];
+}
+
+export interface CreateOrderResult {
+  orderId: string;
+  orderNumber: string;
+}
+
+/**
+ * Build full delivery address from order data
+ */
+export function buildFullAddress(orderData: OrderData, store: Store): string | null {
+  if (orderData.order_type !== 'delivery') {
+    return null;
+  }
+
+  const addressParts = [orderData.delivery_address || ''];
+
+  if (!store?.remove_address_number && orderData.address_number) {
+    addressParts.push(orderData.address_number);
+  }
+
+  if (orderData.address_complement) {
+    addressParts.push(orderData.address_complement);
+  }
+
+  if (orderData.address_neighborhood) {
+    addressParts.push(orderData.address_neighborhood);
+  }
+
+  if (!store?.remove_zipcode && orderData.address_zipcode) {
+    addressParts.push(orderData.address_zipcode);
+  }
+
+  return addressParts.filter(Boolean).join(', ');
+}
+
+/**
+ * Build order notes including table number for digital menu orders
+ */
+export function buildOrderNotes(orderData: OrderData): string | null {
+  if (orderData.order_type === 'digital_menu' && orderData.table_number) {
+    return `Mesa: ${orderData.table_number}${orderData.notes ? `\n${orderData.notes}` : ''}`;
+  }
+
+  return orderData.notes || null;
+}
+
+/**
+ * Create an order in the database
+ */
+export async function createOrder(params: CreateOrderParams): Promise<CreateOrderResult> {
+  const { orderData, customerId, storeId, grandTotal, deliveryPrice, couponDiscount, store } = params;
+
+  // Get current session
+  const { data: { session } } = await supabase.auth.getSession();
+
+  // Build address
+  const fullAddress = buildFullAddress(orderData, store);
+
+  // Build notes
+  const notes = buildOrderNotes(orderData);
+
+  // Create order
+  const { data: order, error: orderError } = await supabase
+    .from('orders')
+    .insert([
+      {
+        store_id: storeId,
+        user_id: session?.user?.id || null,
+        customer_id: customerId,
+        total_amount: grandTotal,
+        delivery_price: deliveryPrice,
+        coupon_code: orderData.coupon_code || null,
+        coupon_discount: couponDiscount,
+        customer_name: orderData.customer_name,
+        customer_email: orderData.customer_email,
+        customer_phone: orderData.customer_phone,
+        delivery_address: fullAddress,
+        notes: notes,
+        payment_proof_url: orderData.payment_proof_url || null,
+        payment_method: orderData.payment_method || null,
+        order_type: orderData.order_type,
+      },
+    ])
+    .select()
+    .single();
+
+  if (orderError) throw orderError;
+
+  // Record coupon usage if applied
+  if (orderData.coupon_id && couponDiscount > 0) {
+    try {
+      await recordCouponUsage(
+        orderData.coupon_id,
+        storeId,
+        orderData.customer_email,
+        order.id,
+        couponDiscount
+      );
+    } catch (couponError) {
+      console.error('Error recording coupon usage:', couponError);
+      // Don't fail the order if coupon recording fails
+    }
+  }
+
+  return {
+    orderId: order.id,
+    orderNumber: order.id.slice(0, 8).toUpperCase(),
+  };
+}
+
+/**
+ * Create order items for an order
+ */
+export async function createOrderItems(params: CreateOrderItemsParams): Promise<void> {
+  const { orderId, items } = params;
+
+  // Create order items
+  const orderItems = items.map((item) => ({
+    order_id: orderId,
+    menu_item_id: item.id,
+    quantity: item.quantity,
+    price_at_time: item.price,
+    item_name: item.name,
+  }));
+
+  const { data: createdItems, error: itemsError } = await supabase
+    .from('order_items')
+    .insert(orderItems)
+    .select();
+
+  if (itemsError) throw itemsError;
+
+  // Create order item extras
+  if (createdItems) {
+    const itemExtras = createdItems.flatMap((orderItem, index) => {
+      const cartItem = items[index];
+      if (!cartItem.extras || cartItem.extras.length === 0) return [];
+
+      return cartItem.extras.map((extra) => ({
+        order_item_id: orderItem.id,
+        extra_name: extra.name,
+        extra_price: extra.price,
+      }));
+    });
+
+    if (itemExtras.length > 0) {
+      const { error: extrasError } = await supabase
+        .from('order_item_extras')
+        .insert(itemExtras);
+
+      if (extrasError) throw extrasError;
+    }
+  }
+}
+
+/**
+ * Handle WhatsApp redirect for order
+ */
+export async function handleWhatsAppRedirect(
+  orderId: string,
+  orderType: string,
+  store: Store
+): Promise<void> {
+  // Check if WhatsApp redirect is enabled for this order type
+  const whatsappSettings = {
+    delivery: store.whatsapp_redirect_delivery,
+    pickup: store.whatsapp_redirect_pickup,
+    digital_menu: store.whatsapp_redirect_digital_menu,
+  };
+
+  const shouldRedirectToWhatsApp = whatsappSettings[orderType as keyof typeof whatsappSettings];
+
+  if (shouldRedirectToWhatsApp && store.whatsapp_number) {
+    // Fetch the full order with items for message generation
+    const { data: fullOrder } = await supabase
+      .from('orders')
+      .select(
+        `
+        *,
+        order_items (
+          id,
+          item_name,
+          quantity,
+          price_at_time,
+          order_item_extras (
+            extra_name,
+            extra_price
+          )
+        )
+      `
+      )
+      .eq('id', orderId)
+      .single();
+
+    if (fullOrder) {
+      // Generate WhatsApp message
+      const message = generateWhatsAppMessage(fullOrder, store);
+
+      // Redirect to WhatsApp
+      redirectToWhatsApp(store.whatsapp_number, message);
+    }
+  }
+}
+
+/**
+ * Complete order creation workflow
+ *
+ * This is the main function that orchestrates the entire order creation process
+ */
+export async function completeOrder(
+  orderData: OrderData,
+  customerId: string,
+  items: CartItem[],
+  grandTotal: number,
+  deliveryPrice: number,
+  couponDiscount: number,
+  store: Store
+): Promise<CreateOrderResult> {
+  // Create the order
+  const result = await createOrder({
+    orderData,
+    customerId,
+    storeId: store.id,
+    grandTotal,
+    deliveryPrice,
+    couponDiscount,
+    store,
+  });
+
+  // Create order items and extras
+  await createOrderItems({
+    orderId: result.orderId,
+    items,
+  });
+
+  // Handle WhatsApp redirect if configured
+  await handleWhatsAppRedirect(result.orderId, orderData.order_type, store);
+
+  return result;
+}

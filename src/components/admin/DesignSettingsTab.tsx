@@ -92,7 +92,7 @@ export const DesignSettingsTab = ({ storeId, initialData }: DesignSettingsTabPro
 
       setLogoUrl(publicUrl);
       toast.success('Logo subido correctamente');
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error uploading logo:', error);
       toast.error('Error al subir el logo');
     } finally {
@@ -108,7 +108,7 @@ export const DesignSettingsTab = ({ storeId, initialData }: DesignSettingsTabPro
 
       setLogoUrl('');
       toast.success('Logo eliminado correctamente');
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error removing logo:', error);
       toast.error('Error al eliminar el logo');
     }
@@ -155,7 +155,7 @@ export const DesignSettingsTab = ({ storeId, initialData }: DesignSettingsTabPro
 
       setBannerUrl(publicUrl);
       toast.success('Banner subido correctamente');
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error uploading banner:', error);
       toast.error('Error al subir el banner');
     } finally {
@@ -171,7 +171,7 @@ export const DesignSettingsTab = ({ storeId, initialData }: DesignSettingsTabPro
 
       setBannerUrl('');
       toast.success('Banner eliminado correctamente');
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error removing banner:', error);
       toast.error('Error al eliminar el banner');
     }
@@ -193,7 +193,7 @@ export const DesignSettingsTab = ({ storeId, initialData }: DesignSettingsTabPro
 
       toast.success('Configuración de diseño guardada correctamente');
       window.location.reload();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error saving design settings:', error);
       toast.error('Error al guardar la configuración de diseño');
     } finally {

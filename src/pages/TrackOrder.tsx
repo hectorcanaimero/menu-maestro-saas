@@ -182,7 +182,7 @@ export default function TrackOrder() {
             {/* Items */}
             <div className="border-t pt-4 space-y-3">
               <H4>Productos</H4>
-              {order.order_items?.map((item: any, index: number) => (
+              {order.order_items?.map((item: { quantity: number; item_name: string; price_at_time: number; order_item_extras?: Array<{ extra_name: string }> }, index: number) => (
                 <div key={index} className="flex justify-between items-start gap-4">
                   <div className="flex-1">
                     <Body size="small" className="font-medium">
@@ -190,7 +190,7 @@ export default function TrackOrder() {
                     </Body>
                     {item.order_item_extras && item.order_item_extras.length > 0 && (
                       <Caption className="text-muted-foreground">
-                        + {item.order_item_extras.map((e: any) => e.extra_name).join(', ')}
+                        + {item.order_item_extras.map((e) => e.extra_name).join(', ')}
                       </Caption>
                     )}
                   </div>

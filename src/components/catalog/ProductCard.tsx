@@ -68,7 +68,7 @@ export const ProductCard = ({
     openQuickView({ id, name, price, image_url, description, categoryId }, products, index);
   };
 
-  const handleConfirmWithExtras = (extras: any[]) => {
+  const handleConfirmWithExtras = (extras: Array<{ id: string; name: string; price: number }>) => {
     addItem({ id, name, price, image_url, extras, categoryId });
   };
 

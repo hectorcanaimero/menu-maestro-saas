@@ -96,7 +96,7 @@ export interface PDFExportOptions {
   subtitle?: string;
   filename: string;
   columns: PDFColumn[];
-  data: any[];
+  data: Record<string, unknown>[];
   orientation?: 'portrait' | 'landscape';
   showFooter?: boolean;
 }
@@ -237,7 +237,15 @@ export function formatDateForExport(date: Date | string): string {
 /**
  * Prepare orders data for export
  */
-export function prepareOrdersForExport(orders: any[]) {
+export function prepareOrdersForExport(orders: Array<{
+  id?: string;
+  created_at?: string;
+  customer_name?: string;
+  customer_phone?: string;
+  total_amount?: number;
+  status?: string;
+  order_items?: Array<{ quantity: number }>;
+}>) {
   return orders.map(order => ({
     'Número': `#${order.id?.slice(0, 8) || 'N/A'}`,
     'Fecha': formatDateForExport(order.created_at),
@@ -245,7 +253,7 @@ export function prepareOrdersForExport(orders: any[]) {
     'Teléfono': order.customer_phone || 'N/A',
     'Total': formatCurrencyForExport(order.total_amount || 0),
     'Estado': order.status || 'N/A',
-    'Productos': order.order_items?.reduce((sum: number, item: any) => sum + item.quantity, 0) || 0,
+    'Productos': order.order_items?.reduce((sum: number, item) => sum + item.quantity, 0) || 0,
   }));
 }
 
@@ -271,7 +279,7 @@ export function prepareSalesSummaryForExport(stats: {
 /**
  * Prepare top products for export
  */
-export function prepareTopProductsForExport(products: any[]) {
+export function prepareTopProductsForExport(products: Array<{ name: string; total_quantity: number; total_revenue: number }>) {
   return products.map((product, index) => ({
     'Ranking': (index + 1).toString(),
     'Producto': product.name,

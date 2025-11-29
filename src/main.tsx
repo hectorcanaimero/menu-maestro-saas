@@ -2,6 +2,7 @@ import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
 import posthog from "posthog-js";
+import { ErrorBoundary } from "./components/ErrorBoundary";
 
 // Initialize PostHog before rendering the app
 // Only initialize if environment variables are set
@@ -30,4 +31,8 @@ if (import.meta.env.VITE_POSTHOG_KEY && import.meta.env.VITE_POSTHOG_HOST) {
   console.warn('[PostHog] Not initialized - missing environment variables');
 }
 
-createRoot(document.getElementById("root")!).render(<App />);
+createRoot(document.getElementById("root")!).render(
+  <ErrorBoundary showDetails={import.meta.env.DEV}>
+    <App />
+  </ErrorBoundary>
+);

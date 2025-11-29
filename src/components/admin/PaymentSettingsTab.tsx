@@ -98,7 +98,7 @@ export function PaymentSettingsTab({ storeId, initialData }: PaymentSettingsTabP
 
       toast.success("Configuración de pagos guardada correctamente");
       window.location.reload();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error saving payment settings:", error);
       toast.error("Error al guardar la configuración");
     }

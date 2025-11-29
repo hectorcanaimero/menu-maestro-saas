@@ -1,4 +1,4 @@
-import { useEffect, useState, ReactNode, useRef } from 'react';
+import { useEffect, useState, ReactNode, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useStore } from '@/contexts/StoreContext';
@@ -48,31 +48,7 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
     }
   }, [store]);
 
-  useEffect(() => {
-    // Don't verify while store is loading
-    if (storeLoading) {
-      setVerificationStep('store');
-      return;
-    }
-
-    // If no store and we haven't exhausted retries, wait and retry
-    if (!store && reloadAttemptRef.current < maxRetries) {
-      reloadAttemptRef.current += 1;
-      console.log(`[ProtectedRoute] No store yet, retry ${reloadAttemptRef.current}/${maxRetries}`);
-
-      const timeout = setTimeout(() => {
-        // Force re-run of this effect by updating a dependency indirectly
-        // The store context should have reloaded by now
-        setIsVerifying(true);
-      }, 1000);
-
-      return () => clearTimeout(timeout);
-    }
-
-    verifyAccess();
-  }, [store?.id, storeLoading]);
-
-  const verifyAccess = async () => {
+  const verifyAccess = useCallback(async () => {
     try {
       console.log(storeLoading, isVerifying, isAuthorized, authError);
       // LAYER 1: Quick client-side session check
@@ -102,7 +78,7 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
       setVerificationStep('authorization');
       const { data, error } = (await supabase.rpc('can_access_admin_routes', {
         p_store_id: store.id,
-      })) as { data: AuthorizationResult[] | null; error: any };
+      })) as { data: AuthorizationResult[] | null; error: unknown };
 
       if (error) {
         console.error('RPC error:', error);
@@ -152,7 +128,32 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
     } finally {
       setIsVerifying(false);
     }
-  };
+  }, [store, isStoreOwner, navigate]);
+
+  useEffect(() => {
+    // Don't verify while store is loading
+    if (storeLoading) {
+      setVerificationStep('store');
+      return;
+    }
+
+    // If no store and we haven't exhausted retries, wait and retry
+    if (!store && reloadAttemptRef.current < maxRetries) {
+      reloadAttemptRef.current += 1;
+      console.log(`[ProtectedRoute] No store yet, retry ${reloadAttemptRef.current}/${maxRetries}`);
+
+      const timeout = setTimeout(() => {
+        // Force re-run of this effect by updating a dependency indirectly
+        // The store context should have reloaded by now
+        setIsVerifying(true);
+      }, 1000);
+
+      return () => clearTimeout(timeout);
+    }
+
+    verifyAccess();
+  }, [store?.id, storeLoading, verifyAccess]);
+
   // Show loading while verifying
   if (storeLoading || isVerifying || isAuthorized === null) {
     return (

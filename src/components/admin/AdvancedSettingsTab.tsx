@@ -55,7 +55,7 @@ export const AdvancedSettingsTab = ({ storeId, initialData }: AdvancedSettingsTa
       if (error) throw error;
 
       toast.success("Configuración avanzada guardada correctamente");
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error saving advanced settings:", error);
       toast.error("Error al guardar la configuración avanzada");
     } finally {

@@ -90,7 +90,7 @@ export function isRushHour(date: Date = new Date()): boolean {
 
 export function calculateEstimatedDelivery(order: {
   created_at: string;
-  items: any[];
+  items: Array<{ quantity: number }>;
   order_type: string;
   status: string;
 }): Date {

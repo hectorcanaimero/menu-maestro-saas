@@ -64,7 +64,7 @@ const createStepSchema = (
   } else if (step === 2) {
     // Step 2: Delivery/pickup/table info
     if (orderType === "delivery") {
-      const schema: any = {
+      const schema: Record<string, z.ZodTypeAny> = {
         delivery_address: z
           .string()
           .trim()
@@ -102,7 +102,7 @@ const createStepSchema = (
     }
   } else if (step === 3) {
     // Step 3: Payment + notes
-    const schema: any = {
+    const schema: Record<string, z.ZodTypeAny> = {
       notes: z.string().trim().max(500, { message: "Las notas no pueden exceder 500 caracteres" }).optional(),
     };
 
@@ -221,12 +221,12 @@ const Checkout = () => {
         // Filter out cash if accept_cash is false
         let filteredMethods = data;
         if (store.accept_cash === false) {
-          filteredMethods = data.filter(method => 
-            !method.name.toLowerCase().includes('efectivo') && 
+          filteredMethods = data.filter(method =>
+            !method.name.toLowerCase().includes('efectivo') &&
             !method.name.toLowerCase().includes('cash')
           );
         }
-        
+
         setPaymentMethods(filteredMethods);
         if (filteredMethods.length === 1) {
           form.setValue("payment_method", filteredMethods[0].name);
@@ -252,7 +252,8 @@ const Checkout = () => {
 
     loadPaymentMethods();
     loadDeliveryZones();
-  }, [store?.id, store?.accept_cash, store?.delivery_price_mode, form]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [store?.id, store?.accept_cash, store?.delivery_price_mode]);
 
   // Calculate delivery price based on mode (fixed or by zone)
   useEffect(() => {
@@ -265,7 +266,7 @@ const Checkout = () => {
     if (store.delivery_price_mode === 'fixed') {
       setDeliveryPrice(store.fixed_delivery_price || 0);
     } else if (store.delivery_price_mode === 'by_zone') {
-      const selectedZoneName = form.watch("address_neighborhood");
+      const selectedZoneName = form.getValues("address_neighborhood");
       if (!selectedZoneName || deliveryZones.length === 0) {
         setDeliveryPrice(0);
         return;
@@ -278,7 +279,8 @@ const Checkout = () => {
     } else {
       setDeliveryPrice(0);
     }
-  }, [form.watch("address_neighborhood"), deliveryZones, orderType, store, form]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [form.watch("address_neighborhood"), deliveryZones, orderType, store]);
 
   const handleNext = async () => {
     const isValid = await form.trigger();
@@ -588,8 +590,7 @@ const Checkout = () => {
                       <FormLabel>Teléfono *</FormLabel>
                       <FormControl>
                         <InputMask mask={phoneMask} value={field.value} onChange={field.onChange}>
-                          {/* @ts-ignore */}
-                          {(inputProps: any) => (
+                          {(inputProps: { value: string; onChange: (e: React.ChangeEvent<HTMLInputElement>) => void }) => (
                             <Input
                               {...inputProps}
                               type="tel"

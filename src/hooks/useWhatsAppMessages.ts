@@ -58,12 +58,13 @@ export function useWhatsAppMessages() {
 
       // Calculate stats
       const newStats: MessageStats = { total: 0, sent: 0, delivered: 0, read: 0, failed: 0 };
-      data.forEach((msg: any) => {
+      data.forEach((msg) => {
+        const message = msg as { status?: string };
         newStats.total++;
-        if (msg.status === 'sent') newStats.sent++;
-        if (msg.status === 'delivered') newStats.delivered++;
-        if (msg.status === 'read') newStats.read++;
-        if (msg.status === 'failed') newStats.failed++;
+        if (message.status === 'sent') newStats.sent++;
+        if (message.status === 'delivered') newStats.delivered++;
+        if (message.status === 'read') newStats.read++;
+        if (message.status === 'failed') newStats.failed++;
       });
       setStats(newStats);
     } finally {
@@ -132,12 +133,13 @@ export function useWhatsAppMessages() {
     }
 
     const monthlyStats: MessageStats = { total: 0, sent: 0, delivered: 0, read: 0, failed: 0 };
-    data.forEach((msg: any) => {
+    data.forEach((msg) => {
+      const message = msg as { status?: string };
       monthlyStats.total++;
-      if (msg.status === 'sent') monthlyStats.sent++;
-      if (msg.status === 'delivered') monthlyStats.delivered++;
-      if (msg.status === 'read') monthlyStats.read++;
-      if (msg.status === 'failed') monthlyStats.failed++;
+      if (message.status === 'sent') monthlyStats.sent++;
+      if (message.status === 'delivered') monthlyStats.delivered++;
+      if (message.status === 'read') monthlyStats.read++;
+      if (message.status === 'failed') monthlyStats.failed++;
     });
 
     return monthlyStats;

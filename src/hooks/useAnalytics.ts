@@ -59,9 +59,9 @@ export function useAnalytics(filters: AnalyticsFilters) {
       const cancelledOrders = orders?.filter((o) => o.status === 'cancelled').length || 0;
 
       // Calculate total products sold
-      const totalProductsSold = orders?.reduce((sum, order: any) => {
-        const items = order.order_items || [];
-        return sum + items.reduce((itemSum: number, item: any) => itemSum + item.quantity, 0);
+      const totalProductsSold = orders?.reduce((sum, order) => {
+        const items = (order as { order_items?: Array<{ quantity: number }> }).order_items || [];
+        return sum + items.reduce((itemSum: number, item) => itemSum + item.quantity, 0);
       }, 0) || 0;
 
       // Calculate average daily sales
@@ -187,9 +187,18 @@ export function useAnalytics(filters: AnalyticsFilters) {
       // Aggregate product sales
       const productMap = new Map<string, { name: string; quantity: number; revenue: number; image_url: string | null }>();
 
-      orders?.forEach((order: any) => {
-        const items = order.order_items || [];
-        items?.forEach((item: any) => {
+      orders?.forEach((order) => {
+        const ord = order as {
+          order_items?: Array<{
+            menu_item_id: string;
+            item_name: string;
+            quantity: number;
+            price_at_time: number;
+            menu_items?: { image_url?: string | null };
+          }>;
+        };
+        const items = ord.order_items || [];
+        items?.forEach((item) => {
           const existing = productMap.get(item.menu_item_id) || {
             name: item.item_name,
             quantity: 0,
@@ -308,9 +317,9 @@ export function useAnalytics(filters: AnalyticsFilters) {
       const pendingOrders = orders?.filter((o) => o.status === 'pending').length || 0;
       const cancelledOrders = orders?.filter((o) => o.status === 'cancelled').length || 0;
 
-      const totalProductsSold = orders?.reduce((sum, order: any) => {
-        const items = order.order_items || [];
-        return sum + items.reduce((itemSum: number, item: any) => itemSum + item.quantity, 0);
+      const totalProductsSold = orders?.reduce((sum, order) => {
+        const items = (order as { order_items?: Array<{ quantity: number }> }).order_items || [];
+        return sum + items.reduce((itemSum: number, item) => itemSum + item.quantity, 0);
       }, 0) || 0;
 
       const daysDiff = Math.ceil((previousDateRange.to.getTime() - previousDateRange.from.getTime()) / (1000 * 60 * 60 * 24)) + 1;

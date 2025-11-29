@@ -57,14 +57,27 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
   const [isStoreOwner, setIsStoreOwner] = useState(false);
 
+  // Initial load effect - runs only once on mount
   useEffect(() => {
     loadStore();
+  }, []);
+
+  // Revalidation interval effect - depends on store
+  useEffect(() => {
+    if (!store) return;
 
     // Revalidate store ownership every 5 minutes
     const intervalId = setInterval(() => {
       revalidateOwnership();
     }, 5 * 60 * 1000);
 
+    return () => {
+      clearInterval(intervalId);
+    };
+  }, [store]);
+
+  // Auth state change listener effect - depends on store
+  useEffect(() => {
     // Listen for auth state changes
     // IMPORTANT: Don't use async directly in callback to avoid Supabase deadlock
     const {
@@ -92,10 +105,9 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
     });
 
     return () => {
-      clearInterval(intervalId);
       subscription.unsubscribe();
     };
-  }, []);
+  }, [store]);
 
   const loadStore = async () => {
     try {
@@ -171,7 +183,7 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
   };
 
   // Helper function to identify users in PostHog
-  const identifyUserInPostHog = (session: any, storeData: Store, isOwner: boolean) => {
+  const identifyUserInPostHog = (session: { user: { id: string; email?: string } } | null, storeData: Store, isOwner: boolean) => {
     try {
       if (session?.user) {
         // Identify user with their user ID and store context

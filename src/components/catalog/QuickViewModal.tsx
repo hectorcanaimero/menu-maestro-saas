@@ -88,7 +88,7 @@ export function QuickViewModal() {
     setShowExtrasDialog(true);
   };
 
-  const handleConfirmWithExtras = (extras: any[]) => {
+  const handleConfirmWithExtras = (extras: Array<{ id: string; name: string; price: number }>) => {
     if (!currentProduct) return;
     addItem({
       id: currentProduct.id,

@@ -161,7 +161,7 @@ const WhatsAppCampaigns = () => {
                 <Label>Audiencia</Label>
                 <Select
                   value={newCampaign.target_audience}
-                  onValueChange={(value: any) => setNewCampaign(prev => ({ ...prev, target_audience: value }))}
+                  onValueChange={(value: string) => setNewCampaign(prev => ({ ...prev, target_audience: value }))}
                 >
                   <SelectTrigger>
                     <SelectValue />
