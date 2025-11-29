@@ -1,1 +1,4 @@
 project_id = "wdpexjymbiyjqwdttqhz"
+
+[functions.enhance-product-image]
+verify_jwt = true

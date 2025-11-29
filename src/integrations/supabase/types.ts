@@ -14,6 +14,57 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_enhancement_history: {
+        Row: {
+          created_at: string | null
+          credit_type: string
+          enhanced_image_url: string
+          id: string
+          menu_item_id: string | null
+          original_image_url: string
+          prompt_used: string | null
+          store_id: string
+          style: string
+        }
+        Insert: {
+          created_at?: string | null
+          credit_type?: string
+          enhanced_image_url: string
+          id?: string
+          menu_item_id?: string | null
+          original_image_url: string
+          prompt_used?: string | null
+          store_id: string
+          style: string
+        }
+        Update: {
+          created_at?: string | null
+          credit_type?: string
+          enhanced_image_url?: string
+          id?: string
+          menu_item_id?: string | null
+          original_image_url?: string
+          prompt_used?: string | null
+          store_id?: string
+          style?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_enhancement_history_menu_item_id_fkey"
+            columns: ["menu_item_id"]
+            isOneToOne: false
+            referencedRelation: "menu_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ai_enhancement_history_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       categories: {
         Row: {
           created_at: string | null
@@ -761,6 +812,47 @@ export type Database = {
             foreignKeyName: "store_access_log_store_id_fkey"
             columns: ["store_id"]
             isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      store_ai_credits: {
+        Row: {
+          created_at: string | null
+          credits_used_this_month: number
+          extra_credits: number
+          id: string
+          last_reset_date: string
+          monthly_credits: number
+          store_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          credits_used_this_month?: number
+          extra_credits?: number
+          id?: string
+          last_reset_date?: string
+          monthly_credits?: number
+          store_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          credits_used_this_month?: number
+          extra_credits?: number
+          id?: string
+          last_reset_date?: string
+          monthly_credits?: number
+          store_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "store_ai_credits_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: true
             referencedRelation: "stores"
             referencedColumns: ["id"]
           },

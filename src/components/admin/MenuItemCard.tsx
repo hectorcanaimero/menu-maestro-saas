@@ -1,6 +1,6 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ImageIcon, Star, Pencil, Trash2, Settings } from "lucide-react";
+import { ImageIcon, Star, Pencil, Trash2, Settings, Sparkles } from "lucide-react";
 
 interface MenuItem {
   id: string;
@@ -20,21 +20,33 @@ interface MenuItemCardProps {
   onEdit: (item: MenuItem) => void;
   onDelete: (id: string) => void;
   onManageExtras: (item: MenuItem) => void;
+  onEnhanceWithAI?: (item: MenuItem) => void;
 }
 
-export const MenuItemCard = ({ item, categoryName, onEdit, onDelete, onManageExtras }: MenuItemCardProps) => {
+export const MenuItemCard = ({ item, categoryName, onEdit, onDelete, onManageExtras, onEnhanceWithAI }: MenuItemCardProps) => {
   return (
     <Card className="overflow-hidden hover:shadow-md transition-shadow">
       <CardContent className="p-4">
         <div className="flex gap-3">
           {/* Image */}
-          <div className="flex-shrink-0">
+          <div className="flex-shrink-0 relative group">
             {item.image_url ? (
-              <img
-                src={item.image_url}
-                alt={item.name}
-                className="w-20 h-20 object-cover rounded-lg"
-              />
+              <>
+                <img
+                  src={item.image_url}
+                  alt={item.name}
+                  className="w-20 h-20 object-cover rounded-lg"
+                />
+                {onEnhanceWithAI && (
+                  <button
+                    onClick={() => onEnhanceWithAI(item)}
+                    className="absolute inset-0 bg-black/60 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                    title="Mejorar con IA"
+                  >
+                    <Sparkles className="w-6 h-6 text-white" />
+                  </button>
+                )}
+              </>
             ) : (
               <div className="w-20 h-20 bg-muted rounded-lg flex items-center justify-center">
                 <ImageIcon className="w-8 h-8 text-muted-foreground" />
@@ -78,6 +90,17 @@ export const MenuItemCard = ({ item, categoryName, onEdit, onDelete, onManageExt
 
             {/* Actions */}
             <div className="flex gap-1 pt-1">
+              {item.image_url && onEnhanceWithAI && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => onEnhanceWithAI(item)}
+                  className="h-8 px-2"
+                  title="Mejorar con IA"
+                >
+                  <Sparkles className="w-3 h-3" />
+                </Button>
+              )}
               <Button
                 variant="outline"
                 size="sm"
