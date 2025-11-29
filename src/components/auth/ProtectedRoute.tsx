@@ -1,4 +1,4 @@
-import { useEffect, useState, ReactNode } from "react";
+import { useEffect, useState, ReactNode, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useStore } from "@/contexts/StoreContext";
@@ -21,21 +21,11 @@ interface AuthorizationResult {
 
 /**
  * ProtectedRoute Component
- *
- * Protects admin routes by verifying:
- * 1. User is authenticated
- * 2. User has admin role
- * 3. User owns a store (server-side verification)
- *
- * This component provides THREE layers of security:
- * - Client-side session check (fast fail)
- * - StoreContext ownership check (cached)
- * - Server-side RPC verification (authoritative)
- *
- * Usage:
- * <ProtectedRoute>
- *   <AdminDashboard />
- * </ProtectedRoute>
+ * 
+ * Protects admin routes with three security layers:
+ * 1. Client-side session check
+ * 2. StoreContext ownership check
+ * 3. Server-side RPC verification
  */
 export function ProtectedRoute({ children }: ProtectedRouteProps) {
   const navigate = useNavigate();
@@ -46,8 +36,39 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
   const [verificationStep, setVerificationStep] = useState<
     'session' | 'store' | 'authorization' | 'complete'
   >('session');
+  
+  // Retry mechanism for waiting after login
+  const reloadAttemptRef = useRef(0);
+  const maxRetries = 3;
 
   useEffect(() => {
+    // Reset retry counter when store becomes available
+    if (store) {
+      reloadAttemptRef.current = 0;
+    }
+  }, [store]);
+
+  useEffect(() => {
+    // Don't verify while store is loading
+    if (storeLoading) {
+      setVerificationStep('store');
+      return;
+    }
+
+    // If no store and we haven't exhausted retries, wait and retry
+    if (!store && reloadAttemptRef.current < maxRetries) {
+      reloadAttemptRef.current += 1;
+      console.log(`[ProtectedRoute] No store yet, retry ${reloadAttemptRef.current}/${maxRetries}`);
+      
+      const timeout = setTimeout(() => {
+        // Force re-run of this effect by updating a dependency indirectly
+        // The store context should have reloaded by now
+        setIsVerifying(true);
+      }, 1000);
+      
+      return () => clearTimeout(timeout);
+    }
+
     verifyAccess();
   }, [store?.id, storeLoading]);
 
@@ -63,28 +84,17 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
         return;
       }
 
-      // LAYER 2: Wait for StoreContext to load
+      // LAYER 2: Check if store is available
       setVerificationStep('store');
-      if (storeLoading) {
-        return; // Wait for store to load
-      }
-
-      // If no store after login, wait for StoreContext to reload
+      
       if (!store) {
-        console.log("[ProtectedRoute] No store found, waiting for reload...");
-        // Give StoreContext time to reload after SIGNED_IN event
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        // Check again after waiting
-        if (!store) {
-          console.warn("[ProtectedRoute] Still no store after waiting");
-          setAuthError("no_store");
-          setIsVerifying(false);
-          return;
-        }
+        console.warn("[ProtectedRoute] No store found after retries");
+        setAuthError("no_store");
+        setIsVerifying(false);
+        return;
       }
 
-      // LAYER 3: Server-side authorization verification (most secure)
+      // LAYER 3: Server-side authorization verification
       setVerificationStep('authorization');
       const { data, error } = await supabase.rpc('can_access_admin_routes', {
         p_store_id: store.id
@@ -115,7 +125,6 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
         setAuthError(authResult.reason);
         setIsAuthorized(false);
 
-        // Show appropriate error message
         if (authResult.reason === "No admin role") {
           toast.error("No tienes permisos de administrador");
         } else if (authResult.reason === "Not the store owner") {
@@ -126,7 +135,7 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
         return;
       }
 
-      // Success: User is authorized
+      // Success
       setVerificationStep('complete');
       setIsAuthorized(true);
       setAuthError(null);
@@ -142,7 +151,7 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
     }
   };
 
-  // Show loading screen while verifying
+  // Show loading while verifying
   if (storeLoading || isVerifying || isAuthorized === null) {
     return (
       <LoadingScreen 
@@ -202,11 +211,9 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
     );
   }
 
-  // User is not authorized
   if (!isAuthorized) {
     return null;
   }
 
-  // User is authorized, render protected content
   return <>{children}</>;
 }
