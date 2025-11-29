@@ -14,13 +14,78 @@ serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const evolutionApiUrl = Deno.env.get('EVOLUTION_API_URL');
+    const evolutionApiKey = Deno.env.get('EVOLUTION_API_KEY');
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     const payload = await req.json();
     console.log('[WhatsApp Webhook] Received:', JSON.stringify(payload));
 
-    // Evolution API sends various event types
-    const { event, data, instance } = payload;
+    // Handle test connection request from frontend
+    if (payload.action === 'test_connection') {
+      const instanceName = payload.instance_name;
+
+      if (!evolutionApiUrl || !evolutionApiKey) {
+        return new Response(JSON.stringify({ 
+          connected: false, 
+          error: 'Evolution API not configured in environment' 
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      if (!instanceName) {
+        return new Response(JSON.stringify({ 
+          connected: false, 
+          error: 'Instance name required' 
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      try {
+        console.log(`[WhatsApp Webhook] Testing connection for instance: ${instanceName}`);
+        const response = await fetch(
+          `${evolutionApiUrl}/instance/connectionState/${instanceName}`,
+          {
+            method: 'GET',
+            headers: {
+              'apikey': evolutionApiKey,
+            },
+          }
+        );
+
+        const result = await response.json();
+        console.log('[WhatsApp Webhook] Connection test result:', result);
+
+        if (response.ok && result?.instance?.state === 'open') {
+          return new Response(JSON.stringify({ 
+            connected: true, 
+            phone: result?.instance?.phoneNumber || null 
+          }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        } else {
+          return new Response(JSON.stringify({ 
+            connected: false, 
+            error: result?.message || 'Instance not connected or not found' 
+          }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+      } catch (error) {
+        console.error('[WhatsApp Webhook] Connection test error:', error);
+        return new Response(JSON.stringify({ 
+          connected: false, 
+          error: 'Failed to connect to Evolution API' 
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+    }
+
+    // Evolution API webhook events
+    const { event, data } = payload;
 
     if (!data?.key?.id) {
       console.log('[WhatsApp Webhook] No message ID in payload, skipping');
@@ -31,7 +96,7 @@ serve(async (req) => {
 
     const messageId = data.key.id;
     let newStatus: string | null = null;
-    let updateData: any = {};
+    let updateData: Record<string, unknown> = {};
 
     // Map Evolution API events to our status
     switch (event) {
@@ -49,7 +114,6 @@ serve(async (req) => {
         break;
 
       case 'send.message':
-        // Message sent confirmation
         newStatus = 'sent';
         updateData.sent_at = new Date().toISOString();
         break;

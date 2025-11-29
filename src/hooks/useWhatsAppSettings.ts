@@ -6,9 +6,6 @@ import { toast } from 'sonner';
 export interface WhatsAppSettings {
   id: string;
   store_id: string;
-  evolution_api_url: string | null;
-  evolution_api_key: string | null;
-  instance_name: string | null;
   connected_phone: string | null;
   is_connected: boolean;
   is_enabled: boolean;
@@ -27,6 +24,9 @@ export function useWhatsAppSettings() {
   const [settings, setSettings] = useState<WhatsAppSettings | null>(null);
   const [loading, setLoading] = useState(true);
   const [testing, setTesting] = useState(false);
+
+  // Instance name is derived from store subdomain
+  const instanceName = store?.subdomain || null;
 
   const fetchSettings = useCallback(async () => {
     if (!store?.id) return;
@@ -97,38 +97,38 @@ export function useWhatsAppSettings() {
   };
 
   const testConnection = async () => {
-    if (!settings?.evolution_api_url || !settings?.evolution_api_key || !settings?.instance_name) {
-      toast.error('Completa todos los campos de configuración');
+    if (!instanceName) {
+      toast.error('No se encontró el subdomain de la tienda');
       return false;
     }
 
     setTesting(true);
     try {
-      // Test connection by fetching instance info
-      const response = await fetch(
-        `${settings.evolution_api_url}/instance/connectionState/${settings.instance_name}`,
-        {
-          method: 'GET',
-          headers: {
-            'apikey': settings.evolution_api_key,
-          },
-        }
-      );
+      // Call edge function to test connection using env secrets
+      const { data, error } = await supabase.functions.invoke('whatsapp-webhook', {
+        body: { 
+          action: 'test_connection',
+          instance_name: instanceName 
+        },
+      });
 
-      const result = await response.json();
-      console.log('Evolution API test result:', result);
+      if (error) {
+        console.error('Connection test error:', error);
+        await updateSettings({ is_connected: false, connected_phone: null });
+        toast.error('Error al probar la conexión');
+        return false;
+      }
 
-      if (response.ok && result?.instance?.state === 'open') {
-        // Update connection status
+      if (data?.connected) {
         await updateSettings({
           is_connected: true,
-          connected_phone: result?.instance?.phoneNumber || null,
+          connected_phone: data.phone || null,
         });
         toast.success('Conexión exitosa');
         return true;
       } else {
         await updateSettings({ is_connected: false, connected_phone: null });
-        toast.error('No se pudo conectar. Verifica las credenciales.');
+        toast.error(data?.error || 'No se pudo conectar');
         return false;
       }
     } catch (error) {
@@ -153,6 +153,7 @@ export function useWhatsAppSettings() {
     settings,
     loading,
     testing,
+    instanceName,
     updateSettings,
     testConnection,
     disconnect,
