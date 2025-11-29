@@ -35,6 +35,7 @@ const AdminCustomers = lazy(() => import("./pages/admin/AdminCustomers"));
 const AdminPromotions = lazy(() => import("./pages/admin/AdminPromotions"));
 const AdminCoupons = lazy(() => import("./pages/admin/AdminCoupons"));
 const AdminAI = lazy(() => import("./pages/admin/AdminAI"));
+const AdminWhatsApp = lazy(() => import("./pages/admin/AdminWhatsApp"));
 const StoreSettings = lazy(() => import("./pages/admin/StoreSettings"));
 
 const queryClient = new QueryClient();
@@ -141,6 +142,14 @@ const App = () => (
                     element={
                       <ProtectedRoute>
                         <AdminAI />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/admin/whatsapp"
+                    element={
+                      <ProtectedRoute>
+                        <AdminWhatsApp />
                       </ProtectedRoute>
                     }
                   />

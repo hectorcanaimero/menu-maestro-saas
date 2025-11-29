@@ -1,0 +1,213 @@
+import "https://deno.land/x/xhr@0.1.0/mod.ts";
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
+
+interface SendMessageRequest {
+  storeId: string;
+  customerPhone: string;
+  customerName?: string;
+  messageType: 'order_confirmation' | 'order_ready' | 'abandoned_cart' | 'promotion' | 'campaign' | 'manual';
+  orderId?: string;
+  campaignId?: string;
+  imageUrl?: string;
+  // Template variables
+  variables?: {
+    order_number?: string;
+    order_total?: string;
+    estimated_time?: string;
+    store_name?: string;
+    delivery_message?: string;
+    cart_total?: string;
+    recovery_link?: string;
+    promotion_message?: string;
+    store_link?: string;
+    custom_message?: string;
+  };
+}
+
+serve(async (req) => {
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  try {
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    const request: SendMessageRequest = await req.json();
+    const { storeId, customerPhone, customerName, messageType, orderId, campaignId, imageUrl, variables } = request;
+
+    console.log(`[WhatsApp] Sending ${messageType} message to ${customerPhone} for store ${storeId}`);
+
+    // 1. Get WhatsApp settings for the store
+    const { data: settings, error: settingsError } = await supabase
+      .from('whatsapp_settings')
+      .select('*')
+      .eq('store_id', storeId)
+      .single();
+
+    if (settingsError || !settings) {
+      console.error('[WhatsApp] Settings not found:', settingsError);
+      return new Response(JSON.stringify({ 
+        success: false, 
+        error: 'WhatsApp not configured for this store' 
+      }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    if (!settings.is_enabled || !settings.is_connected) {
+      console.error('[WhatsApp] Module not enabled or not connected');
+      return new Response(JSON.stringify({ 
+        success: false, 
+        error: 'WhatsApp module is not enabled or not connected' 
+      }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // 2. Check and use credits
+    const { data: creditResult, error: creditError } = await supabase
+      .rpc('use_whatsapp_credit', { p_store_id: storeId });
+
+    if (creditError || !creditResult?.[0]?.success) {
+      console.error('[WhatsApp] Credit error:', creditError || creditResult?.[0]?.error_message);
+      return new Response(JSON.stringify({ 
+        success: false, 
+        error: creditResult?.[0]?.error_message || 'No credits available' 
+      }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    const creditType = creditResult[0].credit_type;
+
+    // 3. Get message template
+    const { data: template, error: templateError } = await supabase
+      .from('whatsapp_message_templates')
+      .select('*')
+      .eq('store_id', storeId)
+      .eq('template_type', messageType)
+      .eq('is_active', true)
+      .single();
+
+    let messageContent: string;
+
+    if (messageType === 'manual' || messageType === 'campaign') {
+      messageContent = variables?.custom_message || '';
+    } else if (template) {
+      // Replace variables in template
+      messageContent = template.message_body;
+      if (variables) {
+        Object.entries(variables).forEach(([key, value]) => {
+          messageContent = messageContent.replace(new RegExp(`\\{${key}\\}`, 'g'), value || '');
+        });
+      }
+      // Replace customer_name
+      messageContent = messageContent.replace(/\{customer_name\}/g, customerName || 'Cliente');
+    } else {
+      console.error('[WhatsApp] Template not found for type:', messageType);
+      return new Response(JSON.stringify({ 
+        success: false, 
+        error: 'Message template not found' 
+      }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // 4. Format phone number (remove non-digits, ensure country code)
+    let formattedPhone = customerPhone.replace(/\D/g, '');
+    if (!formattedPhone.startsWith('58') && formattedPhone.length === 10) {
+      formattedPhone = '58' + formattedPhone;
+    }
+
+    // 5. Send via Evolution API
+    const evolutionUrl = `${settings.evolution_api_url}/message/sendText/${settings.instance_name}`;
+    
+    const evolutionPayload: any = {
+      number: formattedPhone,
+      text: messageContent,
+    };
+
+    // If there's an image, use sendMedia instead
+    const endpoint = imageUrl 
+      ? `${settings.evolution_api_url}/message/sendMedia/${settings.instance_name}`
+      : evolutionUrl;
+
+    if (imageUrl) {
+      evolutionPayload.mediatype = 'image';
+      evolutionPayload.media = imageUrl;
+      evolutionPayload.caption = messageContent;
+      delete evolutionPayload.text;
+    }
+
+    console.log(`[WhatsApp] Calling Evolution API: ${endpoint}`);
+
+    const evolutionResponse = await fetch(endpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': settings.evolution_api_key,
+      },
+      body: JSON.stringify(evolutionPayload),
+    });
+
+    const evolutionResult = await evolutionResponse.json();
+    console.log('[WhatsApp] Evolution API response:', JSON.stringify(evolutionResult));
+
+    const success = evolutionResponse.ok && evolutionResult?.key?.id;
+    const evolutionMessageId = evolutionResult?.key?.id || null;
+
+    // 6. Log message in history
+    const { error: logError } = await supabase
+      .from('whatsapp_messages')
+      .insert({
+        store_id: storeId,
+        customer_phone: customerPhone,
+        customer_name: customerName,
+        message_type: messageType,
+        message_content: messageContent,
+        image_url: imageUrl,
+        status: success ? 'sent' : 'failed',
+        error_message: success ? null : (evolutionResult?.message || 'Unknown error'),
+        order_id: orderId,
+        campaign_id: campaignId,
+        evolution_message_id: evolutionMessageId,
+        credit_type: creditType,
+        sent_at: success ? new Date().toISOString() : null,
+      });
+
+    if (logError) {
+      console.error('[WhatsApp] Error logging message:', logError);
+    }
+
+    return new Response(JSON.stringify({ 
+      success,
+      messageId: evolutionMessageId,
+      creditType,
+      remainingCredits: creditResult[0].remaining_credits,
+    }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+
+  } catch (error) {
+    console.error('[WhatsApp] Error:', error);
+    return new Response(JSON.stringify({ 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Unknown error'
+    }), {
+      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+});
