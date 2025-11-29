@@ -61,12 +61,9 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
     loadStore();
 
     // Revalidate store ownership every 5 minutes
-    const interval = setInterval(
-      () => {
-        revalidateOwnership();
-      },
-      50 * 60 * 1000,
-    ); // 5 minutes
+    const intervalId = setInterval(() => {
+      revalidateOwnership();
+    }, 5 * 60 * 1000);
 
     // Listen for auth state changes
     // IMPORTANT: Don't use async directly in callback to avoid Supabase deadlock
@@ -95,7 +92,7 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
     });
 
     return () => {
-      clearInterval(interval);
+      clearInterval(intervalId);
       subscription.unsubscribe();
     };
   }, []);
