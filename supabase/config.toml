@@ -2,3 +2,9 @@ project_id = "wdpexjymbiyjqwdttqhz"
 
 [functions.enhance-product-image]
 verify_jwt = true
+
+[functions.send-whatsapp-message]
+verify_jwt = true
+
+[functions.whatsapp-webhook]
+verify_jwt = false

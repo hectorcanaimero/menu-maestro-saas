@@ -14,6 +14,68 @@ export type Database = {
   }
   public: {
     Tables: {
+      abandoned_carts: {
+        Row: {
+          cart_data: Json
+          cart_total: number
+          created_at: string | null
+          customer_email: string | null
+          customer_name: string | null
+          customer_phone: string | null
+          expires_at: string | null
+          id: string
+          recovered: boolean | null
+          recovered_at: string | null
+          recovery_token: string | null
+          reminder_sent: boolean | null
+          reminder_sent_at: string | null
+          store_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          cart_data: Json
+          cart_total: number
+          created_at?: string | null
+          customer_email?: string | null
+          customer_name?: string | null
+          customer_phone?: string | null
+          expires_at?: string | null
+          id?: string
+          recovered?: boolean | null
+          recovered_at?: string | null
+          recovery_token?: string | null
+          reminder_sent?: boolean | null
+          reminder_sent_at?: string | null
+          store_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          cart_data?: Json
+          cart_total?: number
+          created_at?: string | null
+          customer_email?: string | null
+          customer_name?: string | null
+          customer_phone?: string | null
+          expires_at?: string | null
+          id?: string
+          recovered?: boolean | null
+          recovered_at?: string | null
+          recovery_token?: string | null
+          reminder_sent?: boolean | null
+          reminder_sent_at?: string | null
+          store_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "abandoned_carts_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ai_enhancement_history: {
         Row: {
           created_at: string | null
@@ -1054,6 +1116,300 @@ export type Database = {
         }
         Relationships: []
       }
+      whatsapp_campaigns: {
+        Row: {
+          completed_at: string | null
+          created_at: string | null
+          id: string
+          image_url: string | null
+          message_body: string
+          messages_delivered: number | null
+          messages_failed: number | null
+          messages_sent: number | null
+          name: string
+          scheduled_at: string | null
+          started_at: string | null
+          status: string | null
+          store_id: string
+          target_audience: string | null
+          total_recipients: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string | null
+          id?: string
+          image_url?: string | null
+          message_body: string
+          messages_delivered?: number | null
+          messages_failed?: number | null
+          messages_sent?: number | null
+          name: string
+          scheduled_at?: string | null
+          started_at?: string | null
+          status?: string | null
+          store_id: string
+          target_audience?: string | null
+          total_recipients?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string | null
+          id?: string
+          image_url?: string | null
+          message_body?: string
+          messages_delivered?: number | null
+          messages_failed?: number | null
+          messages_sent?: number | null
+          name?: string
+          scheduled_at?: string | null
+          started_at?: string | null
+          status?: string | null
+          store_id?: string
+          target_audience?: string | null
+          total_recipients?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_campaigns_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      whatsapp_credits: {
+        Row: {
+          created_at: string | null
+          credits_used_this_month: number | null
+          extra_credits: number | null
+          id: string
+          last_reset_date: string | null
+          monthly_credits: number | null
+          store_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          credits_used_this_month?: number | null
+          extra_credits?: number | null
+          id?: string
+          last_reset_date?: string | null
+          monthly_credits?: number | null
+          store_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          credits_used_this_month?: number | null
+          extra_credits?: number | null
+          id?: string
+          last_reset_date?: string | null
+          monthly_credits?: number | null
+          store_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_credits_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: true
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      whatsapp_message_templates: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          message_body: string
+          store_id: string
+          template_name: string
+          template_type: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          message_body: string
+          store_id: string
+          template_name: string
+          template_type: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          message_body?: string
+          store_id?: string
+          template_name?: string
+          template_type?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_message_templates_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      whatsapp_messages: {
+        Row: {
+          campaign_id: string | null
+          created_at: string | null
+          credit_type: string | null
+          customer_name: string | null
+          customer_phone: string
+          delivered_at: string | null
+          error_message: string | null
+          evolution_message_id: string | null
+          id: string
+          image_url: string | null
+          message_content: string
+          message_type: string
+          order_id: string | null
+          read_at: string | null
+          sent_at: string | null
+          status: string | null
+          store_id: string
+        }
+        Insert: {
+          campaign_id?: string | null
+          created_at?: string | null
+          credit_type?: string | null
+          customer_name?: string | null
+          customer_phone: string
+          delivered_at?: string | null
+          error_message?: string | null
+          evolution_message_id?: string | null
+          id?: string
+          image_url?: string | null
+          message_content: string
+          message_type: string
+          order_id?: string | null
+          read_at?: string | null
+          sent_at?: string | null
+          status?: string | null
+          store_id: string
+        }
+        Update: {
+          campaign_id?: string | null
+          created_at?: string | null
+          credit_type?: string | null
+          customer_name?: string | null
+          customer_phone?: string
+          delivered_at?: string | null
+          error_message?: string | null
+          evolution_message_id?: string | null
+          id?: string
+          image_url?: string | null
+          message_content?: string
+          message_type?: string
+          order_id?: string | null
+          read_at?: string | null
+          sent_at?: string | null
+          status?: string | null
+          store_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_messages_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "whatsapp_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "whatsapp_messages_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "whatsapp_messages_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      whatsapp_settings: {
+        Row: {
+          abandoned_cart_delay_minutes: number | null
+          auto_abandoned_cart: boolean | null
+          auto_order_confirmation: boolean | null
+          auto_order_ready: boolean | null
+          connected_phone: string | null
+          created_at: string | null
+          evolution_api_key: string | null
+          evolution_api_url: string | null
+          id: string
+          instance_name: string | null
+          is_connected: boolean | null
+          is_enabled: boolean | null
+          store_id: string
+          subscription_status: string | null
+          trial_ends_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          abandoned_cart_delay_minutes?: number | null
+          auto_abandoned_cart?: boolean | null
+          auto_order_confirmation?: boolean | null
+          auto_order_ready?: boolean | null
+          connected_phone?: string | null
+          created_at?: string | null
+          evolution_api_key?: string | null
+          evolution_api_url?: string | null
+          id?: string
+          instance_name?: string | null
+          is_connected?: boolean | null
+          is_enabled?: boolean | null
+          store_id: string
+          subscription_status?: string | null
+          trial_ends_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          abandoned_cart_delay_minutes?: number | null
+          auto_abandoned_cart?: boolean | null
+          auto_order_confirmation?: boolean | null
+          auto_order_ready?: boolean | null
+          connected_phone?: string | null
+          created_at?: string | null
+          evolution_api_key?: string | null
+          evolution_api_url?: string | null
+          id?: string
+          instance_name?: string | null
+          is_connected?: boolean | null
+          is_enabled?: boolean | null
+          store_id?: string
+          subscription_status?: string | null
+          trial_ends_at?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_settings_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: true
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       order_status_analytics: {
@@ -1085,6 +1441,15 @@ export type Database = {
           store_id: string
           store_name: string
           user_id: string
+        }[]
+      }
+      check_and_reset_whatsapp_credits: {
+        Args: { p_store_id: string }
+        Returns: {
+          credits_available: number
+          credits_used: number
+          extra_credits: number
+          monthly_credits: number
         }[]
       }
       check_rate_limit: {
@@ -1156,6 +1521,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      initialize_whatsapp_templates: {
+        Args: { p_store_id: string }
+        Returns: undefined
+      }
       log_store_access: {
         Args: {
           p_access_type: string
@@ -1167,6 +1536,15 @@ export type Database = {
           p_user_agent?: string
         }
         Returns: string
+      }
+      use_whatsapp_credit: {
+        Args: { p_store_id: string }
+        Returns: {
+          credit_type: string
+          error_message: string
+          remaining_credits: number
+          success: boolean
+        }[]
       }
       user_owns_store: { Args: { target_store_id: string }; Returns: boolean }
       validate_subdomain: {
