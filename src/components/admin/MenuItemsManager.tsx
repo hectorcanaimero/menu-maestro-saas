@@ -12,9 +12,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Switch } from "@/components/ui/switch";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { toast } from "sonner";
-import { Plus, Pencil, Trash2, Image as ImageIcon, Star, Settings } from "lucide-react";
+import { Plus, Pencil, Trash2, Image as ImageIcon, Star, Settings, Sparkles } from "lucide-react";
 import { ProductExtrasManager } from "./ProductExtrasManager";
 import { MenuItemCard } from "./MenuItemCard";
+import { AIPhotoStudio } from "./AIPhotoStudio";
 
 interface MenuItem {
   id: string;
@@ -43,6 +44,8 @@ const MenuItemsManager = () => {
   const [uploading, setUploading] = useState(false);
   const [extrasDialogOpen, setExtrasDialogOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
+  const [aiStudioOpen, setAiStudioOpen] = useState(false);
+  const [aiStudioItem, setAiStudioItem] = useState<MenuItem | null>(null);
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -223,6 +226,11 @@ const MenuItemsManager = () => {
     return <div className="text-center py-8">Cargando...</div>;
   }
 
+  const handleEnhanceWithAI = (item: MenuItem) => {
+    setAiStudioItem(item);
+    setAiStudioOpen(true);
+  };
+
   return (
     <>
       <ProductExtrasManager
@@ -230,6 +238,13 @@ const MenuItemsManager = () => {
         onOpenChange={setExtrasDialogOpen}
         menuItemId={selectedItem?.id || ""}
         menuItemName={selectedItem?.name || ""}
+      />
+
+      <AIPhotoStudio
+        open={aiStudioOpen}
+        onOpenChange={setAiStudioOpen}
+        menuItem={aiStudioItem}
+        onImageUpdated={fetchData}
       />
       
       <Card>
@@ -424,6 +439,7 @@ const MenuItemsManager = () => {
                   setSelectedItem(item);
                   setExtrasDialogOpen(true);
                 }}
+                onEnhanceWithAI={handleEnhanceWithAI}
               />
             ))
           )}
@@ -488,6 +504,16 @@ const MenuItemsManager = () => {
                     </TableCell>
                      <TableCell className="text-right">
                       <div className="flex justify-end gap-2">
+                        {item.image_url && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleEnhanceWithAI(item)}
+                            title="Mejorar con IA"
+                          >
+                            <Sparkles className="w-4 h-4" />
+                          </Button>
+                        )}
                         <Button
                           variant="ghost"
                           size="icon"
