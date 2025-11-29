@@ -15,6 +15,13 @@ const STYLE_PROMPTS: Record<string, string> = {
   dark_mode: "Transform this food product into a dark moody photograph with dramatic lighting, dark elegant background, professional food photography, high contrast, premium feel.",
 };
 
+// Instagram-compatible aspect ratio specifications
+const ASPECT_RATIO_SPECS: Record<string, string> = {
+  '1:1': 'Create a perfectly square image with 1:1 aspect ratio, ideal for Instagram feed posts.',
+  '4:5': 'Create a portrait image with 4:5 aspect ratio, ideal for Instagram feed with maximum visibility.',
+  '9:16': 'Create a vertical image with 9:16 aspect ratio, ideal for Instagram Stories and Reels.',
+};
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -22,9 +29,9 @@ serve(async (req) => {
   }
 
   try {
-    const { imageUrl, style, menuItemId, menuItemName, storeId } = await req.json();
+    const { imageUrl, style, menuItemId, menuItemName, storeId, aspectRatio } = await req.json();
 
-    console.log(`Processing image enhancement for item: ${menuItemName}, style: ${style}`);
+    console.log(`Processing image enhancement for item: ${menuItemName}, style: ${style}, aspectRatio: ${aspectRatio || '1:1'}`);
 
     if (!imageUrl || !style || !storeId) {
       return new Response(
@@ -42,10 +49,11 @@ serve(async (req) => {
       );
     }
 
-    const prompt = STYLE_PROMPTS[style] || STYLE_PROMPTS.realistic;
-    const fullPrompt = `${prompt} Product name: ${menuItemName}. Keep the food item recognizable but enhance its presentation.`;
+    const stylePrompt = STYLE_PROMPTS[style] || STYLE_PROMPTS.realistic;
+    const aspectSpec = ASPECT_RATIO_SPECS[aspectRatio] || ASPECT_RATIO_SPECS['1:1'];
+    const fullPrompt = `${aspectSpec} ${stylePrompt} Product name: ${menuItemName}. Keep the food item recognizable but enhance its presentation.`;
 
-    console.log(`Using prompt: ${fullPrompt.substring(0, 100)}...`);
+    console.log(`Using prompt: ${fullPrompt.substring(0, 150)}...`);
 
     // Call Lovable AI Gateway for image editing
     const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
@@ -123,7 +131,8 @@ serve(async (req) => {
     const base64Data = generatedImageUrl.replace(/^data:image\/\w+;base64,/, '');
     const imageBuffer = Uint8Array.from(atob(base64Data), c => c.charCodeAt(0));
     
-    const fileName = `ai-enhanced/${storeId}/${menuItemId}-${style}-${Date.now()}.png`;
+    const aspectSuffix = aspectRatio ? `-${aspectRatio.replace(':', 'x')}` : '';
+    const fileName = `ai-enhanced/${storeId}/${menuItemId}-${style}${aspectSuffix}-${Date.now()}.png`;
     
     const { data: uploadData, error: uploadError } = await supabase.storage
       .from('menu-images')
