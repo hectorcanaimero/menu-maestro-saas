@@ -239,16 +239,16 @@ export function formatDateForExport(date: Date | string): string {
  */
 export function prepareOrdersForExport(orders: Array<{
   id?: string;
-  created_at?: string;
+  created_at?: string | null;
   customer_name?: string;
-  customer_phone?: string;
+  customer_phone?: string | null;
   total_amount?: number;
   status?: string;
   order_items?: Array<{ quantity: number }>;
 }>) {
   return orders.map(order => ({
     'Número': `#${order.id?.slice(0, 8) || 'N/A'}`,
-    'Fecha': formatDateForExport(order.created_at),
+    'Fecha': order.created_at ? formatDateForExport(order.created_at) : 'N/A',
     'Cliente': order.customer_name || 'N/A',
     'Teléfono': order.customer_phone || 'N/A',
     'Total': formatCurrencyForExport(order.total_amount || 0),
@@ -279,7 +279,7 @@ export function prepareSalesSummaryForExport(stats: {
 /**
  * Prepare top products for export
  */
-export function prepareTopProductsForExport(products: Array<{ name: string; total_quantity: number; total_revenue: number }>) {
+export function prepareTopProductsForExport(products: Array<{ name: string; quantity: number; revenue: number }>) {
   return products.map((product, index) => ({
     'Ranking': (index + 1).toString(),
     'Producto': product.name,

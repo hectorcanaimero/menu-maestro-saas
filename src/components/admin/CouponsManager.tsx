@@ -236,7 +236,7 @@ const CouponsManager = () => {
 
                 <div>
                   <Label htmlFor="type">Tipo de Descuento *</Label>
-                  <Select value={formData.type} onValueChange={(value: string) => setFormData({ ...formData, type: value as 'percentage' | 'fixed_amount' })}>
+                  <Select value={formData.type} onValueChange={(value: 'percentage' | 'fixed') => setFormData({ ...formData, type: value })}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>

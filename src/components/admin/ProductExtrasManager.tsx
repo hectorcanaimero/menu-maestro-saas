@@ -12,8 +12,8 @@ interface ProductExtra {
   id: string;
   name: string;
   price: number;
-  is_available: boolean;
-  display_order: number;
+  is_available: boolean | null;
+  display_order: number | null;
 }
 
 interface ProductExtrasManagerProps {
@@ -107,7 +107,7 @@ export const ProductExtrasManager = ({
     setFormData({
       name: extra.name,
       price: extra.price.toString(),
-      is_available: extra.is_available,
+      is_available: extra.is_available ?? true,
     });
     setEditDialogOpen(true);
   };

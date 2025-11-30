@@ -41,14 +41,22 @@ const WhatsAppCampaigns = () => {
   const { campaigns, loading, createCampaign, cancelCampaign, deleteCampaign } = useWhatsAppCampaigns();
   const { credits } = useWhatsAppCredits();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [newCampaign, setNewCampaign] = useState({
+  const [newCampaign, setNewCampaign] = useState<{
+    name: string;
+    message_body: string;
+    image_url: string;
+    target_audience: 'all' | 'recent_customers' | 'inactive_customers';
+    scheduled_at: string;
+    total_recipients: number;
+    status: 'draft';
+  }>({
     name: "",
     message_body: "",
     image_url: "",
-    target_audience: "all" as const,
+    target_audience: "all",
     scheduled_at: "",
     total_recipients: 0,
-    status: "draft" as const,
+    status: "draft",
   });
 
   const handleCreateCampaign = async () => {
@@ -161,7 +169,7 @@ const WhatsAppCampaigns = () => {
                 <Label>Audiencia</Label>
                 <Select
                   value={newCampaign.target_audience}
-                  onValueChange={(value: string) => setNewCampaign(prev => ({ ...prev, target_audience: value }))}
+                  onValueChange={(value: 'all' | 'recent_customers' | 'inactive_customers') => setNewCampaign(prev => ({ ...prev, target_audience: value }))}
                 >
                   <SelectTrigger>
                     <SelectValue />

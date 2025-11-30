@@ -90,15 +90,15 @@ export async function validateCouponCode(
     }
 
     // Check usage limit
-    if (coupon.usage_limit !== null && coupon.usage_count >= coupon.usage_limit) {
+    if (coupon.usage_limit !== null && (coupon.usage_count ?? 0) >= coupon.usage_limit) {
       return { valid: false, error: 'Este cupón ha alcanzado su límite de usos' };
     }
 
     // Check minimum order amount
-    if (orderTotal < coupon.minimum_order_amount) {
+    if (orderTotal < (coupon.minimum_order_amount ?? 0)) {
       return {
         valid: false,
-        error: `El pedido debe ser de al menos $${coupon.minimum_order_amount.toFixed(2)} para usar este cupón`,
+        error: `El pedido debe ser de al menos $${(coupon.minimum_order_amount ?? 0).toFixed(2)} para usar este cupón`,
       };
     }
 
@@ -113,7 +113,7 @@ export async function validateCouponCode(
       console.error('Error checking coupon usage:', countError);
     }
 
-    if (count !== null && count >= coupon.per_customer_limit) {
+    if (count !== null && count >= (coupon.per_customer_limit ?? 1)) {
       return { valid: false, error: 'Ya has usado este cupón el número máximo de veces' };
     }
 

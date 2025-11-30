@@ -120,6 +120,7 @@ export function useAnalytics(filters: AnalyticsFilters) {
 
       // Aggregate order data
       orders?.forEach((order) => {
+        if (!order.created_at) return;
         const dateKey = format(new Date(order.created_at), 'yyyy-MM-dd');
         const existing = dailyData.get(dateKey) || { revenue: 0, orders: 0 };
 

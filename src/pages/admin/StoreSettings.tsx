@@ -50,7 +50,7 @@ type StoreSettingsForm = z.infer<typeof storeSettingsSchema>;
 const StoreSettings = () => {
   const navigate = useNavigate();
   const { store } = useStore();
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState<{ id: string; email?: string } | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 

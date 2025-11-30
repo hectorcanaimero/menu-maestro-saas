@@ -8,13 +8,13 @@ interface Order {
   id: string;
   status: string;
   total_amount: number;
-  order_type: string;
+  order_type: string | null;
   delivery_address: string | null;
   customer_name: string;
-  customer_phone: string;
+  customer_phone: string | null;
   customer_email: string;
-  created_at: string;
-  updated_at: string;
+  created_at: string | null;
+  updated_at: string | null;
   order_items?: Array<{
     id: string;
     item_name: string;

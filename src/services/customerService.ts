@@ -101,7 +101,7 @@ export async function updateCustomer(
  * Check if customer data needs update
  */
 export function needsUpdate(
-  existingCustomer: { name: string; phone: string; country: string | null },
+  existingCustomer: { name: string; phone: string | null; country: string | null },
   newData: CustomerData
 ): boolean {
   return (

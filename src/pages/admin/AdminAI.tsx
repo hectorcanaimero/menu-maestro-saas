@@ -17,7 +17,7 @@ interface EnhancementHistory {
   enhanced_image_url: string;
   style: string;
   credit_type: string;
-  created_at: string;
+  created_at: string | null;
   menu_items?: {
     name: string;
   } | null;

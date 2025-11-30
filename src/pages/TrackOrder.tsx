@@ -75,7 +75,9 @@ export default function TrackOrder() {
     );
   }
 
-  const estimatedTime = calculateEstimatedDelivery({ ...order, items: order.order_items || [] });
+  const estimatedTime = order.created_at && order.order_type 
+    ? calculateEstimatedDelivery({ created_at: order.created_at, items: order.order_items || [], order_type: order.order_type, status: order.status })
+    : null;
   const progress = getProgressPercentage(order.status);
   const isDelivered = order.status === 'delivered';
   const isCancelled = order.status === 'cancelled';

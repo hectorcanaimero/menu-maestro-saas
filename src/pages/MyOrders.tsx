@@ -20,9 +20,9 @@ interface Order {
   status: string;
   total_amount: number;
   customer_name: string;
-  delivery_address: string;
+  delivery_address: string | null;
   notes: string | null;
-  created_at: string;
+  created_at: string | null;
   order_items: OrderItem[];
 }
 
@@ -124,13 +124,13 @@ const MyOrders = () => {
                         Pedido #{order.id.slice(0, 8)}
                       </CardTitle>
                       <p className="text-sm text-muted-foreground mt-1">
-                        {new Date(order.created_at).toLocaleDateString("es-ES", {
+                        {order.created_at ? new Date(order.created_at).toLocaleDateString("es-ES", {
                           year: "numeric",
                           month: "long",
                           day: "numeric",
                           hour: "2-digit",
                           minute: "2-digit",
-                        })}
+                        }) : 'N/A'}
                       </p>
                     </div>
                     {getStatusBadge(order.status)}

@@ -26,7 +26,7 @@ interface OrderItem {
 interface Order {
   id: string;
   status: string;
-  order_type: string;
+  order_type: string | null;
   total_amount: number;
   customer_name: string;
   customer_email: string;
@@ -35,8 +35,8 @@ interface Order {
   notes: string | null;
   payment_method: string | null;
   payment_proof_url: string | null;
-  created_at: string;
-  updated_at: string;
+  created_at: string | null;
+  updated_at: string | null;
   order_items: OrderItem[];
 }
 
@@ -94,8 +94,8 @@ const KitchenManager = () => {
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      setOrders(data || []);
-      setFilteredOrders(data || []);
+      setOrders((data || []) as Order[]);
+      setFilteredOrders((data || []) as Order[]);
     } catch (error) {
       console.error("Error fetching orders:", error);
       toast.error("Error al cargar pedidos");
