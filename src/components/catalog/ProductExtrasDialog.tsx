@@ -12,7 +12,7 @@ interface ProductExtra {
   id: string;
   name: string;
   price: number;
-  is_available: boolean;
+  is_available: boolean | null;
 }
 
 interface SelectedExtra {

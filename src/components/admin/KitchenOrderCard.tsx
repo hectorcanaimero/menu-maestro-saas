@@ -21,7 +21,7 @@ interface OrderItem {
 interface Order {
   id: string;
   status: string;
-  order_type: string;
+  order_type: string | null;
   total_amount: number;
   customer_name: string;
   customer_email: string;
@@ -30,8 +30,8 @@ interface Order {
   notes: string | null;
   payment_method: string | null;
   payment_proof_url: string | null;
-  created_at: string;
-  updated_at: string;
+  created_at: string | null;
+  updated_at: string | null;
   order_items: OrderItem[];
 }
 
@@ -101,15 +101,15 @@ export const KitchenOrderCard = ({
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Calendar className="w-4 h-4" />
               <span>
-                {new Date(order.created_at).toLocaleDateString('es-ES', {
+                {order.created_at ? new Date(order.created_at).toLocaleDateString('es-ES', {
                   day: '2-digit',
                   month: '2-digit',
-                })}{' '}
+                }) : 'N/A'}{' '}
                 –{' '}
-                {new Date(order.created_at).toLocaleTimeString('es-ES', {
+                {order.created_at ? new Date(order.created_at).toLocaleTimeString('es-ES', {
                   hour: '2-digit',
                   minute: '2-digit',
-                })}
+                }) : ''}
               </span>
             </div>
           </div>
@@ -190,7 +190,7 @@ export const KitchenOrderCard = ({
         {/* Totals */}
         <div className="space-y-1 pt-3 border-t">
           <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">{getTypeLabel(order.order_type)}:</span>
+            <span className="text-muted-foreground">{getTypeLabel(order.order_type || 'delivery')}:</span>
             <span>$ 0,00</span>
           </div>
           <div className="flex justify-between font-bold text-lg">

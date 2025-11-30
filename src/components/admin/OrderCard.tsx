@@ -21,7 +21,7 @@ interface OrderItem {
 interface Order {
   id: string;
   status: string;
-  order_type: string;
+  order_type: string | null;
   total_amount: number;
   customer_name: string;
   customer_email: string;
@@ -30,8 +30,8 @@ interface Order {
   notes: string | null;
   payment_method: string | null;
   payment_proof_url: string | null;
-  created_at: string;
-  updated_at: string;
+  created_at: string | null;
+  updated_at: string | null;
   order_items: OrderItem[];
 }
 
@@ -84,18 +84,18 @@ export const OrderCard = ({ order, onStatusChange, onViewDetails }: OrderCardPro
             <div className="flex items-center gap-2 flex-wrap">
               <span className="text-sm font-mono font-bold">#{order.id.slice(0, 8)}</span>
               <Badge variant="outline" className="text-xs">
-                {getOrderTypeBadge(order.order_type)}
+                {getOrderTypeBadge(order.order_type || 'delivery')}
               </Badge>
             </div>
             <div className="flex items-center gap-2 text-muted-foreground">
               <Calendar className="w-3 h-3 flex-shrink-0" />
               <span className="text-xs">
-                {new Date(order.created_at).toLocaleDateString("es-ES", {
+                {order.created_at ? new Date(order.created_at).toLocaleDateString("es-ES", {
                   day: "2-digit",
                   month: "short",
                   hour: "2-digit",
                   minute: "2-digit",
-                })}
+                }) : 'N/A'}
               </span>
             </div>
           </div>
@@ -105,7 +105,7 @@ export const OrderCard = ({ order, onStatusChange, onViewDetails }: OrderCardPro
                 variant="ghost"
                 size="icon"
                 className="h-8 w-8"
-                onClick={() => window.open(order.payment_proof_url, '_blank')}
+                onClick={() => order.payment_proof_url && window.open(order.payment_proof_url, '_blank')}
               >
                 <FileImage className="w-4 h-4 text-primary" />
               </Button>

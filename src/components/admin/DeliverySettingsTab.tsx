@@ -26,7 +26,7 @@ interface DeliveryZone {
   id: string;
   zone_name: string;
   delivery_price: number;
-  display_order: number;
+  display_order: number | null;
 }
 
 interface DeliverySettingsTabProps {

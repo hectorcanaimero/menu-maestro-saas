@@ -28,8 +28,8 @@ interface PaymentMethod {
   id: string;
   name: string;
   description: string | null;
-  is_active: boolean;
-  display_order: number;
+  is_active: boolean | null;
+  display_order: number | null;
 }
 
 interface PaymentMethodsManagerProps {
@@ -76,7 +76,7 @@ export function PaymentMethodsManager({ storeId }: PaymentMethodsManagerProps) {
       setFormData({
         name: method.name,
         description: method.description || "",
-        is_active: method.is_active,
+        is_active: method.is_active ?? true,
       });
     } else {
       setEditingMethod(null);
@@ -270,7 +270,7 @@ export function PaymentMethodsManager({ storeId }: PaymentMethodsManagerProps) {
                   </TableCell>
                   <TableCell className="text-center">
                     <Switch
-                      checked={method.is_active}
+                      checked={method.is_active ?? false}
                       onCheckedChange={() => handleToggleActive(method)}
                     />
                   </TableCell>

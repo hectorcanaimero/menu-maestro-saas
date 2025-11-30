@@ -88,7 +88,7 @@ const CustomersManager = () => {
       const customerMap = new Map<string, Customer>();
       
       ordersData?.forEach((order) => {
-        const ord = order as { customer_id: string; total_amount: number; customers?: { id: string; name: string; email?: string; phone?: string } };
+        const ord = order as { customer_id: string; total_amount: number; customers?: { id: string; name: string; email?: string; phone?: string; country?: string; created_at?: string; updated_at?: string } };
         if (ord.customers) {
           const customerId = ord.customer_id;
 
@@ -98,7 +98,13 @@ const CustomersManager = () => {
             existing.total_spent = (existing.total_spent || 0) + Number(ord.total_amount);
           } else {
             customerMap.set(customerId, {
-              ...ord.customers,
+              id: ord.customers.id,
+              name: ord.customers.name,
+              email: ord.customers.email || '',
+              phone: ord.customers.phone || null,
+              country: ord.customers.country || 'venezuela',
+              created_at: ord.customers.created_at || new Date().toISOString(),
+              updated_at: ord.customers.updated_at || new Date().toISOString(),
               order_count: 1,
               total_spent: Number(ord.total_amount),
             });

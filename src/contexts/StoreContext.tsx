@@ -14,7 +14,7 @@ interface Store {
   phone: string | null;
   email: string | null;
   address: string | null;
-  is_active: boolean;
+  is_active: boolean | null;
   operating_modes: Array<'delivery' | 'pickup' | 'digital_menu'> | null;
   force_status: 'normal' | 'force_open' | 'force_closed' | null;
   currency: string | null;
@@ -118,7 +118,7 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
       // Use secure RPC function with rate limiting
       const { data, error } = await supabase.rpc('get_store_by_subdomain_secure', {
         p_subdomain: subdomain,
-        p_ip_address: null, // Browser doesn't have access to IP, server will handle
+        p_ip_address: undefined, // Browser doesn't have access to IP, server will handle
       });
 
       if (error) {

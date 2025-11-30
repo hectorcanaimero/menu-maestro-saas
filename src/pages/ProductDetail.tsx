@@ -21,14 +21,14 @@ interface Product {
   price: number;
   image_url: string | null;
   category_id: string | null;
-  is_available: boolean;
+  is_available: boolean | null;
 }
 
 interface ProductExtra {
   id: string;
   name: string;
   price: number;
-  is_available: boolean;
+  is_available: boolean | null;
 }
 
 export default function ProductDetail() {
