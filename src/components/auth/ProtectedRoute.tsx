@@ -50,7 +50,6 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
 
   const verifyAccess = useCallback(async () => {
     try {
-      console.log(storeLoading, isVerifying, isAuthorized, authError);
       // LAYER 1: Quick client-side session check
       setVerificationStep('session');
       const {
@@ -66,7 +65,6 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
 
       // LAYER 2: Check if store is available
       setVerificationStep('store');
-      console.log(store);
       if (!store) {
         console.warn('[ProtectedRoute] No store found after retries');
         setAuthError('no_store');

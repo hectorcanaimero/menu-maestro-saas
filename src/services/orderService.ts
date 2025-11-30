@@ -53,6 +53,9 @@ export interface CreateOrderItemsParams {
 export interface CreateOrderResult {
   orderId: string;
   orderNumber: string;
+  shouldRedirectToWhatsApp?: boolean;
+  whatsappNumber?: string;
+  whatsappMessage?: string;
 }
 
 /**
@@ -205,13 +208,13 @@ export async function createOrderItems(params: CreateOrderItemsParams): Promise<
 }
 
 /**
- * Handle WhatsApp redirect for order
+ * Prepare WhatsApp redirect data for order
  */
-export async function handleWhatsAppRedirect(
+export async function prepareWhatsAppRedirect(
   orderId: string,
   orderType: string,
   store: Store
-): Promise<void> {
+): Promise<{ shouldRedirect: boolean; phoneNumber?: string; message?: string }> {
   // Check if WhatsApp redirect is enabled for this order type
   const whatsappSettings = {
     delivery: store.whatsapp_redirect_delivery,
@@ -221,12 +224,15 @@ export async function handleWhatsAppRedirect(
 
   const shouldRedirectToWhatsApp = whatsappSettings[orderType as keyof typeof whatsappSettings];
 
-  if (shouldRedirectToWhatsApp && store.whatsapp_number) {
-    // Fetch the full order with items for message generation
-    const { data: fullOrder } = await supabase
-      .from('orders')
-      .select(
-        `
+  if (!shouldRedirectToWhatsApp || !store.whatsapp_number) {
+    return { shouldRedirect: false };
+  }
+
+  // Fetch the full order with items for message generation
+  const { data: fullOrder } = await supabase
+    .from('orders')
+    .select(
+      `
         *,
         order_items (
           id,
@@ -239,18 +245,22 @@ export async function handleWhatsAppRedirect(
           )
         )
       `
-      )
-      .eq('id', orderId)
-      .single();
+    )
+    .eq('id', orderId)
+    .single();
 
-    if (fullOrder) {
-      // Generate WhatsApp message
-      const message = generateWhatsAppMessage(fullOrder, store);
-
-      // Redirect to WhatsApp
-      redirectToWhatsApp(store.whatsapp_number, message);
-    }
+  if (!fullOrder) {
+    return { shouldRedirect: false };
   }
+
+  // Generate WhatsApp message
+  const message = generateWhatsAppMessage(fullOrder, store);
+
+  return {
+    shouldRedirect: true,
+    phoneNumber: store.whatsapp_number,
+    message,
+  };
 }
 
 /**
@@ -284,8 +294,17 @@ export async function completeOrder(
     items,
   });
 
-  // Handle WhatsApp redirect if configured
-  await handleWhatsAppRedirect(result.orderId, orderData.order_type, store);
+  // Prepare WhatsApp redirect if configured
+  const whatsappData = await prepareWhatsAppRedirect(
+    result.orderId,
+    orderData.order_type,
+    store
+  );
 
-  return result;
+  return {
+    ...result,
+    shouldRedirectToWhatsApp: whatsappData.shouldRedirect,
+    whatsappNumber: whatsappData.phoneNumber,
+    whatsappMessage: whatsappData.message,
+  };
 }

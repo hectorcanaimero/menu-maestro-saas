@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
 import { useCart } from "@/contexts/CartContext";
 import { useStore } from "@/contexts/StoreContext";
 import { useStoreTheme } from "@/hooks/useStoreTheme";
@@ -11,8 +10,10 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import { ArrowLeft, Edit, Loader2, MapPin, User, Mail, Phone, CreditCard, FileText, Hash, Ticket } from "lucide-react";
-import { generateWhatsAppMessage, redirectToWhatsApp } from "@/lib/whatsappMessageGenerator";
 import { useFormatPrice } from "@/lib/priceFormatter";
+import { findOrCreateCustomer } from "@/services/customerService";
+import { completeOrder } from "@/services/orderService";
+import { redirectToWhatsApp } from "@/lib/whatsappMessageGenerator";
 
 interface OrderData {
   customer_name: string;
@@ -79,244 +80,44 @@ const ConfirmOrder = () => {
 
     setLoading(true);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      // Find or create customer
+      const customerResult = await findOrCreateCustomer({
+        name: orderData.customer_name,
+        email: orderData.customer_email,
+        phone: orderData.customer_phone,
+        country: orderData.country,
+      });
 
-      // First, create or update customer
-      let customerId: string;
-      
-      // Try to find existing customer by email (unique identifier)
-      const { data: existingCustomer } = await supabase
-        .from("customers")
-        .select("id, name, phone, country")
-        .eq("email", orderData.customer_email)
-        .maybeSingle();
-
-      if (existingCustomer) {
-        // Customer exists - update their information if changed
-        const needsUpdate = 
-          existingCustomer.name !== orderData.customer_name ||
-          existingCustomer.phone !== orderData.customer_phone ||
-          existingCustomer.country !== (orderData.country || "brazil");
-
-        if (needsUpdate) {
-          const { error: updateError } = await supabase
-            .from("customers")
-            .update({
-              name: orderData.customer_name,
-              phone: orderData.customer_phone || null,
-              country: orderData.country || "brazil",
-            })
-            .eq("id", existingCustomer.id);
-
-          if (updateError) {
-            console.error("Error updating customer:", updateError);
-            toast.error("Error al actualizar información del cliente");
-            setLoading(false);
-            return;
-          }
-          
-          toast.info("Información del cliente actualizada");
-        }
-        
-        customerId = existingCustomer.id;
-      } else {
-        // Create new customer
-        const { data: newCustomer, error: customerError } = await supabase
-          .from("customers")
-          .insert({
-            name: orderData.customer_name,
-            email: orderData.customer_email,
-            phone: orderData.customer_phone || null,
-            country: orderData.country || "brazil",
-          })
-          .select("id")
-          .single();
-
-        if (customerError) {
-          console.error("Error creating customer:", customerError);
-          
-          // Check if it's a duplicate email error
-          if (customerError.code === "23505") {
-            toast.error("Este email ya está registrado con información diferente");
-          } else {
-            toast.error("Error al registrar cliente");
-          }
-          
-          setLoading(false);
-          return;
-        }
-        
-        customerId = newCustomer.id;
+      if (!customerResult) {
+        setLoading(false);
+        return;
       }
 
-      // Build full address
-      let fullAddress = null;
-      if (orderData.order_type === "delivery") {
-        const addressParts = [orderData.delivery_address || ""];
-        if (!store?.remove_address_number && orderData.address_number) {
-          addressParts.push(orderData.address_number);
-        }
-        if (orderData.address_complement) {
-          addressParts.push(orderData.address_complement);
-        }
-        if (orderData.address_neighborhood) {
-          addressParts.push(orderData.address_neighborhood);
-        }
-        if (!store?.remove_zipcode && orderData.address_zipcode) {
-          addressParts.push(orderData.address_zipcode);
-        }
-        fullAddress = addressParts.filter(Boolean).join(", ");
+      // Complete order (create order, items, extras, prepare WhatsApp)
+      const result = await completeOrder(
+        orderData,
+        customerResult.customerId,
+        items,
+        grandTotal,
+        deliveryPrice,
+        couponDiscount,
+        store
+      );
+
+      // Handle WhatsApp redirect if configured
+      if (result.shouldRedirectToWhatsApp && result.whatsappNumber && result.whatsappMessage) {
+        toast.success("¡Pedido realizado! Redirigiendo a WhatsApp...");
+        clearCart();
+
+        setTimeout(() => {
+          redirectToWhatsApp(result.whatsappNumber!, result.whatsappMessage!);
+          navigate("/");
+        }, 1500);
+        return;
       }
 
-      // Create order
-      const { data: order, error: orderError } = await supabase
-        .from("orders")
-        .insert([
-          {
-            store_id: store.id,
-            user_id: session?.user?.id || null,
-            customer_id: customerId,
-            total_amount: grandTotal,
-            delivery_price: deliveryPrice,
-            coupon_code: orderData.coupon_code || null,
-            coupon_discount: couponDiscount,
-            customer_name: orderData.customer_name,
-            customer_email: orderData.customer_email,
-            customer_phone: orderData.customer_phone,
-            delivery_address: fullAddress,
-            notes: orderData.order_type === "digital_menu" && orderData.table_number
-              ? `Mesa: ${orderData.table_number}${orderData.notes ? `\n${orderData.notes}` : ''}`
-              : orderData.notes || null,
-            payment_proof_url: orderData.payment_proof_url || null,
-            payment_method: orderData.payment_method || null,
-            order_type: orderData.order_type,
-          },
-        ])
-        .select()
-        .single();
-
-      if (orderError) throw orderError;
-
-      // Record coupon usage if applied
-      if (orderData.coupon_id && couponDiscount > 0) {
-        const { recordCouponUsage } = await import("@/hooks/useCoupons");
-        try {
-          await recordCouponUsage(
-            orderData.coupon_id,
-            store.id,
-            orderData.customer_email,
-            order.id,
-            couponDiscount
-          );
-        } catch (couponError) {
-          console.error("Error recording coupon usage:", couponError);
-          // Don't fail the order if coupon recording fails
-        }
-      }
-
-      // Create order items
-      const orderItems = items.map((item) => ({
-        order_id: order.id,
-        menu_item_id: item.id,
-        quantity: item.quantity,
-        price_at_time: item.price,
-        item_name: item.name,
-      }));
-
-      const { data: createdItems, error: itemsError } = await supabase
-        .from("order_items")
-        .insert(orderItems)
-        .select();
-
-      if (itemsError) throw itemsError;
-
-      // Create order item extras
-      if (createdItems) {
-        const itemExtras = createdItems.flatMap((orderItem, index) => {
-          const cartItem = items[index];
-          if (!cartItem.extras || cartItem.extras.length === 0) return [];
-          
-          return cartItem.extras.map((extra) => ({
-            order_item_id: orderItem.id,
-            extra_name: extra.name,
-            extra_price: extra.price,
-          }));
-        });
-
-        if (itemExtras.length > 0) {
-          const { error: extrasError } = await supabase
-            .from("order_item_extras")
-            .insert(itemExtras);
-
-          if (extrasError) {
-            console.error("Error saving extras:", extrasError);
-          }
-        }
-      }
-
-      // Generate WhatsApp message
-      if (store.phone && (store.order_product_template || store.order_message_template_delivery)) {
-        // Generate tracking URL
-        const trackingUrl = `${window.location.origin}/track/${order.id}`;
-
-        const whatsappMessage = generateWhatsAppMessage(
-          {
-            orderNumber: order.id.substring(0, 8).toUpperCase(),
-            items: items.map(item => ({
-              name: item.name,
-              quantity: item.quantity,
-              price: item.price,
-              extras: item.extras,
-            })),
-            totalAmount: grandTotal,
-            customerName: orderData.customer_name,
-            customerEmail: orderData.customer_email,
-            customerPhone: orderData.customer_phone,
-            deliveryAddress: fullAddress || "",
-            notes: orderData.notes || "",
-            paymentMethod: orderData.payment_method || "",
-            currency: store.currency || "USD",
-            decimalPlaces: store.decimal_places || 2,
-            decimalSeparator: store.decimal_separator || ".",
-            thousandsSeparator: store.thousands_separator || ",",
-            trackingUrl: trackingUrl,
-            couponCode: orderData.coupon_code || "",
-            couponDiscount: couponDiscount,
-            deliveryPrice: deliveryPrice,
-            tableNumber: orderData.table_number || "",
-          },
-          {
-            orderProductTemplate: store.order_product_template || "{product-qty} {product-name}",
-            orderMessageTemplateDelivery: store.order_message_template_delivery || "Pedido #{order-number}\n\n{order-products}\n\nSubtotal: {subtotal}\nEntrega: {delivery-fee}\nTotal: {order-total}",
-            orderMessageTemplatePickup: store.order_message_template_pickup || "Pedido #{order-number}\n\n{order-products}\n\nTotal: {order-total}",
-            orderMessageTemplateDigitalMenu: store.order_message_template_digital_menu || "Pedido #{order-number}\n\n{order-products}\n\nTotal: {order-total}",
-          },
-          orderData.order_type
-        );
-
-        // Redirect to WhatsApp if enabled
-        if (store.redirect_to_whatsapp) {
-          toast.success("¡Pedido realizado! Redirigiendo a WhatsApp...");
-          clearCart();
-
-          setTimeout(() => {
-            redirectToWhatsApp(store.phone!, whatsappMessage);
-            navigate("/");
-          }, 1500);
-          return;
-        } else {
-          toast.success("¡Pedido realizado con éxito!", {
-            action: {
-              label: "Enviar por WhatsApp",
-              onClick: () => redirectToWhatsApp(store.phone!, whatsappMessage),
-            },
-            duration: 10000,
-          });
-        }
-      } else {
-        toast.success("¡Pedido realizado con éxito!");
-      }
-
+      // Success! Clear cart and redirect
+      toast.success("¡Pedido realizado con éxito!");
       clearCart();
       navigate("/");
     } catch (error) {

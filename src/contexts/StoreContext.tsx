@@ -115,7 +115,6 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
 
       // Extract subdomain using utility function
       const subdomain = getSubdomainFromHostname();
-      console.log(subdomain);
       // Use secure RPC function with rate limiting
       const { data, error } = await supabase.rpc('get_store_by_subdomain_secure', {
         p_subdomain: subdomain,
@@ -183,7 +182,11 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
   };
 
   // Helper function to identify users in PostHog
-  const identifyUserInPostHog = (session: { user: { id: string; email?: string } } | null, storeData: Store, isOwner: boolean) => {
+  const identifyUserInPostHog = (
+    session: { user: { id: string; email?: string } } | null,
+    storeData: Store,
+    isOwner: boolean,
+  ) => {
     try {
       if (session?.user) {
         // Identify user with their user ID and store context
