@@ -25,8 +25,8 @@ services:
 
       # Rolling update configuration (zero downtime)
       update_config:
-        parallelism: 1       # Actualizar 1 container a la vez
-        delay: 10s           # Esperar 10s entre actualizaciones
+        parallelism: 1 # Actualizar 1 container a la vez
+        delay: 10s # Esperar 10s entre actualizaciones
         failure_action: rollback
         monitor: 30s
         max_failure_ratio: 0.3
@@ -34,10 +34,10 @@ services:
       # Resource limits (ajustar según servidor)
       resources:
         limits:
-          cpus: '0.5'        # Máximo 0.5 CPU por container
-          memory: 256M       # Máximo 256MB RAM por container
+          cpus: '0.5' # Máximo 0.5 CPU por container
+          memory: 256M # Máximo 256MB RAM por container
         reservations:
-          cpus: '0.25'       # Mínimo garantizado
+          cpus: '0.25' # Mínimo garantizado
           memory: 128M
 
       # Traefik labels para routing dinámico
@@ -47,41 +47,41 @@ services:
         # ========================================
 
         # Enable Traefik
-        - "traefik.enable=true"
+        - 'traefik.enable=true'
 
         # HTTP Router - Redirect to HTTPS
-        - "traefik.http.routers.pideai-http.rule=HostRegexp(`{subdomain:[a-z0-9-]+}.pideai.com`) || Host(`pideai.com`)"
-        - "traefik.http.routers.pideai-http.entrypoints=web"
-        - "traefik.http.routers.pideai-http.middlewares=redirect-to-https"
+        - 'traefik.http.routers.pideai-http.rule=HostRegexp(`{subdomain:[a-z0-9-]+}.pideai.com`) || Host(`pideai.com`)'
+        - 'traefik.http.routers.pideai-http.entrypoints=web'
+        - 'traefik.http.routers.pideai-http.middlewares=redirect-to-https'
 
         # HTTPS Router - Dynamic Subdomain Routing
         # Soporta: tienda1.pideai.com, tienda2.pideai.com, pideai.com, etc.
-        - "traefik.http.routers.pideai-https.rule=HostRegexp(`{subdomain:[a-z0-9-]+}.pideai.com`) || Host(`pideai.com`)"
-        - "traefik.http.routers.pideai-https.entrypoints=websecure"
-        - "traefik.http.routers.pideai-https.tls=true"
-        - "traefik.http.routers.pideai-https.tls.certresolver=letsencryptresolver"
+        - 'traefik.http.routers.pideai-https.rule=HostRegexp(`{subdomain:[a-z0-9-]+}.pideai.com`) || Host(`pideai.com`)'
+        - 'traefik.http.routers.pideai-https.entrypoints=websecure'
+        - 'traefik.http.routers.pideai-https.tls=true'
+        - 'traefik.http.routers.pideai-https.tls.certresolver=letsencryptresolver'
 
         # Service - nginx listens on port 80
-        - "traefik.http.services.pideai.loadbalancer.server.port=80"
+        - 'traefik.http.services.pideai.loadbalancer.server.port=80'
 
         # Middleware: Redirect HTTP to HTTPS
-        - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
-        - "traefik.http.middlewares.redirect-to-https.redirectscheme.permanent=true"
+        - 'traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https'
+        - 'traefik.http.middlewares.redirect-to-https.redirectscheme.permanent=true'
 
         # Middleware: Forward original headers to backend
-        - "traefik.http.middlewares.pideai-headers.headers.customrequestheaders.X-Forwarded-Host={host}"
-        - "traefik.http.middlewares.pideai-headers.headers.customrequestheaders.X-Forwarded-Proto=https"
-        - "traefik.http.middlewares.pideai-headers.headers.customrequestheaders.X-Real-IP={remote_addr}"
+        - 'traefik.http.middlewares.pideai-headers.headers.customrequestheaders.X-Forwarded-Host={host}'
+        - 'traefik.http.middlewares.pideai-headers.headers.customrequestheaders.X-Forwarded-Proto=https'
+        - 'traefik.http.middlewares.pideai-headers.headers.customrequestheaders.X-Real-IP={remote_addr}'
 
         # Apply middlewares to HTTPS router
-        - "traefik.http.routers.pideai-https.middlewares=pideai-headers"
+        - 'traefik.http.routers.pideai-https.middlewares=pideai-headers'
 
     networks:
       - network_public
 
     # Health check (verifica que el container esté funcionando)
     healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:80/health"]
+      test: ['CMD', 'wget', '--quiet', '--tries=1', '--spider', 'http://localhost:80/health']
       interval: 30s
       timeout: 3s
       retries: 3
