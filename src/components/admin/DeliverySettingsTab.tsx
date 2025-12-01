@@ -22,6 +22,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { useModuleAccess } from '@/hooks/useSubscription';
+import { ModuleNotAvailable } from '@/components/admin/ModuleNotAvailable';
 
 const deliverySchema = z.object({
   estimated_delivery_time: z.string()
@@ -71,6 +73,28 @@ export const DeliverySettingsTab = ({ storeId, initialData }: DeliverySettingsTa
   const [zoneToDelete, setZoneToDelete] = useState<{ id: string; name: string } | null>(null);
   const [activeOrdersCount, setActiveOrdersCount] = useState(0);
   const [showTimeSuggestions, setShowTimeSuggestions] = useState(false);
+
+  // Verificar acceso al módulo de Delivery
+  const { data: hasDeliveryAccess, isLoading: checkingAccess } = useModuleAccess('delivery');
+
+  // Si está verificando acceso, mostrar loading
+  if (checkingAccess) {
+    return (
+      <div className="text-center py-8 text-muted-foreground">
+        Verificando permisos...
+      </div>
+    );
+  }
+
+  // Si no tiene acceso al módulo, mostrar mensaje
+  if (!hasDeliveryAccess) {
+    return (
+      <ModuleNotAvailable
+        module="Delivery"
+        description="El sistema de delivery con gestión de motoristas está disponible en planes Enterprise, o puede ser habilitado manualmente por el administrador de la plataforma."
+      />
+    );
+  }
 
   const {
     register,

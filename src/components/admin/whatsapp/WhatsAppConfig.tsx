@@ -20,16 +20,31 @@ import {
 import { useWhatsAppSettings } from "@/hooks/useWhatsAppSettings";
 import { Separator } from "@/components/ui/separator";
 import { WhatsAppConnectionModal } from "./WhatsAppConnectionModal";
+import { useModuleAccess } from "@/hooks/useSubscription";
+import { ModuleNotAvailable } from "@/components/admin/ModuleNotAvailable";
 
 const WhatsAppConfig = () => {
   const { settings, loading, testing, instanceName, updateSettings, testConnection, disconnect, refetch } = useWhatsAppSettings();
   const [connectionModalOpen, setConnectionModalOpen] = useState(false);
 
-  if (loading) {
+  // Verificar acceso al módulo de WhatsApp
+  const { data: hasWhatsAppAccess, isLoading: checkingAccess } = useModuleAccess('whatsapp');
+
+  if (loading || checkingAccess) {
     return (
       <div className="text-center py-8 text-muted-foreground">
         Cargando configuración...
       </div>
+    );
+  }
+
+  // Si no tiene acceso al módulo, mostrar mensaje
+  if (!hasWhatsAppAccess) {
+    return (
+      <ModuleNotAvailable
+        module="WhatsApp"
+        description="Las notificaciones automáticas por WhatsApp están disponibles en planes Pro y Enterprise, o pueden ser habilitadas manualmente por el administrador de la plataforma."
+      />
     );
   }
 
