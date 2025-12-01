@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -99,15 +99,9 @@ export const AdminOrderCreate = ({ open, onOpenChange, onSuccess }: AdminOrderCr
   const totalSteps = 4;
   const progress = (currentStep / totalSteps) * 100;
 
-  // Form setup
+  // Form setup without automatic validation
   const form = useForm<FormData>({
-    resolver: zodResolver(
-      currentStep === 1
-        ? step1Schema
-        : currentStep === 2 && orderType === "delivery"
-        ? step2DeliverySchema
-        : z.object({})
-    ),
+    mode: "onChange",
     defaultValues: {
       customer_email: "",
       customer_name: "",
@@ -203,29 +197,54 @@ export const AdminOrderCreate = ({ open, onOpenChange, onSuccess }: AdminOrderCr
   };
 
   const handleNext = async () => {
-    // Only validate if we need form validation for this step
-    if (currentStep === 1 || (currentStep === 2 && orderType === "delivery")) {
-      const isValid = await form.trigger();
-      if (!isValid) return;
-    }
+    const formData = form.getValues();
 
+    // Step 1: Validate customer info
     if (currentStep === 1) {
-      setCurrentStep(2);
-    } else if (currentStep === 2) {
-      // Only validate delivery zone for delivery orders
-      if (orderType === "delivery" && !form.getValues("delivery_zone")) {
-        toast.error("Selecciona una zona de entrega");
+      try {
+        step1Schema.parse(formData);
+        setCurrentStep(2);
+      } catch (error) {
+        if (error instanceof z.ZodError) {
+          error.errors.forEach((err) => {
+            toast.error(err.message);
+          });
+        }
         return;
       }
-      // For pickup and dine_in, just proceed to next step
-      setCurrentStep(3);
-    } else if (currentStep === 3) {
+    }
+    // Step 2: Validate delivery info (only for delivery orders)
+    else if (currentStep === 2) {
+      if (orderType === "delivery") {
+        try {
+          step2DeliverySchema.parse({
+            delivery_address: formData.delivery_address,
+            delivery_zone: formData.delivery_zone,
+          });
+          setCurrentStep(3);
+        } catch (error) {
+          if (error instanceof z.ZodError) {
+            error.errors.forEach((err) => {
+              toast.error(err.message);
+            });
+          }
+          return;
+        }
+      } else {
+        // For pickup and dine_in, just proceed
+        setCurrentStep(3);
+      }
+    }
+    // Step 3: Validate products
+    else if (currentStep === 3) {
       if (items.length === 0) {
         toast.error("Agrega al menos un producto");
         return;
       }
       setCurrentStep(4);
-    } else {
+    }
+    // Step 4: Submit
+    else {
       handleSubmit();
     }
   };
@@ -282,7 +301,7 @@ export const AdminOrderCreate = ({ open, onOpenChange, onSuccess }: AdminOrderCr
 
       const grandTotal = totalPrice + deliveryPrice;
 
-      // Call RPC to create order
+      // Call RPC to create order (parameters ordered to match function signature)
       const { data, error } = await supabase.rpc("admin_create_order", {
         p_store_id: store.id,
         p_customer_id: customerResult.customerId,
@@ -290,12 +309,12 @@ export const AdminOrderCreate = ({ open, onOpenChange, onSuccess }: AdminOrderCr
         p_customer_email: formData.customer_email,
         p_customer_phone: formData.customer_phone,
         p_order_type: formData.order_type,
+        p_total_amount: grandTotal,
+        p_items: orderItems,
         p_delivery_address: formData.order_type === "delivery" ? formData.delivery_address : null,
         p_notes: notes || null,
         p_payment_method: selectedPaymentMethod,
-        p_total_amount: grandTotal,
         p_delivery_price: deliveryPrice,
-        p_items: orderItems,
       });
 
       if (error) throw error;

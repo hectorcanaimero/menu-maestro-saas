@@ -15,12 +15,12 @@ CREATE OR REPLACE FUNCTION public.admin_create_order(
   p_customer_email TEXT,
   p_customer_phone TEXT,
   p_order_type TEXT,
+  p_total_amount NUMERIC,
+  p_items JSONB, -- Array of {menu_item_id, quantity, price_at_time, item_name, extras: [{name, price}]}
   p_delivery_address TEXT DEFAULT NULL,
   p_notes TEXT DEFAULT NULL,
   p_payment_method TEXT DEFAULT NULL,
-  p_total_amount NUMERIC,
-  p_delivery_price NUMERIC DEFAULT 0,
-  p_items JSONB -- Array of {menu_item_id, quantity, price_at_time, item_name, extras: [{name, price}]}
+  p_delivery_price NUMERIC DEFAULT 0
 )
 RETURNS TABLE (
   order_id UUID,
