@@ -90,9 +90,24 @@ EVOLUTION_API_KEY=tu-api-key-de-evolution
 ```
 
 ### Paso 2: Aplicar Migraciones
+
+**⚠️ IMPORTANTE:** Si tienes conflictos con migraciones existentes al ejecutar `supabase db push`, usa el método alternativo abajo.
+
+**Método A - Supabase CLI (recomendado si no hay conflictos):**
 ```bash
 supabase db push
 ```
+
+**Método B - SQL Editor (si hay conflictos):**
+
+Si `supabase db push` falla con errores de policies o tablas duplicadas:
+
+1. Abre [docs/apply-whatsapp-migrations.sql](docs/apply-whatsapp-migrations.sql)
+2. Copia todo el contenido
+3. Pega y ejecuta en Supabase SQL Editor
+4. Verifica que no haya errores
+
+Este script contiene **solo** las migraciones de WhatsApp y es idempotente (se puede ejecutar múltiples veces).
 
 ### Paso 3: Configurar system_settings
 

@@ -26,6 +26,13 @@ CREATE TABLE IF NOT EXISTS promotions (
 -- Add RLS policies
 ALTER TABLE promotions ENABLE ROW LEVEL SECURITY;
 
+-- Drop existing policies if they exist
+DROP POLICY IF EXISTS "Store owners can view their promotions" ON promotions;
+DROP POLICY IF EXISTS "Store owners can insert their promotions" ON promotions;
+DROP POLICY IF EXISTS "Store owners can update their promotions" ON promotions;
+DROP POLICY IF EXISTS "Store owners can delete their promotions" ON promotions;
+DROP POLICY IF EXISTS "Public can view active promotions" ON promotions;
+
 -- Store owners can manage their own promotions
 CREATE POLICY "Store owners can view their promotions"
   ON promotions FOR SELECT
@@ -68,14 +75,15 @@ CREATE POLICY "Public can view active promotions"
     AND (end_date IS NULL OR end_date > now())
   );
 
--- Create indexes for performance
-CREATE INDEX idx_promotions_store_id ON promotions(store_id);
-CREATE INDEX idx_promotions_active ON promotions(is_active);
-CREATE INDEX idx_promotions_dates ON promotions(start_date, end_date);
-CREATE INDEX idx_promotions_product_ids ON promotions USING GIN(product_ids);
-CREATE INDEX idx_promotions_category_ids ON promotions USING GIN(category_ids);
+-- Create indexes for performance (IF NOT EXISTS)
+CREATE INDEX IF NOT EXISTS idx_promotions_store_id ON promotions(store_id);
+CREATE INDEX IF NOT EXISTS idx_promotions_active ON promotions(is_active);
+CREATE INDEX IF NOT EXISTS idx_promotions_dates ON promotions(start_date, end_date);
+CREATE INDEX IF NOT EXISTS idx_promotions_product_ids ON promotions USING GIN(product_ids);
+CREATE INDEX IF NOT EXISTS idx_promotions_category_ids ON promotions USING GIN(category_ids);
 
--- Create updated_at trigger
+-- Create updated_at trigger (drop first if exists)
+DROP TRIGGER IF EXISTS update_promotions_updated_at ON promotions;
 CREATE TRIGGER update_promotions_updated_at
   BEFORE UPDATE ON promotions
   FOR EACH ROW
