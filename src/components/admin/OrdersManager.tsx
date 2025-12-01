@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { toast } from "sonner";
-import { Package, RefreshCw, Eye, Filter, Download, ExternalLink, FileImage, X, Plus, Edit } from "lucide-react";
+import { Package, RefreshCw, Eye, Filter, Download, ExternalLink, FileImage, X, Plus, Edit, Truck, Store, Utensils } from "lucide-react";
 import { OrderCard } from "./OrderCard";
 import { AdminOrderCreate } from "./AdminOrderCreate";
 import { AdminOrderEdit } from "./AdminOrderEdit";
@@ -164,13 +164,25 @@ const OrdersManager = () => {
     return <Badge variant={config.variant}>{config.label}</Badge>;
   };
 
-  const getOrderTypeBadge = (type: string) => {
-    const typeConfig: Record<string, string> = {
-      delivery: "Entrega",
-      pickup: "Recoger",
-      digital_menu: "En Tienda"
+  const getOrderTypeConfig = (type: string) => {
+    const typeConfig: Record<string, { label: string; icon: any; color: string }> = {
+      delivery: {
+        label: "Entrega",
+        icon: Truck,
+        color: "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-100 border-orange-300"
+      },
+      pickup: {
+        label: "Recoger",
+        icon: Store,
+        color: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100 border-blue-300"
+      },
+      digital_menu: {
+        label: "En Tienda",
+        icon: Utensils,
+        color: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100 border-green-300"
+      }
     };
-    return typeConfig[type] || type;
+    return typeConfig[type] || typeConfig.pickup;
   };
 
   const handleViewDetails = (order: Order) => {
@@ -393,22 +405,27 @@ const OrdersManager = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {currentOrders.map((order) => (
-                      <TableRow key={order.id}>
-                        <TableCell className="font-medium">
-                          #{order.id.slice(0, 8)}
-                        </TableCell>
-                        <TableCell>
-                          <div>
-                            <p className="font-medium">{order.customer_name}</p>
-                            <p className="text-sm text-muted-foreground">{order.customer_phone}</p>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant="outline">
-                            {getOrderTypeBadge(order.order_type)}
-                          </Badge>
-                        </TableCell>
+                    {currentOrders.map((order) => {
+                      const orderTypeConfig = getOrderTypeConfig(order.order_type || 'pickup');
+                      const OrderTypeIcon = orderTypeConfig.icon;
+
+                      return (
+                        <TableRow key={order.id}>
+                          <TableCell className="font-medium">
+                            #{order.id.slice(0, 8)}
+                          </TableCell>
+                          <TableCell>
+                            <div>
+                              <p className="font-medium">{order.customer_name}</p>
+                              <p className="text-sm text-muted-foreground">{order.customer_phone}</p>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="outline" className={`flex items-center gap-1 w-fit ${orderTypeConfig.color}`}>
+                              <OrderTypeIcon className="w-3 h-3" />
+                              {orderTypeConfig.label}
+                            </Badge>
+                          </TableCell>
                         <TableCell className="font-medium">
                           ${order.total_amount.toFixed(2)}
                         </TableCell>
@@ -480,8 +497,9 @@ const OrdersManager = () => {
                             </Button>
                           </div>
                         </TableCell>
-                      </TableRow>
-                    ))}
+                        </TableRow>
+                      );
+                    })}
                   </TableBody>
                 </Table>
               </div>
@@ -540,7 +558,18 @@ const OrdersManager = () => {
                 </div>
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Tipo de Pedido</p>
-                  <p className="mt-1">{getOrderTypeBadge(selectedOrder.order_type)}</p>
+                  <div className="mt-1">
+                    {(() => {
+                      const config = getOrderTypeConfig(selectedOrder.order_type || 'pickup');
+                      const Icon = config.icon;
+                      return (
+                        <Badge variant="outline" className={`${config.color} flex items-center gap-1 w-fit`}>
+                          <Icon className="w-3 h-3" />
+                          {config.label}
+                        </Badge>
+                      );
+                    })()}
+                  </div>
                 </div>
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Fecha de Creación</p>
@@ -586,10 +615,13 @@ const OrdersManager = () => {
                       <p>{selectedOrder.customer_phone}</p>
                     </div>
                   )}
-                  {selectedOrder.delivery_address && (
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground">Dirección de Entrega</p>
-                      <p>{selectedOrder.delivery_address}</p>
+                  {selectedOrder.delivery_address && selectedOrder.order_type === 'delivery' && (
+                    <div className="bg-orange-50 dark:bg-orange-950/20 p-3 rounded-lg border border-orange-200 dark:border-orange-800">
+                      <div className="flex items-center gap-2 mb-1">
+                        <Truck className="w-4 h-4 text-orange-600 dark:text-orange-400" />
+                        <p className="text-sm font-semibold text-orange-900 dark:text-orange-100">Dirección de Entrega</p>
+                      </div>
+                      <p className="text-orange-800 dark:text-orange-200">{selectedOrder.delivery_address}</p>
                     </div>
                   )}
                 </div>

@@ -11,10 +11,32 @@ import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { toast } from 'sonner';
-import { Plus, Trash2 } from 'lucide-react';
+import { Plus, Trash2, AlertTriangle, Clock } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 const deliverySchema = z.object({
-  estimated_delivery_time: z.string().optional(),
+  estimated_delivery_time: z.string()
+    .optional()
+    .refine(
+      (val) => {
+        if (!val || val.trim() === '') return true; // Optional field
+        // Accept formats like: "30-45 min", "1-2 horas", "30 minutos", etc.
+        const validPattern = /^\d+(-\d+)?\s*(min|minutos|hora|horas|minutes|hours)?$/i;
+        return validPattern.test(val.trim());
+      },
+      {
+        message: 'Formato válido: "30-45 min", "1-2 horas", "30 minutos"',
+      }
+    ),
   skip_payment_digital_menu: z.boolean().default(false),
   delivery_price_mode: z.enum(['fixed', 'by_zone']).default('fixed'),
   fixed_delivery_price: z.number().min(0).default(0),
@@ -34,10 +56,21 @@ interface DeliverySettingsTabProps {
   initialData?: Partial<DeliveryFormData>;
 }
 
+const COMMON_DELIVERY_TIMES = [
+  '15-30 min',
+  '30-45 min',
+  '45-60 min',
+  '1-2 horas',
+];
+
 export const DeliverySettingsTab = ({ storeId, initialData }: DeliverySettingsTabProps) => {
   const [loading, setLoading] = useState(false);
   const [zones, setZones] = useState<DeliveryZone[]>([]);
   const [newZone, setNewZone] = useState({ zone_name: '', delivery_price: '' });
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [zoneToDelete, setZoneToDelete] = useState<{ id: string; name: string } | null>(null);
+  const [activeOrdersCount, setActiveOrdersCount] = useState(0);
+  const [showTimeSuggestions, setShowTimeSuggestions] = useState(false);
 
   const {
     register,
@@ -104,8 +137,20 @@ export const DeliverySettingsTab = ({ storeId, initialData }: DeliverySettingsTa
   };
 
   const handleAddZone = async () => {
-    if (!newZone.zone_name.trim() || !newZone.delivery_price) {
+    const trimmedZoneName = newZone.zone_name.trim();
+
+    if (!trimmedZoneName || !newZone.delivery_price) {
       toast.error('Por favor completa todos los campos');
+      return;
+    }
+
+    // Check for duplicate zone names (case-insensitive)
+    const isDuplicate = zones.some(
+      (zone) => zone.zone_name.toLowerCase() === trimmedZoneName.toLowerCase()
+    );
+
+    if (isDuplicate) {
+      toast.error(`La zona "${trimmedZoneName}" ya existe. Por favor usa un nombre diferente.`);
       return;
     }
 
@@ -113,7 +158,7 @@ export const DeliverySettingsTab = ({ storeId, initialData }: DeliverySettingsTa
       const { error } = await supabase.from('delivery_zones').insert([
         {
           store_id: storeId,
-          zone_name: newZone.zone_name,
+          zone_name: trimmedZoneName,
           delivery_price: parseFloat(newZone.delivery_price),
           display_order: zones.length,
         },
@@ -129,18 +174,55 @@ export const DeliverySettingsTab = ({ storeId, initialData }: DeliverySettingsTa
     }
   };
 
-  const handleDeleteZone = async (zoneId: string) => {
-    if (!confirm('¿Estás seguro de eliminar esta zona?')) return;
-
+  const checkActiveOrders = async (zoneName: string): Promise<number> => {
     try {
-      const { error } = await supabase.from('delivery_zones').delete().eq('id', zoneId);
+      // Check for active orders (pending, confirmed, preparing, ready) with this delivery zone
+      const { data, error } = await supabase
+        .from('orders')
+        .select('id', { count: 'exact', head: false })
+        .eq('store_id', storeId)
+        .eq('order_type', 'delivery')
+        .in('status', ['pending', 'confirmed', 'preparing', 'ready'])
+        .ilike('delivery_address', `%${zoneName}%`);
 
       if (error) throw error;
-      toast.success('Zona eliminada');
+      return data?.length || 0;
+    } catch (error) {
+      console.error('Error checking active orders:', error);
+      return 0;
+    }
+  };
+
+  const handleDeleteZoneClick = async (zoneId: string, zoneName: string) => {
+    // Check if there are active orders for this zone
+    const count = await checkActiveOrders(zoneName);
+    setActiveOrdersCount(count);
+    setZoneToDelete({ id: zoneId, name: zoneName });
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDeleteZone = async () => {
+    if (!zoneToDelete) return;
+
+    try {
+      const { error } = await supabase.from('delivery_zones').delete().eq('id', zoneToDelete.id);
+
+      if (error) throw error;
+
+      if (activeOrdersCount > 0) {
+        toast.success(`Zona eliminada. Nota: ${activeOrdersCount} orden(es) activa(s) tenían esta zona asignada.`);
+      } else {
+        toast.success('Zona eliminada correctamente');
+      }
+
       fetchZones();
     } catch (error) {
       console.error('Error deleting zone:', error);
       toast.error('Error al eliminar zona');
+    } finally {
+      setDeleteDialogOpen(false);
+      setZoneToDelete(null);
+      setActiveOrdersCount(0);
     }
   };
 
@@ -149,16 +231,53 @@ export const DeliverySettingsTab = ({ storeId, initialData }: DeliverySettingsTa
       <Card className="border-0 shadow-none md:border md:shadow-sm">
         <CardContent className="px-4 md:px-6 pt-4 md:pt-6 space-y-4 md:space-y-6">
           <div className="space-y-2">
-            <Label htmlFor="estimated_delivery_time" className="text-sm md:text-base">
+            <Label htmlFor="estimated_delivery_time" className="text-sm md:text-base flex items-center gap-2">
+              <Clock className="w-4 h-4" />
               Tiempo estimado de envío
             </Label>
-            <Input
-              id="estimated_delivery_time"
-              {...register('estimated_delivery_time')}
-              placeholder="Ej: 30-45 minutos"
-              className="h-11 md:h-10 text-base md:text-sm"
-            />
-            <p className="text-xs md:text-sm text-muted-foreground">Esta opción se muestra en la página de orden.</p>
+            <div className="relative">
+              <Input
+                id="estimated_delivery_time"
+                {...register('estimated_delivery_time')}
+                placeholder="Ej: 30-45 min"
+                className={`h-11 md:h-10 text-base md:text-sm ${errors.estimated_delivery_time ? 'border-red-500' : ''}`}
+                onFocus={() => setShowTimeSuggestions(true)}
+                onBlur={() => setTimeout(() => setShowTimeSuggestions(false), 200)}
+              />
+
+              {/* Suggestions dropdown */}
+              {showTimeSuggestions && (
+                <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-800 border rounded-md shadow-lg">
+                  <div className="p-2 text-xs font-medium text-muted-foreground border-b">
+                    Tiempos sugeridos:
+                  </div>
+                  {COMMON_DELIVERY_TIMES.map((time) => (
+                    <button
+                      key={time}
+                      type="button"
+                      onClick={() => {
+                        setValue('estimated_delivery_time', time);
+                        setShowTimeSuggestions(false);
+                      }}
+                      className="w-full px-3 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                    >
+                      {time}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {errors.estimated_delivery_time && (
+              <p className="text-xs text-red-500 flex items-center gap-1">
+                <AlertTriangle className="w-3 h-3" />
+                {errors.estimated_delivery_time.message}
+              </p>
+            )}
+
+            <p className="text-xs md:text-sm text-muted-foreground">
+              Esta opción se muestra en la página de orden. Formato: "30-45 min", "1-2 horas"
+            </p>
           </div>
 
           {/* <div className="space-y-2">
@@ -249,7 +368,7 @@ export const DeliverySettingsTab = ({ storeId, initialData }: DeliverySettingsTa
                                 type="button"
                                 variant="ghost"
                                 size="icon"
-                                onClick={() => handleDeleteZone(zone.id)}
+                                onClick={() => handleDeleteZoneClick(zone.id, zone.zone_name)}
                                 className="h-9 w-9 md:h-8 md:w-8"
                               >
                                 <Trash2 className="w-4 h-4" />
@@ -302,6 +421,48 @@ export const DeliverySettingsTab = ({ storeId, initialData }: DeliverySettingsTa
       <Button type="submit" disabled={loading} className="w-full md:w-auto h-11 md:h-10 text-base md:text-sm">
         {loading ? 'Guardando...' : 'Guardar Cambios'}
       </Button>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              {activeOrdersCount > 0 && <AlertTriangle className="w-5 h-5 text-orange-500" />}
+              {activeOrdersCount > 0 ? '¡Atención! Órdenes activas encontradas' : 'Confirmar eliminación'}
+            </AlertDialogTitle>
+            <AlertDialogDescription className="space-y-2">
+              {activeOrdersCount > 0 ? (
+                <>
+                  <p className="font-medium text-orange-600 dark:text-orange-400">
+                    Se encontraron {activeOrdersCount} orden(es) activa(s) que incluyen la zona "{zoneToDelete?.name}".
+                  </p>
+                  <p>
+                    Estas órdenes están en estado pendiente, confirmado, preparando o listo para entrega.
+                  </p>
+                  <p className="font-medium">
+                    ¿Estás seguro de que deseas eliminar esta zona? Las órdenes existentes no se verán afectadas,
+                    pero no podrás usar esta zona para nuevas órdenes.
+                  </p>
+                </>
+              ) : (
+                <p>
+                  ¿Estás seguro de que deseas eliminar la zona "{zoneToDelete?.name}"?
+                  Esta acción no se puede deshacer.
+                </p>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDeleteZone}
+              className={activeOrdersCount > 0 ? 'bg-orange-600 hover:bg-orange-700' : ''}
+            >
+              {activeOrdersCount > 0 ? 'Eliminar de todas formas' : 'Eliminar'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </form>
   );
 };

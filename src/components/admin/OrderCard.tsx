@@ -2,7 +2,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Eye, FileImage, Phone, Mail, MapPin, Calendar, DollarSign } from "lucide-react";
+import { Eye, FileImage, Phone, Mail, MapPin, Calendar, DollarSign, Truck, Store, Utensils } from "lucide-react";
 
 interface OrderItemExtra {
   id: string;
@@ -42,13 +42,25 @@ interface OrderCardProps {
 }
 
 export const OrderCard = ({ order, onStatusChange, onViewDetails }: OrderCardProps) => {
-  const getOrderTypeBadge = (type: string) => {
-    const typeConfig: Record<string, string> = {
-      delivery: "Entrega",
-      pickup: "Recoger",
-      digital_menu: "En Tienda"
+  const getOrderTypeConfig = (type: string) => {
+    const typeConfig: Record<string, { label: string; icon: any; color: string }> = {
+      delivery: {
+        label: "Entrega",
+        icon: Truck,
+        color: "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-100 border-orange-300"
+      },
+      pickup: {
+        label: "Recoger",
+        icon: Store,
+        color: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100 border-blue-300"
+      },
+      digital_menu: {
+        label: "En Tienda",
+        icon: Utensils,
+        color: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100 border-green-300"
+      }
     };
-    return typeConfig[type] || type;
+    return typeConfig[type] || typeConfig.pickup;
   };
 
   const getStatusColor = (status: string) => {
@@ -75,16 +87,21 @@ export const OrderCard = ({ order, onStatusChange, onViewDetails }: OrderCardPro
     return labels[status] || status;
   };
 
+  const orderTypeConfig = getOrderTypeConfig(order.order_type || 'pickup');
+  const OrderTypeIcon = orderTypeConfig.icon;
+  const isDelivery = order.order_type === 'delivery';
+
   return (
-    <Card className="overflow-hidden hover:shadow-md transition-shadow">
+    <Card className={`overflow-hidden hover:shadow-md transition-shadow ${isDelivery ? 'border-l-4 border-l-orange-500' : ''}`}>
       <CardContent className="p-4 space-y-3">
         {/* Header */}
         <div className="flex items-start justify-between gap-2">
           <div className="space-y-1 flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
               <span className="text-sm font-mono font-bold">#{order.id.slice(0, 8)}</span>
-              <Badge variant="outline" className="text-xs">
-                {getOrderTypeBadge(order.order_type || 'delivery')}
+              <Badge variant="outline" className={`text-xs flex items-center gap-1 ${orderTypeConfig.color}`}>
+                <OrderTypeIcon className="w-3 h-3" />
+                {orderTypeConfig.label}
               </Badge>
             </div>
             <div className="flex items-center gap-2 text-muted-foreground">

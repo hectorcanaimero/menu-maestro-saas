@@ -36,15 +36,42 @@ export const useOrderNotifications = () => {
         },
         (payload) => {
           console.log('New order received:', payload);
-          
+
           const order = payload.new as any;
-          
-          // Show toast notification
-          toast.success('¡Nueva orden recibida!', {
-            description: `Cliente: ${order.customer_name} - Total: ${order.total_amount}`,
-            duration: 5000,
+          const orderType = order.order_type || 'pickup';
+
+          // Determine notification title and icon based on order type
+          const notificationConfig = {
+            delivery: {
+              title: '🚚 ¡Nueva orden de DELIVERY!',
+              icon: '🚚',
+            },
+            pickup: {
+              title: '🏪 ¡Nueva orden para RECOGER!',
+              icon: '🏪',
+            },
+            digital_menu: {
+              title: '🍽️ ¡Nueva orden en TIENDA!',
+              icon: '🍽️',
+            }
+          };
+
+          const config = notificationConfig[orderType as keyof typeof notificationConfig] || notificationConfig.pickup;
+
+          // Build description with delivery address if applicable
+          let description = `Cliente: ${order.customer_name} - Total: $${Number(order.total_amount).toFixed(2)}`;
+
+          if (orderType === 'delivery' && order.delivery_address) {
+            description += `\n📍 ${order.delivery_address}`;
+          }
+
+          // Show toast notification with specific styling for delivery
+          toast.success(config.title, {
+            description,
+            duration: orderType === 'delivery' ? 8000 : 5000, // Longer duration for delivery orders
+            className: orderType === 'delivery' ? 'border-l-4 border-l-orange-500' : undefined,
           });
-          
+
           // Play notification sound
           playNotificationSound(volume, repeatCount);
         }

@@ -1,25 +1,29 @@
+import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
-import { 
-  Phone, 
-  CheckCircle2, 
+import {
+  Phone,
+  CheckCircle2,
   XCircle,
   Loader2,
   Zap,
   ShoppingBag,
   PackageCheck,
   ShoppingCart,
-  Server
+  Server,
+  QrCode
 } from "lucide-react";
 import { useWhatsAppSettings } from "@/hooks/useWhatsAppSettings";
 import { Separator } from "@/components/ui/separator";
+import { WhatsAppConnectionModal } from "./WhatsAppConnectionModal";
 
 const WhatsAppConfig = () => {
-  const { settings, loading, testing, instanceName, updateSettings, testConnection, disconnect } = useWhatsAppSettings();
+  const { settings, loading, testing, instanceName, updateSettings, testConnection, disconnect, refetch } = useWhatsAppSettings();
+  const [connectionModalOpen, setConnectionModalOpen] = useState(false);
 
   if (loading) {
     return (
@@ -115,24 +119,41 @@ const WhatsAppConfig = () => {
             )}
           </div>
 
-          <div className="flex gap-2">
-            <Button 
-              onClick={testConnection}
-              disabled={testing || !instanceName}
-            >
-              {testing ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Probando...
-                </>
-              ) : (
-                "Probar Conexión"
-              )}
-            </Button>
-            {settings?.is_connected && (
-              <Button variant="destructive" onClick={disconnect}>
-                Desconectar
+          <div className="flex gap-2 flex-wrap">
+            {!settings?.is_connected ? (
+              <Button
+                onClick={() => setConnectionModalOpen(true)}
+                disabled={!instanceName}
+                className="flex-1 sm:flex-none"
+              >
+                <QrCode className="h-4 w-4 mr-2" />
+                Conectar WhatsApp
               </Button>
+            ) : (
+              <>
+                <Button
+                  onClick={testConnection}
+                  disabled={testing || !instanceName}
+                  variant="outline"
+                  className="flex-1 sm:flex-none"
+                >
+                  {testing ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Probando...
+                    </>
+                  ) : (
+                    "Probar Conexión"
+                  )}
+                </Button>
+                <Button
+                  variant="destructive"
+                  onClick={disconnect}
+                  className="flex-1 sm:flex-none"
+                >
+                  Desconectar
+                </Button>
+              </>
             )}
           </div>
 
@@ -223,6 +244,16 @@ const WhatsAppConfig = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* Connection Modal */}
+      <WhatsAppConnectionModal
+        open={connectionModalOpen}
+        onOpenChange={setConnectionModalOpen}
+        onConnected={() => {
+          // Refresh settings after connection
+          refetch();
+        }}
+      />
     </div>
   );
 };
