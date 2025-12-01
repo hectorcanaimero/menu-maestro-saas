@@ -36,6 +36,7 @@ const AdminPromotions = lazy(() => import("./pages/admin/AdminPromotions"));
 const AdminCoupons = lazy(() => import("./pages/admin/AdminCoupons"));
 const AdminAI = lazy(() => import("./pages/admin/AdminAI"));
 const AdminWhatsApp = lazy(() => import("./pages/admin/AdminWhatsApp"));
+const AdminDelivery = lazy(() => import("./pages/admin/AdminDelivery"));
 const StoreSettings = lazy(() => import("./pages/admin/StoreSettings"));
 
 const queryClient = new QueryClient();
@@ -53,56 +54,86 @@ const App = () => (
               <Suspense fallback={<LoadingScreen />}>
                 <Routes>
                   {/* Public Routes */}
-                  <Route path="/" element={
-                    <SectionErrorBoundary>
-                      <Index />
-                    </SectionErrorBoundary>
-                  } />
-            <Route path="/welcome" element={
-              <SectionErrorBoundary>
-                <Welcome />
-              </SectionErrorBoundary>
-            } />
-            <Route path="/auth" element={
-              <SectionErrorBoundary>
-                <Auth />
-              </SectionErrorBoundary>
-            } />
-            <Route path="/create-store" element={
-              <SectionErrorBoundary>
-                <CreateStore />
-              </SectionErrorBoundary>
-            } />
-            <Route path="/landing" element={
-              <SectionErrorBoundary>
-                <LandingPage />
-              </SectionErrorBoundary>
-            } />
-                  <Route path="/checkout" element={
-                    <SectionErrorBoundary>
-                      <Checkout />
-                    </SectionErrorBoundary>
-                  } />
-                  <Route path="/confirm-order" element={
-                    <SectionErrorBoundary>
-                      <ConfirmOrder />
-                    </SectionErrorBoundary>
-                  } />
-                  <Route path="/my-orders" element={
-                    <SectionErrorBoundary>
-                      <MyOrders />
-                    </SectionErrorBoundary>
-                  } />
-                  <Route path="/track/:orderId" element={
-                    <SectionErrorBoundary>
-                      <TrackOrder />
-                    </SectionErrorBoundary>
-                  } />
-                  <Route path="/products/:id" element={
-                    <SectionErrorBoundary>
-                      <ProductDetail />
-                    </SectionErrorBoundary>
-                  } />
+                  <Route
+                    path="/"
+                    element={
+                      <SectionErrorBoundary>
+                        <Index />
+                      </SectionErrorBoundary>
+                    }
+                  />
+                  <Route
+                    path="/welcome"
+                    element={
+                      <SectionErrorBoundary>
+                        <Welcome />
+                      </SectionErrorBoundary>
+                    }
+                  />
+                  <Route
+                    path="/auth"
+                    element={
+                      <SectionErrorBoundary>
+                        <Auth />
+                      </SectionErrorBoundary>
+                    }
+                  />
+                  <Route
+                    path="/create-store"
+                    element={
+                      <SectionErrorBoundary>
+                        <CreateStore />
+                      </SectionErrorBoundary>
+                    }
+                  />
+                  <Route
+                    path="/landing"
+                    element={
+                      <SectionErrorBoundary>
+                        <LandingPage />
+                      </SectionErrorBoundary>
+                    }
+                  />
+                  <Route
+                    path="/checkout"
+                    element={
+                      <SectionErrorBoundary>
+                        <Checkout />
+                      </SectionErrorBoundary>
+                    }
+                  />
+                  <Route
+                    path="/confirm-order"
+                    element={
+                      <SectionErrorBoundary>
+                        <ConfirmOrder />
+                      </SectionErrorBoundary>
+                    }
+                  />
+                  <Route
+                    path="/my-orders"
+                    element={
+                      <SectionErrorBoundary>
+                        <MyOrders />
+                      </SectionErrorBoundary>
+                    }
+                  />
+                  <Route
+                    path="/track/:orderId"
+                    element={
+                      <SectionErrorBoundary>
+                        <TrackOrder />
+                      </SectionErrorBoundary>
+                    }
+                  />
+                  <Route
+                    path="/products/:id"
+                    element={
+                      <SectionErrorBoundary>
+                        <ProductDetail />
+                      </SectionErrorBoundary>
+                    }
+                  />
 
                   {/* Protected Admin Routes */}
                   <Route
@@ -225,7 +256,16 @@ const App = () => (
                       </ProtectedRoute>
                     }
                   />
-
+                  <Route
+                    path="/admin/delivery"
+                    element={
+                      <ProtectedRoute>
+                        <SectionErrorBoundary>
+                          <AdminDelivery />
+                        </SectionErrorBoundary>
+                      </ProtectedRoute>
+                    }
+                  />
                   {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                   <Route path="*" element={<NotFound />} />
                 </Routes>
