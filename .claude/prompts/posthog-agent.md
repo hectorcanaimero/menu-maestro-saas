@@ -30,13 +30,21 @@ Ayudas al equipo a:
   - Properties: `store_id`, `items_count`, `total_items`, `cart_value`, `order_type`
 - `checkout_step_completed` - Usuario completa un paso (1, 2, o 3)
   - Properties: `store_id`, `step`, `order_type`, `items_count`, `cart_value`
+- `order_placed` - Orden confirmada exitosamente ✅ IMPLEMENTADO
+  - Properties: `store_id`, `order_id`, `order_number`, `order_type`, `order_total`, `items_count`, `total_items`, `delivery_price`, `coupon_discount`, `coupon_code`, `payment_method`, `customer_email`, `timestamp`
+  - Archivo: `src/pages/ConfirmOrder.tsx`
 
 **Cart Actions:**
 
-- `product_added_to_cart` - Usuario agrega producto al carrito
-  - Properties: `store_id`, `product_id`, `product_name`, `quantity`, `price`, `has_extras`
-- `product_removed_from_cart` - Usuario remueve producto
-  - Properties: `product_id`, `store_id`
+- `product_added_to_cart` - Usuario agrega producto al carrito ✅ ACTUALIZADO
+  - Properties: `store_id`, `product_id`, `product_name`, `product_price`, `quantity`, `extras_count`, `extras_price`, `total_price`, `category_id`, `has_extras`, `cart_value`, `items_in_cart`
+  - Archivo: `src/contexts/CartContext.tsx`
+- `product_removed_from_cart` - Usuario remueve producto ✅ ACTUALIZADO
+  - Properties: `store_id`, `product_id`, `product_name`, `product_price`, `quantity`, `extras_count`, `extras_price`, `total_price`, `category_id`
+  - Archivo: `src/contexts/CartContext.tsx`
+- `cart_viewed` - Usuario abre el carrito ✅ IMPLEMENTADO
+  - Properties: `store_id`, `items_count`, `total_items`, `cart_value`, `has_items`
+  - Archivo: `src/components/cart/CartSheet.tsx`
 
 **User Identification:**
 
@@ -45,7 +53,6 @@ Ayudas al equipo a:
 
 ### Eventos Pendientes (No implementados aún)
 
-- `order_placed` - Orden confirmada
 - `product_viewed` - Producto visto en catálogo
 - `admin_menu_item_created` - Admin crea item
 - `admin_settings_updated` - Admin cambia configuración
@@ -145,10 +152,11 @@ checkout_step_completed (step=2) (?)
   ↓
 checkout_step_completed (step=3) (?)
   ↓
-order_placed (?) [PENDIENTE]
+order_placed (?) ✅ IMPLEMENTADO
 ```
 
 **Meta:** 50-60% conversión overall
+**Status:** ✅ Funnel completo - todos los eventos implementados
 
 ### 2. Cart Abandonment
 
@@ -293,10 +301,29 @@ Todo en el dashboard 'Delivery Analytics'"
 
 ## Limitaciones Actuales
 
-- ❌ No hay `order_placed` (el funnel está incompleto)
+- ✅ ~~No hay `order_placed`~~ IMPLEMENTADO - el funnel está completo
+- ✅ ~~No hay `cart_viewed`~~ IMPLEMENTADO - rastreamos cuando los usuarios abren el carrito
 - ❌ No hay `product_viewed` (no sabemos qué ven pero no compran)
 - ❌ No hay eventos de admin (no medimos engagement de store owners)
 - ⚠️ Session replay está habilitado pero necesitas activarlo en el plan
+
+## Últimas Actualizaciones (2025-11-30)
+
+✅ **Eventos Implementados Recientemente:**
+1. `order_placed` - Tracking completo de órdenes confirmadas (ConfirmOrder.tsx)
+2. `cart_viewed` - Tracking cuando usuario abre el carrito (CartSheet.tsx)
+3. Agregado `store_id` a TODOS los eventos de carrito
+4. Agregado `cart_value` y `items_in_cart` a `product_added_to_cart`
+
+📊 **Insights de PostHog Creados:**
+1. 🛒 Cart Abandonment Funnel - Complete (ID: 5245817)
+2. 📉 Abandoned Cart Rate % (ID: 5245818)
+3. 💰 Cart Value: Abandoned vs Completed (ID: 5245825)
+4. 💸 Total Abandoned Cart Value ($) (ID: 5245833)
+5. 📱 Abandonment Rate by Device (ID: 5245843)
+6. 🛒 Cart Abandonment Analytics Dashboard (ID: 806454)
+
+**Dashboard URL:** https://us.i.posthog.com/project/185811/dashboard/806454
 
 ## Comandos Útiles
 

@@ -37,7 +37,7 @@ interface DeliveryZone {
 // Create validation schema for each step
 const createStepSchema = (
   step: number,
-  orderType: "delivery" | "pickup" | "digital_menu",
+  orderType: "delivery" | "pickup",
   removeZipcode: boolean,
   removeAddressNumber: boolean,
   requirePaymentMethod: boolean,
@@ -91,14 +91,6 @@ const createStepSchema = (
       }
 
       return z.object(schema);
-    } else if (orderType === "digital_menu") {
-      return z.object({
-        table_number: z
-          .string()
-          .trim()
-          .min(1, { message: "El número de mesa es requerido" })
-          .max(10, { message: "El número de mesa no puede exceder 10 caracteres" }),
-      });
     }
   } else if (step === 3) {
     // Step 3: Payment + notes
@@ -146,7 +138,7 @@ const Checkout = () => {
   const [paymentProofFile, setPaymentProofFile] = useState<File | null>(null);
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
   const [deliveryZones, setDeliveryZones] = useState<DeliveryZone[]>([]);
-  const [orderType, setOrderType] = useState<"delivery" | "pickup" | "digital_menu">("delivery");
+  const [orderType, setOrderType] = useState<"delivery" | "pickup">("delivery");
   const [deliveryPrice, setDeliveryPrice] = useState(0);
   
   // Coupon state
@@ -466,7 +458,6 @@ const Checkout = () => {
     if (currentStep === 1) return "Información del Cliente";
     if (currentStep === 2) {
       if (orderType === "delivery") return "Información de Entrega";
-      if (orderType === "digital_menu") return "Información de Mesa";
       return "Confirmar Tipo de Orden";
     }
     return "Método de Pago";
@@ -539,16 +530,6 @@ const Checkout = () => {
                         onClick={() => setOrderType("pickup")}
                       >
                         Pickup
-                      </Button>
-                    )}
-                    {store?.operating_modes?.includes("digital_menu") && (
-                      <Button
-                        type="button"
-                        variant={orderType === "digital_menu" ? "default" : "outline"}
-                        className="h-auto py-3 whitespace-normal text-center leading-tight min-h-[56px]"
-                        onClick={() => setOrderType("digital_menu")}
-                      >
-                        Servicio en Tienda
                       </Button>
                     )}
                   </div>
@@ -696,22 +677,6 @@ const Checkout = () => {
                       />
                     )}
                   </>
-                )}
-
-                {orderType === "digital_menu" && (
-                  <FormField
-                    control={form.control}
-                    name="table_number"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Número de Mesa *</FormLabel>
-                        <FormControl>
-                          <Input {...field} type="number" placeholder="1" className="text-2xl text-center py-8" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
                 )}
 
                 {orderType === "pickup" && (

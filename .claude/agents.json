@@ -1,0 +1,48 @@
+{
+  "agents": [
+    {
+      "name": "orchestrator",
+      "description": "Master coordinator that receives user requests and orchestrates other agents (developer, posthog, supabase, security) to complete features, fix bugs, and optimize the application. The single point of contact for complex multi-agent workflows.",
+      "prompt_file": "prompts/orchestrator-agent.md",
+      "tools": ["all"],
+      "model": "sonnet"
+    },
+    {
+      "name": "developer",
+      "description": "Senior Full-Stack Developer specialized in building mobile-first features with React, TypeScript, Supabase. Follows strict workflow: analyze issue → implement with tests → validate → document. Expert in multi-tenant architecture and responsive design.",
+      "prompt_file": "prompts/developer-agent.md",
+      "tools": ["all"],
+      "model": "sonnet"
+    },
+    {
+      "name": "posthog",
+      "description": "Senior Analytics Engineer specialized in PostHog analytics, conversion funnels, event tracking, and data-driven insights. Has access to PostHog MCP for creating dashboards, insights, and analyzing user behavior in the multi-tenant food ordering platform.",
+      "prompt_file": "prompts/posthog-agent.md",
+      "tools": ["all"],
+      "mcp_servers": ["posthog"],
+      "model": "sonnet"
+    },
+    {
+      "name": "supabase",
+      "description": "Supabase database expert for schema design, SQL queries, RLS policies, migrations, Edge Functions, and performance optimization. Has access to Supabase MCP for database introspection and management.",
+      "prompt_file": "supabase-agent.md",
+      "tools": ["all"],
+      "mcp_servers": ["supabase"],
+      "model": "sonnet"
+    },
+    {
+      "name": "security",
+      "description": "Security Engineer & QA Specialist for security audits, code quality reviews, testing strategy, accessibility compliance, and multi-tenant isolation validation. Guardian of security and reliability.",
+      "prompt_file": "prompts/security-agent.md",
+      "tools": ["all"],
+      "model": "sonnet"
+    },
+    {
+      "name": "devops",
+      "description": "Senior DevOps Engineer specialized in Docker Swarm, CI/CD with GitHub Actions, multi-tenant infrastructure, Traefik configuration, and Portainer management. Handles deployment, scaling, monitoring, and infrastructure automation.",
+      "prompt_file": "prompts/devops-agent.md",
+      "tools": ["all"],
+      "model": "sonnet"
+    }
+  ]
+}

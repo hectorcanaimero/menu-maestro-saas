@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { toast } from "sonner";
 import posthog from "posthog-js";
+import { useStore } from "./StoreContext";
 
 interface CartItemExtra {
   id: string;
@@ -32,6 +33,7 @@ interface CartContextType {
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export const CartProvider = ({ children }: { children: ReactNode }) => {
+  const { store } = useStore();
   const [items, setItems] = useState<CartItem[]>(() => {
     const saved = localStorage.getItem("cart");
     return saved ? JSON.parse(saved) : [];
@@ -66,7 +68,20 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         const extrasPrice = item.extras?.reduce((sum, extra) => sum + extra.price, 0) || 0;
         const totalPrice = item.price + extrasPrice;
 
+        // Calculate total cart value (including current cart + new item)
+        const currentCartValue = current.reduce((sum, cartItem) => {
+          const itemExtrasPrice = cartItem.extras?.reduce((acc, extra) => acc + extra.price, 0) || 0;
+          return sum + (cartItem.price + itemExtrasPrice) * cartItem.quantity;
+        }, 0);
+
+        // Add the new item to cart value
+        const newItemValue = totalPrice * (existing ? existing.quantity + 1 : 1);
+        const updatedCartValue = existing
+          ? currentCartValue + totalPrice // Add one more unit of existing item
+          : currentCartValue + newItemValue; // Add new item
+
         posthog.capture('product_added_to_cart', {
+          store_id: store?.id,
           product_id: item.id,
           product_name: item.name,
           product_price: item.price,
@@ -76,6 +91,8 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
           category_id: item.categoryId,
           has_extras: (item.extras?.length || 0) > 0,
           quantity: existing ? existing.quantity + 1 : 1,
+          cart_value: updatedCartValue,
+          items_in_cart: existing ? current.length : current.length + 1,
         });
       } catch (error) {
         console.error('[PostHog] Error tracking add to cart:', error);
@@ -103,6 +120,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
           const totalPrice = (itemToRemove.price + extrasPrice) * itemToRemove.quantity;
 
           posthog.capture('product_removed_from_cart', {
+            store_id: store?.id,
             product_id: itemToRemove.id,
             product_name: itemToRemove.name,
             product_price: itemToRemove.price,

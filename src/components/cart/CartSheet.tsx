@@ -6,15 +6,35 @@ import { useNavigate } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { useCartTotals } from "@/hooks/useCartTotals";
 import { useFormatPrice } from "@/lib/priceFormatter";
+import { useStore } from "@/contexts/StoreContext";
+import posthog from "posthog-js";
 
 export const CartSheet = () => {
   const { items, updateQuantity, removeItem, totalItems } = useCart();
   const { originalTotal, discountedTotal, totalSavings } = useCartTotals(items);
+  const { store } = useStore();
   const navigate = useNavigate();
   const formatPrice = useFormatPrice();
 
+  const handleOpenChange = (open: boolean) => {
+    if (open && store?.id) {
+      // Track cart_viewed event when cart is opened
+      try {
+        posthog.capture('cart_viewed', {
+          store_id: store.id,
+          items_count: items.length,
+          total_items: totalItems,
+          cart_value: discountedTotal,
+          has_items: items.length > 0,
+        });
+      } catch (error) {
+        console.error('[PostHog] Error tracking cart_viewed:', error);
+      }
+    }
+  };
+
   return (
-    <Sheet>
+    <Sheet onOpenChange={handleOpenChange}>
       <SheetTrigger asChild>
         <Button variant="outline" size="icon" className="relative">
           <ShoppingCart className="w-5 h-5" />

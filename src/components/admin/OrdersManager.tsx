@@ -12,8 +12,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { toast } from "sonner";
-import { Package, RefreshCw, Eye, Filter, Download, ExternalLink, FileImage, X } from "lucide-react";
+import { Package, RefreshCw, Eye, Filter, Download, ExternalLink, FileImage, X, Plus, Edit } from "lucide-react";
 import { OrderCard } from "./OrderCard";
+import { AdminOrderCreate } from "./AdminOrderCreate";
+import { AdminOrderEdit } from "./AdminOrderEdit";
 
 interface OrderItemExtra {
   id: string;
@@ -53,6 +55,11 @@ const OrdersManager = () => {
   const [loading, setLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
+
+  // Admin order management
+  const [createOrderOpen, setCreateOrderOpen] = useState(false);
+  const [editOrderOpen, setEditOrderOpen] = useState(false);
+  const [editOrderId, setEditOrderId] = useState<string | null>(null);
 
   // Filter states
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -171,6 +178,15 @@ const OrdersManager = () => {
     setDetailsOpen(true);
   };
 
+  const handleEditOrder = (orderId: string) => {
+    setEditOrderId(orderId);
+    setEditOrderOpen(true);
+  };
+
+  const handleOrderCreatedOrEdited = () => {
+    fetchOrders(); // Refresh orders list
+  };
+
   // Pagination
   const totalPages = Math.ceil(filteredOrders.length / ordersPerPage);
   const startIndex = (currentPage - 1) * ordersPerPage;
@@ -200,6 +216,19 @@ const OrdersManager = () => {
 
   return (
     <>
+      <AdminOrderCreate
+        open={createOrderOpen}
+        onOpenChange={setCreateOrderOpen}
+        onSuccess={handleOrderCreatedOrEdited}
+      />
+
+      <AdminOrderEdit
+        open={editOrderOpen}
+        onOpenChange={setEditOrderOpen}
+        orderId={editOrderId}
+        onSuccess={handleOrderCreatedOrEdited}
+      />
+
       <Card>
         <CardHeader>
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -207,10 +236,16 @@ const OrdersManager = () => {
               <Package className="w-5 h-5" />
               Gestión de Pedidos
             </CardTitle>
-            <Button variant="outline" size="sm" onClick={fetchOrders}>
-              <RefreshCw className="w-4 h-4 mr-2" />
-              Actualizar
-            </Button>
+            <div className="flex gap-2">
+              <Button variant="default" size="sm" onClick={() => setCreateOrderOpen(true)}>
+                <Plus className="w-4 h-4 mr-2" />
+                Crear Pedido
+              </Button>
+              <Button variant="outline" size="sm" onClick={fetchOrders}>
+                <RefreshCw className="w-4 h-4 mr-2" />
+                Actualizar
+              </Button>
+            </div>
           </div>
         </CardHeader>
         <CardContent>
@@ -426,14 +461,24 @@ const OrdersManager = () => {
                           </div>
                         </TableCell>
                         <TableCell className="text-right">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleViewDetails(order)}
-                          >
-                            <Eye className="w-4 h-4 mr-2" />
-                            Ver detalles
-                          </Button>
+                          <div className="flex items-center justify-end gap-2">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleEditOrder(order.id)}
+                            >
+                              <Edit className="w-4 h-4 mr-2" />
+                              Editar
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleViewDetails(order)}
+                            >
+                              <Eye className="w-4 h-4 mr-2" />
+                              Ver
+                            </Button>
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))}

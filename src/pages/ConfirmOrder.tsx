@@ -14,6 +14,7 @@ import { useFormatPrice } from "@/lib/priceFormatter";
 import { findOrCreateCustomer } from "@/services/customerService";
 import { completeOrder } from "@/services/orderService";
 import { redirectToWhatsApp } from "@/lib/whatsappMessageGenerator";
+import posthog from "posthog-js";
 
 interface OrderData {
   customer_name: string;
@@ -27,7 +28,7 @@ interface OrderData {
   table_number?: string;
   notes?: string;
   payment_method?: string;
-  order_type: "delivery" | "pickup" | "digital_menu";
+  order_type: "delivery" | "pickup";
   payment_proof_url?: string;
   country?: string;
   delivery_price?: number;
@@ -104,6 +105,27 @@ const ConfirmOrder = () => {
         store
       );
 
+      // Track order_placed event in PostHog
+      try {
+        posthog.capture('order_placed', {
+          store_id: store.id,
+          order_id: result.orderId,
+          order_number: result.orderNumber,
+          order_type: orderData.order_type,
+          order_total: grandTotal,
+          items_count: items.length,
+          total_items: items.reduce((sum, item) => sum + item.quantity, 0),
+          delivery_price: deliveryPrice,
+          coupon_discount: couponDiscount,
+          coupon_code: orderData.coupon_code || null,
+          payment_method: orderData.payment_method || null,
+          customer_email: orderData.customer_email,
+          timestamp: Date.now(),
+        });
+      } catch (error) {
+        console.error('[PostHog] Error tracking order_placed:', error);
+      }
+
       // Handle WhatsApp redirect if configured
       if (result.shouldRedirectToWhatsApp && result.whatsappNumber && result.whatsappMessage) {
         toast.success("¡Pedido realizado! Redirigiendo a WhatsApp...");
@@ -142,8 +164,6 @@ const ConfirmOrder = () => {
         return "Entrega a Domicilio";
       case "pickup":
         return "Recoger en Tienda";
-      case "digital_menu":
-        return "Servicio en Tienda";
       default:
         return orderData.order_type;
     }
@@ -240,21 +260,6 @@ const ConfirmOrder = () => {
                 {orderData.address_zipcode && (
                   <p className="text-muted-foreground">Código Postal: {orderData.address_zipcode}</p>
                 )}
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Table Number for Digital Menu */}
-          {orderData.order_type === "digital_menu" && orderData.table_number && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Hash className="w-5 h-5" />
-                  Número de Mesa
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-2xl font-bold">{orderData.table_number}</p>
               </CardContent>
             </Card>
           )}
