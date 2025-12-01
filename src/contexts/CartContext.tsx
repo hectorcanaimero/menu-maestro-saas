@@ -3,13 +3,13 @@ import { toast } from "sonner";
 import posthog from "posthog-js";
 import { useStore } from "./StoreContext";
 
-interface CartItemExtra {
+export interface CartItemExtra {
   id: string;
   name: string;
   price: number;
 }
 
-interface CartItem {
+export interface CartItem {
   id: string;
   name: string;
   price: number;

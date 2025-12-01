@@ -123,12 +123,12 @@ export const AdminOrderEdit = ({ open, onOpenChange, orderId, onSuccess }: Admin
 
     setLoading(true);
     try {
-      // Check if can edit
-      const { data: canEditData } = await supabase.rpc("admin_can_edit_order", {
+      // Check if can edit using type assertion for custom RPC
+      const { data: canEditData } = await (supabase.rpc as any)("admin_can_edit_order", {
         p_order_id: orderId,
       });
 
-      if (canEditData && canEditData.length > 0) {
+      if (canEditData && Array.isArray(canEditData) && canEditData.length > 0) {
         const result = canEditData[0];
         setCanEdit(result.can_edit);
         setEditReason(result.reason || "");
@@ -253,7 +253,7 @@ export const AdminOrderEdit = ({ open, onOpenChange, orderId, onSuccess }: Admin
       return sum + (item.price_at_time + extrasTotal) * item.quantity;
     }, 0);
 
-    const deliveryPrice = order?.delivery_price || 0;
+    const deliveryPrice = order?.delivery_price ?? 0;
     return itemsTotal + deliveryPrice;
   };
 
@@ -277,15 +277,15 @@ export const AdminOrderEdit = ({ open, onOpenChange, orderId, onSuccess }: Admin
         extras: item.extras,
       }));
 
-      // Call RPC to update order
-      const { data: result, error } = await supabase.rpc("admin_update_order", {
+      // Call RPC to update order using type assertion
+      const { data: result, error } = await (supabase.rpc as any)("admin_update_order", {
         p_order_id: orderId,
         p_customer_name: data.customer_name,
         p_customer_email: data.customer_email,
         p_customer_phone: data.customer_phone,
-        p_delivery_address: data.delivery_address || null,
-        p_notes: data.notes || null,
-        p_payment_method: selectedPaymentMethod,
+        p_delivery_address: data.delivery_address || undefined,
+        p_notes: data.notes || undefined,
+        p_payment_method: selectedPaymentMethod || undefined,
         p_status: data.status,
         p_items: orderItems,
         p_recalculate_total: true,
@@ -293,10 +293,10 @@ export const AdminOrderEdit = ({ open, onOpenChange, orderId, onSuccess }: Admin
 
       if (error) throw error;
 
-      const updateResult = result[0];
+      const updateResult = Array.isArray(result) ? result[0] : result;
 
-      if (!updateResult.success) {
-        throw new Error(updateResult.error_message || "Error al actualizar pedido");
+      if (!updateResult?.success) {
+        throw new Error(updateResult?.error_message || "Error al actualizar pedido");
       }
 
       // Track in PostHog
@@ -506,68 +506,15 @@ export const AdminOrderEdit = ({ open, onOpenChange, orderId, onSuccess }: Admin
                           </CardContent>
                         </Card>
                       ))}
-
-                      <Separator />
-
-                      <div className="space-y-2 text-sm">
-                        <div className="flex justify-between">
-                          <span>Subtotal:</span>
-                          <span>{formatPrice(totalPrice)}</span>
-                        </div>
-                        {order?.order_type === "delivery" && order.delivery_price > 0 && (
-                          <div className="flex justify-between">
-                            <span>Costo de entrega:</span>
-                            <span>{formatPrice(order.delivery_price)}</span>
-                          </div>
-                        )}
-                        <Separator />
-                        <div className="flex justify-between font-bold text-lg">
-                          <span>Total:</span>
-                          <span className="text-primary">{formatPrice(grandTotal)}</span>
-                        </div>
-                      </div>
                     </div>
-                  )}
-
-                  {/* Show available products for adding */}
-                  {canEdit && menuItems.length > 0 && (
-                    <details className="mt-4">
-                      <summary className="cursor-pointer text-sm font-medium text-primary">
-                        Ver productos disponibles
-                      </summary>
-                      <div className="grid grid-cols-3 gap-3 mt-3 max-h-60 overflow-y-auto">
-                        {menuItems.map((item) => (
-                          <Card
-                            key={item.id}
-                            className="cursor-pointer hover:shadow-md transition-shadow"
-                            onClick={() => handleAddProduct(item)}
-                          >
-                            <CardContent className="p-2">
-                              {item.image_url && (
-                                <img
-                                  src={item.image_url}
-                                  alt={item.name}
-                                  className="w-full h-16 object-cover rounded mb-1"
-                                />
-                              )}
-                              <p className="font-medium text-xs truncate">{item.name}</p>
-                              <p className="text-primary font-semibold text-xs">{formatPrice(item.price)}</p>
-                            </CardContent>
-                          </Card>
-                        ))}
-                      </div>
-                    </details>
                   )}
                 </div>
 
                 <Separator />
 
-                {/* Payment and Status */}
+                {/* Order Status & Payment */}
                 <div className="space-y-4">
-                  <PaymentMethodSelector
-                    selectedMethod={selectedPaymentMethod}
-                    onMethodChange={setSelectedPaymentMethod}
-                  />
+                  <h3 className="font-semibold text-lg">Estado y Pago</h3>
 
                   <FormField
                     control={form.control}
@@ -584,8 +531,9 @@ export const AdminOrderEdit = ({ open, onOpenChange, orderId, onSuccess }: Admin
                           <SelectContent>
                             <SelectItem value="pending">Pendiente</SelectItem>
                             <SelectItem value="confirmed">Confirmado</SelectItem>
-                            <SelectItem value="preparing">Preparando</SelectItem>
+                            <SelectItem value="preparing">En Preparación</SelectItem>
                             <SelectItem value="ready">Listo</SelectItem>
+                            <SelectItem value="on_the_way">En Camino</SelectItem>
                             <SelectItem value="delivered">Entregado</SelectItem>
                             <SelectItem value="cancelled">Cancelado</SelectItem>
                           </SelectContent>
@@ -595,6 +543,14 @@ export const AdminOrderEdit = ({ open, onOpenChange, orderId, onSuccess }: Admin
                     )}
                   />
 
+                  <div>
+                    <FormLabel>Método de Pago</FormLabel>
+                    <PaymentMethodSelector
+                      selectedMethod={selectedPaymentMethod}
+                      onSelect={setSelectedPaymentMethod}
+                    />
+                  </div>
+
                   <FormField
                     control={form.control}
                     name="notes"
@@ -602,7 +558,7 @@ export const AdminOrderEdit = ({ open, onOpenChange, orderId, onSuccess }: Admin
                       <FormItem>
                         <FormLabel>Notas</FormLabel>
                         <FormControl>
-                          <Textarea {...field} rows={3} disabled={!canEdit} />
+                          <Textarea {...field} rows={2} disabled={!canEdit} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -610,12 +566,33 @@ export const AdminOrderEdit = ({ open, onOpenChange, orderId, onSuccess }: Admin
                   />
                 </div>
 
+                <Separator />
+
+                {/* Order Summary */}
+                <div className="bg-muted p-4 rounded-lg space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span>Subtotal</span>
+                    <span>{formatPrice(totalPrice)}</span>
+                  </div>
+                  {(order?.delivery_price ?? 0) > 0 && (
+                    <div className="flex justify-between text-sm">
+                      <span>Envío</span>
+                      <span>{formatPrice(order?.delivery_price ?? 0)}</span>
+                    </div>
+                  )}
+                  <Separator />
+                  <div className="flex justify-between font-semibold text-lg">
+                    <span>Total</span>
+                    <span className="text-primary">{formatPrice(grandTotal)}</span>
+                  </div>
+                </div>
+
                 {/* Actions */}
-                <div className="flex gap-3">
+                <div className="flex justify-end gap-3">
                   <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                     Cancelar
                   </Button>
-                  <Button type="submit" className="flex-1" disabled={saving || !canEdit}>
+                  <Button type="submit" disabled={saving || !canEdit}>
                     {saving ? (
                       <>
                         <Loader2 className="w-4 h-4 mr-2 animate-spin" />

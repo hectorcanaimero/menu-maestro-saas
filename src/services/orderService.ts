@@ -11,8 +11,10 @@
 import { supabase } from '@/integrations/supabase/client';
 import { recordCouponUsage } from '@/hooks/useCoupons';
 import { generateWhatsAppMessage, redirectToWhatsApp } from '@/lib/whatsappMessageGenerator';
-import { CartItem } from '@/contexts/CartContext';
-import { Store } from '@/contexts/StoreContext';
+import type { CartItem } from '@/contexts/CartContext';
+import type { Store } from '@/contexts/StoreContext';
+
+export type { CartItem, Store };
 
 export interface OrderData {
   customer_name: string;
@@ -190,7 +192,7 @@ export async function createOrderItems(params: CreateOrderItemsParams): Promise<
       const cartItem = items[index];
       if (!cartItem.extras || cartItem.extras.length === 0) return [];
 
-      return cartItem.extras.map((extra) => ({
+      return cartItem.extras.map((extra: { name: string; price: number }) => ({
         order_item_id: orderItem.id,
         extra_name: extra.name,
         extra_price: extra.price,
@@ -215,16 +217,8 @@ export async function prepareWhatsAppRedirect(
   orderType: string,
   store: Store
 ): Promise<{ shouldRedirect: boolean; phoneNumber?: string; message?: string }> {
-  // Check if WhatsApp redirect is enabled for this order type
-  const whatsappSettings = {
-    delivery: store.whatsapp_redirect_delivery,
-    pickup: store.whatsapp_redirect_pickup,
-    digital_menu: store.whatsapp_redirect_digital_menu,
-  };
-
-  const shouldRedirectToWhatsApp = whatsappSettings[orderType as keyof typeof whatsappSettings];
-
-  if (!shouldRedirectToWhatsApp || !store.whatsapp_number) {
+  // Check if store has phone
+  if (!store.phone) {
     return { shouldRedirect: false };
   }
 
@@ -254,11 +248,11 @@ export async function prepareWhatsAppRedirect(
   }
 
   // Generate WhatsApp message
-  const message = generateWhatsAppMessage(fullOrder, store);
+  const message = generateWhatsAppMessage(fullOrder as any, store as any);
 
   return {
     shouldRedirect: true,
-    phoneNumber: store.whatsapp_number,
+    phoneNumber: store.phone,
     message,
   };
 }

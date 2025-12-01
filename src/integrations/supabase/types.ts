@@ -312,6 +312,88 @@ export type Database = {
         }
         Relationships: []
       }
+      delivery_assignments: {
+        Row: {
+          actual_minutes: number | null
+          assigned_at: string | null
+          created_at: string | null
+          customer_signature_url: string | null
+          delivered_at: string | null
+          delivery_notes: string | null
+          delivery_photo_url: string | null
+          distance_km: number | null
+          driver_id: string
+          estimated_minutes: number | null
+          id: string
+          order_id: string
+          picked_up_at: string | null
+          route_polyline: string | null
+          status: string | null
+          store_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          actual_minutes?: number | null
+          assigned_at?: string | null
+          created_at?: string | null
+          customer_signature_url?: string | null
+          delivered_at?: string | null
+          delivery_notes?: string | null
+          delivery_photo_url?: string | null
+          distance_km?: number | null
+          driver_id: string
+          estimated_minutes?: number | null
+          id?: string
+          order_id: string
+          picked_up_at?: string | null
+          route_polyline?: string | null
+          status?: string | null
+          store_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          actual_minutes?: number | null
+          assigned_at?: string | null
+          created_at?: string | null
+          customer_signature_url?: string | null
+          delivered_at?: string | null
+          delivery_notes?: string | null
+          delivery_photo_url?: string | null
+          distance_km?: number | null
+          driver_id?: string
+          estimated_minutes?: number | null
+          id?: string
+          order_id?: string
+          picked_up_at?: string | null
+          route_polyline?: string | null
+          status?: string | null
+          store_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "delivery_assignments_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "delivery_assignments_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "delivery_assignments_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       delivery_zones: {
         Row: {
           created_at: string | null
@@ -340,6 +422,109 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "delivery_zones_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      driver_locations: {
+        Row: {
+          accuracy: number | null
+          driver_id: string
+          heading: number | null
+          id: string
+          latitude: number
+          longitude: number
+          recorded_at: string | null
+          speed: number | null
+        }
+        Insert: {
+          accuracy?: number | null
+          driver_id: string
+          heading?: number | null
+          id?: string
+          latitude: number
+          longitude: number
+          recorded_at?: string | null
+          speed?: number | null
+        }
+        Update: {
+          accuracy?: number | null
+          driver_id?: string
+          heading?: number | null
+          id?: string
+          latitude?: number
+          longitude?: number
+          recorded_at?: string | null
+          speed?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "driver_locations_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      drivers: {
+        Row: {
+          created_at: string | null
+          current_lat: number | null
+          current_lng: number | null
+          email: string | null
+          id: string
+          is_active: boolean | null
+          last_location_update: string | null
+          license_plate: string | null
+          name: string
+          phone: string
+          photo_url: string | null
+          status: string | null
+          store_id: string
+          updated_at: string | null
+          vehicle_type: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          current_lat?: number | null
+          current_lng?: number | null
+          email?: string | null
+          id?: string
+          is_active?: boolean | null
+          last_location_update?: string | null
+          license_plate?: string | null
+          name: string
+          phone: string
+          photo_url?: string | null
+          status?: string | null
+          store_id: string
+          updated_at?: string | null
+          vehicle_type?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          current_lat?: number | null
+          current_lng?: number | null
+          email?: string | null
+          id?: string
+          is_active?: boolean | null
+          last_location_update?: string | null
+          license_plate?: string | null
+          name?: string
+          phone?: string
+          photo_url?: string | null
+          status?: string | null
+          store_id?: string
+          updated_at?: string | null
+          vehicle_type?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "drivers_store_id_fkey"
             columns: ["store_id"]
             isOneToOne: false
             referencedRelation: "stores"
@@ -534,6 +719,8 @@ export type Database = {
       }
       orders: {
         Row: {
+          assigned_driver_id: string | null
+          calculated_delivery_price: number | null
           coupon_code: string | null
           coupon_discount: number | null
           created_at: string | null
@@ -542,7 +729,11 @@ export type Database = {
           customer_name: string
           customer_phone: string | null
           delivery_address: string | null
+          delivery_lat: number | null
+          delivery_lng: number | null
           delivery_price: number | null
+          distance_km: number | null
+          estimated_delivery_minutes: number | null
           id: string
           notes: string | null
           order_type: string | null
@@ -555,6 +746,8 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
+          assigned_driver_id?: string | null
+          calculated_delivery_price?: number | null
           coupon_code?: string | null
           coupon_discount?: number | null
           created_at?: string | null
@@ -563,7 +756,11 @@ export type Database = {
           customer_name: string
           customer_phone?: string | null
           delivery_address?: string | null
+          delivery_lat?: number | null
+          delivery_lng?: number | null
           delivery_price?: number | null
+          distance_km?: number | null
+          estimated_delivery_minutes?: number | null
           id?: string
           notes?: string | null
           order_type?: string | null
@@ -576,6 +773,8 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
+          assigned_driver_id?: string | null
+          calculated_delivery_price?: number | null
           coupon_code?: string | null
           coupon_discount?: number | null
           created_at?: string | null
@@ -584,7 +783,11 @@ export type Database = {
           customer_name?: string
           customer_phone?: string | null
           delivery_address?: string | null
+          delivery_lat?: number | null
+          delivery_lng?: number | null
           delivery_price?: number | null
+          distance_km?: number | null
+          estimated_delivery_minutes?: number | null
           id?: string
           notes?: string | null
           order_type?: string | null
@@ -597,6 +800,13 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "orders_assigned_driver_id_fkey"
+            columns: ["assigned_driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "orders_customer_id_fkey"
             columns: ["customer_id"]
@@ -960,11 +1170,13 @@ export type Database = {
           accept_cash: boolean | null
           address: string | null
           banner_url: string | null
+          base_delivery_price: number | null
           created_at: string | null
           currency: string | null
           decimal_places: number | null
           decimal_separator: string | null
           delivery_price_mode: string | null
+          delivery_price_mode_v2: string | null
           description: string | null
           email: string | null
           enable_audio_notifications: boolean | null
@@ -974,6 +1186,7 @@ export type Database = {
           id: string
           is_active: boolean | null
           logo_url: string | null
+          max_delivery_distance_km: number | null
           minimum_order_price: number | null
           name: string
           notification_repeat_count: number | null
@@ -989,12 +1202,16 @@ export type Database = {
           payment_on_delivery: string | null
           phone: string | null
           price_color: string | null
+          price_per_km: number | null
           primary_color: string | null
           redirect_to_whatsapp: boolean | null
           remove_address_number: boolean | null
           remove_zipcode: boolean | null
           require_payment_proof: boolean | null
           skip_payment_digital_menu: boolean | null
+          store_address_full: string | null
+          store_lat: number | null
+          store_lng: number | null
           subdomain: string
           thousands_separator: string | null
           updated_at: string | null
@@ -1003,11 +1220,13 @@ export type Database = {
           accept_cash?: boolean | null
           address?: string | null
           banner_url?: string | null
+          base_delivery_price?: number | null
           created_at?: string | null
           currency?: string | null
           decimal_places?: number | null
           decimal_separator?: string | null
           delivery_price_mode?: string | null
+          delivery_price_mode_v2?: string | null
           description?: string | null
           email?: string | null
           enable_audio_notifications?: boolean | null
@@ -1017,6 +1236,7 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           logo_url?: string | null
+          max_delivery_distance_km?: number | null
           minimum_order_price?: number | null
           name: string
           notification_repeat_count?: number | null
@@ -1032,12 +1252,16 @@ export type Database = {
           payment_on_delivery?: string | null
           phone?: string | null
           price_color?: string | null
+          price_per_km?: number | null
           primary_color?: string | null
           redirect_to_whatsapp?: boolean | null
           remove_address_number?: boolean | null
           remove_zipcode?: boolean | null
           require_payment_proof?: boolean | null
           skip_payment_digital_menu?: boolean | null
+          store_address_full?: string | null
+          store_lat?: number | null
+          store_lng?: number | null
           subdomain: string
           thousands_separator?: string | null
           updated_at?: string | null
@@ -1046,11 +1270,13 @@ export type Database = {
           accept_cash?: boolean | null
           address?: string | null
           banner_url?: string | null
+          base_delivery_price?: number | null
           created_at?: string | null
           currency?: string | null
           decimal_places?: number | null
           decimal_separator?: string | null
           delivery_price_mode?: string | null
+          delivery_price_mode_v2?: string | null
           description?: string | null
           email?: string | null
           enable_audio_notifications?: boolean | null
@@ -1060,6 +1286,7 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           logo_url?: string | null
+          max_delivery_distance_km?: number | null
           minimum_order_price?: number | null
           name?: string
           notification_repeat_count?: number | null
@@ -1075,12 +1302,16 @@ export type Database = {
           payment_on_delivery?: string | null
           phone?: string | null
           price_color?: string | null
+          price_per_km?: number | null
           primary_color?: string | null
           redirect_to_whatsapp?: boolean | null
           remove_address_number?: boolean | null
           remove_zipcode?: boolean | null
           require_payment_proof?: boolean | null
           skip_payment_digital_menu?: boolean | null
+          store_address_full?: string | null
+          store_lat?: number | null
+          store_lng?: number | null
           subdomain?: string
           thousands_separator?: string | null
           updated_at?: string | null
@@ -1482,6 +1713,19 @@ export type Database = {
           success: boolean
         }[]
       }
+      assign_driver_to_order: {
+        Args: {
+          p_distance_km?: number
+          p_driver_id: string
+          p_estimated_minutes?: number
+          p_order_id: string
+        }
+        Returns: {
+          assignment_id: string
+          error_message: string
+          success: boolean
+        }[]
+      }
       can_access_admin_routes: {
         Args: { p_store_id?: string }
         Returns: {
@@ -1585,6 +1829,30 @@ export type Database = {
           p_user_agent?: string
         }
         Returns: string
+      }
+      update_delivery_status: {
+        Args: {
+          p_assignment_id: string
+          p_customer_signature_url?: string
+          p_delivery_notes?: string
+          p_delivery_photo_url?: string
+          p_status: string
+        }
+        Returns: {
+          error_message: string
+          success: boolean
+        }[]
+      }
+      update_driver_location: {
+        Args: {
+          p_accuracy?: number
+          p_driver_id: string
+          p_heading?: number
+          p_latitude: number
+          p_longitude: number
+          p_speed?: number
+        }
+        Returns: boolean
       }
       use_whatsapp_credit: {
         Args: { p_store_id: string }

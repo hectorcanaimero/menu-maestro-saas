@@ -1,7 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -290,19 +289,19 @@ export const AdminOrderCreate = ({ open, onOpenChange, onSuccess }: AdminOrderCr
         return;
       }
 
-      // Prepare items for RPC
+      // Prepare items for RPC - convert to JSON-compatible format
       const orderItems = items.map(item => ({
         menu_item_id: item.id,
         quantity: item.quantity,
         price_at_time: item.price,
         item_name: item.name,
-        extras: item.extras || [],
+        extras: (item.extras || []).map(e => ({ name: e.name, price: e.price })),
       }));
 
       const grandTotal = totalPrice + deliveryPrice;
 
-      // Call RPC to create order (parameters ordered to match function signature)
-      const { data, error } = await supabase.rpc("admin_create_order", {
+      // Call RPC to create order using type assertion for custom RPC
+      const { data, error } = await (supabase.rpc as any)("admin_create_order", {
         p_store_id: store.id,
         p_customer_id: customerResult.customerId,
         p_customer_name: formData.customer_name,
@@ -311,18 +310,18 @@ export const AdminOrderCreate = ({ open, onOpenChange, onSuccess }: AdminOrderCr
         p_order_type: formData.order_type,
         p_total_amount: grandTotal,
         p_items: orderItems,
-        p_delivery_address: formData.order_type === "delivery" ? formData.delivery_address : null,
-        p_notes: notes || null,
+        p_delivery_address: formData.order_type === "delivery" ? formData.delivery_address : undefined,
+        p_notes: notes || undefined,
         p_payment_method: selectedPaymentMethod,
         p_delivery_price: deliveryPrice,
       });
 
       if (error) throw error;
 
-      const result = data[0];
+      const result = Array.isArray(data) ? data[0] : data;
 
-      if (!result.success) {
-        throw new Error(result.error_message || "Error al crear pedido");
+      if (!result?.success) {
+        throw new Error(result?.error_message || "Error al crear pedido");
       }
 
       // Track in PostHog
@@ -499,7 +498,7 @@ export const AdminOrderCreate = ({ open, onOpenChange, onSuccess }: AdminOrderCr
                         <FormItem>
                           <FormLabel>Teléfono</FormLabel>
                           <FormControl>
-                            <Input {...field} placeholder="+58 414 123-4567" />
+                            <Input {...field} placeholder="+58 412 1234567" />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -508,7 +507,7 @@ export const AdminOrderCreate = ({ open, onOpenChange, onSuccess }: AdminOrderCr
                   </div>
                 )}
 
-                {/* Step 2: Delivery Info */}
+                {/* Step 2: Delivery/Pickup Info */}
                 {currentStep === 2 && (
                   <div className="space-y-4">
                     {orderType === "delivery" ? (
@@ -520,7 +519,7 @@ export const AdminOrderCreate = ({ open, onOpenChange, onSuccess }: AdminOrderCr
                             <FormItem>
                               <FormLabel>Dirección de Entrega</FormLabel>
                               <FormControl>
-                                <Input {...field} placeholder="Av. Principal, Casa 123" />
+                                <Textarea {...field} placeholder="Calle, número, urbanización..." rows={3} />
                               </FormControl>
                               <FormMessage />
                             </FormItem>
@@ -551,52 +550,85 @@ export const AdminOrderCreate = ({ open, onOpenChange, onSuccess }: AdminOrderCr
                             </FormItem>
                           )}
                         />
+
+                        {deliveryPrice > 0 && (
+                          <div className="p-3 bg-muted rounded-lg">
+                            <p className="text-sm">
+                              Costo de envío: <span className="font-semibold">{formatPrice(deliveryPrice)}</span>
+                            </p>
+                          </div>
+                        )}
                       </>
                     ) : orderType === "pickup" ? (
-                      <div className="text-center py-8">
-                        <p className="text-muted-foreground">El cliente recogerá el pedido en la tienda</p>
-                        <p className="text-sm text-muted-foreground mt-2">
-                          {store?.address || "Dirección de la tienda"}
+                      <div className="p-6 bg-muted rounded-lg text-center">
+                        <MapPin className="w-12 h-12 mx-auto mb-3 text-primary" />
+                        <h4 className="font-semibold mb-2">Recoger en Tienda</h4>
+                        <p className="text-sm text-muted-foreground">
+                          El cliente recogerá su pedido directamente en el local
                         </p>
                       </div>
                     ) : (
-                      <div className="text-center py-8">
-                        <p className="text-muted-foreground">Pedido para servicio en mesa</p>
-                        <p className="text-sm text-muted-foreground mt-2">
-                          El cliente consumirá en el restaurante
+                      <div className="p-6 bg-muted rounded-lg text-center">
+                        <UtensilsCrossed className="w-12 h-12 mx-auto mb-3 text-primary" />
+                        <h4 className="font-semibold mb-2">Servicio en Mesa</h4>
+                        <p className="text-sm text-muted-foreground">
+                          Pedido para consumir en el establecimiento
                         </p>
                       </div>
                     )}
                   </div>
                 )}
 
-                {/* Step 3: Add Products */}
+                {/* Step 3: Products */}
                 {currentStep === 3 && (
                   <div className="space-y-4">
-                    {/* Current Cart */}
-                    {items.length > 0 && (
-                      <Card>
-                        <CardContent className="p-4 space-y-3">
-                          <h4 className="font-semibold text-sm">Productos en el Pedido</h4>
+                    {/* Product Search */}
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 max-h-[300px] overflow-y-auto">
+                      {menuItems.map((item) => (
+                        <Card
+                          key={item.id}
+                          className="cursor-pointer hover:border-primary transition-colors"
+                          onClick={() => handleAddProduct(item)}
+                        >
+                          <CardContent className="p-3">
+                            {item.image_url && (
+                              <img
+                                src={item.image_url}
+                                alt={item.name}
+                                className="w-full h-20 object-cover rounded mb-2"
+                              />
+                            )}
+                            <p className="text-sm font-medium truncate">{item.name}</p>
+                            <p className="text-xs text-primary font-semibold">{formatPrice(item.price)}</p>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+
+                    <Separator />
+
+                    {/* Cart Items */}
+                    <div className="space-y-2">
+                      <h4 className="font-medium">Productos en el pedido ({items.length})</h4>
+                      {items.length === 0 ? (
+                        <p className="text-sm text-muted-foreground py-4 text-center">
+                          No hay productos agregados
+                        </p>
+                      ) : (
+                        <div className="space-y-2 max-h-[200px] overflow-y-auto">
                           {items.map((item) => (
                             <div
-                              key={item.cartItemId}
-                              className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg"
+                              key={item.cartItemId || item.id}
+                              className="flex items-center gap-3 p-2 bg-muted rounded-lg"
                             >
-                              {item.image_url && (
-                                <img
-                                  src={item.image_url}
-                                  alt={item.name}
-                                  className="w-12 h-12 object-cover rounded"
-                                />
-                              )}
                               <div className="flex-1 min-w-0">
-                                <p className="font-medium text-sm truncate">{item.name}</p>
+                                <p className="text-sm font-medium truncate">{item.name}</p>
                                 {item.extras && item.extras.length > 0 && (
                                   <p className="text-xs text-muted-foreground">
                                     + {item.extras.map(e => e.name).join(", ")}
                                   </p>
                                 )}
+                                <p className="text-xs text-primary">{formatPrice(item.price)}</p>
                               </div>
                               <div className="flex items-center gap-2">
                                 <Button
@@ -604,148 +636,125 @@ export const AdminOrderCreate = ({ open, onOpenChange, onSuccess }: AdminOrderCr
                                   variant="outline"
                                   size="icon"
                                   className="h-7 w-7"
-                                  onClick={() => updateQuantity(item.cartItemId!, item.quantity - 1)}
+                                  onClick={() => updateQuantity(item.cartItemId || item.id, item.quantity - 1)}
                                 >
                                   <Minus className="w-3 h-3" />
                                 </Button>
-                                <span className="w-8 text-center font-medium">{item.quantity}</span>
+                                <span className="w-6 text-center text-sm">{item.quantity}</span>
                                 <Button
                                   type="button"
                                   variant="outline"
                                   size="icon"
                                   className="h-7 w-7"
-                                  onClick={() => updateQuantity(item.cartItemId!, item.quantity + 1)}
+                                  onClick={() => updateQuantity(item.cartItemId || item.id, item.quantity + 1)}
                                 >
                                   <Plus className="w-3 h-3" />
                                 </Button>
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-7 w-7 text-destructive"
+                                  onClick={() => removeItem(item.cartItemId || item.id)}
+                                >
+                                  <X className="w-3 h-3" />
+                                </Button>
                               </div>
-                              <p className="font-semibold text-sm w-20 text-right">
-                                {formatPrice(
-                                  (item.price + (item.extras?.reduce((s, e) => s + e.price, 0) || 0)) *
-                                    item.quantity
-                                )}
-                              </p>
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="icon"
-                                className="h-7 w-7"
-                                onClick={() => removeItem(item.cartItemId!)}
-                              >
-                                <X className="w-4 h-4" />
-                              </Button>
                             </div>
                           ))}
-                          <Separator />
-                          <div className="flex justify-between font-semibold">
-                            <span>Subtotal:</span>
-                            <span>{formatPrice(totalPrice)}</span>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
 
-                    {/* Available Products */}
+                {/* Step 4: Payment & Confirmation */}
+                {currentStep === 4 && (
+                  <div className="space-y-4">
+                    <PaymentMethodSelector
+                      selectedMethod={selectedPaymentMethod}
+                      onSelect={setSelectedPaymentMethod}
+                    />
+
                     <div>
-                      <h4 className="font-semibold mb-4">Productos Disponibles</h4>
-                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4 max-h-96 overflow-y-auto pr-2">
-                        {menuItems.map((item) => (
-                          <Card
-                            key={item.id}
-                            className="cursor-pointer hover:shadow-lg hover:scale-[1.02] transition-all duration-200"
-                            onClick={() => handleAddProduct(item)}
-                          >
-                            <CardContent className="p-4">
-                              {item.image_url && (
-                                <img
-                                  src={item.image_url}
-                                  alt={item.name}
-                                  className="w-full h-32 object-cover rounded-lg mb-3"
-                                />
-                              )}
-                              <p className="font-medium text-base mb-1 line-clamp-2">{item.name}</p>
-                              <p className="text-primary font-bold text-lg">{formatPrice(item.price)}</p>
-                            </CardContent>
-                          </Card>
-                        ))}
+                      <FormLabel>Notas del pedido (opcional)</FormLabel>
+                      <Textarea
+                        value={notes}
+                        onChange={(e) => setNotes(e.target.value)}
+                        placeholder="Instrucciones especiales, alergias, etc."
+                        rows={2}
+                      />
+                    </div>
+
+                    <Separator />
+
+                    {/* Order Summary */}
+                    <div className="bg-muted p-4 rounded-lg space-y-2">
+                      <h4 className="font-semibold">Resumen del Pedido</h4>
+                      <div className="space-y-1 text-sm">
+                        <div className="flex justify-between">
+                          <span>Subtotal ({items.length} productos)</span>
+                          <span>{formatPrice(totalPrice)}</span>
+                        </div>
+                        {deliveryPrice > 0 && (
+                          <div className="flex justify-between">
+                            <span>Envío</span>
+                            <span>{formatPrice(deliveryPrice)}</span>
+                          </div>
+                        )}
+                        <Separator className="my-2" />
+                        <div className="flex justify-between font-semibold text-lg">
+                          <span>Total</span>
+                          <span className="text-primary">{formatPrice(grandTotal)}</span>
+                        </div>
                       </div>
                     </div>
                   </div>
                 )}
 
-                {/* Step 4: Payment & Summary */}
-                {currentStep === 4 && (
-                  <div className="space-y-6">
-                    <PaymentMethodSelector
-                      selectedMethod={selectedPaymentMethod}
-                      onMethodChange={setSelectedPaymentMethod}
-                      required
-                    />
+                {/* Navigation Buttons */}
+                <div className="flex justify-between pt-4">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleBack}
+                    disabled={currentStep === 1 || creating}
+                  >
+                    <ArrowLeft className="w-4 h-4 mr-2" />
+                    Anterior
+                  </Button>
 
-                    <div>
-                      <FormLabel>Notas Adicionales</FormLabel>
-                      <Textarea
-                        value={notes}
-                        onChange={(e) => setNotes(e.target.value)}
-                        placeholder="Instrucciones especiales (opcional)"
-                        rows={3}
-                        className="mt-2"
-                      />
-                    </div>
-
-                    {/* Order Summary */}
-                    <Card>
-                      <CardContent className="p-4 space-y-3">
-                        <h4 className="font-semibold">Resumen del Pedido</h4>
-                        <div className="space-y-2 text-sm">
-                          <div className="flex justify-between">
-                            <span>Subtotal ({items.length} productos):</span>
-                            <span>{formatPrice(totalPrice)}</span>
-                          </div>
-                          {orderType === "delivery" && deliveryPrice > 0 && (
-                            <div className="flex justify-between">
-                              <span>Costo de entrega:</span>
-                              <span>{formatPrice(deliveryPrice)}</span>
-                            </div>
-                          )}
-                          <Separator />
-                          <div className="flex justify-between font-bold text-lg">
-                            <span>Total:</span>
-                            <span className="text-primary">{formatPrice(grandTotal)}</span>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </div>
-                )}
+                  <Button
+                    type="button"
+                    onClick={handleNext}
+                    disabled={creating}
+                  >
+                    {creating ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Creando...
+                      </>
+                    ) : currentStep === 4 ? (
+                      <>
+                        <Check className="w-4 h-4 mr-2" />
+                        Crear Pedido
+                      </>
+                    ) : (
+                      <>
+                        Siguiente
+                        <ArrowRight className="w-4 h-4 ml-2" />
+                      </>
+                    )}
+                  </Button>
+                </div>
               </form>
             </Form>
-          </div>
-
-          {/* Footer Actions */}
-          <div className="flex gap-3 mt-6">
-            <Button variant="outline" onClick={handleBack} disabled={currentStep === 1 || creating}>
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Atrás
-            </Button>
-            <Button onClick={handleNext} className="flex-1" disabled={creating}>
-              {creating ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Creando...
-                </>
-              ) : currentStep === totalSteps ? (
-                "Crear Pedido"
-              ) : (
-                <>
-                  Siguiente
-                  <ArrowRight className="w-4 h-4 ml-2" />
-                </>
-              )}
-            </Button>
           </div>
         </DialogContent>
       </Dialog>
     </>
   );
 };
+
+// Import for icon used in step 2
+import { UtensilsCrossed } from "lucide-react";

@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { getSubdomainFromHostname } from '@/lib/subdomain-validation';
 import posthog from 'posthog-js';
 
-interface Store {
+export interface Store {
   id: string;
   subdomain: string;
   name: string;
