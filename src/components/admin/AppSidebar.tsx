@@ -15,6 +15,7 @@ import {
   Brain,
   Bot,
   Ticket,
+  Image,
 } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import {
@@ -45,7 +46,7 @@ const navItems = [
 const navIntegration = [
   { path: '/admin/whatsapp', label: 'Whatsapp', icon: Send },
   // { path: '/admin/chatbot', label: 'Lis Bot', icon: Bot },
-  { path: '/admin/ai', label: 'Estudio Imagen IA', icon: Brain },
+  { path: '/admin/ai', label: 'Estudio Imagen IA', icon: Image },
   { path: '/admin/delivery', label: 'Delivery', icon: Package },
   // { path: '/admin/fidelity', label: 'Fidelidad', icon: Club },
   // { path: '/admin/point-sale', label: 'Punto de Venta', icon: Club },

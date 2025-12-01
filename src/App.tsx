@@ -39,6 +39,11 @@ const AdminWhatsApp = lazy(() => import("./pages/admin/AdminWhatsApp"));
 const AdminDelivery = lazy(() => import("./pages/admin/AdminDelivery"));
 const StoreSettings = lazy(() => import("./pages/admin/StoreSettings"));
 
+// Platform Admin routes - super admin panel
+const PlatformAdminLayout = lazy(() => import("./pages/platform-admin/PlatformAdminLayout"));
+const PlatformDashboard = lazy(() => import("./pages/platform-admin/PlatformDashboard"));
+import { PlatformAdminGuard } from "./components/platform-admin/PlatformAdminGuard";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -266,6 +271,26 @@ const App = () => (
                       </ProtectedRoute>
                     }
                   />
+
+                  {/* Platform Admin Routes - Super Admin Panel */}
+                  <Route
+                    path="/platform-admin"
+                    element={
+                      <PlatformAdminGuard>
+                        <PlatformAdminLayout />
+                      </PlatformAdminGuard>
+                    }
+                  >
+                    <Route
+                      index
+                      element={
+                        <SectionErrorBoundary>
+                          <PlatformDashboard />
+                        </SectionErrorBoundary>
+                      }
+                    />
+                  </Route>
+
                   {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                   <Route path="*" element={<NotFound />} />
                 </Routes>
