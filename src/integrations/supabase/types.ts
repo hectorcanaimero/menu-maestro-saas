@@ -1433,6 +1433,55 @@ export type Database = {
       }
     }
     Functions: {
+      admin_can_edit_order: {
+        Args: { p_order_id: string }
+        Returns: {
+          can_edit: boolean
+          current_status: string
+          reason: string
+        }[]
+      }
+      admin_create_order: {
+        Args: {
+          p_customer_email: string
+          p_customer_id: string
+          p_customer_name: string
+          p_customer_phone: string
+          p_delivery_address?: string
+          p_delivery_price?: number
+          p_items: Json
+          p_notes?: string
+          p_order_type: string
+          p_payment_method?: string
+          p_store_id: string
+          p_total_amount: number
+        }
+        Returns: {
+          error_message: string
+          order_id: string
+          order_number: string
+          success: boolean
+        }[]
+      }
+      admin_update_order: {
+        Args: {
+          p_customer_email?: string
+          p_customer_name?: string
+          p_customer_phone?: string
+          p_delivery_address?: string
+          p_items?: Json
+          p_notes?: string
+          p_order_id: string
+          p_payment_method?: string
+          p_recalculate_total?: boolean
+          p_status?: string
+        }
+        Returns: {
+          error_message: string
+          new_total: number
+          success: boolean
+        }[]
+      }
       can_access_admin_routes: {
         Args: { p_store_id?: string }
         Returns: {
