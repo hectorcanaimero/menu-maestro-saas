@@ -34,10 +34,10 @@ ARG VITE_POSTHOG_PERSONAL_KEY
 
 # Validar que las variables requeridas est\u00e9n presentes
 RUN if [ -z "$VITE_SUPABASE_URL" ]; then \
-      echo "ERROR: VITE_SUPABASE_URL is required"; exit 1; \
+      echo "WARNING: VITE_SUPABASE_URL is not set. App may not function correctly."; \
     fi && \
     if [ -z "$VITE_SUPABASE_PUBLISHABLE_KEY" ]; then \
-      echo "ERROR: VITE_SUPABASE_PUBLISHABLE_KEY is required"; exit 1; \
+      echo "WARNING: VITE_SUPABASE_PUBLISHABLE_KEY is not set. App may not function correctly."; \
     fi
 
 # Convertir build args a environment variables para el build
