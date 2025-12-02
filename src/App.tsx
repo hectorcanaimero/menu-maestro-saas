@@ -37,6 +37,7 @@ const AdminCoupons = lazy(() => import("./pages/admin/AdminCoupons"));
 const AdminAI = lazy(() => import("./pages/admin/AdminAI"));
 const AdminWhatsApp = lazy(() => import("./pages/admin/AdminWhatsApp"));
 const AdminDelivery = lazy(() => import("./pages/admin/AdminDelivery"));
+const AdminSubscription = lazy(() => import("./pages/admin/AdminSubscription"));
 const StoreSettings = lazy(() => import("./pages/admin/StoreSettings"));
 
 // Platform Admin routes - super admin panel
@@ -272,6 +273,16 @@ const App = () => (
                       <ProtectedRoute>
                         <SectionErrorBoundary>
                           <AdminDelivery />
+                        </SectionErrorBoundary>
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/admin/subscription"
+                    element={
+                      <ProtectedRoute>
+                        <SectionErrorBoundary>
+                          <AdminSubscription />
                         </SectionErrorBoundary>
                       </ProtectedRoute>
                     }

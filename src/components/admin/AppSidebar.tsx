@@ -16,6 +16,7 @@ import {
   Bot,
   Ticket,
   Image,
+  CreditCard,
 } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import {
@@ -40,6 +41,7 @@ const navItems = [
   { path: '/admin/promotions', label: 'Promociones', icon: Tag },
   { path: '/admin/coupons', label: 'Cupones', icon: Ticket },
   { path: '/admin/analytics', label: 'Análisis y Reportes', icon: BarChart3 },
+  { path: '/admin/subscription', label: 'Suscripción', icon: CreditCard },
   { path: '/admin/settings', label: 'Configuración', icon: Settings },
 ];
 
