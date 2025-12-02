@@ -42,6 +42,11 @@ const StoreSettings = lazy(() => import("./pages/admin/StoreSettings"));
 // Platform Admin routes - super admin panel
 const PlatformAdminLayout = lazy(() => import("./pages/platform-admin/PlatformAdminLayout"));
 const PlatformDashboard = lazy(() => import("./pages/platform-admin/PlatformDashboard"));
+const PaymentValidations = lazy(() => import("./pages/platform-admin/PaymentValidations"));
+const SubscriptionsManager = lazy(() => import("./pages/platform-admin/SubscriptionsManager"));
+const StoresManager = lazy(() => import("./pages/platform-admin/StoresManager"));
+const PlansManager = lazy(() => import("./pages/platform-admin/PlansManager"));
+const AdminsManager = lazy(() => import("./pages/platform-admin/AdminsManager"));
 import { PlatformAdminGuard } from "./components/platform-admin/PlatformAdminGuard";
 
 const queryClient = new QueryClient();
@@ -277,7 +282,9 @@ const App = () => (
                     path="/platform-admin"
                     element={
                       <PlatformAdminGuard>
-                        <PlatformAdminLayout />
+                        <Suspense fallback={<LoadingScreen />}>
+                          <PlatformAdminLayout />
+                        </Suspense>
                       </PlatformAdminGuard>
                     }
                   >
@@ -286,6 +293,46 @@ const App = () => (
                       element={
                         <SectionErrorBoundary>
                           <PlatformDashboard />
+                        </SectionErrorBoundary>
+                      }
+                    />
+                    <Route
+                      path="payments"
+                      element={
+                        <SectionErrorBoundary>
+                          <PaymentValidations />
+                        </SectionErrorBoundary>
+                      }
+                    />
+                    <Route
+                      path="subscriptions"
+                      element={
+                        <SectionErrorBoundary>
+                          <SubscriptionsManager />
+                        </SectionErrorBoundary>
+                      }
+                    />
+                    <Route
+                      path="stores"
+                      element={
+                        <SectionErrorBoundary>
+                          <StoresManager />
+                        </SectionErrorBoundary>
+                      }
+                    />
+                    <Route
+                      path="plans"
+                      element={
+                        <SectionErrorBoundary>
+                          <PlansManager />
+                        </SectionErrorBoundary>
+                      }
+                    />
+                    <Route
+                      path="admins"
+                      element={
+                        <SectionErrorBoundary>
+                          <AdminsManager />
                         </SectionErrorBoundary>
                       }
                     />

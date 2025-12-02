@@ -1,8 +1,12 @@
 -- Create app_role enum for role management
-CREATE TYPE public.app_role AS ENUM ('admin', 'user');
+DO $$ BEGIN
+  CREATE TYPE public.app_role AS ENUM ('admin', 'user');
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
 
 -- Create user_roles table for secure role management
-CREATE TABLE public.user_roles (
+CREATE TABLE IF NOT EXISTS public.user_roles (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
   role public.app_role NOT NULL,
@@ -14,6 +18,7 @@ CREATE TABLE public.user_roles (
 ALTER TABLE public.user_roles ENABLE ROW LEVEL SECURITY;
 
 -- Users can view their own roles
+DROP POLICY IF EXISTS "Users can view their own roles" ON public.user_roles;
 CREATE POLICY "Users can view their own roles"
   ON public.user_roles
   FOR SELECT
@@ -40,18 +45,21 @@ DROP POLICY IF EXISTS "Authenticated users can insert categories" ON public.cate
 DROP POLICY IF EXISTS "Authenticated users can update categories" ON public.categories;
 DROP POLICY IF EXISTS "Authenticated users can delete categories" ON public.categories;
 
+DROP POLICY IF EXISTS "Admins can insert categories" ON public.categories;
 CREATE POLICY "Admins can insert categories"
   ON public.categories
   FOR INSERT
   TO authenticated
   WITH CHECK (public.has_role(auth.uid(), 'admin'));
 
+DROP POLICY IF EXISTS "Admins can update categories" ON public.categories;
 CREATE POLICY "Admins can update categories"
   ON public.categories
   FOR UPDATE
   TO authenticated
   USING (public.has_role(auth.uid(), 'admin'));
 
+DROP POLICY IF EXISTS "Admins can delete categories" ON public.categories;
 CREATE POLICY "Admins can delete categories"
   ON public.categories
   FOR DELETE
@@ -63,18 +71,21 @@ DROP POLICY IF EXISTS "Authenticated users can insert menu items" ON public.menu
 DROP POLICY IF EXISTS "Authenticated users can update menu items" ON public.menu_items;
 DROP POLICY IF EXISTS "Authenticated users can delete menu items" ON public.menu_items;
 
+DROP POLICY IF EXISTS "Admins can insert menu items" ON public.menu_items;
 CREATE POLICY "Admins can insert menu items"
   ON public.menu_items
   FOR INSERT
   TO authenticated
   WITH CHECK (public.has_role(auth.uid(), 'admin'));
 
+DROP POLICY IF EXISTS "Admins can update menu items" ON public.menu_items;
 CREATE POLICY "Admins can update menu items"
   ON public.menu_items
   FOR UPDATE
   TO authenticated
   USING (public.has_role(auth.uid(), 'admin'));
 
+DROP POLICY IF EXISTS "Admins can delete menu items" ON public.menu_items;
 CREATE POLICY "Admins can delete menu items"
   ON public.menu_items
   FOR DELETE
@@ -86,6 +97,7 @@ DROP POLICY IF EXISTS "Authenticated users can upload menu images" ON storage.ob
 DROP POLICY IF EXISTS "Authenticated users can update menu images" ON storage.objects;
 DROP POLICY IF EXISTS "Authenticated users can delete menu images" ON storage.objects;
 
+DROP POLICY IF EXISTS "Admins can upload menu images" ON storage.objects;
 CREATE POLICY "Admins can upload menu images"
   ON storage.objects
   FOR INSERT
@@ -95,6 +107,7 @@ CREATE POLICY "Admins can upload menu images"
     public.has_role(auth.uid(), 'admin')
   );
 
+DROP POLICY IF EXISTS "Admins can update menu images" ON storage.objects;
 CREATE POLICY "Admins can update menu images"
   ON storage.objects
   FOR UPDATE
@@ -104,6 +117,7 @@ CREATE POLICY "Admins can update menu images"
     public.has_role(auth.uid(), 'admin')
   );
 
+DROP POLICY IF EXISTS "Admins can delete menu images" ON storage.objects;
 CREATE POLICY "Admins can delete menu images"
   ON storage.objects
   FOR DELETE

@@ -12,11 +12,13 @@ CREATE TABLE IF NOT EXISTS public.profiles (
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 
 -- Profiles policies
+DROP POLICY IF EXISTS "Users can view their own profile" ON public.profiles;
 CREATE POLICY "Users can view their own profile"
   ON public.profiles
   FOR SELECT
   USING (auth.uid() = id);
 
+DROP POLICY IF EXISTS "Users can update their own profile" ON public.profiles;
 CREATE POLICY "Users can update their own profile"
   ON public.profiles
   FOR UPDATE
@@ -54,18 +56,21 @@ CREATE POLICY "Categories are publicly readable"
   FOR SELECT
   USING (true);
 
+DROP POLICY IF EXISTS "Authenticated users can insert categories" ON public.categories;
 CREATE POLICY "Authenticated users can insert categories"
   ON public.categories
   FOR INSERT
   TO authenticated
   WITH CHECK (true);
 
+DROP POLICY IF EXISTS "Authenticated users can update categories" ON public.categories;
 CREATE POLICY "Authenticated users can update categories"
   ON public.categories
   FOR UPDATE
   TO authenticated
   USING (true);
 
+DROP POLICY IF EXISTS "Authenticated users can delete categories" ON public.categories;
 CREATE POLICY "Authenticated users can delete categories"
   ON public.categories
   FOR DELETE
@@ -79,18 +84,21 @@ CREATE POLICY "Menu items are publicly readable"
   FOR SELECT
   USING (true);
 
+DROP POLICY IF EXISTS "Authenticated users can insert menu items" ON public.menu_items;
 CREATE POLICY "Authenticated users can insert menu items"
   ON public.menu_items
   FOR INSERT
   TO authenticated
   WITH CHECK (true);
 
+DROP POLICY IF EXISTS "Authenticated users can update menu items" ON public.menu_items;
 CREATE POLICY "Authenticated users can update menu items"
   ON public.menu_items
   FOR UPDATE
   TO authenticated
   USING (true);
 
+DROP POLICY IF EXISTS "Authenticated users can delete menu items" ON public.menu_items;
 CREATE POLICY "Authenticated users can delete menu items"
   ON public.menu_items
   FOR DELETE
@@ -103,23 +111,27 @@ VALUES ('menu-images', 'menu-images', true)
 ON CONFLICT (id) DO NOTHING;
 
 -- Storage policies for menu images
+DROP POLICY IF EXISTS "Public can view menu images" ON storage.objects;
 CREATE POLICY "Public can view menu images"
   ON storage.objects
   FOR SELECT
   USING (bucket_id = 'menu-images');
 
+DROP POLICY IF EXISTS "Authenticated users can upload menu images" ON storage.objects;
 CREATE POLICY "Authenticated users can upload menu images"
   ON storage.objects
   FOR INSERT
   TO authenticated
   WITH CHECK (bucket_id = 'menu-images');
 
+DROP POLICY IF EXISTS "Authenticated users can update menu images" ON storage.objects;
 CREATE POLICY "Authenticated users can update menu images"
   ON storage.objects
   FOR UPDATE
   TO authenticated
   USING (bucket_id = 'menu-images');
 
+DROP POLICY IF EXISTS "Authenticated users can delete menu images" ON storage.objects;
 CREATE POLICY "Authenticated users can delete menu images"
   ON storage.objects
   FOR DELETE
@@ -138,6 +150,7 @@ END;
 $$;
 
 -- Trigger for profiles updated_at
+DROP TRIGGER IF EXISTS update_profiles_updated_at ON public.profiles;
 CREATE TRIGGER update_profiles_updated_at
   BEFORE UPDATE ON public.profiles
   FOR EACH ROW

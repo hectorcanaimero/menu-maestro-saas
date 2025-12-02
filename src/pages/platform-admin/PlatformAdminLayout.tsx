@@ -19,7 +19,7 @@ import { cn } from '@/lib/utils';
  * Layout principal del panel de administración de plataforma
  * Incluye sidebar con navegación y header con información del admin
  */
-export function PlatformAdminLayout() {
+function PlatformAdminLayout() {
   const location = useLocation();
   const navigate = useNavigate();
   const { role, isLoading } = usePlatformAdmin();
@@ -147,3 +147,5 @@ export function PlatformAdminLayout() {
     </div>
   );
 }
+
+export default PlatformAdminLayout;

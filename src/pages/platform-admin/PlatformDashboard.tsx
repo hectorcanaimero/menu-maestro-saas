@@ -15,7 +15,7 @@ interface DashboardStats {
   monthlyRevenue: number;
 }
 
-export function PlatformDashboard() {
+function PlatformDashboard() {
   // Obtener estadísticas generales
   const { data: stats, isLoading: statsLoading } = useQuery({
     queryKey: ['platform-stats'],
@@ -287,3 +287,5 @@ export function PlatformDashboard() {
     </div>
   );
 }
+
+export default PlatformDashboard;

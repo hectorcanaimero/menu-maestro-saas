@@ -86,9 +86,16 @@ export function useSubscription() {
           subscription_plans(*)
         `)
         .eq('store_id', store.id)
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
+
+      // If no subscription exists, return null (will be handled by components)
+      if (!data) {
+        console.warn('No subscription found for store:', store.id);
+        return null;
+      }
+
       return data as Subscription;
     },
     enabled: !!store?.id,
@@ -135,7 +142,7 @@ export function useSubscription() {
   const canAccessFeature = async (featureName: string): Promise<boolean> => {
     if (!store?.id) return false;
 
-    const { data, error } = await supabase.rpc('can_access_feature', {
+    const { data, error } = await supabase.rpc('has_feature_enabled', {
       p_store_id: store.id,
       p_feature_name: featureName,
     });
