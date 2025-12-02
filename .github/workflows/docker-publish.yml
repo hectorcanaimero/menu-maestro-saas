@@ -52,13 +52,20 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: ./Dockerfile.traefik
+          file: ./Dockerfile.production
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
           platforms: linux/amd64,linux/arm64
+          build-args: |
+            VITE_SUPABASE_PROJECT_ID=${{ secrets.VITE_SUPABASE_PROJECT_ID }}
+            VITE_SUPABASE_PUBLISHABLE_KEY=${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
+            VITE_SUPABASE_URL=${{ secrets.VITE_SUPABASE_URL }}
+            VITE_POSTHOG_KEY=${{ secrets.VITE_POSTHOG_KEY }}
+            VITE_POSTHOG_HOST=${{ secrets.VITE_POSTHOG_HOST }}
+            VITE_POSTHOG_PERSONAL_KEY=${{ secrets.VITE_POSTHOG_PERSONAL_KEY }}
 
       - name: Generate build summary
         run: |
