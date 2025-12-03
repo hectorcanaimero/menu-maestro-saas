@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useEffect, ReactNode } from "react
 import { toast } from "sonner";
 import posthog from "posthog-js";
 import { useStore } from "./StoreContext";
+import { setSecureItem, getSecureItem, removeSecureItem } from "@/lib/secureStorage";
 
 export interface CartItemExtra {
   id: string;
@@ -34,14 +35,49 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export const CartProvider = ({ children }: { children: ReactNode }) => {
   const { store } = useStore();
-  const [items, setItems] = useState<CartItem[]>(() => {
-    const saved = localStorage.getItem("cart");
-    return saved ? JSON.parse(saved) : [];
-  });
+  const [items, setItems] = useState<CartItem[]>([]);
+  const [isLoadingCart, setIsLoadingCart] = useState(true);
 
+  // Load encrypted cart on mount
   useEffect(() => {
-    localStorage.setItem("cart", JSON.stringify(items));
-  }, [items]);
+    const loadCart = async () => {
+      try {
+        const savedCart = await getSecureItem<CartItem[]>('cart');
+        if (savedCart && Array.isArray(savedCart)) {
+          setItems(savedCart);
+        }
+      } catch (error) {
+        console.error('[SecureStorage] Error loading cart:', error);
+        // Fail silently - start with empty cart
+      } finally {
+        setIsLoadingCart(false);
+      }
+    };
+
+    loadCart();
+  }, []);
+
+  // Save encrypted cart whenever items change
+  useEffect(() => {
+    // Don't save until initial load is complete
+    if (isLoadingCart) return;
+
+    const saveCart = async () => {
+      try {
+        if (items.length > 0) {
+          await setSecureItem('cart', items);
+        } else {
+          // Remove cart if empty
+          removeSecureItem('cart');
+        }
+      } catch (error) {
+        console.error('[SecureStorage] Error saving cart:', error);
+        // Fail silently - don't disrupt user experience
+      }
+    };
+
+    saveCart();
+  }, [items, isLoadingCart]);
 
   const generateCartItemId = (productId: string, extras?: CartItemExtra[]): string => {
     if (!extras || extras.length === 0) {
@@ -152,7 +188,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
 
   const clearCart = () => {
     setItems([]);
-    localStorage.removeItem("cart");
+    removeSecureItem("cart");
   };
 
   const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);

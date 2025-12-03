@@ -12,10 +12,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { toast } from "sonner";
-import { Package, RefreshCw, Eye, Filter, Download, ExternalLink, FileImage, X, Plus, Edit, Truck, Store, Utensils } from "lucide-react";
+import { Package, RefreshCw, Eye, Filter, Download, ExternalLink, FileImage, X, Plus, Edit, Truck, Store, Utensils, UserPlus } from "lucide-react";
 import { OrderCard } from "./OrderCard";
 import { AdminOrderCreate } from "./AdminOrderCreate";
 import { AdminOrderEdit } from "./AdminOrderEdit";
+import { DriverAssignmentDialog } from "./DriverAssignmentDialog";
 
 interface OrderItemExtra {
   id: string;
@@ -60,6 +61,10 @@ const OrdersManager = () => {
   const [createOrderOpen, setCreateOrderOpen] = useState(false);
   const [editOrderOpen, setEditOrderOpen] = useState(false);
   const [editOrderId, setEditOrderId] = useState<string | null>(null);
+
+  // Driver assignment
+  const [driverDialogOpen, setDriverDialogOpen] = useState(false);
+  const [selectedOrderForDriver, setSelectedOrderForDriver] = useState<Order | null>(null);
 
   // Filter states
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -193,6 +198,11 @@ const OrdersManager = () => {
   const handleEditOrder = (orderId: string) => {
     setEditOrderId(orderId);
     setEditOrderOpen(true);
+  };
+
+  const handleAssignDriver = (order: Order) => {
+    setSelectedOrderForDriver(order);
+    setDriverDialogOpen(true);
   };
 
   const handleOrderCreatedOrEdited = () => {
@@ -479,6 +489,16 @@ const OrdersManager = () => {
                         </TableCell>
                         <TableCell className="text-right">
                           <div className="flex items-center justify-end gap-2">
+                            {order.order_type === 'delivery' && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleAssignDriver(order)}
+                              >
+                                <UserPlus className="w-4 h-4 mr-2" />
+                                Motorista
+                              </Button>
+                            )}
                             <Button
                               variant="ghost"
                               size="sm"
@@ -747,6 +767,19 @@ const OrdersManager = () => {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Driver Assignment Dialog */}
+      {selectedOrderForDriver && (
+        <DriverAssignmentDialog
+          open={driverDialogOpen}
+          onOpenChange={setDriverDialogOpen}
+          orderId={selectedOrderForDriver.id}
+          orderAddress={selectedOrderForDriver.delivery_address || undefined}
+          onSuccess={() => {
+            fetchOrders(); // Refresh orders list
+          }}
+        />
+      )}
     </>
   );
 };

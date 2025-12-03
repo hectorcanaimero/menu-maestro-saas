@@ -190,19 +190,29 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
     try {
       if (session?.user) {
         // Identify user with their user ID and store context
+        // DO NOT send email in identify() as it gets stored in localStorage
         posthog.identify(session.user.id, {
-          email: session.user.email,
+          // Only send non-sensitive metadata
           store_id: storeData.id,
           store_name: storeData.name,
           is_store_owner: isOwner,
           role: isOwner ? 'owner' : 'customer',
           store_subdomain: storeData.subdomain,
+          user_type: 'authenticated',
         });
+
+        // Send email ONLY to PostHog servers (not stored in localStorage)
+        // This is done via the $set operation which goes directly to the server
+        if (session.user.email) {
+          posthog.people.set({
+            email: session.user.email, // This goes to PostHog servers only, not localStorage
+          });
+        }
 
         if (import.meta.env.DEV) {
           console.log('[PostHog] User identified:', {
             user_id: session.user.id,
-            email: session.user.email,
+            email: '***@***.com', // Don't log email in console for security
             store_id: storeData.id,
             is_store_owner: isOwner,
           });
@@ -216,6 +226,7 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
           store_id: storeData.id,
           store_name: storeData.name,
           store_subdomain: storeData.subdomain,
+          user_type: 'anonymous',
         });
       }
     } catch (error) {

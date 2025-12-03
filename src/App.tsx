@@ -50,6 +50,11 @@ const PlansManager = lazy(() => import("./pages/platform-admin/PlansManager"));
 const AdminsManager = lazy(() => import("./pages/platform-admin/AdminsManager"));
 import { PlatformAdminGuard } from "./components/platform-admin/PlatformAdminGuard";
 
+// Driver routes - PWA for delivery drivers
+const DriverLogin = lazy(() => import("./pages/driver/DriverLogin"));
+const DriverDashboard = lazy(() => import("./pages/driver/DriverDashboard"));
+const ActiveDelivery = lazy(() => import("./pages/driver/ActiveDelivery"));
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -348,6 +353,32 @@ const App = () => (
                       }
                     />
                   </Route>
+
+                  {/* Driver Routes - PWA for delivery drivers */}
+                  <Route
+                    path="/driver/login"
+                    element={
+                      <SectionErrorBoundary>
+                        <DriverLogin />
+                      </SectionErrorBoundary>
+                    }
+                  />
+                  <Route
+                    path="/driver/dashboard"
+                    element={
+                      <SectionErrorBoundary>
+                        <DriverDashboard />
+                      </SectionErrorBoundary>
+                    }
+                  />
+                  <Route
+                    path="/driver/delivery/:assignmentId"
+                    element={
+                      <SectionErrorBoundary>
+                        <ActiveDelivery />
+                      </SectionErrorBoundary>
+                    }
+                  />
 
                   {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                   <Route path="*" element={<NotFound />} />

@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { Package, Users, Settings, DollarSign, MapPin, Truck, Save, Loader2 } from "lucide-react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { DriversManager } from "@/components/admin/DriversManager";
+import { AdminDeliveryDashboard } from "@/components/delivery/AdminDeliveryDashboard";
 import { useStore } from "@/contexts/StoreContext";
 import { supabase } from "@/integrations/supabase/client";
 import { H2, H3, Body, Caption } from "@/components/ui/typography";
@@ -67,11 +68,32 @@ export default function AdminDelivery() {
       return;
     }
 
+    setSaving(true);
     try {
-      // For now, show a message about Google Maps integration
-      toast.info("Función de geocodificación disponible con Google Maps API");
-    } catch (error) {
-      toast.error("Error al obtener coordenadas");
+      const { data, error } = await supabase.functions.invoke('geocode-address', {
+        body: { address: deliverySettings.store_address_full },
+      });
+
+      if (error) throw error;
+
+      if (!data || !data.lat || !data.lng) {
+        throw new Error('No se pudieron obtener las coordenadas');
+      }
+
+      // Update the form with the geocoded coordinates
+      setDeliverySettings({
+        ...deliverySettings,
+        store_lat: data.lat,
+        store_lng: data.lng,
+        store_address_full: data.formatted_address, // Use formatted address from Google
+      });
+
+      toast.success(`Coordenadas obtenidas: ${data.lat.toFixed(6)}, ${data.lng.toFixed(6)}`);
+    } catch (error: any) {
+      console.error("Error geocoding address:", error);
+      toast.error(error.message || "Error al obtener coordenadas. Verifica que la dirección sea correcta.");
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -108,54 +130,7 @@ export default function AdminDelivery() {
 
           {/* Dashboard Tab */}
           <TabsContent value="dashboard" className="mt-6">
-            <div className="grid gap-4 md:grid-cols-4">
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">Entregas Hoy</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">0</div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">En Camino</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-yellow-600">0</div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">Completadas</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-green-600">0</div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">Motoristas Activos</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-primary">0</div>
-                </CardContent>
-              </Card>
-            </div>
-
-            <Card className="mt-6">
-              <CardHeader>
-                <CardTitle>Entregas Pendientes</CardTitle>
-                <CardDescription>Pedidos de delivery listos para asignar motorista</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="py-12 text-center text-muted-foreground">
-                  <Truck className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                  <Body>No hay entregas pendientes</Body>
-                  <Caption>Los pedidos de delivery aparecerán aquí</Caption>
-                </div>
-              </CardContent>
-            </Card>
+            <AdminDeliveryDashboard />
           </TabsContent>
 
           {/* Settings Tab */}
@@ -319,9 +294,23 @@ export default function AdminDelivery() {
                     </div>
                   </div>
 
-                  <Button variant="outline" className="w-full" onClick={handleGeocodeAddress}>
-                    <MapPin className="w-4 h-4 mr-2" />
-                    Obtener Coordenadas
+                  <Button
+                    variant="outline"
+                    className="w-full"
+                    onClick={handleGeocodeAddress}
+                    disabled={saving || !deliverySettings.store_address_full}
+                  >
+                    {saving ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Obteniendo coordenadas...
+                      </>
+                    ) : (
+                      <>
+                        <MapPin className="w-4 h-4 mr-2" />
+                        Obtener Coordenadas
+                      </>
+                    )}
                   </Button>
 
                   {deliverySettings.store_lat && deliverySettings.store_lng && (

@@ -17,6 +17,7 @@ import {
   Home,
 } from 'lucide-react';
 import { useOrderTracking, requestNotificationPermission } from '@/hooks/useOrderTracking';
+import { useDeliveryTracking } from '@/hooks/useDeliveryTracking';
 import { OrderTimeline } from '@/components/order/OrderTimeline';
 import {
   calculateEstimatedDelivery,
@@ -28,10 +29,24 @@ import { formatCurrency } from '@/lib/analytics';
 import { H1, H2, H3, H4, Body, Caption } from '@/components/ui/typography';
 import { format, formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { DeliveryMap } from '@/components/delivery/DeliveryMap';
+import { DriverLocationMarker } from '@/components/delivery/DriverLocationMarker';
+import { DriverInfoCard } from '@/components/delivery/DriverInfoCard';
+import { Marker, Popup } from 'react-leaflet';
+import L from 'leaflet';
 
 export default function TrackOrder() {
   const { orderId } = useParams<{ orderId: string }>();
   const { order, isLoading, error } = useOrderTracking(orderId || '');
+
+  // Get delivery tracking data
+  const {
+    assignment,
+    driver,
+    driverLocation,
+    estimatedMinutesRemaining,
+    isLoading: isLoadingDelivery,
+  } = useDeliveryTracking(orderId);
 
   // Apply store theme colors
   useStoreTheme();
@@ -133,6 +148,94 @@ export default function TrackOrder() {
             <OrderTimeline currentStatus={order.status} />
           </CardContent>
         </Card>
+
+        {/* Delivery Map and Driver Info - Only for delivery orders with assigned driver */}
+        {order.order_type === 'delivery' && driver && driverLocation && (
+          <>
+            {/* Driver Info Card */}
+            <DriverInfoCard
+              driver={{
+                id: driver.id,
+                name: driver.name,
+                phone: driver.phone,
+                photo_url: driver.photo_url,
+                vehicle_type: driver.vehicle_type as any,
+                status: 'busy',
+              }}
+              deliveryStatus={
+                assignment
+                  ? {
+                      status: assignment.status,
+                      estimated_minutes: assignment.estimated_minutes ?? undefined,
+                      actual_minutes: assignment.actual_minutes ?? undefined,
+                    }
+                  : undefined
+              }
+              estimatedMinutesRemaining={estimatedMinutesRemaining ?? undefined}
+              showContactButton={true}
+            />
+
+            {/* Delivery Map */}
+            <Card>
+              <CardHeader>
+                <H3>Ubicación en Tiempo Real</H3>
+                <Caption className="text-muted-foreground">
+                  Sigue el recorrido de tu pedido en el mapa
+                </Caption>
+              </CardHeader>
+              <CardContent>
+                <DeliveryMap
+                  center={{
+                    lat: driverLocation.latitude,
+                    lng: driverLocation.longitude,
+                  }}
+                  zoom={15}
+                  height="400px"
+                >
+                  {/* Driver Location Marker */}
+                  <DriverLocationMarker
+                    location={{
+                      lat: driverLocation.latitude,
+                      lng: driverLocation.longitude,
+                    }}
+                    driver={{
+                      name: driver.name,
+                      vehicle_type: driver.vehicle_type as any,
+                      phone: driver.phone,
+                      photo_url: driver.photo_url,
+                    }}
+                    showPopup={true}
+                    autoCenter={false}
+                  />
+
+                  {/* Delivery Address Marker */}
+                  {order.delivery_lat && order.delivery_lng && (
+                    <Marker
+                      position={[order.delivery_lat, order.delivery_lng]}
+                      icon={L.icon({
+                        iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+                        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+                        iconSize: [25, 41],
+                        iconAnchor: [12, 41],
+                        popupAnchor: [1, -34],
+                        shadowSize: [41, 41]
+                      })}
+                    >
+                      <Popup>
+                        <div className="p-2">
+                          <p className="font-semibold">📍 Dirección de entrega</p>
+                          <p className="text-sm text-muted-foreground mt-1">
+                            {order.delivery_address}
+                          </p>
+                        </div>
+                      </Popup>
+                    </Marker>
+                  )}
+                </DeliveryMap>
+              </CardContent>
+            </Card>
+          </>
+        )}
 
         {/* Estimated Delivery Time - Only show if not delivered/cancelled */}
         {!isDelivered && !isCancelled && (

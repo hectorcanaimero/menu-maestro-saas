@@ -10,6 +10,7 @@ import { useStoreTheme } from "@/hooks/useStoreTheme";
 import { useCartTotals } from "@/hooks/useCartTotals";
 import { validateCouponCode, applyCouponDiscount, type Coupon } from "@/hooks/useCoupons";
 import { useFormatPrice } from "@/lib/priceFormatter";
+import { setSecureItem, getSecureItem, type SecureCustomerData } from "@/lib/secureStorage";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -196,6 +197,41 @@ const Checkout = () => {
     mode: "onChange",
   });
 
+  // Load saved customer data (encrypted) on mount
+  useEffect(() => {
+    const loadSavedCustomerData = async () => {
+      try {
+        const savedData = await getSecureItem<SecureCustomerData>('customer_data');
+        if (savedData) {
+          // Auto-fill form with saved data
+          form.setValue('customer_name', savedData.customer_name || '');
+          form.setValue('customer_email', savedData.customer_email || '');
+          form.setValue('customer_phone', savedData.customer_phone || '');
+          if (savedData.delivery_address) {
+            form.setValue('delivery_address', savedData.delivery_address);
+          }
+          if (savedData.address_number) {
+            form.setValue('address_number', savedData.address_number);
+          }
+          if (savedData.address_complement) {
+            form.setValue('address_complement', savedData.address_complement);
+          }
+          if (savedData.address_neighborhood) {
+            form.setValue('address_neighborhood', savedData.address_neighborhood);
+          }
+          if (savedData.address_zipcode) {
+            form.setValue('address_zipcode', savedData.address_zipcode);
+          }
+        }
+      } catch (error) {
+        console.error('[SecureStorage] Error loading customer data:', error);
+        // Fail silently - don't disrupt checkout experience
+      }
+    };
+
+    loadSavedCustomerData();
+  }, [form]);
+
   useEffect(() => {
     const loadPaymentMethods = async () => {
       if (!store?.id) return;
@@ -279,6 +315,42 @@ const Checkout = () => {
     if (!isValid) return;
 
     if (currentStep < totalSteps) {
+      // Save customer data (encrypted) after step 1
+      if (currentStep === 1) {
+        try {
+          const formData = form.getValues();
+          const customerData: SecureCustomerData = {
+            customer_name: formData.customer_name,
+            customer_email: formData.customer_email,
+            customer_phone: formData.customer_phone,
+          };
+          await setSecureItem('customer_data', customerData);
+        } catch (error) {
+          console.error('[SecureStorage] Error saving customer data:', error);
+          // Fail silently - don't disrupt checkout
+        }
+      }
+
+      // Save delivery address (encrypted) after step 2 if delivery
+      if (currentStep === 2 && orderType === 'delivery') {
+        try {
+          const formData = form.getValues();
+          const customerData: SecureCustomerData = {
+            customer_name: formData.customer_name,
+            customer_email: formData.customer_email,
+            customer_phone: formData.customer_phone,
+            delivery_address: formData.delivery_address,
+            address_number: formData.address_number,
+            address_complement: formData.address_complement,
+            address_neighborhood: formData.address_neighborhood,
+            address_zipcode: formData.address_zipcode,
+          };
+          await setSecureItem('customer_data', customerData);
+        } catch (error) {
+          console.error('[SecureStorage] Error saving delivery data:', error);
+        }
+      }
+
       // Track checkout step completion
       try {
         posthog.capture("checkout_step_completed", {

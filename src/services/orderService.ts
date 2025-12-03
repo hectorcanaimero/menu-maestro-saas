@@ -243,12 +243,51 @@ export async function prepareWhatsAppRedirect(
     .eq('id', orderId)
     .single();
 
-  if (!fullOrder) {
+  if (!fullOrder || !fullOrder.order_items) {
     return { shouldRedirect: false };
   }
 
+  // Format order items for WhatsApp message generator
+  const formattedItems = fullOrder.order_items.map((item: any) => ({
+    name: item.item_name,
+    quantity: item.quantity,
+    price: item.price_at_time,
+    extras: item.order_item_extras?.map((extra: any) => ({
+      name: extra.extra_name,
+      price: extra.extra_price,
+    })) || [],
+  }));
+
+  // Build WhatsApp message templates from store settings
+  const templates = {
+    orderProductTemplate: store.order_product_template || '{product-qty}x {product-name} - {product-price}\n{product-extras}',
+    orderMessageTemplateDelivery: store.order_message_template_delivery || '🛵 *Nuevo Pedido #{order-number}*\n\n{order-products}\n\n*Total:* {order-total}\n\n*Cliente:* {customer-name}\n*Teléfono:* {customer-phone}\n*Dirección:* {customer-address}',
+    orderMessageTemplatePickup: store.order_message_template_pickup || '🏪 *Nuevo Pedido para Recoger #{order-number}*\n\n{order-products}\n\n*Total:* {order-total}\n\n*Cliente:* {customer-name}\n*Teléfono:* {customer-phone}',
+    orderMessageTemplateDigitalMenu: store.order_message_template_digital_menu || '📱 *Nuevo Pedido #{order-number}*\n\n{order-products}\n\n*Total:* {order-total}\n\n*Cliente:* {customer-name}\n*Mesa:* {order-table}',
+  };
+
+  // Build order data for message generation
+  const orderData = {
+    orderNumber: fullOrder.id.slice(0, 8).toUpperCase(),
+    items: formattedItems,
+    totalAmount: fullOrder.total_amount,
+    customerName: fullOrder.customer_name,
+    customerEmail: fullOrder.customer_email,
+    customerPhone: fullOrder.customer_phone,
+    deliveryAddress: fullOrder.delivery_address || '',
+    notes: fullOrder.notes || undefined,
+    paymentMethod: fullOrder.payment_method || undefined,
+    currency: store.currency || 'USD',
+    decimalPlaces: store.decimal_places || 2,
+    decimalSeparator: store.decimal_separator || '.',
+    thousandsSeparator: store.thousands_separator || ',',
+    couponCode: fullOrder.coupon_code || undefined,
+    couponDiscount: fullOrder.coupon_discount || 0,
+    deliveryPrice: fullOrder.delivery_price || 0,
+  };
+
   // Generate WhatsApp message
-  const message = generateWhatsAppMessage(fullOrder as any, store as any);
+  const message = generateWhatsAppMessage(orderData, templates, orderType as 'delivery' | 'pickup' | 'digital_menu');
 
   return {
     shouldRedirect: true,

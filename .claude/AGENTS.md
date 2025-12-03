@@ -56,6 +56,88 @@ Este proyecto incluye **6 agentes especializados** que pueden ayudarte con difer
 
 ---
 
+### 0.5. 🎨 UX Validator Agent (`@ux-validator`) ⭐ NUEVO
+
+**Especialidad:** Validación de Experiencia de Usuario y Usabilidad
+
+**Cuándo usar:**
+- **AUTOMÁTICAMENTE** después de que @developer cree/modifique una interfaz
+- Validar accesibilidad y usabilidad de componentes
+- Revisar diseño mobile-first y responsiveness
+- Analizar flujos de usuario y friction points
+- Evaluar consistencia visual y UX patterns
+
+**Qué hace:**
+1. **Analiza** la interfaz creada/modificada
+2. **Valida** usabilidad, accesibilidad (WCAG), mobile-first
+3. **Identifica** friction points y problemas de UX
+4. **Provee** insights accionables y sugerencias de mejora
+5. **Reporta** score de UX con recomendaciones priorizadas
+
+**Capacidades:**
+- ✅ Análisis de usabilidad y flujos de usuario
+- ✅ Validación WCAG 2.1 (A, AA, AAA)
+- ✅ Mobile-first design review (touch targets, font sizes)
+- ✅ Análisis de consistencia visual
+- ✅ Evaluación de cognitive load
+- ✅ Review de microinteracciones
+- ✅ Performance UX (loading states, feedback)
+- ✅ Cross-device compatibility
+
+**Criterios de evaluación:**
+- **Usabilidad** (1-10): Facilidad de uso, claridad, eficiencia
+- **Accesibilidad** (1-10): WCAG compliance, keyboard nav, screen readers
+- **Mobile-First** (1-10): Touch targets, responsive, gestures
+- **Consistencia** (1-10): Design system, patterns, branding
+- **Performance UX** (1-10): Loading states, feedback, animations
+
+**Ejemplo de uso:**
+```
+@developer crea el componente OrderTrackingCard
+[Developer implementa]
+
+@ux-validator valida el componente OrderTrackingCard recién creado
+```
+
+**Output típico:**
+```markdown
+## 🎨 UX Validation Report: OrderTrackingCard
+
+### Scores
+- Usabilidad: 8/10
+- Accesibilidad: 6/10
+- Mobile-First: 9/10
+- Consistencia: 7/10
+- Performance UX: 8/10
+
+### ✅ Fortalezas
+- Touch targets > 44px ✓
+- Responsive design bien implementado ✓
+- Loading states presentes ✓
+
+### ⚠️ Issues Críticos (P1)
+1. Falta aria-label en botón de tracking
+2. Contraste de texto insuficiente (3.2:1, necesita 4.5:1)
+
+### 💡 Sugerencias de Mejora (P2)
+1. Agregar skeleton loading state
+2. Mejorar feedback visual al tocar botones
+3. Considerar vibration API para notificaciones
+
+### 🎯 Recomendaciones
+- Priorizar issues P1 antes de merge
+- Considerar agregar tests de accesibilidad
+```
+
+**Workflow automático:**
+Cuando @orchestrator o el usuario invoca @developer para crear UI:
+1. @developer implementa la interfaz
+2. @ux-validator se activa automáticamente
+3. Valida y reporta insights
+4. @developer ajusta si hay issues P1
+
+---
+
 ### 1. 👨‍💻 Developer Agent (`@developer`)
 
 **Especialidad:** Desarrollo Full-Stack Mobile-First
@@ -333,8 +415,9 @@ portainer/
 1. **@supabase** - Diseña schema, RLS policies, migraciones
 2. **@security** - Revisa diseño, valida security (input sanitization, RLS)
 3. **@developer** - Implementa UI, componentes, integración con tests
-4. **@security** - Audita implementación antes de merge
-5. **@posthog** - Configura tracking de eventos de reseñas
+4. **@ux-validator** - Valida la interfaz de reseñas (usabilidad, accesibilidad)
+5. **@security** - Audita implementación antes de merge
+6. **@posthog** - Configura tracking de eventos de reseñas
 
 ### Optimizar Performance
 
@@ -551,6 +634,6 @@ Puedes invocar múltiples agentes en secuencia:
 
 ---
 
-**Última actualización:** 2025-11-30
-**Versión:** 4.0.0
-**Total agentes:** 6 (Orchestrator, Developer, PostHog, Supabase, Security, DevOps)
+**Última actualización:** 2025-12-02
+**Versión:** 4.1.0
+**Total agentes:** 7 (Orchestrator, UX Validator, Developer, PostHog, Supabase, Security, DevOps)

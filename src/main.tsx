@@ -1,6 +1,7 @@
 import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
+import "leaflet/dist/leaflet.css";
 import posthog from "posthog-js";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 
@@ -19,9 +20,25 @@ if (import.meta.env.VITE_POSTHOG_KEY && import.meta.env.VITE_POSTHOG_HOST) {
       },
       // Automatically capture pageviews
       capture_pageview: true,
+      // Privacy & Security Configuration
+      persistence: 'localStorage', // Use localStorage but with minimal data
+      sanitize_properties: (properties) => {
+        // Remove any sensitive data from properties before storing
+        const sanitized = { ...properties };
+        // Remove email addresses, phone numbers, and other PII
+        const sensitiveKeys = ['email', 'customer_email', 'phone', 'customer_phone', 'address', 'delivery_address'];
+        sensitiveKeys.forEach(key => {
+          if (sanitized[key]) {
+            delete sanitized[key];
+          }
+        });
+        return sanitized;
+      },
+      // Disable storing sensitive user properties in localStorage
+      property_blacklist: ['$email', 'email', 'customer_email', 'customer_phone', 'phone'],
       // Disable in development to avoid polluting analytics
       loaded: (posthog) => {
-        if (import.meta.env.DEV) console.log('[PostHog] Initialized successfully');
+        if (import.meta.env.DEV) console.log('[PostHog] Initialized successfully with privacy settings');
       },
     });
   } catch (error) {

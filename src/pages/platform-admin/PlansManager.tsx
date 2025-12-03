@@ -1,113 +1,102 @@
+/**
+ * PlansManager Page
+ *
+ * Complete subscription plans management interface
+ * Accessible only by platform super admins
+ */
+
 import { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { useToast } from '@/hooks/use-toast';
+import { Switch } from '@/components/ui/switch';
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import { Package, DollarSign, Edit, CheckCircle } from 'lucide-react';
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Plus, Edit, Copy, Archive, ArchiveRestore, CheckCircle, MoreVertical, Package } from 'lucide-react';
+import { usePlans, Plan, CreatePlanInput, UpdatePlanInput } from '@/hooks/usePlans';
+import { PlanFormDialog } from '@/components/admin/PlanFormDialog';
+import { getFeatureByKey } from '@/lib/planFeatures';
 
-interface Plan {
-  id: string;
-  name: string;
-  display_name: string;
-  description: string;
-  price_monthly: number;
-  limits: {
-    max_products: number;
-    max_categories: number;
-    max_orders_per_month: number;
-    max_ai_credits_per_month: number;
-  };
-  features: string[];
-  sort_order: number;
-  is_active: boolean;
-}
+// ============================================================================
+// MAIN COMPONENT
+// ============================================================================
 
 function PlansManager() {
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
+  // State
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [editingPlan, setEditingPlan] = useState<Plan | null>(null);
-  const [showEditDialog, setShowEditDialog] = useState(false);
-  const [formData, setFormData] = useState({
-    price_monthly: 0,
-    description: '',
-  });
+  const [archivingPlan, setArchivingPlan] = useState<Plan | null>(null);
+  const [restoringPlan, setRestoringPlan] = useState<Plan | null>(null);
+  const [includeArchived, setIncludeArchived] = useState(false);
 
-  // Fetch plans
-  const { data: plans, isLoading } = useQuery({
-    queryKey: ['subscription-plans'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('subscription_plans')
-        .select('*')
-        .order('sort_order');
+  // Hook
+  const {
+    plans,
+    isLoading,
+    createPlan,
+    createPlanAsync,
+    isCreating,
+    updatePlan,
+    updatePlanAsync,
+    isUpdating,
+    toggleActive,
+    archivePlan,
+    isArchiving,
+    restorePlan,
+    isRestoring,
+    duplicatePlan,
+    isDuplicating,
+  } = usePlans(includeArchived);
 
-      if (error) throw error;
-      return data as Plan[];
-    },
-  });
+  // Handlers
+  const handleCreatePlan = async (data: CreatePlanInput) => {
+    await createPlanAsync(data);
+    setShowCreateDialog(false);
+  };
 
-  // Update plan mutation
-  const updatePlanMutation = useMutation({
-    mutationFn: async ({ planId, updates }: { planId: string; updates: Partial<Plan> }) => {
-      const { data, error } = await supabase
-        .from('subscription_plans')
-        .update(updates)
-        .eq('id', planId)
-        .select()
-        .single();
-
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      toast({
-        title: 'Plan actualizado',
-        description: 'Los cambios han sido guardados correctamente',
-      });
-      queryClient.invalidateQueries({ queryKey: ['subscription-plans'] });
-      setShowEditDialog(false);
+  const handleUpdatePlan = async (data: { planId: string; updates: UpdatePlanInput }) => {
+    try {
+      await updatePlanAsync(data);
       setEditingPlan(null);
-    },
-    onError: (error: any) => {
-      toast({
-        variant: 'destructive',
-        title: 'Error al actualizar plan',
-        description: error.message,
-      });
-    },
-  });
-
-  const handleEdit = (plan: Plan) => {
-    setEditingPlan(plan);
-    setFormData({
-      price_monthly: plan.price_monthly,
-      description: plan.description,
-    });
-    setShowEditDialog(true);
+    } catch (error) {
+      // Error is already handled by the mutation's onError
+      console.error('[PlansManager] Error updating plan:', error);
+    }
   };
 
-  const handleSave = () => {
-    if (!editingPlan) return;
-
-    updatePlanMutation.mutate({
-      planId: editingPlan.id,
-      updates: formData,
-    });
+  const handleArchivePlan = () => {
+    if (archivingPlan) {
+      archivePlan(archivingPlan.id);
+      setArchivingPlan(null);
+    }
   };
+
+  const handleRestorePlan = () => {
+    if (restoringPlan) {
+      restorePlan(restoringPlan.id);
+      setRestoringPlan(null);
+    }
+  };
+
+  // Filter plans
+  const activePlans = plans?.filter((p) => !p.is_archived) || [];
+  const archivedPlans = plans?.filter((p) => p.is_archived) || [];
 
   if (isLoading) {
     return (
@@ -120,186 +109,299 @@ function PlansManager() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Gestión de Planes</h1>
-        <p className="text-muted-foreground mt-2">
-          Administra los planes de suscripción disponibles (solo super admin)
-        </p>
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold">Gestión de Planes</h1>
+          <p className="text-muted-foreground mt-2">
+            Administra los planes de suscripción disponibles (solo super admin)
+          </p>
+        </div>
+        <Button onClick={() => setShowCreateDialog(true)} className="gap-2">
+          <Plus className="h-4 w-4" />
+          Crear Nuevo Plan
+        </Button>
       </div>
 
-      {/* Plans Grid */}
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-        {plans?.map((plan) => (
-          <Card key={plan.id} className={plan.name === 'trial' ? 'border-blue-500' : ''}>
-            <CardHeader>
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <CardTitle>{plan.display_name}</CardTitle>
-                  {plan.name === 'trial' && (
-                    <Badge variant="outline" className="mt-2 border-blue-500 text-blue-700">
-                      Incluye 30 días de prueba
-                    </Badge>
-                  )}
-                </div>
-                <div className="text-right">
-                  <div className="text-3xl font-bold">${plan.price_monthly}</div>
-                  <div className="text-xs text-muted-foreground">/mes</div>
-                </div>
-              </div>
-              <CardDescription className="mt-2">{plan.description}</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Productos:</span>
-                  <span className="font-medium">
-                    {plan.limits.max_products === -1 ? 'Ilimitado' : plan.limits.max_products}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Categorías:</span>
-                  <span className="font-medium">
-                    {plan.limits.max_categories === -1 ? 'Ilimitado' : plan.limits.max_categories}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Órdenes/mes:</span>
-                  <span className="font-medium">
-                    {plan.limits.max_orders_per_month === -1 ? 'Ilimitado' : plan.limits.max_orders_per_month}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Créditos AI/mes:</span>
-                  <span className="font-medium">{plan.limits.max_ai_credits_per_month}</span>
-                </div>
-              </div>
+      {/* Show Archived Toggle */}
+      {archivedPlans.length > 0 && (
+        <div className="flex items-center gap-2 p-4 border rounded-lg bg-muted/50">
+          <Switch checked={includeArchived} onCheckedChange={setIncludeArchived} id="show-archived" />
+          <label htmlFor="show-archived" className="text-sm cursor-pointer">
+            Mostrar planes archivados ({archivedPlans.length})
+          </label>
+        </div>
+      )}
 
-              {plan.features && plan.features.length > 0 && (
-                <div className="space-y-1 pt-2 border-t">
-                  <p className="text-xs font-medium text-muted-foreground mb-2">Características:</p>
-                  {plan.features.slice(0, 3).map((feature, idx) => (
-                    <div key={idx} className="flex items-start gap-2 text-xs">
-                      <CheckCircle className="h-3 w-3 text-green-600 mt-0.5 flex-shrink-0" />
-                      <span>{feature}</span>
-                    </div>
-                  ))}
-                  {plan.features.length > 3 && (
-                    <p className="text-xs text-muted-foreground">
-                      +{plan.features.length - 3} características más
-                    </p>
-                  )}
-                </div>
-              )}
-
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handleEdit(plan)}
-                className="w-full gap-2"
-              >
-                <Edit className="h-3 w-3" />
-                Editar Plan
-              </Button>
+      {/* Active Plans Grid */}
+      <div>
+        <h2 className="text-xl font-semibold mb-4">Planes Activos</h2>
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {activePlans.map((plan) => (
+            <PlanCard
+              key={plan.id}
+              plan={plan}
+              onEdit={() => setEditingPlan(plan)}
+              onToggleActive={() => toggleActive({ planId: plan.id, isActive: !plan.is_active })}
+              onDuplicate={() => duplicatePlan(plan.id)}
+              onArchive={() => setArchivingPlan(plan)}
+              isDuplicating={isDuplicating}
+            />
+          ))}
+        </div>
+        {activePlans.length === 0 && (
+          <Card>
+            <CardContent className="flex flex-col items-center justify-center py-12">
+              <Package className="h-12 w-12 text-muted-foreground mb-4" />
+              <p className="text-muted-foreground text-center">
+                No hay planes activos.
+                <br />
+                Crea un nuevo plan para empezar.
+              </p>
             </CardContent>
           </Card>
-        ))}
+        )}
       </div>
 
-      {/* Info Card */}
-      <Card className="border-orange-200 bg-orange-50">
-        <CardHeader>
-          <CardTitle className="text-sm">Nota Importante</CardTitle>
-        </CardHeader>
-        <CardContent className="text-sm space-y-2">
-          <p>
-            Por seguridad, solo se pueden editar los <strong>precios</strong> y{' '}
-            <strong>descripciones</strong> de los planes.
-          </p>
-          <p className="text-muted-foreground">
-            Los límites y características requieren cambios en la base de datos directamente para evitar
-            inconsistencias en suscripciones activas.
-          </p>
-        </CardContent>
-      </Card>
+      {/* Archived Plans Grid */}
+      {includeArchived && archivedPlans.length > 0 && (
+        <div>
+          <h2 className="text-xl font-semibold mb-4">Planes Archivados</h2>
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {archivedPlans.map((plan) => (
+              <PlanCard
+                key={plan.id}
+                plan={plan}
+                onEdit={() => setEditingPlan(plan)}
+                onRestore={() => setRestoringPlan(plan)}
+                isArchived
+              />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Create Dialog */}
+      <PlanFormDialog
+        open={showCreateDialog}
+        onOpenChange={setShowCreateDialog}
+        onSubmit={handleCreatePlan}
+        isSubmitting={isCreating}
+      />
 
       {/* Edit Dialog */}
-      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Editar Plan: {editingPlan?.display_name}</DialogTitle>
-            <DialogDescription>
-              Modifica el precio mensual y la descripción del plan
-            </DialogDescription>
-          </DialogHeader>
+      <PlanFormDialog
+        open={!!editingPlan}
+        onOpenChange={(open) => !open && setEditingPlan(null)}
+        plan={editingPlan}
+        onSubmit={handleUpdatePlan}
+        isSubmitting={isUpdating}
+      />
 
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="price">Precio mensual (USD) *</Label>
-              <div className="relative mt-2">
-                <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  id="price"
-                  type="number"
-                  step="0.01"
-                  value={formData.price_monthly}
-                  onChange={(e) =>
-                    setFormData({ ...formData, price_monthly: parseFloat(e.target.value) || 0 })
-                  }
-                  className="pl-10"
-                />
-              </div>
-            </div>
+      {/* Archive Confirmation Dialog */}
+      <AlertDialog open={!!archivingPlan} onOpenChange={(open) => !open && setArchivingPlan(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Archivar plan "{archivingPlan?.display_name}"?</AlertDialogTitle>
+            <AlertDialogDescription>
+              El plan será archivado y no estará disponible para nuevas suscripciones. Las suscripciones existentes
+              seguirán funcionando normalmente.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleArchivePlan} disabled={isArchiving}>
+              {isArchiving ? 'Archivando...' : 'Archivar Plan'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
-            <div>
-              <Label htmlFor="description">Descripción *</Label>
-              <Textarea
-                id="description"
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                rows={3}
-                className="mt-2"
-              />
-            </div>
-
-            <div className="bg-muted p-3 rounded text-sm">
-              <p className="font-medium mb-1">Límites actuales (no editables):</p>
-              <ul className="space-y-1 text-muted-foreground">
-                <li>
-                  • Productos:{' '}
-                  {editingPlan?.limits.max_products === -1 ? '∞' : editingPlan?.limits.max_products}
-                </li>
-                <li>
-                  • Categorías:{' '}
-                  {editingPlan?.limits.max_categories === -1 ? '∞' : editingPlan?.limits.max_categories}
-                </li>
-                <li>
-                  • Órdenes/mes:{' '}
-                  {editingPlan?.limits.max_orders_per_month === -1
-                    ? '∞'
-                    : editingPlan?.limits.max_orders_per_month}
-                </li>
-                <li>• Créditos AI/mes: {editingPlan?.limits.max_ai_credits_per_month}</li>
-              </ul>
-            </div>
-          </div>
-
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => {
-                setShowEditDialog(false);
-                setEditingPlan(null);
-              }}
-            >
-              Cancelar
-            </Button>
-            <Button onClick={handleSave} disabled={updatePlanMutation.isPending}>
-              {updatePlanMutation.isPending ? 'Guardando...' : 'Guardar Cambios'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {/* Restore Confirmation Dialog */}
+      <AlertDialog open={!!restoringPlan} onOpenChange={(open) => !open && setRestoringPlan(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Restaurar plan "{restoringPlan?.display_name}"?</AlertDialogTitle>
+            <AlertDialogDescription>
+              El plan será restaurado y estará disponible para nuevas suscripciones. Recuerda activarlo si deseas que
+              sea visible inmediatamente.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleRestorePlan} disabled={isRestoring}>
+              {isRestoring ? 'Restaurando...' : 'Restaurar Plan'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
+  );
+}
+
+// ============================================================================
+// PLAN CARD COMPONENT
+// ============================================================================
+
+interface PlanCardProps {
+  plan: Plan;
+  onEdit: () => void;
+  onToggleActive?: () => void;
+  onDuplicate?: () => void;
+  onArchive?: () => void;
+  onRestore?: () => void;
+  isArchived?: boolean;
+  isDuplicating?: boolean;
+}
+
+function PlanCard({
+  plan,
+  onEdit,
+  onToggleActive,
+  onDuplicate,
+  onArchive,
+  onRestore,
+  isArchived = false,
+  isDuplicating = false,
+}: PlanCardProps) {
+  return (
+    <Card className={`${plan.name === 'trial' ? 'border-blue-500' : ''} ${isArchived ? 'opacity-60' : ''}`}>
+      <CardHeader>
+        <div className="flex items-start justify-between">
+          <div className="flex-1">
+            <div className="flex items-center gap-2">
+              <CardTitle>{plan.display_name}</CardTitle>
+              {isArchived && (
+                <Badge variant="outline" className="border-orange-500 text-orange-700">
+                  Archivado
+                </Badge>
+              )}
+            </div>
+            {plan.name === 'trial' && plan.trial_duration_days > 0 && (
+              <Badge variant="outline" className="mt-2 border-blue-500 text-blue-700">
+                {plan.trial_duration_days} días de prueba
+              </Badge>
+            )}
+            {!isArchived && (
+              <div className="flex items-center gap-2 mt-2">
+                <Switch checked={plan.is_active} onCheckedChange={onToggleActive} id={`active-${plan.id}`} />
+                <label htmlFor={`active-${plan.id}`} className="text-xs text-muted-foreground">
+                  {plan.is_active ? 'Activo' : 'Inactivo'}
+                </label>
+              </div>
+            )}
+          </div>
+          <div className="flex items-start gap-2">
+            <div className="text-right">
+              <div className="text-2xl font-bold">${plan.price_monthly}</div>
+              <div className="text-xs text-muted-foreground">/mes</div>
+            </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-8 w-8">
+                  <MoreVertical className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={onEdit}>
+                  <Edit className="h-4 w-4 mr-2" />
+                  Editar
+                </DropdownMenuItem>
+                {!isArchived && (
+                  <>
+                    <DropdownMenuItem onClick={onDuplicate} disabled={isDuplicating}>
+                      <Copy className="h-4 w-4 mr-2" />
+                      Duplicar
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={onArchive} className="text-destructive">
+                      <Archive className="h-4 w-4 mr-2" />
+                      Archivar
+                    </DropdownMenuItem>
+                  </>
+                )}
+                {isArchived && onRestore && (
+                  <DropdownMenuItem onClick={onRestore}>
+                    <ArchiveRestore className="h-4 w-4 mr-2" />
+                    Restaurar
+                  </DropdownMenuItem>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </div>
+        <CardDescription className="mt-2">{plan.description}</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {/* Limits */}
+        <div className="space-y-2 text-sm">
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">Productos:</span>
+            <span className="font-medium">
+              {plan.limits.max_products === -1 ? 'Ilimitado' : plan.limits.max_products}
+            </span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">Categorías:</span>
+            <span className="font-medium">
+              {plan.limits.max_categories === -1 ? 'Ilimitado' : plan.limits.max_categories}
+            </span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">Órdenes/mes:</span>
+            <span className="font-medium">
+              {plan.limits.max_orders_per_month === -1 ? 'Ilimitado' : plan.limits.max_orders_per_month}
+            </span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">Créditos AI/mes:</span>
+            <span className="font-medium">{plan.limits.max_ai_credits_per_month}</span>
+          </div>
+        </div>
+
+        {/* Modules */}
+        {(plan.modules.whatsapp_monthly !== undefined || plan.modules.delivery_monthly !== undefined) && (
+          <div className="space-y-2 pt-2 border-t">
+            <p className="text-xs font-medium text-muted-foreground">Módulos:</p>
+            {plan.modules.whatsapp_monthly !== undefined && (
+              <div className="flex justify-between text-xs">
+                <span className="text-muted-foreground">WhatsApp:</span>
+                <span className="font-medium">
+                  {plan.modules.whatsapp_monthly === 0 ? 'Incluido' : `+$${plan.modules.whatsapp_monthly}/mes`}
+                </span>
+              </div>
+            )}
+            {plan.modules.delivery_monthly !== undefined && (
+              <div className="flex justify-between text-xs">
+                <span className="text-muted-foreground">Delivery:</span>
+                <span className="font-medium">
+                  {plan.modules.delivery_monthly === 0 ? 'Incluido' : `+$${plan.modules.delivery_monthly}/mes`}
+                </span>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Features */}
+        {plan.features && plan.features.length > 0 && (
+          <div className="space-y-1 pt-2 border-t">
+            <p className="text-xs font-medium text-muted-foreground mb-2">Características:</p>
+            {plan.features.slice(0, 3).map((featureKey, idx) => {
+              const feature = getFeatureByKey(featureKey);
+              return (
+                <div key={idx} className="flex items-start gap-2 text-xs">
+                  <CheckCircle className="h-3 w-3 text-green-600 mt-0.5 flex-shrink-0" />
+                  <span>{feature?.label || featureKey}</span>
+                </div>
+              );
+            })}
+            {plan.features.length > 3 && (
+              <p className="text-xs text-muted-foreground">+{plan.features.length - 3} características más</p>
+            )}
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 }
 
