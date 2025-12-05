@@ -101,13 +101,14 @@ async function createInstance(apiUrl: string, apiKey: string, instanceName: stri
       const errorText = await response.text();
       console.error(`[createInstance] Error response:`, errorText);
 
-      // Check if instance already exists
+      // If instance already exists (409), return success
+      // The frontend should have already checked this, but handle it gracefully
       if (response.status === 409 || errorText.includes('already exists')) {
-        console.log(`[createInstance] Instance already exists, fetching QR code`);
+        console.log(`[createInstance] Instance already exists (409 error)`);
         return {
           success: true,
           already_exists: true,
-          message: 'Instance already exists, ready to connect'
+          message: 'Instance already exists'
         };
       }
 
@@ -127,6 +128,35 @@ async function createInstance(apiUrl: string, apiKey: string, instanceName: stri
     console.error(`[createInstance] Error:`, error);
     throw error;
   }
+}
+
+/**
+ * Check connection status (lightweight version for internal use)
+ */
+async function checkConnectionStatus(apiUrl: string, apiKey: string, instanceName: string) {
+  const response = await fetch(`${apiUrl}/instance/connectionState/${instanceName}`, {
+    method: 'GET',
+    headers: {
+      'apikey': apiKey,
+    },
+  });
+
+  if (!response.ok) {
+    if (response.status === 404) {
+      return { connected: false, state: 'not_found' };
+    }
+    throw new Error(`Failed to check connection: ${await response.text()}`);
+  }
+
+  const data = await response.json();
+  const isConnected = data?.instance?.state === 'open';
+  const phoneNumber = data?.instance?.owner || null;
+
+  return {
+    connected: isConnected,
+    state: data?.instance?.state,
+    phone: phoneNumber,
+  };
 }
 
 /**

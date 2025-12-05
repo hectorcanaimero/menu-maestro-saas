@@ -156,9 +156,65 @@ serve(async (req) => {
 
     // 4. Format phone number (remove non-digits, ensure country code)
     let formattedPhone = customerPhone.replace(/\D/g, '');
-    if (!formattedPhone.startsWith('58') && formattedPhone.length === 10) {
+    console.log(`[WhatsApp] Original phone number: ${customerPhone}`);
+    console.log(`[WhatsApp] Cleaned phone number: ${formattedPhone}`);
+
+    // Brazilian area codes (DDD - Discagem Direta à Distância)
+    const brazilianDDDs = [
+      '11', '12', '13', '14', '15', '16', '17', '18', '19', // São Paulo
+      '21', '22', '24', // Rio de Janeiro
+      '27', '28', // Espírito Santo
+      '31', '32', '33', '34', '35', '37', '38', // Minas Gerais
+      '41', '42', '43', '44', '45', '46', // Paraná
+      '47', '48', '49', // Santa Catarina
+      '51', '53', '54', '55', // Rio Grande do Sul
+      '61', // Distrito Federal
+      '62', '64', // Goiás
+      '63', // Tocantins
+      '65', '66', // Mato Grosso
+      '67', // Mato Grosso do Sul
+      '68', // Acre
+      '69', // Rondônia
+      '71', '73', '74', '75', '77', // Bahia
+      '79', // Sergipe
+      '81', '87', // Pernambuco
+      '82', // Alagoas
+      '83', // Paraíba
+      '84', // Rio Grande do Norte
+      '85', '88', // Ceará
+      '86', '89', // Piauí
+      '91', '93', '94', // Pará
+      '92', '97', // Amazonas
+      '95', // Roraima
+      '96', // Amapá
+      '98', '99', // Maranhão
+    ];
+
+    // Detect and format based on country
+    if (formattedPhone.startsWith('55')) {
+      // Brazil: already has country code +55
+      console.log(`[WhatsApp] Brazilian number detected (already has +55 prefix)`);
+    } else if (formattedPhone.startsWith('58')) {
+      // Venezuela: already has country code +58
+      console.log(`[WhatsApp] Venezuelan number detected (already has +58 prefix)`);
+    } else if (formattedPhone.length === 11) {
+      // Check if it's a Brazilian number (11 digits with known DDD)
+      const ddd = formattedPhone.substring(0, 2);
+      if (brazilianDDDs.includes(ddd)) {
+        formattedPhone = '55' + formattedPhone;
+        console.log(`[WhatsApp] Adding Brazil country code +55 (DDD: ${ddd}): ${formattedPhone}`);
+      } else {
+        console.log(`[WhatsApp] 11 digits but unknown DDD (${ddd}), using as-is: ${formattedPhone}`);
+      }
+    } else if (formattedPhone.length === 10) {
+      // Probably Venezuela without country code (10 digits)
       formattedPhone = '58' + formattedPhone;
+      console.log(`[WhatsApp] Adding Venezuela country code +58: ${formattedPhone}`);
+    } else {
+      console.log(`[WhatsApp] Unknown format (length: ${formattedPhone.length}), using as-is: ${formattedPhone}`);
     }
+
+    console.log(`[WhatsApp] Final formatted phone: ${formattedPhone}`);
 
     // 5. Send via Evolution API
     const evolutionUrl = `${evolutionApiUrl}/message/sendText/${instanceName}`;

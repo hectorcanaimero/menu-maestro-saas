@@ -60,7 +60,14 @@ const createStepSchema = (
         .string()
         .trim()
         .min(10, { message: "El teléfono debe tener al menos 10 dígitos" })
-        .max(20, { message: "El teléfono no puede exceder 20 caracteres" }),
+        .max(20, { message: "El teléfono no puede exceder 20 caracteres" })
+        .refine((phone) => {
+          // Remove all non-numeric characters for validation
+          const cleanPhone = phone.replace(/\D/g, '');
+          // Brazilian phone: +55 (XX) XXXXX-XXXX = 13 digits total (55 + 11)
+          // Venezuelan phone: +58 (XXX) XXX-XXXX = 12 digits total (58 + 10)
+          return cleanPhone.length >= 10;
+        }, { message: "Formato de teléfono inválido" }),
     });
   } else if (step === 2) {
     // Step 2: Delivery/pickup/table info
@@ -520,7 +527,10 @@ const Checkout = () => {
     toast.info("Cupón removido");
   };
 
+  // Brazilian phone masks: mobile has 9 digits in the local number, landline has 8
+  // For simplicity, we'll use the mobile format which is most common
   const phoneMask = country === "brazil" ? "+55 (99) 99999-9999" : "+58 (999) 999-9999";
+  const phonePlaceholder = country === "brazil" ? "+55 (11) 98765-4321" : "+58 (412) 345-6789";
 
   if (items.length === 0) {
     return null;
@@ -607,6 +617,37 @@ const Checkout = () => {
                   </div>
                 </div>
 
+                {/* Country Selector for Phone Format */}
+                <div className="space-y-3">
+                  <FormLabel>País (para formato de teléfono)</FormLabel>
+                  <div className="grid grid-cols-2 gap-3">
+                    <Button
+                      type="button"
+                      variant={country === "venezuela" ? "default" : "outline"}
+                      className="h-auto py-3"
+                      onClick={() => {
+                        setCountry("venezuela");
+                        // Clear phone field when switching countries
+                        form.setValue("customer_phone", "");
+                      }}
+                    >
+                      Venezuela (+58)
+                    </Button>
+                    <Button
+                      type="button"
+                      variant={country === "brazil" ? "default" : "outline"}
+                      className="h-auto py-3"
+                      onClick={() => {
+                        setCountry("brazil");
+                        // Clear phone field when switching countries
+                        form.setValue("customer_phone", "");
+                      }}
+                    >
+                      Brasil (+55)
+                    </Button>
+                  </div>
+                </div>
+
                 <FormField
                   control={form.control}
                   name="customer_name"
@@ -647,7 +688,7 @@ const Checkout = () => {
                             <Input
                               {...inputProps}
                               type="tel"
-                              placeholder="+58 (000) 000-0000"
+                              placeholder={phonePlaceholder}
                             />
                           )}
                         </InputMask>

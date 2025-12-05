@@ -177,8 +177,24 @@ export function useWhatsAppSettings() {
       }
 
       if (data?.success) {
-        toast.success(data.already_exists ? 'Instancia ya existe' : 'Instancia creada correctamente');
-        return { success: true, already_exists: data.already_exists };
+        // If instance already exists and is connected, update local settings
+        if (data.already_exists && data.is_connected) {
+          await updateSettings({
+            is_connected: true,
+            connected_phone: data.phone || null,
+          });
+          toast.success('Instancia ya está conectada');
+        } else {
+          toast.success(data.already_exists ? 'Instancia ya existe' : 'Instancia creada correctamente');
+        }
+
+        return {
+          success: true,
+          already_exists: data.already_exists,
+          is_connected: data.is_connected,
+          phone: data.phone,
+          state: data.state
+        };
       }
 
       return { success: false };

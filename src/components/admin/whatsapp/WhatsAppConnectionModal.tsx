@@ -65,8 +65,54 @@ export function WhatsAppConnectionModal({
     setPollingAttempts(0);
 
     try {
-      // Step 1: Create instance (or verify it exists)
+      // Step 1: First, CHECK if instance already exists
+      console.log('[WhatsAppConnectionModal] Step 1: Checking if instance exists...');
+      const checkResult = await checkConnectionStatus();
+      console.log('[WhatsAppConnectionModal] Check result:', checkResult);
+
+      // Case 1: Instance exists and is CONNECTED
+      if (checkResult.connected) {
+        console.log('[WhatsAppConnectionModal] Instance already connected:', checkResult.phone);
+        setState('connected');
+        setConnectedPhone(checkResult.phone || null);
+
+        // Call onConnected callback
+        if (onConnected) {
+          onConnected();
+        }
+
+        // Auto-close after 2 seconds
+        setTimeout(() => {
+          onOpenChange(false);
+        }, 2000);
+        return;
+      }
+
+      // Case 2: Instance exists but is NOT connected (state could be 'close', etc.)
+      if (checkResult.state && checkResult.state !== 'not_found') {
+        console.log('[WhatsAppConnectionModal] Instance exists but disconnected (state: ' + checkResult.state + '), generating QR for reconnection');
+
+        // Generate QR code directly (no need to create instance)
+        setState('fetching_qr');
+        const qrResult = await getQRCode();
+
+        if (!qrResult.success || !qrResult.qr_code) {
+          setState('error');
+          setError('No se pudo obtener el código QR. Intenta de nuevo.');
+          return;
+        }
+
+        // Show QR Code and start polling
+        setQrCode(qrResult.qr_code);
+        setState('showing_qr');
+        startPolling();
+        return;
+      }
+
+      // Case 3: Instance does NOT exist - need to create it first
+      console.log('[WhatsAppConnectionModal] Instance does not exist, creating new instance...');
       const createResult = await createInstance();
+      console.log('[WhatsAppConnectionModal] Create result:', createResult);
 
       if (!createResult.success) {
         setState('error');
@@ -74,7 +120,8 @@ export function WhatsAppConnectionModal({
         return;
       }
 
-      // Step 2: Get QR Code
+      // After creating, generate QR code
+      console.log('[WhatsAppConnectionModal] New instance created, generating QR for first connection');
       setState('fetching_qr');
       const qrResult = await getQRCode();
 
@@ -84,15 +131,13 @@ export function WhatsAppConnectionModal({
         return;
       }
 
-      // Step 3: Show QR Code and start polling
+      // Show QR Code and start polling
       setQrCode(qrResult.qr_code);
       setState('showing_qr');
-
-      // Start polling connection status
       startPolling();
 
     } catch (err) {
-      console.error('Connection error:', err);
+      console.error('[WhatsAppConnectionModal] Connection error:', err);
       setState('error');
       setError('Error inesperado. Por favor, intenta de nuevo.');
     }

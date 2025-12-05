@@ -444,7 +444,7 @@ const OrdersManager = () => {
                             <Button
                               variant="ghost"
                               size="sm"
-                              onClick={() => window.open(order.payment_proof_url, '_blank')}
+                              onClick={() => order.payment_proof_url && window.open(order.payment_proof_url, '_blank')}
                               className="h-8 px-2"
                             >
                               <FileImage className="w-4 h-4 text-primary" />
