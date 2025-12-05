@@ -250,19 +250,19 @@ const MenuItemsManager = () => {
             <DialogTrigger asChild>
               <Button size="sm">
                 <Plus className="w-4 h-4 mr-2" />
-                Nuevo Platillo
+                Nuevo Producto
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle>{editingItem ? 'Editar Platillo' : 'Nuevo Platillo'}</DialogTitle>
+                <DialogTitle>{editingItem ? 'Editar Producto' : 'Nuevo Producto'}</DialogTitle>
               </DialogHeader>
               <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6">
                 {/* Essential Fields - Always Visible */}
                 <div className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="name" className="text-sm md:text-base">
-                      Nombre del Platillo
+                      Nombre del Producto
                     </Label>
                     <Input
                       id="name"
@@ -282,7 +282,7 @@ const MenuItemsManager = () => {
                       id="description"
                       value={formData.description}
                       onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                      placeholder="Describe brevemente el platillo..."
+                      placeholder="Describe brevemente el producto..."
                       className="min-h-20 text-base md:text-sm"
                     />
                   </div>
@@ -352,7 +352,7 @@ const MenuItemsManager = () => {
                             </div>
                           )}
                         </div>
-                        <p className="text-xs text-muted-foreground">Sube una imagen del platillo (opcional)</p>
+                        <p className="text-xs text-muted-foreground">Sube una imagen del producto (opcional)</p>
                       </div>
 
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -413,7 +413,7 @@ const MenuItemsManager = () => {
                 </Accordion>
 
                 <Button type="submit" className="w-full h-11 md:h-10 text-base md:text-sm" disabled={uploading}>
-                  {uploading ? 'Subiendo imagen...' : editingItem ? 'Actualizar Platillo' : 'Crear Platillo'}
+                  {uploading ? 'Subiendo imagen...' : editingItem ? 'Actualizar Producto' : 'Crear Producto'}
                 </Button>
               </form>
             </DialogContent>
@@ -423,7 +423,7 @@ const MenuItemsManager = () => {
           {/* Mobile View - Cards */}
           <div className="grid gap-4 md:hidden">
             {items.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">No hay platillos. Crea uno para empezar.</div>
+              <div className="text-center py-8 text-muted-foreground">No hay producto. Crea uno para empezar.</div>
             ) : (
               items.map((item) => (
                 <MenuItemCard
@@ -460,7 +460,7 @@ const MenuItemsManager = () => {
                 {items.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={7} className="text-center text-muted-foreground">
-                      No hay platillos. Crea uno para empezar.
+                      No hay productos. Crea uno para empezar.
                     </TableCell>
                   </TableRow>
                 ) : (
