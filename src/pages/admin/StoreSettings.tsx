@@ -233,10 +233,7 @@ const StoreSettings = () => {
                     <Label htmlFor="currency" className="text-sm md:text-base">
                       Moneda
                     </Label>
-                    <Select
-                      value={watch('currency')}
-                      onValueChange={(value) => setValue('currency', value as any)}
-                    >
+                    <Select value={watch('currency')} onValueChange={(value) => setValue('currency', value as any)}>
                       <SelectTrigger className="h-11 md:h-10 text-base md:text-sm">
                         <SelectValue placeholder="Selecciona una moneda" />
                       </SelectTrigger>
@@ -251,7 +248,9 @@ const StoreSettings = () => {
                     <p className="text-xs md:text-sm text-muted-foreground">
                       Moneda utilizada para mostrar los precios en tu tienda.
                     </p>
-                    {errors.currency && <p className="text-xs md:text-sm text-destructive">{errors.currency.message}</p>}
+                    {errors.currency && (
+                      <p className="text-xs md:text-sm text-destructive">{errors.currency.message}</p>
+                    )}
                   </div>
 
                   <div className="space-y-2">
@@ -260,7 +259,7 @@ const StoreSettings = () => {
                       {[
                         { value: 'delivery', label: 'Delivery' },
                         { value: 'pickup', label: 'Entrega en tienda' },
-                        { value: 'digital_menu', label: 'Menú Digital' },
+                        // { value: 'digital_menu', label: 'Menú Digital' },
                       ].map((mode) => (
                         <div key={mode.value} className="flex items-center space-x-3 py-1">
                           <Checkbox

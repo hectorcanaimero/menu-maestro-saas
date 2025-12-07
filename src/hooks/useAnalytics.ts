@@ -54,7 +54,7 @@ export function useAnalytics(filters: AnalyticsFilters) {
 
       const totalRevenue = orders?.reduce((sum, order) => sum + Number(order.total_amount), 0) || 0;
       const totalOrders = orders?.length || 0;
-      const completedOrders = orders?.filter((o) => o.status === 'completed').length || 0;
+      const completedOrders = orders?.filter((o) => o.status === 'delivered').length || 0;
       const pendingOrders = orders?.filter((o) => o.status === 'pending').length || 0;
       const cancelledOrders = orders?.filter((o) => o.status === 'cancelled').length || 0;
 
@@ -124,8 +124,8 @@ export function useAnalytics(filters: AnalyticsFilters) {
         const dateKey = format(new Date(order.created_at), 'yyyy-MM-dd');
         const existing = dailyData.get(dateKey) || { revenue: 0, orders: 0 };
 
-        // Only count completed orders in revenue
-        const revenue = order.status === 'completed' ? Number(order.total_amount) : 0;
+        // Only count delivered orders in revenue
+        const revenue = order.status === 'delivered' ? Number(order.total_amount) : 0;
 
         dailyData.set(dateKey, {
           revenue: existing.revenue + revenue,
@@ -170,9 +170,9 @@ export function useAnalytics(filters: AnalyticsFilters) {
         .gte('created_at', dateRange.from.toISOString())
         .lte('created_at', dateRange.to.toISOString());
 
-      // Only filter by completed if no status filter is set or if status is 'completed'
-      if (!status || status === 'all' || status === 'completed') {
-        query = query.eq('status', 'completed');
+      // Only filter by delivered if no status filter is set or if status is 'delivered'
+      if (!status || status === 'all' || status === 'delivered') {
+        query = query.eq('status', 'delivered');
       } else {
         query = query.eq('status', status);
       }
@@ -231,17 +231,41 @@ export function useAnalytics(filters: AnalyticsFilters) {
     queryFn: async (): Promise<CustomerStats> => {
       if (!store?.id) throw new Error('Store ID required');
 
-      const { data: customers, error } = await supabase
-        .from('customers')
-        .select('id, created_at');
+      // Get unique customers from orders (customers table has no store_id)
+      // All time orders for this store
+      const { data: allOrders, error: allError } = await supabase
+        .from('orders')
+        .select('customer_email, created_at')
+        .eq('store_id', store.id);
 
-      if (error) throw error;
+      if (allError) throw allError;
 
-      const totalCustomers = customers?.length || 0;
-      const newCustomers = customers?.filter((c) => {
-        const createdAt = new Date(c.created_at);
-        return createdAt >= dateRange.from && createdAt <= dateRange.to;
-      }).length || 0;
+      // Get unique customer emails
+      const uniqueCustomers = new Set(allOrders?.map(o => o.customer_email) || []);
+      const totalCustomers = uniqueCustomers.size;
+
+      // Get customers from the period
+      const customersInPeriod = new Set(
+        allOrders?.filter(o => {
+          const orderDate = new Date(o.created_at);
+          return orderDate >= dateRange.from && orderDate <= dateRange.to;
+        }).map(o => o.customer_email) || []
+      );
+
+      // Find customers whose first order was in this period
+      const firstOrderMap = new Map<string, Date>();
+      allOrders?.forEach(order => {
+        const email = order.customer_email;
+        const orderDate = new Date(order.created_at);
+        if (!firstOrderMap.has(email) || orderDate < firstOrderMap.get(email)!) {
+          firstOrderMap.set(email, orderDate);
+        }
+      });
+
+      const newCustomers = Array.from(customersInPeriod).filter(email => {
+        const firstOrder = firstOrderMap.get(email);
+        return firstOrder && firstOrder >= dateRange.from && firstOrder <= dateRange.to;
+      }).length;
 
       return {
         totalCustomers,
@@ -314,7 +338,7 @@ export function useAnalytics(filters: AnalyticsFilters) {
 
       const totalRevenue = orders?.reduce((sum, order) => sum + Number(order.total_amount), 0) || 0;
       const totalOrders = orders?.length || 0;
-      const completedOrders = orders?.filter((o) => o.status === 'completed').length || 0;
+      const completedOrders = orders?.filter((o) => o.status === 'delivered').length || 0;
       const pendingOrders = orders?.filter((o) => o.status === 'pending').length || 0;
       const cancelledOrders = orders?.filter((o) => o.status === 'cancelled').length || 0;
 

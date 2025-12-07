@@ -3,6 +3,7 @@ import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import { componentTagger } from "lovable-tagger";
 import { visualizer } from "rollup-plugin-visualizer";
+import { sentryVitePlugin } from "@sentry/vite-plugin";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
@@ -20,6 +21,35 @@ export default defineConfig(({ mode }) => ({
         gzipSize: true,
         brotliSize: true,
       }),
+    // Sentry plugin for source maps upload (only in production builds)
+    mode === "production" &&
+      sentryVitePlugin({
+        org: "pideai",
+        project: "pideai-restaurant-app",
+        authToken: process.env.SENTRY_AUTH_TOKEN,
+
+        // Upload source maps to Sentry
+        sourcemaps: {
+          assets: "./dist/**",
+          ignore: ["node_modules"],
+          filesToDeleteAfterUpload: ["./dist/**/*.map"],
+        },
+
+        // Release configuration
+        release: {
+          name: process.env.VITE_APP_VERSION || "development",
+          cleanArtifacts: true,
+          setCommits: {
+            auto: true,
+          },
+        },
+
+        // Telemetry
+        telemetry: false,
+
+        // Debug mode for troubleshooting
+        debug: false,
+      }),
   ].filter(Boolean),
   resolve: {
     alias: {
@@ -27,6 +57,8 @@ export default defineConfig(({ mode }) => ({
     },
   },
   build: {
+    // Generate source maps for production (required for Sentry)
+    sourcemap: mode === "production",
     rollupOptions: {
       output: {
         manualChunks: {
@@ -59,6 +91,9 @@ export default defineConfig(({ mode }) => ({
 
           // Utilities
           "utils": ["date-fns", "sonner", "clsx", "tailwind-merge"],
+
+          // Sentry
+          "sentry": ["@sentry/react"],
         },
       },
     },

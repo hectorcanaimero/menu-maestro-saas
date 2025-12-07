@@ -1,9 +1,126 @@
 import { createRoot } from "react-dom/client";
+import * as Sentry from "@sentry/react";
+import {
+  createRoutesFromChildren,
+  matchRoutes,
+  useLocation,
+  useNavigationType,
+} from "react-router-dom";
+import { useEffect } from "react";
 import App from "./App.tsx";
 import "./index.css";
 import "leaflet/dist/leaflet.css";
 import posthog from "posthog-js";
 import { ErrorBoundary } from "./components/ErrorBoundary";
+
+// Initialize Sentry with professional configuration
+Sentry.init({
+  dsn: "https://63afd0c5a58daa15228eba85ac8356eb@o172702.ingest.us.sentry.io/4510482187878400",
+
+  // Environment detection
+  environment: import.meta.env.MODE,
+
+  // Release tracking with git commit hash
+  release: import.meta.env.VITE_APP_VERSION || "development",
+
+  // Performance Monitoring
+  integrations: [
+    // React Router integration for automatic navigation tracking
+    Sentry.reactRouterV6BrowserTracingIntegration({
+      useEffect,
+      useLocation,
+      useNavigationType,
+      createRoutesFromChildren,
+      matchRoutes,
+    }),
+
+    // Session Replay with privacy controls
+    Sentry.replayIntegration({
+      // Mask all text content by default
+      maskAllText: true,
+      // Mask all input fields
+      maskAllInputs: true,
+      // Block all media elements (images, videos)
+      blockAllMedia: false,
+      // Network details recording
+      networkDetailAllowUrls: [window.location.origin],
+      networkCaptureBodies: true,
+      networkRequestHeaders: ["X-Custom-Header"],
+      networkResponseHeaders: ["X-Custom-Header"],
+    }),
+
+    // Note: Sentry User Feedback widget removed - using Chatwoot for support instead
+    // See src/pages/admin/AdminDashboard.tsx for Chatwoot integration
+
+    // Browser Profiling for performance insights
+    Sentry.browserProfilingIntegration(),
+
+    // Additional integrations
+    Sentry.browserTracingIntegration({
+      // Trace all XHR and fetch requests
+      traceFetch: true,
+      traceXHR: true,
+      // Enable long task monitoring
+      enableLongTask: true,
+      // Enable interaction tracking
+      enableInp: true,
+    }),
+  ],
+
+  // Performance Monitoring - Sample 100% in dev, 20% in production
+  tracesSampleRate: import.meta.env.DEV ? 1.0 : 0.2,
+
+  // Session Replay - Sample 10% of sessions, 100% of error sessions
+  replaysSessionSampleRate: import.meta.env.DEV ? 1.0 : 0.1,
+  replaysOnErrorSampleRate: 1.0,
+
+  // Profiling - Sample 100% in dev, 10% in production
+  profilesSampleRate: import.meta.env.DEV ? 1.0 : 0.1,
+
+  // Enhanced error tracking
+  beforeSend(event, hint) {
+    // Add custom context
+    const error = hint.originalException;
+
+    // Log errors in development
+    if (import.meta.env.DEV) {
+      console.error("[Sentry]", error);
+    }
+
+    // Filter out specific errors we don't want to track
+    if (error && typeof error === 'object' && 'message' in error) {
+      const errorMessage = String(error.message);
+      // Ignore ResizeObserver errors (common browser quirk)
+      if (errorMessage.includes("ResizeObserver")) {
+        return null;
+      }
+      // Ignore certain network errors
+      if (errorMessage.includes("Failed to fetch") || errorMessage.includes("NetworkError")) {
+        // Still send but tag them
+        event.tags = { ...event.tags, network_error: true };
+      }
+    }
+
+    return event;
+  },
+
+  // Breadcrumbs configuration
+  maxBreadcrumbs: 50,
+
+  // Attach stack trace to all messages
+  attachStacktrace: true,
+
+  // Send default PII (Personally Identifiable Information)
+  sendDefaultPii: false,
+
+  // Custom tags for all events
+  initialScope: {
+    tags: {
+      app_type: "restaurant_ordering",
+      platform: "web",
+    },
+  },
+});
 
 // Initialize PostHog before rendering the app
 // Only initialize if environment variables are set
@@ -49,7 +166,21 @@ if (import.meta.env.VITE_POSTHOG_KEY && import.meta.env.VITE_POSTHOG_HOST) {
 }
 
 createRoot(document.getElementById("root")!).render(
-  <ErrorBoundary showDetails={import.meta.env.DEV}>
+  <Sentry.ErrorBoundary
+    fallback={({ error, resetError }) => (
+      <ErrorBoundary showDetails={import.meta.env.DEV}>
+        <div style={{ padding: '2rem', textAlign: 'center' }}>
+          <h2>Algo salió mal</h2>
+          <p>Lo sentimos, ha ocurrido un error inesperado.</p>
+          {import.meta.env.DEV && <pre style={{ textAlign: 'left', overflow: 'auto' }}>{String(error)}</pre>}
+          <button onClick={resetError} style={{ marginTop: '1rem', padding: '0.5rem 1rem', cursor: 'pointer' }}>
+            Intentar de nuevo
+          </button>
+        </div>
+      </ErrorBoundary>
+    )}
+    showDialog
+  >
     <App />
-  </ErrorBoundary>
+  </Sentry.ErrorBoundary>
 );

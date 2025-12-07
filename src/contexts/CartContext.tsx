@@ -3,6 +3,7 @@ import { toast } from "sonner";
 import posthog from "posthog-js";
 import { useStore } from "./StoreContext";
 import { setSecureItem, getSecureItem, removeSecureItem } from "@/lib/secureStorage";
+import { trackCartOperation, captureException } from "@/lib/sentry-utils";
 
 export interface CartItemExtra {
   id: string;
@@ -48,6 +49,12 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         }
       } catch (error) {
         console.error('[SecureStorage] Error loading cart:', error);
+        // Track cart loading error in Sentry
+        captureException(error as Error, {
+          tags: { context: 'cart_load' },
+          extra: { message: 'Failed to load cart from secure storage' },
+          level: 'warning',
+        });
         // Fail silently - start with empty cart
       } finally {
         setIsLoadingCart(false);
@@ -134,6 +141,14 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         console.error('[PostHog] Error tracking add to cart:', error);
       }
 
+      // Track in Sentry with breadcrumb
+      trackCartOperation('add', item.id, {
+        product_name: item.name,
+        price: item.price,
+        has_extras: (item.extras?.length || 0) > 0,
+        extras_count: item.extras?.length || 0,
+      });
+
       if (existing) {
         toast.success("Cantidad actualizada");
         return current.map((i) =>
@@ -169,6 +184,12 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         } catch (error) {
           console.error('[PostHog] Error tracking remove from cart:', error);
         }
+
+        // Track in Sentry with breadcrumb
+        trackCartOperation('remove', itemToRemove.id, {
+          product_name: itemToRemove.name,
+          quantity: itemToRemove.quantity,
+        });
       }
 
       return current.filter((item) => item.cartItemId !== cartItemId);
@@ -181,12 +202,30 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       removeItem(cartItemId);
       return;
     }
-    setItems((current) =>
-      current.map((item) => (item.cartItemId === cartItemId ? { ...item, quantity } : item))
-    );
+    setItems((current) => {
+      const updatedItems = current.map((item) => (item.cartItemId === cartItemId ? { ...item, quantity } : item));
+
+      // Track in Sentry with breadcrumb
+      const item = current.find((i) => i.cartItemId === cartItemId);
+      if (item) {
+        trackCartOperation('update', item.id, {
+          product_name: item.name,
+          old_quantity: item.quantity,
+          new_quantity: quantity,
+        });
+      }
+
+      return updatedItems;
+    });
   };
 
   const clearCart = () => {
+    // Track cart clear in Sentry
+    trackCartOperation('clear', undefined, {
+      items_count: items.length,
+      cart_value: totalPrice,
+    });
+
     setItems([]);
     removeSecureItem("cart");
   };

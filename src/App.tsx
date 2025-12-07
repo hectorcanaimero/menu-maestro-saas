@@ -57,18 +57,16 @@ const ActiveDelivery = lazy(() => import("./pages/driver/ActiveDelivery"));
 
 const queryClient = new QueryClient();
 
-const App = () => (
-  <ErrorBoundary showDetails={import.meta.env.DEV}>
-    <QueryClientProvider client={queryClient}>
-      <StoreProvider>
-        <CartProvider>
-          <TooltipProvider>
-            <Toaster />
-            <Sonner />
-            <BrowserRouter>
-              <ScrollToTop />
-              <Suspense fallback={<LoadingScreen />}>
-                <Routes>
+// Internal component to use hooks that require router context
+const AppContent = () => {
+  // Note: Chatwoot is now initialized in AdminDashboard only
+  // See src/pages/admin/AdminDashboard.tsx for implementation
+
+  return (
+    <>
+      <ScrollToTop />
+      <Suspense fallback={<LoadingScreen />}>
+        <Routes>
                   {/* Public Routes */}
                   <Route
                     path="/"
@@ -384,6 +382,20 @@ const App = () => (
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </Suspense>
+            </>
+  );
+};
+
+const App = () => (
+  <ErrorBoundary showDetails={import.meta.env.DEV}>
+    <QueryClientProvider client={queryClient}>
+      <StoreProvider>
+        <CartProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <AppContent />
             </BrowserRouter>
           </TooltipProvider>
         </CartProvider>

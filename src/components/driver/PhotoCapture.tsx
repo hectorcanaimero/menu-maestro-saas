@@ -1,7 +1,8 @@
 import { useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Camera, X, Check } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Camera, X, Check, Loader2, AlertCircle } from 'lucide-react';
 
 interface PhotoCaptureProps {
   onSave: (photoDataUrl: string) => void;
@@ -14,22 +15,63 @@ export function PhotoCapture({ onSave, onCancel }: PhotoCaptureProps) {
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [photo, setPhoto] = useState<string | null>(null);
   const [cameraActive, setCameraActive] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const startCamera = async () => {
+    setIsLoading(true);
+    setError(null);
+
     try {
+      // Check if mediaDevices is supported
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        throw new Error('Tu navegador no soporta acceso a la cámara');
+      }
+
       const mediaStream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'environment' }, // Use back camera on mobile
+        video: {
+          facingMode: 'environment', // Use back camera on mobile
+          width: { ideal: 1920 },
+          height: { ideal: 1080 }
+        },
         audio: false,
       });
 
       if (videoRef.current) {
         videoRef.current.srcObject = mediaStream;
+
+        // Wait for video to be ready
+        await new Promise<void>((resolve) => {
+          if (videoRef.current) {
+            videoRef.current.onloadedmetadata = () => {
+              videoRef.current?.play().then(() => resolve()).catch(() => resolve());
+            };
+          } else {
+            resolve();
+          }
+        });
+
         setStream(mediaStream);
         setCameraActive(true);
+        setIsLoading(false);
       }
-    } catch (error) {
-      console.error('Error accessing camera:', error);
-      alert('No se pudo acceder a la cámara. Verifica los permisos.');
+    } catch (err: any) {
+      console.error('Error accessing camera:', err);
+      setIsLoading(false);
+
+      let errorMessage = 'No se pudo acceder a la cámara.';
+
+      if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+        errorMessage = 'Permiso de cámara denegado. Por favor, habilita el acceso a la cámara en la configuración de tu navegador.';
+      } else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
+        errorMessage = 'No se encontró ninguna cámara en tu dispositivo.';
+      } else if (err.name === 'NotReadableError' || err.name === 'TrackStartError') {
+        errorMessage = 'La cámara está siendo usada por otra aplicación. Cierra otras apps que usen la cámara.';
+      } else if (err.message) {
+        errorMessage = err.message;
+      }
+
+      setError(errorMessage);
     }
   };
 
@@ -90,15 +132,43 @@ export function PhotoCapture({ onSave, onCancel }: PhotoCaptureProps) {
         <CardTitle className="text-lg">Foto de Comprobación</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        {!cameraActive && !photo && (
+        {/* Error Message */}
+        {error && (
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
+
+        {/* Loading State */}
+        {isLoading && (
+          <div className="flex flex-col items-center justify-center py-12 border-2 border-dashed border-muted rounded-lg">
+            <Loader2 className="h-12 w-12 text-muted-foreground mb-4 animate-spin" />
+            <p className="text-sm text-muted-foreground">
+              Iniciando cámara...
+            </p>
+          </div>
+        )}
+
+        {/* Initial State */}
+        {!cameraActive && !photo && !isLoading && (
           <div className="flex flex-col items-center justify-center py-12 border-2 border-dashed border-muted rounded-lg">
             <Camera className="h-12 w-12 text-muted-foreground mb-4" />
             <p className="text-sm text-muted-foreground mb-4">
               Toma una foto del pedido entregado
             </p>
-            <Button onClick={startCamera}>
-              <Camera className="h-4 w-4 mr-2" />
-              Abrir Cámara
+            <Button onClick={startCamera} disabled={isLoading}>
+              {isLoading ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Iniciando...
+                </>
+              ) : (
+                <>
+                  <Camera className="h-4 w-4 mr-2" />
+                  Abrir Cámara
+                </>
+              )}
             </Button>
           </div>
         )}
@@ -110,7 +180,9 @@ export function PhotoCapture({ onSave, onCancel }: PhotoCaptureProps) {
                 ref={videoRef}
                 autoPlay
                 playsInline
+                muted
                 className="w-full h-auto"
+                style={{ maxHeight: '60vh' }}
               />
             </div>
             <div className="flex gap-2">

@@ -17,6 +17,7 @@ import { OrderCard } from "./OrderCard";
 import { AdminOrderCreate } from "./AdminOrderCreate";
 import { AdminOrderEdit } from "./AdminOrderEdit";
 import { DriverAssignmentDialog } from "./DriverAssignmentDialog";
+import { useModuleAccess } from "@/hooks/useSubscription";
 
 interface OrderItemExtra {
   id: string;
@@ -65,6 +66,10 @@ const OrdersManager = () => {
   // Driver assignment
   const [driverDialogOpen, setDriverDialogOpen] = useState(false);
   const [selectedOrderForDriver, setSelectedOrderForDriver] = useState<Order | null>(null);
+
+  // Check if delivery module is enabled
+  const { data: hasDeliveryModule } = useModuleAccess('delivery');
+  const showDriverFeatures = hasDeliveryModule === true;
 
   // Filter states
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -489,7 +494,7 @@ const OrdersManager = () => {
                         </TableCell>
                         <TableCell className="text-right">
                           <div className="flex items-center justify-end gap-2">
-                            {order.order_type === 'delivery' && (
+                            {order.order_type === 'delivery' && showDriverFeatures && (
                               <Button
                                 variant="outline"
                                 size="sm"

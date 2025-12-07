@@ -30,6 +30,8 @@ import {
   SidebarMenuButton,
   useSidebar,
 } from '@/components/ui/sidebar';
+import { useModuleAccess } from '@/hooks/useSubscription';
+import { useStore } from '@/contexts/StoreContext';
 
 const navItems = [
   { path: '/admin', label: 'Dashboard', icon: LayoutDashboard },
@@ -49,7 +51,7 @@ const navIntegration = [
   { path: '/admin/whatsapp', label: 'Whatsapp', icon: Send },
   // { path: '/admin/chatbot', label: 'Lis Bot', icon: Bot },
   { path: '/admin/ai', label: 'Estudio Imagen IA', icon: Image },
-  { path: '/admin/delivery', label: 'Delivery', icon: Package },
+  { path: '/admin/delivery', label: 'Delivery', icon: Package, requiresModule: 'delivery' as const },
   // { path: '/admin/fidelity', label: 'Fidelidad', icon: Club },
   // { path: '/admin/point-sale', label: 'Punto de Venta', icon: Club },
   // { path: '/admin/custom-domain', label: 'Dominio Propio', icon: Club },
@@ -57,6 +59,16 @@ const navIntegration = [
 
 export function AppSidebar() {
   const { open } = useSidebar();
+  const { store } = useStore();
+  const { data: hasDeliveryModule } = useModuleAccess('delivery');
+
+  // Filter navigation items based on module access
+  const filteredNavIntegration = navIntegration.filter((item) => {
+    if (item.requiresModule === 'delivery') {
+      return hasDeliveryModule === true;
+    }
+    return true;
+  });
 
   return (
     <Sidebar collapsible="icon">
@@ -88,7 +100,7 @@ export function AppSidebar() {
           <SidebarGroupLabel className="mt-5">Integraciones</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {navIntegration.map((item) => {
+              {filteredNavIntegration.map((item) => {
                 const Icon = item.icon;
                 return (
                   <SidebarMenuItem key={item.path}>

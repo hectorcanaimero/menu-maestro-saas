@@ -1,4 +1,5 @@
 import { ShoppingCart, Plus, Minus, Trash2, X } from "lucide-react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { useCart } from "@/contexts/CartContext";
@@ -7,6 +8,8 @@ import { Badge } from "@/components/ui/badge";
 import { useCartTotals } from "@/hooks/useCartTotals";
 import { useFormatPrice } from "@/lib/priceFormatter";
 import { useStore } from "@/contexts/StoreContext";
+import { useStoreStatus } from "@/hooks/useStoreStatus";
+import { StoreClosedDialog } from "@/components/catalog/StoreClosedDialog";
 import posthog from "posthog-js";
 
 export const CartSheet = () => {
@@ -15,6 +18,8 @@ export const CartSheet = () => {
   const { store } = useStore();
   const navigate = useNavigate();
   const formatPrice = useFormatPrice();
+  const { status: storeStatus } = useStoreStatus(store?.id, store?.force_status || null);
+  const [showClosedDialog, setShowClosedDialog] = useState(false);
 
   const handleOpenChange = (open: boolean) => {
     if (open && store?.id) {
@@ -31,6 +36,16 @@ export const CartSheet = () => {
         console.error('[PostHog] Error tracking cart_viewed:', error);
       }
     }
+  };
+
+  const handleCheckout = () => {
+    // Validate store is open
+    if (!storeStatus.isOpen) {
+      setShowClosedDialog(true);
+      return;
+    }
+
+    navigate("/checkout");
   };
 
   return (
@@ -80,7 +95,7 @@ export const CartSheet = () => {
                   <span style={{ color: `hsl(var(--price-color, var(--primary)))` }}>{formatPrice(discountedTotal)}</span>
                 </div>
               </div>
-              <Button className="w-full" size="lg" onClick={() => navigate("/checkout")}>
+              <Button className="w-full" size="lg" onClick={handleCheckout}>
                 Realizar Pedido
               </Button>
               <div className="border-t pt-4 mt-4 space-y-4"></div>
@@ -156,6 +171,17 @@ export const CartSheet = () => {
           )}
         </div>
       </SheetContent>
+
+      {/* Store Closed Dialog */}
+      <StoreClosedDialog
+        open={showClosedDialog}
+        onOpenChange={setShowClosedDialog}
+        storeName={store?.name}
+        nextOpenTime={storeStatus.nextOpenTime}
+        onViewHours={() => {
+          setShowClosedDialog(false);
+        }}
+      />
     </Sheet>
   );
 };

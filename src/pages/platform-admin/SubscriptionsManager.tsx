@@ -29,8 +29,10 @@ interface Subscription {
   trial_ends_at: string | null;
   current_period_start: string;
   current_period_end: string;
-  whatsapp_enabled: boolean;
-  delivery_enabled: boolean;
+  enabled_modules: {
+    whatsapp?: boolean;
+    delivery?: boolean;
+  };
   created_at: string;
   stores: {
     name: string;
@@ -79,12 +81,21 @@ function SubscriptionsManager() {
 
   // Toggle module mutation
   const toggleModuleMutation = useMutation({
-    mutationFn: async ({ subscriptionId, module, enable }: { subscriptionId: string; module: 'whatsapp' | 'delivery'; enable: boolean }) => {
-      const column = module === 'whatsapp' ? 'whatsapp_enabled' : 'delivery_enabled';
+    mutationFn: async ({ subscriptionId, module, enable, currentModules }: {
+      subscriptionId: string;
+      module: 'whatsapp' | 'delivery';
+      enable: boolean;
+      currentModules: { whatsapp?: boolean; delivery?: boolean };
+    }) => {
+      // Update the JSONB enabled_modules field
+      const updatedModules = {
+        ...currentModules,
+        [module]: enable,
+      };
 
       const { data, error } = await supabase
         .from('subscriptions')
-        .update({ [column]: enable })
+        .update({ enabled_modules: updatedModules })
         .eq('id', subscriptionId)
         .select()
         .single();
@@ -93,9 +104,10 @@ function SubscriptionsManager() {
       return data;
     },
     onSuccess: (_, variables) => {
+      const moduleName = variables.module === 'whatsapp' ? 'WhatsApp' : 'Delivery Avanzado (por kilómetro)';
       toast({
         title: variables.enable ? 'Módulo habilitado' : 'Módulo deshabilitado',
-        description: `El módulo ${variables.module === 'whatsapp' ? 'WhatsApp' : 'Delivery'} ha sido ${variables.enable ? 'habilitado' : 'deshabilitado'}`,
+        description: `El módulo ${moduleName} ha sido ${variables.enable ? 'habilitado' : 'deshabilitado'} exitosamente`,
       });
       queryClient.invalidateQueries({ queryKey: ['all-subscriptions'] });
       setShowModuleDialog(false);
@@ -149,14 +161,13 @@ function SubscriptionsManager() {
   const confirmToggleModule = () => {
     if (!selectedSubscription || !moduleType) return;
 
-    const currentlyEnabled = moduleType === 'whatsapp'
-      ? selectedSubscription.whatsapp_enabled
-      : selectedSubscription.delivery_enabled;
+    const currentlyEnabled = selectedSubscription.enabled_modules?.[moduleType] || false;
 
     toggleModuleMutation.mutate({
       subscriptionId: selectedSubscription.id,
       module: moduleType,
       enable: !currentlyEnabled,
+      currentModules: selectedSubscription.enabled_modules || {},
     });
   };
 
@@ -274,21 +285,26 @@ function SubscriptionsManager() {
 
                         <div className="pt-2">
                           <p className="text-muted-foreground mb-1">Módulos</p>
-                          <div className="flex gap-2">
+                          <div className="flex flex-col gap-2">
                             <Button
                               size="sm"
-                              variant={subscription.whatsapp_enabled ? 'default' : 'outline'}
+                              variant={subscription.enabled_modules?.whatsapp ? 'default' : 'outline'}
                               onClick={() => handleToggleModule(subscription, 'whatsapp')}
+                              className="justify-start"
                             >
-                              WhatsApp {subscription.whatsapp_enabled && '✓'}
+                              WhatsApp {subscription.enabled_modules?.whatsapp && '✓'}
                             </Button>
                             <Button
                               size="sm"
-                              variant={subscription.delivery_enabled ? 'default' : 'outline'}
+                              variant={subscription.enabled_modules?.delivery ? 'default' : 'outline'}
                               onClick={() => handleToggleModule(subscription, 'delivery')}
+                              className="justify-start"
                             >
-                              Delivery {subscription.delivery_enabled && '✓'}
+                              Delivery Avanzado {subscription.enabled_modules?.delivery && '✓'}
                             </Button>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              Delivery Avanzado = Por kilómetro + Motoristas + GPS tracking
+                            </p>
                           </div>
                         </div>
                       </div>
@@ -307,18 +323,26 @@ function SubscriptionsManager() {
           <DialogHeader>
             <DialogTitle>
               {moduleType === 'whatsapp'
-                ? selectedSubscription?.whatsapp_enabled ? 'Deshabilitar WhatsApp' : 'Habilitar WhatsApp'
-                : selectedSubscription?.delivery_enabled ? 'Deshabilitar Delivery' : 'Habilitar Delivery'
+                ? (selectedSubscription?.enabled_modules?.whatsapp ? 'Deshabilitar WhatsApp' : 'Habilitar WhatsApp')
+                : (selectedSubscription?.enabled_modules?.delivery ? 'Deshabilitar Delivery Avanzado' : 'Habilitar Delivery Avanzado')
               }
             </DialogTitle>
-            <DialogDescription>
-              Confirma que deseas{' '}
-              {moduleType === 'whatsapp'
-                ? selectedSubscription?.whatsapp_enabled ? 'deshabilitar' : 'habilitar'
-                : selectedSubscription?.delivery_enabled ? 'deshabilitar' : 'habilitar'
-              }{' '}
-              el módulo {moduleType === 'whatsapp' ? 'WhatsApp' : 'Delivery'} para{' '}
-              <strong>{selectedSubscription?.stores.name}</strong>
+            <DialogDescription className="space-y-2">
+              <p>
+                Confirma que deseas{' '}
+                {moduleType === 'whatsapp'
+                  ? (selectedSubscription?.enabled_modules?.whatsapp ? 'deshabilitar' : 'habilitar')
+                  : (selectedSubscription?.enabled_modules?.delivery ? 'deshabilitar' : 'habilitar')
+                }{' '}
+                el módulo <strong>{moduleType === 'whatsapp' ? 'WhatsApp' : 'Delivery Avanzado'}</strong> para{' '}
+                <strong>{selectedSubscription?.stores.name}</strong>
+              </p>
+              {moduleType === 'delivery' && (
+                <p className="text-xs text-muted-foreground border-l-2 border-blue-500 pl-3 mt-2">
+                  <strong>Nota:</strong> Delivery Avanzado incluye: cálculo por kilómetro, gestión de motoristas y GPS tracking en tiempo real.
+                  El delivery básico (precio fijo/por zona) siempre está disponible para la tienda.
+                </p>
+              )}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -326,7 +350,7 @@ function SubscriptionsManager() {
               Cancelar
             </Button>
             <Button onClick={confirmToggleModule} disabled={toggleModuleMutation.isPending}>
-              Confirmar
+              {toggleModuleMutation.isPending ? 'Procesando...' : 'Confirmar'}
             </Button>
           </DialogFooter>
         </DialogContent>

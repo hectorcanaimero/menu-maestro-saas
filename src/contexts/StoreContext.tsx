@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useEffect, ReactNode } from 'react
 import { supabase } from '@/integrations/supabase/client';
 import { getSubdomainFromHostname } from '@/lib/subdomain-validation';
 import posthog from 'posthog-js';
+import * as Sentry from '@sentry/react';
 
 export interface Store {
   id: string;
@@ -93,6 +94,11 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
       } else if (event === 'SIGNED_OUT') {
         console.log('[StoreContext] User signed out');
         setIsStoreOwner(false);
+
+        // Clear Sentry user context
+        Sentry.setUser(null);
+
+        // Clear PostHog
         posthog.reset();
       } else if (store) {
         // Update ownership for other events
@@ -162,6 +168,15 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
       const storeData = result.store_data as unknown as Store;
       setStore(storeData);
       setIsStoreOwner(result.is_owner || false);
+
+      // Set Sentry context for multi-tenant tracking
+      Sentry.setContext("store", {
+        store_id: storeData.id,
+        store_name: storeData.name,
+        subdomain: storeData.subdomain,
+        is_active: storeData.is_active,
+        operating_modes: storeData.operating_modes,
+      });
     } catch (error) {
       console.error('Error in loadStore:', error);
       setStore(null);
@@ -176,6 +191,19 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
     } = await supabase.auth.getSession();
     const isOwner = session?.user?.id === storeData.owner_id;
     setIsStoreOwner(isOwner);
+
+    // Set Sentry user context
+    if (session?.user) {
+      Sentry.setUser({
+        id: session.user.id,
+        email: session.user.email,
+        username: session.user.email?.split('@')[0],
+      });
+
+      // Set additional tags
+      Sentry.setTag("is_store_owner", isOwner);
+      Sentry.setTag("user_role", isOwner ? "owner" : "customer");
+    }
 
     // Identify user in PostHog after checking ownership
     identifyUserInPostHog(session, storeData, isOwner);

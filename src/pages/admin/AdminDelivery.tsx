@@ -14,9 +14,12 @@ import { AdminDeliveryDashboard } from "@/components/delivery/AdminDeliveryDashb
 import { useStore } from "@/contexts/StoreContext";
 import { supabase } from "@/integrations/supabase/client";
 import { H2, H3, Body, Caption } from "@/components/ui/typography";
+import { useModuleAccess } from "@/hooks/useSubscription";
+import { ModuleNotAvailable } from "@/components/admin/ModuleNotAvailable";
 
 export default function AdminDelivery() {
   const { store, reloadStore } = useStore();
+  const { data: hasDeliveryModule, isLoading: checkingModule } = useModuleAccess('delivery');
   const [activeTab, setActiveTab] = useState("drivers");
   const [saving, setSaving] = useState(false);
 
@@ -96,6 +99,31 @@ export default function AdminDelivery() {
       setSaving(false);
     }
   };
+
+  // Show loading state
+  if (checkingModule) {
+    return (
+      <AdminLayout>
+        <div className="space-y-6">
+          <Skeleton className="h-12 w-64 mb-6" />
+          <Skeleton className="h-32 mb-4" />
+          <Skeleton className="h-48" />
+        </div>
+      </AdminLayout>
+    );
+  }
+
+  // Show module not available if delivery module is disabled
+  if (!hasDeliveryModule) {
+    return (
+      <AdminLayout>
+        <ModuleNotAvailable
+          module="Delivery Avanzado"
+          description="El sistema de delivery avanzado con motoristas, GPS tracking y cálculo por kilómetro está disponible en planes Enterprise. Contacta con soporte para habilitarlo."
+        />
+      </AdminLayout>
+    );
+  }
 
   return (
     <AdminLayout>

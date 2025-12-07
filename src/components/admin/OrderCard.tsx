@@ -1,12 +1,25 @@
-import { useState } from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Eye, FileImage, Phone, MapPin, Calendar, DollarSign, Truck, Store, Utensils, Bike, UserPlus } from "lucide-react";
-import { DriverAssignmentDialog } from "./DriverAssignmentDialog";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { useState } from 'react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Eye,
+  FileImage,
+  Phone,
+  MapPin,
+  Calendar,
+  DollarSign,
+  Truck,
+  Store,
+  Utensils,
+  Bike,
+  UserPlus,
+} from 'lucide-react';
+import { DriverAssignmentDialog } from './DriverAssignmentDialog';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { useModuleAccess } from '@/hooks/useSubscription';
 
 interface OrderItemExtra {
   id: string;
@@ -49,6 +62,18 @@ interface OrderCardProps {
 
 export const OrderCard = ({ order, onStatusChange, onViewDetails, onDriverAssigned }: OrderCardProps) => {
   const [showDriverDialog, setShowDriverDialog] = useState(false);
+  const { data: hasDeliveryModule, isLoading: checkingModule } = useModuleAccess('delivery');
+  // Only show driver assignment features if delivery module is explicitly enabled
+  const showDriverFeatures = hasDeliveryModule === true;
+
+  // Debug log (can be removed later)
+  console.log('OrderCard - Delivery Module Check:', {
+    orderId: order.id.slice(0, 8),
+    hasDeliveryModule,
+    checkingModule,
+    showDriverFeatures,
+    isDelivery: order.order_type === 'delivery',
+  });
 
   // Get delivery assignment info
   const { data: deliveryAssignment } = useQuery({
@@ -56,7 +81,8 @@ export const OrderCard = ({ order, onStatusChange, onViewDetails, onDriverAssign
     queryFn: async () => {
       const { data, error } = await supabase
         .from('delivery_assignments')
-        .select(`
+        .select(
+          `
           *,
           driver:drivers (
             id,
@@ -65,7 +91,8 @@ export const OrderCard = ({ order, onStatusChange, onViewDetails, onDriverAssign
             vehicle_type,
             photo_url
           )
-        `)
+        `,
+        )
         .eq('order_id', order.id)
         .order('created_at', { ascending: false })
         .limit(1)
@@ -80,44 +107,44 @@ export const OrderCard = ({ order, onStatusChange, onViewDetails, onDriverAssign
   const getOrderTypeConfig = (type: string) => {
     const typeConfig: Record<string, { label: string; icon: any; color: string }> = {
       delivery: {
-        label: "Entrega",
+        label: 'Entrega',
         icon: Truck,
-        color: "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-100 border-orange-300"
+        color: 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-100 border-orange-300',
       },
       pickup: {
-        label: "Recoger",
+        label: 'Recoger',
         icon: Store,
-        color: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100 border-blue-300"
+        color: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100 border-blue-300',
       },
       digital_menu: {
-        label: "En Tienda",
+        label: 'En Tienda',
         icon: Utensils,
-        color: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100 border-green-300"
-      }
+        color: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100 border-green-300',
+      },
     };
     return typeConfig[type] || typeConfig.pickup;
   };
 
   const getStatusColor = (status: string) => {
     const colors: Record<string, string> = {
-      pending: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-100",
-      confirmed: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100",
-      preparing: "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-100",
-      ready: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100",
-      delivered: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100",
-      cancelled: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100",
+      pending: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-100',
+      confirmed: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100',
+      preparing: 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-100',
+      ready: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100',
+      delivered: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100',
+      cancelled: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100',
     };
     return colors[status] || colors.pending;
   };
 
   const getStatusLabel = (status: string) => {
     const labels: Record<string, string> = {
-      pending: "Pendiente",
-      confirmed: "Confirmado",
-      preparing: "Preparando",
-      ready: "Listo",
-      delivered: "Entregado",
-      cancelled: "Cancelado",
+      pending: 'Pendiente',
+      confirmed: 'Confirmado',
+      preparing: 'Preparando',
+      ready: 'Listo',
+      delivered: 'Entregado',
+      cancelled: 'Cancelado',
     };
     return labels[status] || status;
   };
@@ -129,7 +156,11 @@ export const OrderCard = ({ order, onStatusChange, onViewDetails, onDriverAssign
 
   return (
     <>
-      <Card className={`overflow-hidden hover:shadow-md transition-shadow ${isDelivery ? 'border-l-4 border-l-orange-500' : ''}`}>
+      <Card
+        className={`overflow-hidden hover:shadow-md transition-shadow ${
+          isDelivery ? 'border-l-4 border-l-orange-500' : ''
+        }`}
+      >
         <CardContent className="p-4 space-y-3">
           {/* Header */}
           <div className="flex items-start justify-between gap-2">
@@ -144,12 +175,14 @@ export const OrderCard = ({ order, onStatusChange, onViewDetails, onDriverAssign
               <div className="flex items-center gap-2 text-muted-foreground">
                 <Calendar className="w-3 h-3 flex-shrink-0" />
                 <span className="text-xs">
-                  {order.created_at ? new Date(order.created_at).toLocaleDateString("es-ES", {
-                    day: "2-digit",
-                    month: "short",
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  }) : 'N/A'}
+                  {order.created_at
+                    ? new Date(order.created_at).toLocaleDateString('es-ES', {
+                        day: '2-digit',
+                        month: 'short',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })
+                    : 'N/A'}
                 </span>
               </div>
             </div>
@@ -205,18 +238,13 @@ export const OrderCard = ({ order, onStatusChange, onViewDetails, onDriverAssign
                   <p className="text-xs font-medium text-green-700 dark:text-green-400">
                     {deliveryAssignment.driver.name}
                   </p>
-                  <p className="text-xs text-green-600 dark:text-green-500">
-                    Motorista asignado
-                  </p>
+                  <p className="text-xs text-green-600 dark:text-green-500">Motorista asignado</p>
                 </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-7 text-xs"
-                  onClick={() => setShowDriverDialog(true)}
-                >
-                  Cambiar
-                </Button>
+                {showDriverFeatures && (
+                  <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => setShowDriverDialog(true)}>
+                    Cambiar
+                  </Button>
+                )}
               </div>
             </div>
           )}
@@ -234,10 +262,7 @@ export const OrderCard = ({ order, onStatusChange, onViewDetails, onDriverAssign
 
           {/* Actions */}
           <div className="grid grid-cols-2 gap-2 pt-2">
-            <Select
-              value={order.status}
-              onValueChange={(value) => onStatusChange(order.id, value)}
-            >
+            <Select value={order.status} onValueChange={(value) => onStatusChange(order.id, value)}>
               <SelectTrigger className="h-9 text-xs">
                 <SelectValue />
               </SelectTrigger>
@@ -250,25 +275,15 @@ export const OrderCard = ({ order, onStatusChange, onViewDetails, onDriverAssign
                 <SelectItem value="cancelled">Cancelado</SelectItem>
               </SelectContent>
             </Select>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => onViewDetails(order)}
-              className="h-9"
-            >
+            <Button variant="outline" size="sm" onClick={() => onViewDetails(order)} className="h-9">
               <Eye className="w-3 h-3 mr-1" />
               Detalles
             </Button>
           </div>
 
           {/* Assign Driver Button (for delivery orders without driver) */}
-          {isDelivery && !hasDriver && (
-            <Button
-              variant="default"
-              size="sm"
-              className="w-full h-9"
-              onClick={() => setShowDriverDialog(true)}
-            >
+          {isDelivery && !hasDriver && showDriverFeatures && (
+            <Button variant="default" size="sm" className="w-full h-9" onClick={() => setShowDriverDialog(true)}>
               <UserPlus className="w-3 h-3 mr-2" />
               Asignar Motorista
             </Button>
@@ -277,7 +292,7 @@ export const OrderCard = ({ order, onStatusChange, onViewDetails, onDriverAssign
       </Card>
 
       {/* Driver Assignment Dialog */}
-      {isDelivery && (
+      {isDelivery && showDriverFeatures && (
         <DriverAssignmentDialog
           open={showDriverDialog}
           onOpenChange={setShowDriverDialog}

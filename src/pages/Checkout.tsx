@@ -7,10 +7,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { useCart } from "@/contexts/CartContext";
 import { useStore } from "@/contexts/StoreContext";
 import { useStoreTheme } from "@/hooks/useStoreTheme";
+import { useStoreStatus } from "@/hooks/useStoreStatus";
 import { useCartTotals } from "@/hooks/useCartTotals";
 import { validateCouponCode, applyCouponDiscount, type Coupon } from "@/hooks/useCoupons";
 import { useFormatPrice } from "@/lib/priceFormatter";
 import { setSecureItem, getSecureItem, type SecureCustomerData } from "@/lib/secureStorage";
+import { StoreClosedDialog } from "@/components/catalog/StoreClosedDialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -140,6 +142,9 @@ const Checkout = () => {
   // Apply store theme colors
   useStoreTheme();
 
+  // Check store status
+  const { status: storeStatus } = useStoreStatus(store?.id, store?.force_status || null);
+
   const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [country, setCountry] = useState<"brazil" | "venezuela">("venezuela");
@@ -148,7 +153,8 @@ const Checkout = () => {
   const [deliveryZones, setDeliveryZones] = useState<DeliveryZone[]>([]);
   const [orderType, setOrderType] = useState<"delivery" | "pickup">("delivery");
   const [deliveryPrice, setDeliveryPrice] = useState(0);
-  
+  const [showClosedDialog, setShowClosedDialog] = useState(false);
+
   // Coupon state
   const [couponCode, setCouponCode] = useState("");
   const [appliedCoupon, setAppliedCoupon] = useState<Coupon | null>(null);
@@ -388,6 +394,12 @@ const Checkout = () => {
   const handleSubmit = async () => {
     if (!store?.id) {
       toast.error("No se pudo identificar la tienda");
+      return;
+    }
+
+    // Validate store is open
+    if (!storeStatus.isOpen) {
+      setShowClosedDialog(true);
       return;
     }
 
@@ -1035,6 +1047,18 @@ const Checkout = () => {
           </Button>
         </div>
       </div>
+
+      {/* Store Closed Dialog */}
+      <StoreClosedDialog
+        open={showClosedDialog}
+        onOpenChange={setShowClosedDialog}
+        storeName={store?.name}
+        nextOpenTime={storeStatus.nextOpenTime}
+        onViewHours={() => {
+          setShowClosedDialog(false);
+          navigate("/");
+        }}
+      />
     </div>
   );
 };

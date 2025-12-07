@@ -20,6 +20,7 @@ import {
   Square,
   RectangleVertical,
   Smartphone,
+  ScanEye,
 } from 'lucide-react';
 import { useAICredits } from '@/hooks/useAICredits';
 import { useStore } from '@/contexts/StoreContext';
@@ -39,7 +40,7 @@ interface AIPhotoStudioProps {
   onImageUpdated: () => void;
 }
 
-type StyleType = 'realistic' | 'premium' | 'animated' | 'minimalist' | 'white_bg' | 'dark_mode';
+type StyleType = 'realistic' | 'premium' | 'animated' | 'minimalist' | 'white_bg' | 'dark_mode' | 'top_view';
 type AspectRatio = '1:1' | '4:5' | '9:16';
 
 interface StyleOption {
@@ -99,6 +100,13 @@ const STYLE_OPTIONS: StyleOption[] = [
     description: 'Fondo oscuro dramático',
     icon: <Moon className="w-5 h-5" />,
     gradient: 'from-slate-700 to-slate-900',
+  },
+  {
+    id: 'top_view',
+    name: 'Vista Cenital',
+    description: 'Foto 360° desde arriba',
+    icon: <ScanEye className="w-5 h-5" />,
+    gradient: 'from-blue-500 to-cyan-500',
   },
 ];
 
@@ -372,7 +380,7 @@ export const AIPhotoStudio = ({ open, onOpenChange, menuItem, onImageUpdated }: 
           {!previewUrl && (
             <div className="space-y-3">
               <p className="text-sm font-medium">🎨 Selecciona un estilo</p>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 {STYLE_OPTIONS.map((style) => (
                   <motion.button
                     key={style.id}

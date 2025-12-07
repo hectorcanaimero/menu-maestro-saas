@@ -76,9 +76,9 @@ export function StoreInfoWidget({
       {/* Row 1: Name + Rating */}
       <div className="flex items-center gap-0 md:gap-1 flex-wrap">
         <span className="text-lg md:text-xl font-semibold text-foreground">{storeName}</span>
-        <Dot />
+        {/* <Dot />
         <Star className={`fill-yellow-400 text-yellow-400 me-1`} />
-        <span className="text-mds md:text-xl text-foreground">4.7</span>
+        <span className="text-mds md:text-xl text-foreground">4.7</span> */}
         {/* <StoreRating rating={4.7} reviewCount={124} variant="compact" size="md" /> */}
         {/* Open/Closed Status */}
       </div>

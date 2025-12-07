@@ -120,6 +120,26 @@ All routes are defined in src/App.tsx:
 - Template-based order messages (configurable per operating mode)
 - Message generator in src/lib/whatsappMessageGenerator.ts
 
+**Live Chat Support (Chatwoot):**
+- Integrated Chatwoot widget in admin dashboard only
+- Automatic user identification with Supabase session
+- Custom attributes: user_type, role, logged_in_at
+- Custom React hook: src/hooks/useChatwoot.ts
+- Configuration: websiteToken and baseUrl from Chatwoot instance
+- Replaces Sentry feedback widget for support
+
+**Error Monitoring (Sentry):**
+- Error tracking and performance monitoring
+- No feedback widget (using Chatwoot instead)
+- Configured in src/main.tsx
+
+**Driver App Features:**
+- PWA for delivery drivers
+- GPS tracking with real-time location updates
+- Photo capture for delivery proof (with improved error handling)
+- Signature capture for delivery confirmation
+- Camera access with proper error messages and loading states
+
 ## Path Aliases
 
 The project uses `@/` as an alias for the `src/` directory:

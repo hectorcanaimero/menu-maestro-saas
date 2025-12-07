@@ -15,37 +15,37 @@ export interface SubdomainValidationResult {
  */
 export const RESERVED_SUBDOMAINS = [
   // 'www',
-  "admin",
-  "api",
-  "app",
-  "dashboard",
-  "auth",
-  "login",
-  "signup",
-  "register",
-  "mail",
-  "email",
-  "ftp",
-  "localhost",
-  "staging",
-  "dev",
-  "test",
-  "demo",
-  "beta",
-  "secure",
-  "ssl",
-  "support",
-  "help",
-  "status",
-  "blog",
-  "docs",
-  "cdn",
-  "static",
-  "assets",
-  "media",
-  "files",
-  "upload",
-  "download",
+  'admin',
+  'api',
+  'app',
+  'dashboard',
+  'auth',
+  'login',
+  'signup',
+  'register',
+  'mail',
+  'email',
+  'ftp',
+  'localhost',
+  'staging',
+  'dev',
+  'test',
+  'demo',
+  'beta',
+  'secure',
+  'ssl',
+  'support',
+  'help',
+  'status',
+  'blog',
+  'docs',
+  'cdn',
+  'static',
+  'assets',
+  'media',
+  'files',
+  'upload',
+  'download',
 ] as const;
 
 /**
@@ -67,7 +67,7 @@ export function validateSubdomainFormat(subdomain: string): SubdomainValidationR
   if (!subdomain || subdomain.trim().length === 0) {
     return {
       isValid: false,
-      errorMessage: "El subdominio no puede estar vacío",
+      errorMessage: 'El subdominio no puede estar vacío',
     };
   }
 
@@ -77,7 +77,7 @@ export function validateSubdomainFormat(subdomain: string): SubdomainValidationR
   if (trimmed.length < 3) {
     return {
       isValid: false,
-      errorMessage: "El subdominio debe tener al menos 3 caracteres",
+      errorMessage: 'El subdominio debe tener al menos 3 caracteres',
     };
   }
 
@@ -85,7 +85,7 @@ export function validateSubdomainFormat(subdomain: string): SubdomainValidationR
   if (trimmed.length > 63) {
     return {
       isValid: false,
-      errorMessage: "El subdominio debe tener menos de 63 caracteres",
+      errorMessage: 'El subdominio debe tener menos de 63 caracteres',
     };
   }
 
@@ -94,23 +94,23 @@ export function validateSubdomainFormat(subdomain: string): SubdomainValidationR
   if (!formatRegex.test(trimmed)) {
     return {
       isValid: false,
-      errorMessage: "El subdominio solo puede contener letras minúsculas, números y guiones",
+      errorMessage: 'El subdominio solo puede contener letras minúsculas, números y guiones',
     };
   }
 
   // Check: cannot start or end with hyphen
-  if (trimmed.startsWith("-") || trimmed.endsWith("-")) {
+  if (trimmed.startsWith('-') || trimmed.endsWith('-')) {
     return {
       isValid: false,
-      errorMessage: "El subdominio no puede comenzar o terminar con un guion",
+      errorMessage: 'El subdominio no puede comenzar o terminar con un guion',
     };
   }
 
   // Check: cannot have consecutive hyphens
-  if (trimmed.includes("--")) {
+  if (trimmed.includes('--')) {
     return {
       isValid: false,
-      errorMessage: "El subdominio no puede contener guiones consecutivos",
+      errorMessage: 'El subdominio no puede contener guiones consecutivos',
     };
   }
 
@@ -118,7 +118,7 @@ export function validateSubdomainFormat(subdomain: string): SubdomainValidationR
   if (RESERVED_SUBDOMAINS.includes(trimmed as any)) {
     return {
       isValid: false,
-      errorMessage: "Este subdominio está reservado y no puede ser usado",
+      errorMessage: 'Este subdominio está reservado y no puede ser usado',
     };
   }
 
@@ -138,20 +138,21 @@ export function validateSubdomainFormat(subdomain: string): SubdomainValidationR
  */
 export function getSubdomainFromHostname(): string {
   const hostname = window.location.hostname;
-  const parts = hostname.split(".");
-
+  const parts = hostname.split('.');
+  // const domain = 'pideai.com';
+  const domain = 'artex.lat';
   // Development mode (localhost)
-  if (hostname === "localhost" || hostname === "127.0.0.1" || hostname.startsWith("192.168.")) {
-    return localStorage.getItem("dev_subdomain") || "totus";
+  if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname.startsWith('192.168.')) {
+    return localStorage.getItem('dev_subdomain') || 'totus';
   }
 
   // Production mode (pideai.com)
-  if (hostname.includes("pideai.com") && parts.length >= 3) {
+  if (hostname.includes(domain) && parts.length >= 3) {
     return parts[0];
   }
 
   // Fallback
-  return localStorage.getItem("dev_subdomain") || "totus";
+  return localStorage.getItem('dev_subdomain') || 'totus';
 }
 
 /**
@@ -167,12 +168,12 @@ export function generateSubdomainSuggestions(storeName: string): string[] {
 
   const normalized = storeName
     .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "") // Remove accents
-    .replace(/[^a-z0-9\s-]/g, "") // Remove special chars
-    .replace(/\s+/g, "-") // Replace spaces with hyphens
-    .replace(/-+/g, "-") // Remove consecutive hyphens
-    .replace(/^-|-$/g, ""); // Remove leading/trailing hyphens
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '') // Remove accents
+    .replace(/[^a-z0-9\s-]/g, '') // Remove special chars
+    .replace(/\s+/g, '-') // Replace spaces with hyphens
+    .replace(/-+/g, '-') // Remove consecutive hyphens
+    .replace(/^-|-$/g, ''); // Remove leading/trailing hyphens
 
   if (normalized.length < 3) {
     return [];
@@ -213,7 +214,9 @@ export function generateSubdomainSuggestions(storeName: string): string[] {
  * @returns Formatted subdomain with domain
  */
 export function formatSubdomainDisplay(subdomain: string): string {
-  return `${subdomain}.pideai.com`;
+  // const domain = 'pideai.com';
+  const domain = 'artex.lat';
+  return `${subdomain}.${domain}`;
 }
 
 /**
@@ -223,5 +226,5 @@ export function formatSubdomainDisplay(subdomain: string): string {
  */
 export function isMainDomain(): boolean {
   const subdomain = getSubdomainFromHostname();
-  return subdomain === "www" || subdomain === "";
+  return subdomain === 'www' || subdomain === '';
 }
