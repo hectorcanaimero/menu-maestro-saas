@@ -11,6 +11,7 @@ import { Store, ArrowLeft, CheckCircle2, XCircle, Loader2 } from "lucide-react";
 import {
   validateSubdomainFormat,
   generateSubdomainSuggestions,
+  getCurrentDomain,
 } from "@/lib/subdomain-validation";
 
 const CreateStore = () => {
@@ -244,7 +245,7 @@ const CreateStore = () => {
                     )}
                   </div>
                   <span className="text-sm text-muted-foreground whitespace-nowrap">
-                    .pideai.com
+                    .{getCurrentDomain()}
                   </span>
                 </div>
                 {subdomainValidation && (

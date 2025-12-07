@@ -9,6 +9,7 @@ import { CheckCircle, XCircle, Clock, DollarSign, Store, Calendar } from 'lucide
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
+import { formatSubdomainDisplay } from '@/lib/subdomain-validation';
 import {
   Dialog,
   DialogContent,
@@ -232,7 +233,7 @@ function PaymentValidations() {
                               {payment.stores.name}
                             </h3>
                             <p className="text-sm text-muted-foreground">
-                              {payment.stores.subdomain}.pideai.com • {payment.stores.email}
+                              {formatSubdomainDisplay(payment.stores.subdomain)} • {payment.stores.email}
                             </p>
                           </div>
                           {getStatusBadge(payment.status)}

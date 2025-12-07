@@ -11,6 +11,7 @@ import { Search, Store, Calendar, AlertCircle, CheckCircle, Clock, Ban } from 'l
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
+import { formatSubdomainDisplay } from '@/lib/subdomain-validation';
 import {
   Dialog,
   DialogContent,
@@ -249,7 +250,7 @@ function SubscriptionsManager() {
                               {subscription.stores.name}
                             </h3>
                             <p className="text-sm text-muted-foreground">
-                              {subscription.stores.subdomain}.pideai.com
+                              {formatSubdomainDisplay(subscription.stores.subdomain)}
                             </p>
                             <p className="text-xs text-muted-foreground">{subscription.stores.email}</p>
                           </div>

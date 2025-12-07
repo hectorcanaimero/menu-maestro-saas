@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Search, Store, Calendar, ExternalLink, Mail, User } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { formatSubdomainDisplay } from '@/lib/subdomain-validation';
 
 interface StoreData {
   id: string;
@@ -221,12 +222,12 @@ function StoresManager() {
                             </h3>
                             <div className="flex items-center gap-2 mt-1">
                               <a
-                                href={`https://${store.subdomain}.pideai.com`}
+                                href={`https://${formatSubdomainDisplay(store.subdomain)}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="text-sm text-blue-600 hover:underline flex items-center gap-1"
                               >
-                                {store.subdomain}.pideai.com
+                                {formatSubdomainDisplay(store.subdomain)}
                                 <ExternalLink className="h-3 w-3" />
                               </a>
                             </div>
@@ -277,7 +278,7 @@ function StoresManager() {
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => window.open(`https://${store.subdomain}.pideai.com`, '_blank')}
+                            onClick={() => window.open(`https://${formatSubdomainDisplay(store.subdomain)}`, '_blank')}
                             className="w-full gap-2"
                           >
                             <ExternalLink className="h-3 w-3" />

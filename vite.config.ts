@@ -10,6 +10,14 @@ export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
     port: 8080,
+    hmr: {
+      overlay: true,
+    },
+    // Prevent full page reload when switching tabs
+    watch: {
+      // Only watch source files, not node_modules
+      ignored: ['**/node_modules/**', '**/dist/**'],
+    },
   },
   plugins: [
     react(),
@@ -38,7 +46,6 @@ export default defineConfig(({ mode }) => ({
         // Release configuration
         release: {
           name: process.env.VITE_APP_VERSION || "development",
-          cleanArtifacts: true,
           setCommits: {
             auto: true,
           },

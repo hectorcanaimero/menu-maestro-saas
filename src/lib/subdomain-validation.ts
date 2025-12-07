@@ -129,26 +129,35 @@ export function validateSubdomainFormat(subdomain: string): SubdomainValidationR
 }
 
 /**
+ * Supported domains for multi-tenant deployment
+ */
+const SUPPORTED_DOMAINS = ['pideai.com', 'artex.lat'] as const;
+
+/**
  * Extracts subdomain from hostname
  *
  * Development: Uses localStorage 'dev_subdomain' (default: 'totus')
- * Production: Extracts from hostname (e.g., 'tienda1.pideai.com' -> 'tienda1')
+ * Production: Extracts from hostname (e.g., 'tienda1.pideai.com' -> 'tienda1' or 'tienda1.artex.lat' -> 'tienda1')
  *
  * @returns The extracted subdomain
  */
 export function getSubdomainFromHostname(): string {
   const hostname = window.location.hostname;
   const parts = hostname.split('.');
-  // const domain = 'pideai.com';
-  const domain = 'artex.lat';
+
   // Development mode (localhost)
   if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname.startsWith('192.168.')) {
     return localStorage.getItem('dev_subdomain') || 'totus';
   }
 
-  // Production mode (pideai.com)
-  if (hostname.includes(domain) && parts.length >= 3) {
-    return parts[0];
+  // Production mode - check all supported domains
+  for (const domain of SUPPORTED_DOMAINS) {
+    if (hostname.endsWith(domain) && parts.length >= 3) {
+      // Extract subdomain (first part before domain)
+      const domainParts = domain.split('.');
+      const subdomainParts = parts.slice(0, parts.length - domainParts.length);
+      return subdomainParts.join('.');
+    }
   }
 
   // Fallback
@@ -208,21 +217,39 @@ export function generateSubdomainSuggestions(storeName: string): string[] {
 }
 
 /**
+ * Get the current domain being used
+ *
+ * @returns The current domain (pideai.com or artex.lat)
+ */
+export function getCurrentDomain(): string {
+  const hostname = window.location.hostname;
+
+  // Check which domain we're on
+  for (const domain of SUPPORTED_DOMAINS) {
+    if (hostname.endsWith(domain)) {
+      return domain;
+    }
+  }
+
+  // Default to pideai.com for development or unknown domains
+  return 'pideai.com';
+}
+
+/**
  * Format subdomain display for UI
  *
  * @param subdomain - The subdomain to format
- * @returns Formatted subdomain with domain
+ * @returns Formatted subdomain with current domain
  */
 export function formatSubdomainDisplay(subdomain: string): string {
-  // const domain = 'pideai.com';
-  const domain = 'artex.lat';
+  const domain = getCurrentDomain();
   return `${subdomain}.${domain}`;
 }
 
 /**
  * Check if current hostname is the main domain (www or empty subdomain)
  *
- * @returns True if the current domain is www.pideai.com or pideai.com
+ * @returns True if the current domain is www.pideai.com, pideai.com, www.artex.lat, or artex.lat
  */
 export function isMainDomain(): boolean {
   const subdomain = getSubdomainFromHostname();

@@ -55,7 +55,18 @@ const DriverLogin = lazy(() => import("./pages/driver/DriverLogin"));
 const DriverDashboard = lazy(() => import("./pages/driver/DriverDashboard"));
 const ActiveDelivery = lazy(() => import("./pages/driver/ActiveDelivery"));
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      // Prevent refetch on window focus (tab switch)
+      refetchOnWindowFocus: false,
+      // Prevent refetch when component mounts
+      refetchOnMount: false,
+      // Keep data fresh for 5 minutes
+      staleTime: 5 * 60 * 1000,
+    },
+  },
+});
 
 // Internal component to use hooks that require router context
 const AppContent = () => {
