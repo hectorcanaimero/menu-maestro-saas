@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -6,17 +6,21 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { toast } from "sonner";
-import { Store, ArrowLeft, CheckCircle2, XCircle, Loader2 } from "lucide-react";
+import { Store, ArrowLeft, CheckCircle2, XCircle, Loader2, Globe, Copy } from "lucide-react";
 import {
   validateSubdomainFormat,
   generateSubdomainSuggestions,
   getCurrentDomain,
+  formatSubdomainDisplay,
 } from "@/lib/subdomain-validation";
+import { ProgressSteps } from "@/components/ui/progress-steps";
 
 const CreateStore = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [checkingAuth, setCheckingAuth] = useState(true);
   const [validatingSubdomain, setValidatingSubdomain] = useState(false);
   const [subdomainValidation, setSubdomainValidation] = useState<{
     isValid: boolean;
@@ -31,6 +35,20 @@ const CreateStore = () => {
     email: "",
     address: "",
   });
+
+  // Check authentication on mount
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast.info("Primero debes crear una cuenta");
+        navigate("/auth");
+        return;
+      }
+      setCheckingAuth(false);
+    };
+    checkAuth();
+  }, [navigate]);
 
   const validateSubdomainServer = async (subdomain: string) => {
     if (!subdomain || subdomain.length < 3) {
@@ -177,6 +195,23 @@ const CreateStore = () => {
     }
   };
 
+  // Show loading state while checking auth
+  if (checkingAuth) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-primary" />
+          <p className="text-muted-foreground">Verificando sesión...</p>
+        </div>
+      </div>
+    );
+  }
+
+  const steps = [
+    { title: "Crear Cuenta", description: "Registro y verificación" },
+    { title: "Configurar Tienda", description: "Detalles de tu negocio" },
+  ];
+
   return (
     <div className="min-h-screen bg-background py-8">
       <div className="container mx-auto px-4 max-w-2xl">
@@ -198,6 +233,7 @@ const CreateStore = () => {
             <CardDescription>
               Configura tu menú digital y comienza a recibir pedidos en línea
             </CardDescription>
+            <ProgressSteps steps={steps} currentStep={1} className="mt-6" />
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -275,6 +311,7 @@ const CreateStore = () => {
                             validateSubdomainServer(suggestion);
                           }}
                           className="text-xs px-2 py-1 bg-secondary hover:bg-secondary/80 rounded-md"
+                          aria-label={`Usar subdominio ${suggestion}`}
                         >
                           {suggestion}
                         </button>
@@ -283,6 +320,33 @@ const CreateStore = () => {
                   </div>
                 )}
               </div>
+
+              {/* URL Preview when subdomain is valid */}
+              {subdomainValidation?.isValid && formData.subdomain && (
+                <Alert className="border-green-200 bg-green-50">
+                  <Globe className="h-4 w-4 text-green-600" />
+                  <AlertTitle className="text-green-900">¡Tu tienda estará disponible en!</AlertTitle>
+                  <AlertDescription>
+                    <div className="flex items-center gap-2 mt-2">
+                      <code className="text-sm bg-white px-2 py-1 rounded border flex-1">
+                        {formatSubdomainDisplay(formData.subdomain)}
+                      </code>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => {
+                          navigator.clipboard.writeText(formatSubdomainDisplay(formData.subdomain));
+                          toast.success("URL copiada al portapapeles");
+                        }}
+                        aria-label="Copiar URL"
+                      >
+                        <Copy className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </AlertDescription>
+                </Alert>
+              )}
 
               <div className="space-y-2">
                 <Label htmlFor="description">Descripción</Label>

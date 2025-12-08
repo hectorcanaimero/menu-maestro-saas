@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { Eye, EyeOff } from "lucide-react";
+import { PasswordStrengthMeter } from "@/components/ui/password-strength-meter";
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -95,8 +96,13 @@ const Auth = () => {
       }
 
       if (data.user) {
-        toast.success("Cuenta creada exitosamente. Por favor verifica tu correo.");
-        setSignupData({ email: "", password: "", fullName: "" });
+        // Redirect to email verification page with context
+        navigate("/verify-email", {
+          state: {
+            email: signupData.email,
+            nextStep: "/create-store", // Where to go after verification
+          },
+        });
       }
     } catch (error) {
       toast.error("Error al crear cuenta");
@@ -149,10 +155,22 @@ const Auth = () => {
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
                       className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                      aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
                     >
                       {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                     </button>
                   </div>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div></div>
+                  <Button
+                    type="button"
+                    variant="link"
+                    className="text-sm px-0"
+                    onClick={() => navigate("/reset-password")}
+                  >
+                    ¿Olvidaste tu contraseña?
+                  </Button>
                 </div>
                 <Button type="submit" className="w-full" disabled={isLoading}>
                   {isLoading ? "Iniciando sesión..." : "Iniciar Sesión"}
@@ -194,16 +212,19 @@ const Auth = () => {
                       value={signupData.password}
                       onChange={(e) => setSignupData({ ...signupData, password: e.target.value })}
                       required
-                      minLength={6}
+                      minLength={8}
+                      aria-describedby="password-strength"
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
                       className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                      aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
                     >
                       {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                     </button>
                   </div>
+                  <PasswordStrengthMeter password={signupData.password} className="mt-2" />
                 </div>
                 <Button type="submit" className="w-full" disabled={isLoading}>
                   {isLoading ? "Creando cuenta..." : "Crear Cuenta"}

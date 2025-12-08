@@ -15,6 +15,9 @@ import { ScrollToTop } from "@/components/ScrollToTop";
 const Index = lazy(() => import("./pages/Index"));
 const Welcome = lazy(() => import("./pages/Welcome"));
 const Auth = lazy(() => import("./pages/Auth"));
+const VerifyEmail = lazy(() => import("./pages/VerifyEmail"));
+const ResetPassword = lazy(() => import("./pages/ResetPassword"));
+const UpdatePassword = lazy(() => import("./pages/UpdatePassword"));
 const CreateStore = lazy(() => import("./pages/CreateStore"));
 const LandingPage = lazy(() => import("./pages/LandingPage"));
 const Checkout = lazy(() => import("./pages/Checkout"));
@@ -100,6 +103,30 @@ const AppContent = () => {
                     element={
                       <SectionErrorBoundary>
                         <Auth />
+                      </SectionErrorBoundary>
+                    }
+                  />
+                  <Route
+                    path="/verify-email"
+                    element={
+                      <SectionErrorBoundary>
+                        <VerifyEmail />
+                      </SectionErrorBoundary>
+                    }
+                  />
+                  <Route
+                    path="/reset-password"
+                    element={
+                      <SectionErrorBoundary>
+                        <ResetPassword />
+                      </SectionErrorBoundary>
+                    }
+                  />
+                  <Route
+                    path="/update-password"
+                    element={
+                      <SectionErrorBoundary>
+                        <UpdatePassword />
                       </SectionErrorBoundary>
                     }
                   />
