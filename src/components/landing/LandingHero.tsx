@@ -46,8 +46,8 @@ export const LandingHero = () => {
                 Crear Tienda Gratis
                 <ArrowRight className="ml-2" size={20} />
               </Button>
-              <Button size="lg" variant="outline" onClick={() => navigate('/welcome')}>
-                Ver Demo
+              <Button size="lg" variant="outline" onClick={() => navigate('/auth')}>
+                Iniciar Sesión
               </Button>
             </div>
 
@@ -55,15 +55,15 @@ export const LandingHero = () => {
             <div className="space-y-3 pt-4">
               <div className="flex items-center gap-2 text-foreground">
                 <CheckCircle2 size={20} className="text-primary" />
-                <span>Sin tarjeta de crédito requerida</span>
+                <span>Comienza gratis sin compromiso</span>
               </div>
               <div className="flex items-center gap-2 text-foreground">
                 <CheckCircle2 size={20} className="text-primary" />
-                <span>Configura tu tienda en menos de 5 minutos</span>
+                <span>Configura tu tienda en minutos</span>
               </div>
               <div className="flex items-center gap-2 text-foreground">
                 <CheckCircle2 size={20} className="text-primary" />
-                <span>Soporte 24/7 incluido</span>
+                <span>Gestiona pedidos en tiempo real</span>
               </div>
             </div>
           </motion.div>

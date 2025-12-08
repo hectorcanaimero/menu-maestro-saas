@@ -56,9 +56,9 @@ const Index = () => {
           <h1 className="text-2xl font-bold mb-2">Tienda no encontrada</h1>
           <p className="text-muted-foreground mb-6">Esta tienda no existe o no está activa.</p>
           <div className="flex gap-3 justify-center">
-            <Button onClick={() => navigate('/welcome')}>Ver PideAI</Button>
-            <Button variant="outline" onClick={() => navigate('/create-store')}>
-              Crear mi tienda
+            <Button onClick={() => navigate('/create-store')}>Crear mi tienda</Button>
+            <Button variant="outline" onClick={() => navigate('/auth')}>
+              Iniciar Sesión
             </Button>
           </div>
         </div>

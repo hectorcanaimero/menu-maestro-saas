@@ -33,12 +33,6 @@ export const LandingHeader = () => {
               Características
             </button>
             <button
-              onClick={() => scrollToSection('pricing')}
-              className="text-foreground hover:text-primary transition-colors"
-            >
-              Precios
-            </button>
-            <button
               onClick={() => scrollToSection('how-it-works')}
               className="text-foreground hover:text-primary transition-colors"
             >
@@ -74,12 +68,6 @@ export const LandingHeader = () => {
               className="block w-full text-left py-2 text-foreground hover:text-primary transition-colors"
             >
               Características
-            </button>
-            <button
-              onClick={() => scrollToSection('pricing')}
-              className="block w-full text-left py-2 text-foreground hover:text-primary transition-colors"
-            >
-              Precios
             </button>
             <button
               onClick={() => scrollToSection('how-it-works')}

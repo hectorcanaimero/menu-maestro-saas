@@ -25,7 +25,7 @@ const LandingPage = () => {
       </section>
 
       <HowItWorks />
-      <PricingSection />
+      {/* <PricingSection /> */}
       <TestimonialsSection />
       <FAQSection />
 

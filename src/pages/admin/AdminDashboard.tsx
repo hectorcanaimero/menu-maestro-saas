@@ -1,10 +1,11 @@
-import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import AdminLayout from "@/components/admin/AdminLayout";
-import DashboardStats from "@/components/admin/DashboardStats";
-import { H2, Body } from "@/components/ui/typography";
-import { useChatwoot } from "@/hooks/useChatwoot";
-import { useStore } from "@/contexts/StoreContext";
+import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import AdminLayout from '@/components/admin/AdminLayout';
+import DashboardStats from '@/components/admin/DashboardStats';
+import { StoreQRCode } from '@/components/admin/StoreQRCode';
+import { H2, Body } from '@/components/ui/typography';
+import { useChatwoot } from '@/hooks/useChatwoot';
+import { useStore } from '@/contexts/StoreContext';
 
 /**
  * AdminDashboard Component
@@ -13,7 +14,7 @@ import { useStore } from "@/contexts/StoreContext";
  * This component only needs to fetch user email for display
  */
 const AdminDashboard = () => {
-  const [userEmail, setUserEmail] = useState("");
+  const [userEmail, setUserEmail] = useState('');
   const { store } = useStore();
 
   // Initialize Chatwoot widget for admin support
@@ -30,7 +31,9 @@ const AdminDashboard = () => {
   }, [store]); // Re-run when store is loaded
 
   const getUserEmail = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
     if (session?.user?.email) {
       setUserEmail(session.user.email);
 
@@ -57,9 +60,7 @@ const AdminDashboard = () => {
       <div className="space-y-4 sm:space-y-6 max-w-7xl">
         <div>
           <H2 className="text-xl sm:text-2xl">Dashboard</H2>
-          <Body className="text-muted-foreground text-sm sm:text-base">
-            Bienvenido al panel de administración
-          </Body>
+          <Body className="text-muted-foreground text-sm sm:text-base">Bienvenido al panel de administración</Body>
         </div>
         <DashboardStats />
       </div>

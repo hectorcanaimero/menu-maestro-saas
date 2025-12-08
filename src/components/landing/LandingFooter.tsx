@@ -23,11 +23,6 @@ export const LandingFooter = () => {
                 </a>
               </li>
               <li>
-                <a href="#pricing" className="hover:text-primary transition-colors">
-                  Precios
-                </a>
-              </li>
-              <li>
                 <a href="#how-it-works" className="hover:text-primary transition-colors">
                   Cómo Funciona
                 </a>
