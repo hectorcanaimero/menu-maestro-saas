@@ -54,44 +54,6 @@ EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD wget --quiet --tries=1 --spider http://localhost:3000 || exit 1
 
-#########################################
-# Traefik Labels (dinámico + dominio fijo)
-#########################################
-LABEL traefik.enable="true"
-
-# Middleware
-LABEL traefik.http.middlewares.gzip.compress="true"
-LABEL traefik.http.middlewares.redirect-to-https.redirectscheme.scheme="https"
-
-# --- HTTP redirects ---
-LABEL traefik.http.routers.http-totus.entryPoints="http"
-LABEL traefik.http.routers.http-totus.rule="Host(`totus.pideai.com`)"
-LABEL traefik.http.routers.http-totus.middlewares="redirect-to-https"
-
-LABEL traefik.http.routers.http-artex.entryPoints="http"
-LABEL traefik.http.routers.http-artex.rule="HostRegexp(`{subdomain:[a-zA-Z0-9-]+}.artex.lat`)"
-LABEL traefik.http.routers.http-artex.middlewares="redirect-to-https"
-
-# --- HTTPS routers ---
-LABEL traefik.http.routers.https-totus.entryPoints="https"
-LABEL traefik.http.routers.https-totus.rule="Host(`totus.pideai.com`)"
-LABEL traefik.http.routers.https-totus.tls="true"
-LABEL traefik.http.routers.https-totus.tls.certresolver="letsencrypt"
-LABEL traefik.http.routers.https-totus.middlewares="gzip"
-LABEL traefik.http.routers.https-totus.service="app-svc"
-
-LABEL traefik.http.routers.https-artex.entryPoints="https"
-LABEL traefik.http.routers.https-artex.rule="HostRegexp(`{subdomain:[a-zA-Z0-9-]+}.artex.lat`)"
-LABEL traefik.http.routers.https-artex.tls="true"
-LABEL traefik.http.routers.https-artex.tls.certresolver="letsencrypt"
-LABEL traefik.http.routers.https-artex.middlewares="gzip"
-LABEL traefik.http.routers.https-artex.service="app-svc"
-
-# --- Service ---
-LABEL traefik.http.services.app-svc.loadbalancer.server.port="3000"
-
-# Coolify network
-LABEL caddy_ingress_network="coolify"
 
 ##############################
 # Start server
