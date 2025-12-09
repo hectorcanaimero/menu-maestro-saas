@@ -12,6 +12,7 @@ import {
   Users,
   LogOut,
   Shield,
+  BarChart3,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -35,6 +36,11 @@ function PlatformAdminLayout() {
       icon: LayoutDashboard,
       href: '/platform-admin',
       exactMatch: true,
+    },
+    {
+      label: 'Analytics',
+      icon: BarChart3,
+      href: '/platform-admin/posthog',
     },
     {
       label: 'Tiendas',
@@ -65,7 +71,7 @@ function PlatformAdminLayout() {
   ];
 
   // Filtrar items según rol
-  const visibleNavItems = navItems.filter(item => {
+  const visibleNavItems = navItems.filter((item) => {
     if (item.requiresSuperAdmin) {
       return role === 'super_admin';
     }
@@ -95,9 +101,7 @@ function PlatformAdminLayout() {
             </div>
             <div>
               <h1 className="font-bold text-lg">PideAI Admin</h1>
-              <p className="text-xs text-muted-foreground capitalize">
-                {role?.replace('_', ' ')}
-              </p>
+              <p className="text-xs text-muted-foreground capitalize">{role?.replace('_', ' ')}</p>
             </div>
           </div>
         </div>
@@ -115,7 +119,7 @@ function PlatformAdminLayout() {
                 className={cn(
                   'flex items-center gap-3 px-4 py-3 rounded-lg transition-colors',
                   'hover:bg-accent hover:text-accent-foreground',
-                  active && 'bg-primary text-primary-foreground hover:bg-primary/90'
+                  active && 'bg-primary text-primary-foreground hover:bg-primary/90',
                 )}
               >
                 <Icon className="h-5 w-5" />
@@ -127,11 +131,7 @@ function PlatformAdminLayout() {
 
         {/* User section */}
         <div className="p-4 border-t border-border">
-          <Button
-            variant="ghost"
-            className="w-full justify-start gap-3"
-            onClick={handleLogout}
-          >
+          <Button variant="ghost" className="w-full justify-start gap-3" onClick={handleLogout}>
             <LogOut className="h-5 w-5" />
             <span>Cerrar Sesión</span>
           </Button>
