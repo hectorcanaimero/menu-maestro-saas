@@ -1,4 +1,4 @@
-import { QrCode, MessageCircle, Percent, Tag, Truck, BarChart3 } from 'lucide-react';
+import { QrCode, MessageCircle, Percent, Tag, Truck, BarChart3, DollarSign } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 
 const features = [
@@ -11,6 +11,11 @@ const features = [
     icon: MessageCircle,
     title: 'Integración WhatsApp',
     description: 'Recibe pedidos directamente por WhatsApp con plantillas automáticas y notificaciones en tiempo real.',
+  },
+  {
+    icon: DollarSign,
+    title: 'Conversión de Monedas',
+    description: 'Conversión automática EUR/USD a bolívares venezolanos (VES) con tasas del BCV actualizadas cada hora. Configura tasas manuales si lo prefieres.',
   },
   {
     icon: Percent,

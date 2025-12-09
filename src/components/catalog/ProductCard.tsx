@@ -11,6 +11,7 @@ import { ProductExtrasDialog } from './ProductExtrasDialog';
 import { useProductPromotions, getBestPromotion } from '@/hooks/usePromotions';
 import { useQuickView } from '@/hooks/useQuickView';
 import { useFormatPrice } from '@/lib/priceFormatter';
+import { DualPrice } from '@/components/catalog/DualPrice';
 
 interface ProductCardProps {
   id: string;
@@ -122,7 +123,7 @@ export const ProductCard = ({
                 <Tag className="w-3 h-3" />
                 {bestDeal.promotion.type === 'percentage'
                   ? `-${bestDeal.promotion.value}%`
-                  : `-${formatPrice(bestDeal.promotion.value)}`}
+                  : `-${formatPrice(bestDeal.promotion.value).original}`}
               </Badge>
             )}
 
@@ -151,24 +152,26 @@ export const ProductCard = ({
               <div className="pt-1">
                 {hasDiscount ? (
                   <div className="flex items-center gap-2 flex-wrap">
-                    <p
-                      className="text-base sm:text-lg font-bold"
-                      style={{ color: `hsl(var(--price-color, var(--foreground)))` }}
-                    >
-                      {formatPrice(bestDeal.discountedPrice)}
-                    </p>
-                    <p className="text-xs sm:text-sm text-muted-foreground line-through">{formatPrice(price)}</p>
-                    <Badge variant="secondary" className="text-xs">
-                      Ahorra {formatPrice(bestDeal.savings)}
-                    </Badge>
+                    <DualPrice
+                      price={bestDeal.discountedPrice}
+                      size="sm"
+                      className="[&>div:first-child]:text-base [&>div:first-child]:sm:text-lg"
+                      style={{ color: `hsl(var(--price-color, var(--foreground)))` } as React.CSSProperties}
+                    />
+                    <div className="text-xs sm:text-sm text-muted-foreground line-through">
+                      <DualPrice price={price} size="sm" />
+                    </div>
+                    {/* <Badge variant="secondary" className="text-xs flex items-center gap-1">
+                      Ahorra <DualPrice price={bestDeal.savings} size="sm" />
+                    </Badge> */}
                   </div>
                 ) : (
-                  <p
-                    className="text-base sm:text-lg font-bold"
-                    style={{ color: `hsl(var(--price-color, var(--foreground)))` }}
-                  >
-                    {formatPrice(price)}
-                  </p>
+                  <DualPrice
+                    price={price}
+                    size="sm"
+                    className="[&>div:first-child]:text-base [&>div:first-child]:sm:text-lg"
+                    style={{ color: `hsl(var(--price-color, var(--foreground)))` } as React.CSSProperties}
+                  />
                 )}
               </div>
             </div>

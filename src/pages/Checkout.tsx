@@ -13,6 +13,7 @@ import { validateCouponCode, applyCouponDiscount, type Coupon } from "@/hooks/us
 import { useFormatPrice } from "@/lib/priceFormatter";
 import { setSecureItem, getSecureItem, type SecureCustomerData } from "@/lib/secureStorage";
 import { StoreClosedDialog } from "@/components/catalog/StoreClosedDialog";
+import { DualPrice } from "@/components/catalog/DualPrice";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -405,7 +406,7 @@ const Checkout = () => {
 
     // Validate minimum order price
     if (store.minimum_order_price && discountedTotal < store.minimum_order_price) {
-      toast.error(`El pedido mínimo es ${formatPrice(store.minimum_order_price)}`);
+      toast.error(`El pedido mínimo es ${formatPrice(store.minimum_order_price).original}`);
       return;
     }
 
@@ -520,7 +521,7 @@ const Checkout = () => {
       const discount = applyCouponDiscount(result.coupon, discountedTotal);
       setAppliedCoupon(result.coupon);
       setCouponDiscount(discount);
-      toast.success(`¡Cupón aplicado! Ahorraste ${formatPrice(discount)}`);
+      toast.success(`¡Cupón aplicado! Ahorraste ${formatPrice(discount).original}`);
     } catch (error) {
       console.error("Error validating coupon:", error);
       setCouponError("Error al validar el cupón");
@@ -762,7 +763,7 @@ const Checkout = () => {
                             <SelectContent>
                               {deliveryZones.map((zone) => (
                                 <SelectItem key={zone.id} value={zone.zone_name}>
-                                  {zone.zone_name} - {formatPrice(zone.delivery_price)}
+                                  {zone.zone_name} - {formatPrice(zone.delivery_price).original}
                                 </SelectItem>
                               ))}
                             </SelectContent>
@@ -887,8 +888,8 @@ const Checkout = () => {
                             <Check className="h-4 w-4 text-green-600" />
                             <code className="font-mono font-bold text-green-600">{appliedCoupon.code}</code>
                           </div>
-                          <p className="text-sm text-green-600 mt-1">
-                            Ahorraste {formatPrice(couponDiscount)}
+                          <p className="text-sm text-green-600 mt-1 flex items-center gap-1">
+                            Ahorraste <DualPrice price={couponDiscount} size="sm" />
                           </p>
                         </div>
                         <Button
@@ -954,13 +955,16 @@ const Checkout = () => {
                   <h3 className="font-semibold">Resumen del Pedido</h3>
                   <div className="space-y-2">
                     {items.slice(0, 3).map((item) => (
-                      <div key={item.cartItemId || item.id} className="flex justify-between text-sm">
+                      <div key={item.cartItemId || item.id} className="flex justify-between text-sm items-start">
                         <span>
                           {item.quantity}x {item.name}
                         </span>
-                        <span className="text-price font-medium">
-                          {formatPrice((item.price + (item.extras?.reduce((sum, e) => sum + e.price, 0) || 0)) * item.quantity)}
-                        </span>
+                        <div className="text-price font-medium text-right">
+                          <DualPrice
+                            price={(item.price + (item.extras?.reduce((sum, e) => sum + e.price, 0) || 0)) * item.quantity}
+                            size="sm"
+                          />
+                        </div>
                       </div>
                     ))}
                     {items.length > 3 && (
@@ -969,53 +973,53 @@ const Checkout = () => {
                   </div>
                   <div className="pt-3 border-t space-y-2">
                     {totalSavings > 0 && (
-                      <div className="flex justify-between text-sm">
+                      <div className="flex justify-between text-sm items-start">
                         <span>Subtotal original</span>
-                        <span className="line-through text-muted-foreground">
-                          {formatPrice(originalTotal)}
-                        </span>
+                        <div className="line-through text-muted-foreground text-right">
+                          <DualPrice price={originalTotal} size="sm" />
+                        </div>
                       </div>
                     )}
                     {totalSavings > 0 && (
-                      <div className="flex justify-between text-sm">
+                      <div className="flex justify-between text-sm items-start">
                         <span className="text-green-600">Descuento promociones</span>
-                        <span className="text-green-600">
-                          -{formatPrice(totalSavings)}
-                        </span>
+                        <div className="text-green-600 text-right">
+                          -<DualPrice price={totalSavings} size="sm" />
+                        </div>
                       </div>
                     )}
-                    <div className="flex justify-between text-sm">
+                    <div className="flex justify-between text-sm items-start">
                       <span>Subtotal</span>
-                      <span>
-                        {formatPrice(discountedTotal)}
-                      </span>
+                      <div className="text-right">
+                        <DualPrice price={discountedTotal} size="sm" />
+                      </div>
                     </div>
                     {couponDiscount > 0 && (
-                      <div className="flex justify-between text-sm">
+                      <div className="flex justify-between text-sm items-start">
                         <span className="text-green-600">Descuento cupón</span>
-                        <span className="text-green-600">
-                          -{formatPrice(couponDiscount)}
-                        </span>
+                        <div className="text-green-600 text-right">
+                          -<DualPrice price={couponDiscount} size="sm" />
+                        </div>
                       </div>
                     )}
                     {orderType === "delivery" && deliveryPrice > 0 && (
-                      <div className="flex justify-between text-sm">
+                      <div className="flex justify-between text-sm items-start">
                         <span>Costo de entrega</span>
-                        <span>
-                          {formatPrice(deliveryPrice)}
-                        </span>
+                        <div className="text-right">
+                          <DualPrice price={deliveryPrice} size="sm" />
+                        </div>
                       </div>
                     )}
-                    <div className="flex justify-between font-bold text-lg pt-2 border-t">
+                    <div className="flex justify-between font-bold text-lg pt-2 border-t items-start">
                       <span>Total</span>
-                      <span className="text-price">
-                        {formatPrice(grandTotal)}
-                      </span>
+                      <div className="text-price text-right">
+                        <DualPrice price={grandTotal} size="md" />
+                      </div>
                     </div>
                   </div>
                   {store?.minimum_order_price && discountedTotal < store.minimum_order_price && (
-                    <Badge variant="destructive" className="w-full justify-center mt-3">
-                      Pedido mínimo: {formatPrice(store.minimum_order_price)}
+                    <Badge variant="destructive" className="w-full justify-center mt-3 flex items-center gap-1">
+                      Pedido mínimo: <DualPrice price={store.minimum_order_price} size="sm" />
                     </Badge>
                   )}
                 </div>

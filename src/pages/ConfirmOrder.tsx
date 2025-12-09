@@ -11,6 +11,7 @@ import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import { ArrowLeft, Edit, Loader2, MapPin, User, Mail, Phone, CreditCard, FileText, Hash, Ticket } from "lucide-react";
 import { useFormatPrice } from "@/lib/priceFormatter";
+import { DualPrice } from "@/components/catalog/DualPrice";
 import { findOrCreateCustomer } from "@/services/customerService";
 import { completeOrder } from "@/services/orderService";
 import { redirectToWhatsApp } from "@/lib/whatsappMessageGenerator";
@@ -299,9 +300,9 @@ const ConfirmOrder = () => {
                   <Badge variant="secondary" className="text-base px-3 py-1">
                     {orderData.coupon_code}
                   </Badge>
-                  <span className="text-green-600 font-semibold">
-                    -{formatPrice(couponDiscount)}
-                  </span>
+                  <div className="text-green-600 font-semibold">
+                    -<DualPrice price={couponDiscount} size="sm" />
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -347,9 +348,9 @@ const ConfirmOrder = () => {
                         {item.extras && item.extras.length > 0 && (
                           <div className="mt-2 text-sm text-muted-foreground space-y-1">
                             {item.extras.map((extra, idx) => (
-                              <div key={idx} className="flex justify-between">
+                              <div key={idx} className="flex justify-between items-start">
                                 <span>+ {extra.name}</span>
-                                <span>{formatPrice(extra.price)}</span>
+                                <DualPrice price={extra.price} size="sm" />
                               </div>
                             ))}
                           </div>
@@ -357,9 +358,12 @@ const ConfirmOrder = () => {
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="font-semibold">
-                        {formatPrice((item.price + (item.extras?.reduce((sum, e) => sum + e.price, 0) || 0)) * item.quantity)}
-                      </p>
+                      <div className="font-semibold">
+                        <DualPrice
+                          price={(item.price + (item.extras?.reduce((sum, e) => sum + e.price, 0) || 0)) * item.quantity}
+                          size="sm"
+                        />
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -370,36 +374,48 @@ const ConfirmOrder = () => {
               <div className="space-y-2">
                 {totalSavings > 0 && (
                     <>
-                      <div className="flex justify-between text-sm">
+                      <div className="flex justify-between text-sm items-start">
                         <span className="text-muted-foreground">Subtotal original:</span>
-                        <span className="line-through text-muted-foreground">{formatPrice(originalTotal)}</span>
+                        <div className="line-through text-muted-foreground text-right">
+                          <DualPrice price={originalTotal} size="sm" />
+                        </div>
                       </div>
-                      <div className="flex justify-between text-sm">
+                      <div className="flex justify-between text-sm items-start">
                         <span className="text-green-600">Descuento:</span>
-                        <span className="text-green-600">-{formatPrice(totalSavings)}</span>
+                        <div className="text-green-600 text-right">
+                          -<DualPrice price={totalSavings} size="sm" />
+                        </div>
                       </div>
                     </>
                   )}
-                <div className="flex justify-between text-sm">
+                <div className="flex justify-between text-sm items-start">
                   <span>Subtotal:</span>
-                  <span>{formatPrice(discountedTotal)}</span>
+                  <div className="text-right">
+                    <DualPrice price={discountedTotal} size="sm" />
+                  </div>
                 </div>
                 {couponDiscount > 0 && (
-                  <div className="flex justify-between text-sm">
+                  <div className="flex justify-between text-sm items-start">
                     <span className="text-green-600">Cupón ({orderData.coupon_code}):</span>
-                    <span className="text-green-600">-{formatPrice(couponDiscount)}</span>
+                    <div className="text-green-600 text-right">
+                      -<DualPrice price={couponDiscount} size="sm" />
+                    </div>
                   </div>
                 )}
                 {orderData?.order_type === "delivery" && deliveryPrice > 0 && (
-                  <div className="flex justify-between text-sm">
+                  <div className="flex justify-between text-sm items-start">
                     <span>Costo de entrega:</span>
-                    <span>{formatPrice(deliveryPrice)}</span>
+                    <div className="text-right">
+                      <DualPrice price={deliveryPrice} size="sm" />
+                    </div>
                   </div>
                 )}
                 <Separator />
-                <div className="flex justify-between items-center text-lg font-bold">
+                <div className="flex justify-between items-start text-lg font-bold">
                   <span>Total:</span>
-                  <span className="text-primary text-2xl">{formatPrice(grandTotal)}</span>
+                  <div className="text-primary text-right">
+                    <DualPrice price={grandTotal} size="lg" />
+                  </div>
                 </div>
               </div>
             </CardContent>

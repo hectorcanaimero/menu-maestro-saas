@@ -117,13 +117,7 @@ export const PricingSection = () => {
             Planes que se Adaptan a tu Negocio
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            {plans[0]?.trialDays && (
-              <>
-                Todos los planes incluyen{' '}
-                <span className="font-bold text-primary">{plans[0].trialDays} días de prueba gratis</span>.{' '}
-              </>
-            )}
-            Sin tarjeta de crédito requerida. Cancela cuando quieras.
+            Plan gratuito disponible para siempre. Planes de pago con opciones flexibles. Sin tarjeta de crédito requerida.
           </p>
         </motion.div>
 

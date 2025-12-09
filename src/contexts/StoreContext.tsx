@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { getSubdomainFromHostname } from '@/lib/subdomain-validation';
+import { useAutoUpdateRates } from '@/hooks/useAutoUpdateRates';
 import posthog from 'posthog-js';
 import * as Sentry from '@sentry/react';
 
@@ -42,6 +43,11 @@ export interface Store {
   notification_repeat_count: number | null;
   primary_color: string | null;
   price_color: string | null;
+  enable_currency_conversion: boolean | null;
+  use_manual_exchange_rate: boolean | null;
+  manual_usd_ves_rate: number | null;
+  manual_eur_ves_rate: number | null;
+  active_currency: string | null; // 'original' or 'VES' - which currency to use for checkout
 }
 
 interface StoreContextType {
@@ -57,6 +63,9 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
   const [store, setStore] = useState<Store | null>(null);
   const [loading, setLoading] = useState(true);
   const [isStoreOwner, setIsStoreOwner] = useState(false);
+
+  // Auto-update exchange rates every hour if conversion is enabled
+  useAutoUpdateRates(store?.id, store?.enable_currency_conversion ?? false);
 
   // Initial load effect - runs only once on mount
   useEffect(() => {

@@ -13,6 +13,7 @@ import { useStoreTheme } from "@/hooks/useStoreTheme";
 import { useProductPromotions, getBestPromotion } from "@/hooks/usePromotions";
 import { useStore } from "@/contexts/StoreContext";
 import { useFormatPrice } from "@/lib/priceFormatter";
+import { DualPrice } from "@/components/catalog/DualPrice";
 
 interface Product {
   id: string;
@@ -196,7 +197,7 @@ export default function ProductDetail() {
                   <Tag className="w-3 h-3" />
                   {bestDeal.promotion.type === "percentage"
                     ? `-${bestDeal.promotion.value}%`
-                    : `-${formatPrice(bestDeal.savings)}`}
+                    : `-${formatPrice(bestDeal.savings).original}`}
                 </Badge>
               )}
             </div>
@@ -211,22 +212,22 @@ export default function ProductDetail() {
               <div className="flex items-center gap-3">
                 {bestDeal ? (
                   <>
-                    <p className="text-2xl text-muted-foreground line-through">
-                      {formatPrice(product.price)}
-                    </p>
-                    <p className="text-3xl font-bold" style={{ color: `hsl(var(--price-color, var(--primary)))` }}>
-                      {formatPrice(calculateTotalPrice())}
-                    </p>
+                    <div className="text-2xl text-muted-foreground line-through">
+                      <DualPrice price={product.price} size="md" />
+                    </div>
+                    <div className="text-3xl font-bold" style={{ color: `hsl(var(--price-color, var(--primary)))` }}>
+                      <DualPrice price={calculateTotalPrice()} size="lg" />
+                    </div>
                   </>
                 ) : (
-                  <p className="text-3xl font-bold" style={{ color: `hsl(var(--price-color, var(--primary)))` }}>
-                    {formatPrice(calculateTotalPrice())}
-                  </p>
+                  <div className="text-3xl font-bold" style={{ color: `hsl(var(--price-color, var(--primary)))` }}>
+                    <DualPrice price={calculateTotalPrice()} size="lg" />
+                  </div>
                 )}
               </div>
               {bestDeal && (
-                <Badge variant="secondary" className="mt-2">
-                  Ahorra {formatPrice(bestDeal.savings)}
+                <Badge variant="secondary" className="mt-2 flex items-center gap-1">
+                  Ahorra <DualPrice price={bestDeal.savings} size="sm" />
                 </Badge>
               )}
             </div>
@@ -263,9 +264,9 @@ export default function ProductDetail() {
                         />
                         <span className="text-foreground font-medium">{extra.name}</span>
                       </div>
-                      <span className="text-sm font-semibold" style={{ color: `hsl(var(--price-color, var(--primary)))` }}>
-                        +{formatPrice(extra.price)}
-                      </span>
+                      <div className="text-sm font-semibold" style={{ color: `hsl(var(--price-color, var(--primary)))` }}>
+                        +<DualPrice price={extra.price} size="sm" />
+                      </div>
                     </label>
                   ))}
                 </div>

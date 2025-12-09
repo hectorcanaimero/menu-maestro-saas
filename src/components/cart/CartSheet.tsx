@@ -10,6 +10,7 @@ import { useFormatPrice } from "@/lib/priceFormatter";
 import { useStore } from "@/contexts/StoreContext";
 import { useStoreStatus } from "@/hooks/useStoreStatus";
 import { StoreClosedDialog } from "@/components/catalog/StoreClosedDialog";
+import { DualPrice } from "@/components/catalog/DualPrice";
 import posthog from "posthog-js";
 
 export const CartSheet = () => {
@@ -82,17 +83,25 @@ export const CartSheet = () => {
                   <>
                     <div className="flex justify-between items-center text-sm">
                       <span className="text-muted-foreground">Subtotal:</span>
-                      <span className="line-through text-muted-foreground">{formatPrice(originalTotal)}</span>
+                      <span className="line-through text-muted-foreground">
+                        <DualPrice price={originalTotal} size="sm" />
+                      </span>
                     </div>
                     <div className="flex justify-between items-center text-sm">
                       <span className="text-green-600">Descuento:</span>
-                      <span className="text-green-600">-{formatPrice(totalSavings)}</span>
+                      <span className="text-green-600">
+                        -<DualPrice price={totalSavings} size="sm" />
+                      </span>
                     </div>
                   </>
                 )}
                 <div className="flex justify-between items-center text-lg font-bold">
                   <span>Total:</span>
-                  <span style={{ color: `hsl(var(--price-color, var(--primary)))` }}>{formatPrice(discountedTotal)}</span>
+                  <DualPrice
+                    price={discountedTotal}
+                    size="sm"
+                    style={{ color: `hsl(var(--price-color, var(--primary)))` }}
+                  />
                 </div>
               </div>
               <Button className="w-full" size="lg" onClick={handleCheckout}>
@@ -113,7 +122,9 @@ export const CartSheet = () => {
 
                       <div className="flex-1">
                         <h4 className="font-semibold">{item.name}</h4>
-                        <p className="text-sm font-semibold mt-1" style={{ color: `hsl(var(--price-color, var(--primary)))` }}>{formatPrice(item.price)}</p>
+                        <div className="text-sm font-semibold mt-1" style={{ color: `hsl(var(--price-color, var(--primary)))` }}>
+                          <DualPrice price={item.price} size="sm" />
+                        </div>
 
                         <div className="flex items-center gap-2 mt-2">
                           <Button
@@ -144,9 +155,12 @@ export const CartSheet = () => {
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="font-semibold">
-                          {formatPrice((item.price + (item.extras?.reduce((sum, e) => sum + e.price, 0) || 0)) * item.quantity)}
-                        </p>
+                        <div className="font-semibold">
+                          <DualPrice
+                            price={(item.price + (item.extras?.reduce((sum, e) => sum + e.price, 0) || 0)) * item.quantity}
+                            size="sm"
+                          />
+                        </div>
                         {item.extras && item.extras.length > 0 && (
                           <p className="text-xs text-muted-foreground mt-1">
                             +{item.extras.length} extra{item.extras.length > 1 ? 's' : ''}
@@ -159,7 +173,7 @@ export const CartSheet = () => {
                         {item.extras.map((extra, idx) => (
                           <div key={idx} className="flex justify-between">
                             <span>+ {extra.name}</span>
-                            <span>{formatPrice(extra.price)}</span>
+                            <DualPrice price={extra.price} size="sm" />
                           </div>
                         ))}
                       </div>

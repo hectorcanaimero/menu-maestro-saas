@@ -147,7 +147,7 @@ export function getSubdomainFromHostname(): string {
 
   // Development mode (localhost)
   if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname.startsWith('192.168.')) {
-    return localStorage.getItem('dev_subdomain') || 'www';
+    return localStorage.getItem('dev_subdomain') || 'totus';
   }
 
   // Production mode - check all supported domains
@@ -161,7 +161,7 @@ export function getSubdomainFromHostname(): string {
   }
 
   // Fallback
-  return localStorage.getItem('dev_subdomain') || 'www';
+  return localStorage.getItem('dev_subdomain') || 'totus';
 }
 
 /**

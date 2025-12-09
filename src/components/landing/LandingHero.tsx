@@ -34,10 +34,10 @@ export const LandingHero = () => {
             transition={{ duration: 0.6 }}
             style={{ y: yContent, opacity }}
           >
-            {/* Trust Badge - 30 días gratis */}
+            {/* Trust Badge - Plan Gratuito */}
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20">
               <span className="text-sm font-semibold text-primary">
-                <span role="img" aria-label="Celebración">🎉</span> 30 días GRATIS
+                <span role="img" aria-label="Celebración">🎉</span> Plan Gratuito Disponible
               </span>
               <span className="text-sm text-muted-foreground">• Sin tarjeta de crédito</span>
             </div>
@@ -77,7 +77,7 @@ export const LandingHero = () => {
             <div className="space-y-3 pt-4">
               <div className="flex items-center gap-2 text-foreground">
                 <CheckCircle2 size={20} className="text-primary" />
-                <span className="font-medium">30 días gratis • Cancela cuando quieras</span>
+                <span className="font-medium">Plan gratuito disponible • Planes de pago desde $1 al día</span>
               </div>
               <div className="flex items-center gap-2 text-foreground">
                 <CheckCircle2 size={20} className="text-primary" />

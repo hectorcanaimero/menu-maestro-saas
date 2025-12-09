@@ -15,6 +15,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Checkbox } from '@/components/ui/checkbox';
 import { BusinessHoursTab } from '@/components/admin/BusinessHoursTab';
 import { PaymentSettingsTab } from '@/components/admin/PaymentSettingsTab';
+import { CurrencyConversionTab } from '@/components/admin/CurrencyConversionTab';
 import { OrderSettingsTab } from '@/components/admin/OrderSettingsTab';
 import { DeliverySettingsTab } from '@/components/admin/DeliverySettingsTab';
 import { AdvancedSettingsTab } from '@/components/admin/AdvancedSettingsTab';
@@ -162,6 +163,9 @@ const StoreSettings = () => {
             </TabsTrigger>
             <TabsTrigger value="payment" className="min-w-[100px] md:min-w-0">
               Pago
+            </TabsTrigger>
+            <TabsTrigger value="conversion" className="min-w-[100px] md:min-w-0">
+              Conversión
             </TabsTrigger>
             <TabsTrigger value="advanced" className="min-w-[100px] md:min-w-0">
               Avanzado
@@ -334,6 +338,19 @@ const StoreSettings = () => {
                 thousands_separator: store.thousands_separator,
                 accept_cash: store.accept_cash,
                 require_payment_proof: store.require_payment_proof,
+              }}
+            />
+          </TabsContent>
+
+          <TabsContent value="conversion" className="mt-4 md:mt-6">
+            <CurrencyConversionTab
+              storeId={store.id}
+              initialData={{
+                enable_currency_conversion: store.enable_currency_conversion,
+                use_manual_exchange_rate: store.use_manual_exchange_rate,
+                manual_usd_ves_rate: store.manual_usd_ves_rate,
+                manual_eur_ves_rate: store.manual_eur_ves_rate,
+                active_currency: store.active_currency,
               }}
             />
           </TabsContent>
