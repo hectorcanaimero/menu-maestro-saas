@@ -3,11 +3,13 @@ import { X, Sparkles, ArrowRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
+import { usePostHog } from '@/hooks/usePostHog';
 
 export const ExitIntentPopup = () => {
   const [isVisible, setIsVisible] = useState(false);
   const [hasShown, setHasShown] = useState(false);
   const navigate = useNavigate();
+  const { track } = usePostHog();
 
   useEffect(() => {
     // Check if user has already seen the popup in this session
@@ -23,6 +25,10 @@ export const ExitIntentPopup = () => {
         setIsVisible(true);
         setHasShown(true);
         sessionStorage.setItem('exitIntentShown', 'true');
+        track('exit_intent_shown', {
+          trigger: 'mouse_leave',
+          time_on_page: Math.round(performance.now() / 1000),
+        });
       }
     };
 
@@ -38,10 +44,17 @@ export const ExitIntentPopup = () => {
   }, [hasShown]);
 
   const handleClose = () => {
+    track('exit_intent_dismissed', {
+      time_shown: Math.round(performance.now() / 1000),
+    });
     setIsVisible(false);
   };
 
   const handleCTA = () => {
+    track('exit_intent_converted', {
+      cta_text: 'Crear Mi Tienda Gratis',
+      destination: '/create-store',
+    });
     setIsVisible(false);
     navigate('/create-store');
   };

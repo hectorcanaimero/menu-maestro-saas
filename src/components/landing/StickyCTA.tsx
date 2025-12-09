@@ -3,11 +3,14 @@ import { ArrowRight, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
+import { usePostHog } from '@/hooks/usePostHog';
 
 export const StickyCTA = () => {
   const [isVisible, setIsVisible] = useState(false);
   const [isDismissed, setIsDismissed] = useState(false);
   const navigate = useNavigate();
+  const { track } = usePostHog();
+  const [hasTrackedShown, setHasTrackedShown] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -19,20 +22,37 @@ export const StickyCTA = () => {
       const distanceFromBottom = documentHeight - (scrollY + windowHeight);
 
       if (!isDismissed) {
-        setIsVisible(scrollY > 800 && distanceFromBottom > 300);
+        const shouldShow = scrollY > 800 && distanceFromBottom > 300;
+        setIsVisible(shouldShow);
+
+        // Track when sticky CTA is shown for the first time
+        if (shouldShow && !hasTrackedShown) {
+          track('sticky_cta_shown', {
+            scroll_position: scrollY,
+            scroll_percentage: Math.round((scrollY / (documentHeight - windowHeight)) * 100),
+          });
+          setHasTrackedShown(true);
+        }
       }
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
-  }, [isDismissed]);
+  }, [isDismissed, hasTrackedShown, track]);
 
   const handleDismiss = () => {
+    track('sticky_cta_dismissed', {
+      time_visible: Math.round(performance.now() / 1000),
+    });
     setIsDismissed(true);
     setIsVisible(false);
   };
 
   const handleCTA = () => {
+    track('sticky_cta_clicked', {
+      cta_text: 'Crear Tienda Gratis',
+      destination: '/create-store',
+    });
     navigate('/create-store');
   };
 

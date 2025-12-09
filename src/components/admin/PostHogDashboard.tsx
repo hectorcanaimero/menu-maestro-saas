@@ -12,8 +12,11 @@ import {
   DollarSign,
   Activity,
   ExternalLink,
+  AlertCircle,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { usePostHogMetrics } from '@/hooks/usePostHogMetrics';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 interface MetricCardProps {
   title: string;
@@ -132,33 +135,7 @@ const ExperimentCard = ({ name, status, variants, winner, significance }: Experi
 };
 
 export const PostHogDashboard = () => {
-  // Mock data - En producción esto vendría de PostHog API
-  const metrics = {
-    pageViews: 12450,
-    pageViewsChange: 23.5,
-    uniqueVisitors: 8234,
-    uniqueVisitorsChange: 18.2,
-    conversionRate: 4.2,
-    conversionRateChange: 0.8,
-    avgSessionDuration: '3:42',
-    avgSessionDurationChange: 12.3,
-    whatsappClicks: 456,
-    whatsappClicksChange: 28.1,
-    pricingSectionViews: 5678,
-    pricingSectionViewsChange: 15.4,
-    planSelections: 342,
-    planSelectionsChange: 9.2,
-    scrollDepth75Plus: 62,
-    scrollDepth75PlusChange: 5.3,
-  };
-
-  const funnelSteps: ConversionFunnelStep[] = [
-    { name: 'Landing Page Viewed', count: 8234, percentage: 100, dropOff: 31 },
-    { name: 'Scrolled to Pricing', count: 5678, percentage: 69, dropOff: 40 },
-    { name: 'CTA Clicked', count: 3407, percentage: 41, dropOff: 10 },
-    { name: 'Signup Started', count: 3066, percentage: 37, dropOff: 0 },
-    { name: 'Signup Completed', count: 342, percentage: 4.2 },
-  ];
+  const { metrics, funnelSteps, topEvents, isLoading, error } = usePostHogMetrics();
 
   const experiments: ExperimentCardProps[] = [
     {
@@ -181,6 +158,17 @@ export const PostHogDashboard = () => {
     },
   ];
 
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center space-y-3">
+          <Activity className="h-12 w-12 animate-pulse mx-auto text-muted-foreground" />
+          <p className="text-muted-foreground">Cargando métricas de PostHog...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -188,7 +176,7 @@ export const PostHogDashboard = () => {
         <div>
           <h2 className="text-3xl font-bold tracking-tight">Analytics Dashboard</h2>
           <p className="text-muted-foreground">
-            Métricas de landing page y experimentos A/B
+            Métricas en tiempo real de PostHog
           </p>
         </div>
         <Button variant="outline" asChild>
@@ -204,39 +192,58 @@ export const PostHogDashboard = () => {
         </Button>
       </div>
 
+      {/* Error Alert */}
+      {error && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Error al cargar métricas</AlertTitle>
+          <AlertDescription>
+            {error}. Los datos mostrados pueden estar incompletos.
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {/* Info Alert for low data */}
+      {!error && metrics.pageViews === 0 && (
+        <Alert>
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Sin datos disponibles</AlertTitle>
+          <AlertDescription>
+            Las métricas se mostrarán una vez que los usuarios interactúen con la landing page.
+            Los eventos se rastrean automáticamente con PostHog.
+          </AlertDescription>
+        </Alert>
+      )}
+
       {/* Key Metrics Grid */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <MetricCard
           title="Vistas de Página"
           value={metrics.pageViews.toLocaleString()}
-          change={metrics.pageViewsChange}
-          changeLabel="vs mes anterior"
           icon={Eye}
-          trend="up"
+          description="Total de visualizaciones"
+          trend="neutral"
         />
         <MetricCard
           title="Visitantes Únicos"
           value={metrics.uniqueVisitors.toLocaleString()}
-          change={metrics.uniqueVisitorsChange}
-          changeLabel="vs mes anterior"
           icon={Users}
-          trend="up"
+          description="Usuarios únicos"
+          trend="neutral"
         />
         <MetricCard
           title="Tasa de Conversión"
           value={`${metrics.conversionRate}%`}
-          change={metrics.conversionRateChange}
-          changeLabel="vs mes anterior"
           icon={TrendingUp}
-          trend="up"
+          description="Signups completados"
+          trend={metrics.conversionRate > 3 ? "up" : "neutral"}
         />
         <MetricCard
           title="Duración Promedio"
           value={metrics.avgSessionDuration}
-          change={metrics.avgSessionDurationChange}
-          changeLabel="vs mes anterior"
           icon={Activity}
-          trend="up"
+          description="Tiempo en sesión"
+          trend="neutral"
         />
       </div>
 
@@ -245,34 +252,30 @@ export const PostHogDashboard = () => {
         <MetricCard
           title="Clicks WhatsApp"
           value={metrics.whatsappClicks.toLocaleString()}
-          change={metrics.whatsappClicksChange}
-          changeLabel="vs mes anterior"
           icon={MessageCircle}
-          trend="up"
+          description="Widget interactions"
+          trend="neutral"
         />
         <MetricCard
           title="Vistas Pricing"
           value={metrics.pricingSectionViews.toLocaleString()}
-          change={metrics.pricingSectionViewsChange}
-          changeLabel="vs mes anterior"
           icon={DollarSign}
-          trend="up"
+          description="Sección de precios"
+          trend="neutral"
         />
         <MetricCard
           title="Planes Seleccionados"
           value={metrics.planSelections.toLocaleString()}
-          change={metrics.planSelectionsChange}
-          changeLabel="vs mes anterior"
           icon={ShoppingCart}
-          trend="up"
+          description="Clicks en planes"
+          trend="neutral"
         />
         <MetricCard
           title="Scroll Profundo (75%+)"
           value={`${metrics.scrollDepth75Plus}%`}
-          change={metrics.scrollDepth75PlusChange}
-          changeLabel="vs mes anterior"
           icon={MousePointer}
-          trend="up"
+          description="Engagement alto"
+          trend={metrics.scrollDepth75Plus > 50 ? "up" : "neutral"}
         />
       </div>
 
@@ -307,32 +310,29 @@ export const PostHogDashboard = () => {
       {/* Top Events */}
       <Card>
         <CardHeader>
-          <CardTitle>Eventos Más Frecuentes (Últimos 7 días)</CardTitle>
-          <CardDescription>Top 10 interacciones de usuarios</CardDescription>
+          <CardTitle>Eventos Más Frecuentes (Sesión Actual)</CardTitle>
+          <CardDescription>Top interacciones rastreadas por PostHog</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-3">
-            {[
-              { event: 'landing_page_viewed', count: 8234 },
-              { event: 'pricing_section_viewed', count: 5678 },
-              { event: 'scroll_depth_50', count: 6123 },
-              { event: 'scroll_depth_75', count: 5102 },
-              { event: 'hero_cta_clicked', count: 3407 },
-              { event: 'pricing_plan_clicked', count: 342 },
-              { event: 'whatsapp_widget_clicked', count: 456 },
-              { event: 'testimonial_section_viewed', count: 4234 },
-              { event: 'use_case_tab_clicked', count: 2156 },
-              { event: 'exit_intent_shown', count: 1823 },
-            ].map((item, index) => (
-              <div key={item.event} className="flex items-center justify-between py-2 border-b last:border-0">
-                <div className="flex items-center gap-3">
-                  <span className="text-sm font-mono text-muted-foreground">#{index + 1}</span>
-                  <span className="text-sm font-medium">{item.event}</span>
+          {topEvents.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              <Activity className="h-12 w-12 mx-auto mb-3 opacity-50" />
+              <p>No hay eventos registrados aún</p>
+              <p className="text-sm mt-1">Los eventos aparecerán cuando los usuarios interactúen con la landing page</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {topEvents.map((item, index) => (
+                <div key={item.event} className="flex items-center justify-between py-2 border-b last:border-0">
+                  <div className="flex items-center gap-3">
+                    <span className="text-sm font-mono text-muted-foreground">#{index + 1}</span>
+                    <span className="text-sm font-medium">{item.event}</span>
+                  </div>
+                  <Badge variant="secondary">{item.count.toLocaleString()}</Badge>
                 </div>
-                <Badge variant="secondary">{item.count.toLocaleString()}</Badge>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -341,20 +341,21 @@ export const PostHogDashboard = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Activity className="h-5 w-5" />
-            PostHog Integration
+            Integración PostHog
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-2">
           <p className="text-sm text-muted-foreground">
-            Dashboard conectado a PostHog. Los datos se actualizan en tiempo real desde tu proyecto.
+            Dashboard conectado a PostHog. Los datos se rastrean en tiempo real y se almacenan localmente en esta sesión.
+            Para métricas históricas y avanzadas, accede al panel de PostHog.
           </p>
           <div className="flex flex-wrap gap-2 mt-3">
-            <Badge variant="outline">Autocapture: Activo</Badge>
-            <Badge variant="outline">Session Recording: Activo</Badge>
+            <Badge variant="outline">Tracking: Activo</Badge>
+            <Badge variant="outline">Session Recording: Disponible</Badge>
             <Badge variant="outline">Feature Flags: Disponible</Badge>
-            <Badge variant="outline">Experiments: 3 activos</Badge>
+            <Badge variant="outline">A/B Testing: Disponible</Badge>
           </div>
-          <div className="flex gap-2 mt-4">
+          <div className="flex flex-wrap gap-2 mt-4">
             <Button variant="outline" size="sm" asChild>
               <a href="https://us.posthog.com/insights" target="_blank" rel="noopener noreferrer">
                 Ver Insights
@@ -368,6 +369,11 @@ export const PostHogDashboard = () => {
             <Button variant="outline" size="sm" asChild>
               <a href="https://us.posthog.com/experiments" target="_blank" rel="noopener noreferrer">
                 Gestionar Experimentos
+              </a>
+            </Button>
+            <Button variant="outline" size="sm" asChild>
+              <a href="https://us.posthog.com/events" target="_blank" rel="noopener noreferrer">
+                Ver Todos los Eventos
               </a>
             </Button>
           </div>

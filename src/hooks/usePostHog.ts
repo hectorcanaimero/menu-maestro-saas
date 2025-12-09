@@ -17,6 +17,14 @@ export const usePostHog = () => {
   const track = (eventName: string, properties?: Record<string, any>) => {
     if (isEnabled()) {
       trackEvent(eventName, properties);
+      // Store event count in session storage for local metrics
+      try {
+        const key = `ph_events_${eventName}`;
+        const current = parseInt(sessionStorage.getItem(key) || '0', 10);
+        sessionStorage.setItem(key, (current + 1).toString());
+      } catch (e) {
+        // Ignore storage errors
+      }
     }
   };
 
