@@ -10,6 +10,7 @@ import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { ErrorBoundary, SectionErrorBoundary } from "@/components/ErrorBoundary";
 import { LoadingScreen } from "@/components/LoadingScreen";
 import { ScrollToTop } from "@/components/ScrollToTop";
+import { HelmetProvider } from "react-helmet-async";
 
 // Lazy load all route components
 const Index = lazy(() => import("./pages/Index"));
@@ -51,6 +52,7 @@ const SubscriptionsManager = lazy(() => import("./pages/platform-admin/Subscript
 const StoresManager = lazy(() => import("./pages/platform-admin/StoresManager"));
 const PlansManager = lazy(() => import("./pages/platform-admin/PlansManager"));
 const AdminsManager = lazy(() => import("./pages/platform-admin/AdminsManager"));
+const PostHogAnalytics = lazy(() => import("./pages/platform-admin/PostHogAnalytics"));
 import { PlatformAdminGuard } from "./components/platform-admin/PlatformAdminGuard";
 
 // Driver routes - PWA for delivery drivers
@@ -388,6 +390,14 @@ const AppContent = () => {
                         </SectionErrorBoundary>
                       }
                     />
+                    <Route
+                      path="posthog"
+                      element={
+                        <SectionErrorBoundary>
+                          <PostHogAnalytics />
+                        </SectionErrorBoundary>
+                      }
+                    />
                   </Route>
 
                   {/* Driver Routes - PWA for delivery drivers */}
@@ -426,19 +436,21 @@ const AppContent = () => {
 
 const App = () => (
   <ErrorBoundary showDetails={import.meta.env.DEV}>
-    <QueryClientProvider client={queryClient}>
-      <StoreProvider>
-        <CartProvider>
-          <TooltipProvider>
-            <Toaster />
-            <Sonner />
-            <BrowserRouter>
-              <AppContent />
-            </BrowserRouter>
-          </TooltipProvider>
-        </CartProvider>
-      </StoreProvider>
-    </QueryClientProvider>
+    <HelmetProvider>
+      <QueryClientProvider client={queryClient}>
+        <StoreProvider>
+          <CartProvider>
+            <TooltipProvider>
+              <Toaster />
+              <Sonner />
+              <BrowserRouter>
+                <AppContent />
+              </BrowserRouter>
+            </TooltipProvider>
+          </CartProvider>
+        </StoreProvider>
+      </QueryClientProvider>
+    </HelmetProvider>
   </ErrorBoundary>
 );
 

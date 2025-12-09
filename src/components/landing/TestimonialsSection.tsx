@@ -4,25 +4,31 @@ import { motion } from 'framer-motion';
 export const TestimonialsSection = () => {
   const testimonials = [
     {
+      name: 'César Cegarra',
+      business: 'Sushi House',
+      role: 'Gerente General',
+      content:
+        'Aumentamos nuestras ventas en un 40% en el primer mes. Los pedidos por WhatsApp son claros y organizados. Ya no perdemos tiempo tomando órdenes por teléfono.',
+      rating: 5,
+      metric: '+40% ventas',
+    },
+    {
       name: 'María González',
-      business: 'Restaurante La Esquina',
+      business: 'Pizzería Napolitana',
+      role: 'Propietaria',
       content:
-        'PideAI transformó completamente nuestro negocio. Ahora recibimos el triple de pedidos y la gestión es mucho más eficiente.',
+        'El mejor cambio que hicimos. Ahora los clientes ven fotos de nuestras pizzas y siempre ordenan extras. La inversión se pagó sola en 2 semanas.',
       rating: 5,
+      metric: 'ROI en 2 semanas',
     },
     {
-      name: 'Carlos Méndez',
-      business: 'Pizzería Don Carlos',
+      name: 'Roberto Díaz',
+      business: 'Café Central',
+      role: 'Administrador',
       content:
-        'La mejor inversión para mi pizzería. El panel de cocina es increíble, todos los pedidos llegan organizados y en tiempo real.',
+        'Configuramos todo en 30 minutos. El código QR en las mesas eliminó las filas y mejoramos la experiencia del cliente. Nuestros meseros ahora se enfocan en servicio.',
       rating: 5,
-    },
-    {
-      name: 'Ana Rodríguez',
-      business: 'Café & Co',
-      content:
-        'Súper fácil de configurar. En menos de una hora ya teníamos nuestro menú digital listo. Los clientes están encantados.',
-      rating: 5,
+      metric: 'Setup en 30 min',
     },
   ];
 
@@ -54,15 +60,30 @@ export const TestimonialsSection = () => {
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: index * 0.15 }}
             >
-              <div className="flex gap-1 mb-4">
-                {[...Array(testimonial.rating)].map((_, i) => (
-                  <Star key={i} size={20} className="fill-primary text-primary" />
-                ))}
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex gap-1">
+                  {[...Array(testimonial.rating)].map((_, i) => (
+                    <Star key={i} size={18} className="fill-primary text-primary" aria-hidden="true" />
+                  ))}
+                </div>
+                {testimonial.metric && (
+                  <span className="text-xs font-semibold text-primary bg-primary/10 px-2 py-1 rounded-full">
+                    {testimonial.metric}
+                  </span>
+                )}
               </div>
-              <p className="text-muted-foreground mb-6 italic">"{testimonial.content}"</p>
-              <div>
-                <div className="font-semibold">{testimonial.name}</div>
-                <div className="text-sm text-muted-foreground">{testimonial.business}</div>
+              <p className="text-muted-foreground mb-6 italic leading-relaxed">"{testimonial.content}"</p>
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                  <span className="text-primary font-bold text-lg" aria-hidden="true">
+                    {testimonial.name.charAt(0)}
+                  </span>
+                </div>
+                <div>
+                  <div className="font-semibold text-sm">{testimonial.name}</div>
+                  <div className="text-xs text-muted-foreground">{testimonial.role}</div>
+                  <div className="text-xs text-muted-foreground font-medium">{testimonial.business}</div>
+                </div>
               </div>
             </motion.div>
           ))}

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Menu, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import logo from '@/assets/logo.svg';
 
 export const LandingHeader = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -20,10 +21,16 @@ export const LandingHeader = () => {
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <div className="flex items-center">
-            <span className="text-2xl font-bold text-primary">PideAI</span>
-          </div>
-
+          <button
+            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+            className="flex items-center hover:opacity-80 transition-opacity"
+            aria-label="PideAI - Volver al inicio"
+          >
+            <img src={logo} alt="PideAI" className="h-8 w-auto" />
+            <span className="text-2xl md:text-3xl lg:text-3xl text-primary font-bold leading-tight whitespace-nowrap ml-2 tracking-tight">
+              PideAI
+            </span>
+          </button>
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-8">
             <button
@@ -39,23 +46,15 @@ export const LandingHeader = () => {
               Cómo Funciona
             </button>
           </nav>
-
           {/* Desktop CTAs */}
           <div className="hidden md:flex items-center space-x-4">
             <Button variant="ghost" onClick={() => navigate('/auth')}>
               Iniciar Sesión
             </Button>
-            <Button onClick={() => navigate('/create-store')}>
-              Crear Tienda Gratis
-            </Button>
+            <Button onClick={() => navigate('/create-store')}>Crear Tienda Gratis</Button>
           </div>
-
           {/* Mobile Menu Button */}
-          <button
-            className="md:hidden"
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-            aria-label="Toggle menu"
-          >
+          <button className="md:hidden" onClick={() => setIsMenuOpen(!isMenuOpen)} aria-label="Toggle menu">
             {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
         </div>
@@ -76,11 +75,7 @@ export const LandingHeader = () => {
               Cómo Funciona
             </button>
             <div className="space-y-2 pt-4">
-              <Button
-                variant="outline"
-                className="w-full"
-                onClick={() => navigate('/auth')}
-              >
+              <Button variant="outline" className="w-full" onClick={() => navigate('/auth')}>
                 Iniciar Sesión
               </Button>
               <Button className="w-full" onClick={() => navigate('/create-store')}>
