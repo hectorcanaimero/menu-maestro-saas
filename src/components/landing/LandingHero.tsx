@@ -11,7 +11,7 @@ export const LandingHero = () => {
 
   const { scrollYProgress } = useScroll({
     target: ref,
-    offset: ["start start", "end start"]
+    offset: ['start start', 'end start'],
   });
 
   // Parallax effects - different speeds for depth (disabled on mobile and reduced motion)
@@ -37,15 +37,17 @@ export const LandingHero = () => {
             {/* Trust Badge - Plan Gratuito */}
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20">
               <span className="text-sm font-semibold text-primary">
-                <span role="img" aria-label="Celebración">🎉</span> Plan Gratuito Disponible
+                <span role="img" aria-label="Celebración">
+                  🎉
+                </span>{' '}
+                Plan Gratuito Disponible
               </span>
               <span className="text-sm text-muted-foreground">• Sin tarjeta de crédito</span>
             </div>
 
             <div className="space-y-4">
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight">
-                Pedidos Fáciles y Rápidos con{' '}
-                <span className="text-primary">WhatsApp</span>
+                Pedidos Fáciles y Rápidos con <span className="text-primary">WhatsApp</span>
               </h1>
               <p className="text-lg md:text-xl text-muted-foreground">
                 Crea tu menú digital en minutos y recibe pedidos por WhatsApp.{' '}
@@ -91,7 +93,7 @@ export const LandingHero = () => {
           </motion.div>
 
           {/* Stats */}
-          <motion.div 
+          <motion.div
             className="grid grid-cols-2 gap-6"
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}

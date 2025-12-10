@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { Eye, EyeOff } from "lucide-react";
 import { PasswordStrengthMeter } from "@/components/ui/password-strength-meter";
+import { getSubdomainFromHostname, getCurrentDomain } from "@/lib/subdomain-validation";
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -22,16 +23,31 @@ const Auth = () => {
     const checkUser = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
-        navigate("/admin");
+        // Verify user is on their own store subdomain
+        const currentSubdomain = getSubdomainFromHostname();
+        const { data: userStore } = await supabase
+          .rpc('get_user_owned_store')
+          .single();
+
+        if (userStore && userStore.subdomain === currentSubdomain) {
+          navigate("/admin");
+        } else if (userStore) {
+          // User has session but on wrong subdomain
+          const currentDomain = getCurrentDomain();
+          toast.error(`Debes acceder desde tu tienda: ${userStore.subdomain}.${currentDomain}`);
+          await supabase.auth.signOut();
+        }
       }
     };
     checkUser();
 
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_IN' && session) {
-        toast.success("¡Bienvenido!");
-        navigate("/admin");
+    // Listen for auth changes - Don't auto-redirect here
+    // The redirect is handled explicitly in handleLogin after validation
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      // Don't auto-redirect on SIGNED_IN - validation happens in handleLogin
+      if (event === 'SIGNED_OUT') {
+        // Clear any stored data
+        console.log('User signed out');
       }
     });
 
@@ -43,6 +59,9 @@ const Auth = () => {
     setIsLoading(true);
 
     try {
+      // Get current subdomain
+      const currentSubdomain = getSubdomainFromHostname();
+
       const { data, error } = await supabase.auth.signInWithPassword({
         email: loginData.email,
         password: loginData.password,
@@ -58,14 +77,44 @@ const Auth = () => {
         return;
       }
 
-      // La redirección se manejará en onAuthStateChange
       if (!data.session) {
         toast.error("Error al iniciar sesión");
         setIsLoading(false);
+        return;
       }
+
+      // Verify user owns a store and that it matches the current subdomain
+      const { data: userStore } = await supabase
+        .rpc('get_user_owned_store')
+        .single();
+
+      if (!userStore) {
+        // User doesn't own any store - log them out and show error
+        await supabase.auth.signOut();
+        toast.error("No tienes una tienda asociada. Por favor, crea una tienda primero.");
+        setIsLoading(false);
+        navigate("/create-store");
+        return;
+      }
+
+      // Check if user is trying to login to their own store
+      if (userStore.subdomain !== currentSubdomain) {
+        // User is trying to login to a different store - not allowed!
+        await supabase.auth.signOut();
+        const currentDomain = getCurrentDomain();
+        toast.error(`Solo puedes iniciar sesión en tu propia tienda: ${userStore.subdomain}.${currentDomain}`, {
+          duration: 6000,
+        });
+        setIsLoading(false);
+        return;
+      }
+
+      // Success - user is logging into their own store
+      toast.success("¡Bienvenido!");
+      navigate("/admin");
     } catch (error) {
+      console.error("Error during login:", error);
       toast.error("Error al iniciar sesión");
-    } finally {
       setIsLoading(false);
     }
   };

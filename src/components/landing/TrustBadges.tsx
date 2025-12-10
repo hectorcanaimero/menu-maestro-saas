@@ -5,8 +5,8 @@ export const TrustBadges = () => {
   const badges = [
     {
       icon: Shield,
-      title: 'Pagos Seguros',
-      description: 'Cifrado SSL de nivel bancario',
+      title: 'Tu Negocio Protegido',
+      description: 'Datos y ventas siempre respaldados',
     },
     {
       icon: Lock,
@@ -20,8 +20,8 @@ export const TrustBadges = () => {
     },
     {
       icon: CheckCircle2,
-      title: '30 Días Gratis',
-      description: 'Prueba sin compromiso ni tarjeta',
+      title: 'Planes a medida',
+      description: 'Pensado para emprendedores y negocios pequeños',
     },
   ];
 

@@ -15,7 +15,8 @@ const features = [
   {
     icon: DollarSign,
     title: 'Conversión de Monedas',
-    description: 'Conversión automática EUR/USD a bolívares venezolanos (VES) con tasas del BCV actualizadas cada hora. Configura tasas manuales si lo prefieres.',
+    description:
+      'Conversión automática EUR/USD a bolívares venezolanos (VES) con tasas del BCV actualizadas cada hora. Configura tasas manuales si lo prefieres.',
   },
   {
     icon: Percent,
@@ -27,11 +28,11 @@ const features = [
     title: 'Promociones',
     description: 'Configura promociones automáticas: 2x1, descuentos por categoría, ofertas especiales y más.',
   },
-  {
-    icon: Truck,
-    title: 'Gestión de Delivery',
-    description: 'Administra zonas de entrega, asigna repartidores y rastrea pedidos en tiempo real con GPS.',
-  },
+  // {
+  //   icon: Truck,
+  //   title: 'Gestión de Delivery',
+  //   description: 'Administra zonas de entrega, asigna repartidores y rastrea pedidos en tiempo real con GPS.',
+  // },
   {
     icon: BarChart3,
     title: 'Analytics Avanzados',

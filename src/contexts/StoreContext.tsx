@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { getSubdomainFromHostname } from '@/lib/subdomain-validation';
+import { getSubdomainFromHostname, getCurrentDomain } from '@/lib/subdomain-validation';
 import { useAutoUpdateRates } from '@/hooks/useAutoUpdateRates';
 import posthog from 'posthog-js';
 import * as Sentry from '@sentry/react';
@@ -200,6 +200,33 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
     } = await supabase.auth.getSession();
     const isOwner = session?.user?.id === storeData.owner_id;
     setIsStoreOwner(isOwner);
+
+    // CRITICAL: If user is authenticated but NOT the owner, sign them out
+    // This prevents users from accessing admin panels of stores they don't own
+    if (session?.user && !isOwner) {
+      console.warn('[StoreContext] User is authenticated but not the owner of this store. Checking if they own a different store...');
+
+      // Check if user owns a different store
+      const { data: userStore } = await supabase
+        .rpc('get_user_owned_store')
+        .single();
+
+      if (userStore && userStore.subdomain !== storeData.subdomain) {
+        // User owns a different store - sign them out and show message
+        console.error('[StoreContext] User is logged into wrong store. Logging out...');
+        await supabase.auth.signOut();
+
+        // Show error message (will be visible for a moment before signout completes)
+        if (typeof window !== 'undefined') {
+          const currentDomain = getCurrentDomain();
+          import('sonner').then(({ toast }) => {
+            toast.error(`Solo puedes acceder a tu propia tienda: ${userStore.subdomain}.${currentDomain}`, {
+              duration: 8000,
+            });
+          });
+        }
+      }
+    }
 
     // Set Sentry user context
     if (session?.user) {
