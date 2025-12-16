@@ -65,14 +65,19 @@ export function AppSidebar() {
   // Check if the store is a food business
   const isFoodBusiness = store?.is_food_business ?? true;
   const isCatalogMode = store?.catalog_mode ?? false;
-
+  console.log('Store settings:', { isFoodBusiness, isCatalogMode });
   // Filter navigation items based on food business type
   const filteredNavItems = navItems.filter((item) => {
-    if (item.requiresFoodBusiness) {
-      return isFoodBusiness ? true : isCatalogMode ? false : true;
+    if (isCatalogMode) {
+      if (item.requiresFoodBusiness) {
+        return false;
+      }
+      if (item.requiresCatalog) {
+        return !isCatalogMode;
+      }
     }
-    if (item.requiresCatalog) {
-      return !isCatalogMode;
+    if (item.requiresFoodBusiness) {
+      return isFoodBusiness;
     }
     return true;
   });
