@@ -13,6 +13,7 @@ import {
   LogOut,
   Shield,
   BarChart3,
+  Eye,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -46,6 +47,11 @@ function PlatformAdminLayout() {
       label: 'Tiendas',
       icon: Store,
       href: '/platform-admin/stores',
+    },
+    {
+      label: 'Catálogos',
+      icon: Eye,
+      href: '/platform-admin/catalogs',
     },
     {
       label: 'Suscripciones',

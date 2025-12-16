@@ -1,36 +1,36 @@
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { toast } from "sonner";
-import { Eye, EyeOff } from "lucide-react";
-import { PasswordStrengthMeter } from "@/components/ui/password-strength-meter";
-import { getSubdomainFromHostname, getCurrentDomain } from "@/lib/subdomain-validation";
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { toast } from 'sonner';
+import { Eye, EyeOff } from 'lucide-react';
+import { PasswordStrengthMeter } from '@/components/ui/password-strength-meter';
+import { getSubdomainFromHostname, getCurrentDomain } from '@/lib/subdomain-validation';
 
 const Auth = () => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [loginData, setLoginData] = useState({ email: "", password: "" });
-  const [signupData, setSignupData] = useState({ email: "", password: "", fullName: "" });
+  const [loginData, setLoginData] = useState({ email: '', password: '' });
+  const [signupData, setSignupData] = useState({ email: '', password: '', fullName: '' });
 
   useEffect(() => {
     // Check current session
     const checkUser = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       if (session) {
         // Verify user is on their own store subdomain
         const currentSubdomain = getSubdomainFromHostname();
-        const { data: userStore } = await supabase
-          .rpc('get_user_owned_store')
-          .single();
+        const { data: userStore } = await supabase.rpc('get_user_owned_store').single();
 
         if (userStore && userStore.subdomain === currentSubdomain) {
-          navigate("/admin");
+          navigate('/admin');
         } else if (userStore) {
           // User has session but on wrong subdomain
           const currentDomain = getCurrentDomain();
@@ -43,7 +43,9 @@ const Auth = () => {
 
     // Listen for auth changes - Don't auto-redirect here
     // The redirect is handled explicitly in handleLogin after validation
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event) => {
       // Don't auto-redirect on SIGNED_IN - validation happens in handleLogin
       if (event === 'SIGNED_OUT') {
         // Clear any stored data
@@ -68,8 +70,8 @@ const Auth = () => {
       });
 
       if (error) {
-        if (error.message.includes("Invalid login credentials")) {
-          toast.error("Credenciales incorrectas");
+        if (error.message.includes('Invalid login credentials')) {
+          toast.error('Credenciales incorrectas');
         } else {
           toast.error(error.message);
         }
@@ -78,22 +80,45 @@ const Auth = () => {
       }
 
       if (!data.session) {
-        toast.error("Error al iniciar sesión");
+        toast.error('Error al iniciar sesión');
         setIsLoading(false);
         return;
       }
-
+      console.log('data', data);
       // Verify user owns a store and that it matches the current subdomain
-      const { data: userStore } = await supabase
-        .rpc('get_user_owned_store')
-        .single();
+      const { data: session } = await supabase.auth.getSession();
+      const userId = session.session?.user.id;
+
+      // Debug logging in development
+      if (import.meta.env.DEV) {
+        console.log('[AUTH DEBUG]', {
+          email: loginData.email,
+          userId,
+          subdomain: currentSubdomain,
+        });
+      }
+
+      const { data: userStore, error: storeError } = await supabase.rpc('get_user_owned_store').single();
+
+      // Debug RPC result
+      if (import.meta.env.DEV) {
+        console.log('[AUTH DEBUG] RPC get_user_owned_store:', { userStore, storeError });
+      }
 
       if (!userStore) {
         // User doesn't own any store - log them out and show error
         await supabase.auth.signOut();
-        toast.error("No tienes una tienda asociada. Por favor, crea una tienda primero.");
+
+        // More specific error message
+        const errorMsg = storeError
+          ? `Error al verificar tienda: ${storeError.message}`
+          : `No se encontró tienda asociada a ${loginData.email}. Verifica que el owner_id de tu tienda coincida con tu user_id: ${userId}`;
+
+        toast.error(errorMsg, { duration: 8000 });
+        console.error('[AUTH ERROR]', { userId, email: loginData.email, error: storeError });
+
         setIsLoading(false);
-        navigate("/create-store");
+        navigate('/create-store');
         return;
       }
 
@@ -110,11 +135,11 @@ const Auth = () => {
       }
 
       // Success - user is logging into their own store
-      toast.success("¡Bienvenido!");
-      navigate("/admin");
+      toast.success('¡Bienvenido!');
+      navigate('/admin');
     } catch (error) {
-      console.error("Error during login:", error);
-      toast.error("Error al iniciar sesión");
+      console.error('Error during login:', error);
+      toast.error('Error al iniciar sesión');
       setIsLoading(false);
     }
   };
@@ -136,8 +161,8 @@ const Auth = () => {
       });
 
       if (error) {
-        if (error.message.includes("already registered")) {
-          toast.error("Este correo ya está registrado");
+        if (error.message.includes('already registered')) {
+          toast.error('Este correo ya está registrado');
         } else {
           toast.error(error.message);
         }
@@ -146,15 +171,15 @@ const Auth = () => {
 
       if (data.user) {
         // Redirect to email verification page with context
-        navigate("/verify-email", {
+        navigate('/verify-email', {
           state: {
             email: signupData.email,
-            nextStep: "/create-store", // Where to go after verification
+            nextStep: '/create-store', // Where to go after verification
           },
         });
       }
     } catch (error) {
-      toast.error("Error al crear cuenta");
+      toast.error('Error al crear cuenta');
     } finally {
       setIsLoading(false);
     }
@@ -165,9 +190,7 @@ const Auth = () => {
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl font-bold text-center">Panel de Administración</CardTitle>
-          <CardDescription className="text-center">
-            Accede para gestionar tu menú de restaurante
-          </CardDescription>
+          <CardDescription className="text-center">Accede para gestionar tu menú de restaurante</CardDescription>
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="login" className="w-full">
@@ -175,7 +198,7 @@ const Auth = () => {
               <TabsTrigger value="login">Iniciar Sesión</TabsTrigger>
               <TabsTrigger value="signup">Registrarse</TabsTrigger>
             </TabsList>
-            
+
             <TabsContent value="login">
               <form onSubmit={handleLogin} className="space-y-4">
                 <div className="space-y-2">
@@ -194,7 +217,7 @@ const Auth = () => {
                   <div className="relative">
                     <Input
                       id="login-password"
-                      type={showPassword ? "text" : "password"}
+                      type={showPassword ? 'text' : 'password'}
                       placeholder="••••••••"
                       value={loginData.password}
                       onChange={(e) => setLoginData({ ...loginData, password: e.target.value })}
@@ -204,7 +227,7 @@ const Auth = () => {
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
                       className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                      aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                      aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
                     >
                       {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                     </button>
@@ -216,17 +239,17 @@ const Auth = () => {
                     type="button"
                     variant="link"
                     className="text-sm px-0"
-                    onClick={() => navigate("/reset-password")}
+                    onClick={() => navigate('/reset-password')}
                   >
                     ¿Olvidaste tu contraseña?
                   </Button>
                 </div>
                 <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? "Iniciando sesión..." : "Iniciar Sesión"}
+                  {isLoading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
                 </Button>
               </form>
             </TabsContent>
-            
+
             <TabsContent value="signup">
               <form onSubmit={handleSignup} className="space-y-4">
                 <div className="space-y-2">
@@ -256,7 +279,7 @@ const Auth = () => {
                   <div className="relative">
                     <Input
                       id="signup-password"
-                      type={showPassword ? "text" : "password"}
+                      type={showPassword ? 'text' : 'password'}
                       placeholder="••••••••"
                       value={signupData.password}
                       onChange={(e) => setSignupData({ ...signupData, password: e.target.value })}
@@ -268,7 +291,7 @@ const Auth = () => {
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
                       className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                      aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                      aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
                     >
                       {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                     </button>
@@ -276,7 +299,7 @@ const Auth = () => {
                   <PasswordStrengthMeter password={signupData.password} className="mt-2" />
                 </div>
                 <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? "Creando cuenta..." : "Crear Cuenta"}
+                  {isLoading ? 'Creando cuenta...' : 'Crear Cuenta'}
                 </Button>
               </form>
             </TabsContent>

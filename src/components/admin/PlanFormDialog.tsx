@@ -56,6 +56,12 @@ const planFormSchema = z.object({
     .int('Debe ser un número entero')
     .min(-1, 'Usa -1 para ilimitado o un número positivo'),
   max_ai_credits_per_month: z.number().int('Debe ser un número entero').min(0, 'No puede ser negativo'),
+  catalog_view_limit: z
+    .number()
+    .int('Debe ser un número entero')
+    .min(-1, 'Usa -1 o deja vacío para ilimitado, o un número positivo')
+    .optional()
+    .nullable(),
 
   // Module pricing
   whatsapp_monthly: z
@@ -120,6 +126,7 @@ export function PlanFormDialog({ open, onOpenChange, plan, onSubmit, isSubmittin
       max_categories: -1,
       max_orders_per_month: -1,
       max_ai_credits_per_month: 0,
+      catalog_view_limit: null,
       whatsapp_monthly: null,
       delivery_monthly: null,
       features: [],
@@ -141,6 +148,7 @@ export function PlanFormDialog({ open, onOpenChange, plan, onSubmit, isSubmittin
         max_categories: plan.limits.max_categories,
         max_orders_per_month: plan.limits.max_orders_per_month,
         max_ai_credits_per_month: plan.limits.max_ai_credits_per_month,
+        catalog_view_limit: (plan as any).catalog_view_limit ?? null,
         whatsapp_monthly: plan.modules.whatsapp_monthly ?? null,
         delivery_monthly: plan.modules.delivery_monthly ?? null,
         features: plan.features || [],
@@ -193,6 +201,7 @@ export function PlanFormDialog({ open, onOpenChange, plan, onSubmit, isSubmittin
               whatsapp_monthly: values.whatsapp_monthly ?? undefined,
               delivery_monthly: values.delivery_monthly ?? undefined,
             },
+            catalog_view_limit: values.catalog_view_limit ?? undefined,
             features: values.features,
             is_active: values.is_active,
             trial_duration_days: values.trial_duration_days,
@@ -216,6 +225,7 @@ export function PlanFormDialog({ open, onOpenChange, plan, onSubmit, isSubmittin
             whatsapp_monthly: values.whatsapp_monthly ?? undefined,
             delivery_monthly: values.delivery_monthly ?? undefined,
           },
+          catalog_view_limit: values.catalog_view_limit ?? undefined,
           features: values.features,
           is_active: values.is_active,
           trial_duration_days: values.trial_duration_days,
@@ -517,6 +527,33 @@ export function PlanFormDialog({ open, onOpenChange, plan, onSubmit, isSubmittin
                         />
                       </FormControl>
                       <FormDescription>Cantidad de créditos para funcionalidades de IA</FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="catalog_view_limit"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Límite de Vistas de Catálogo por Mes</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          placeholder="1000 (vacío = ilimitado)"
+                          value={field.value ?? ''}
+                          onChange={(e) => {
+                            const val = e.target.value === '' ? null : parseInt(e.target.value);
+                            if (val === null || !isNaN(val)) {
+                              field.onChange(val);
+                            }
+                          }}
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        Vistas permitidas en modo catálogo. Vacío o null = ilimitado (planes premium)
+                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}

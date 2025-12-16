@@ -4,7 +4,7 @@ import { ProductCard } from './ProductCard';
 import { QuickViewModal } from './QuickViewModal';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useSearchParams } from 'react-router-dom';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { LayoutGrid, List, Search as SearchIcon, ArrowUpDown, ChevronLeft, ChevronRight } from 'lucide-react';
@@ -16,9 +16,22 @@ type SortOption = 'default' | 'price-asc' | 'price-desc' | 'name-asc' | 'name-de
 
 const PRODUCTS_PER_PAGE = 12;
 
+// Helper function to create URL-friendly slugs (same as CategoriesSection)
+const createSlug = (text: string): string => {
+  return text
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9\s-]/g, '')
+    .trim()
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-');
+};
+
 export const ProductGrid = () => {
   const [searchParams, setSearchParams] = useSearchParams();
-  const categoryFilter = searchParams.get('category');
+  const categorySlug = searchParams.get('category');
+  const showFeatured = searchParams.get('featured') === 'true';
   const searchQuery = searchParams.get('search') || '';
   const sortParam = (searchParams.get('sort') as SortOption) || 'default';
   const pageParam = parseInt(searchParams.get('page') || '1', 10);
@@ -28,6 +41,28 @@ export const ProductGrid = () => {
   const [currentPage, setCurrentPage] = useState(pageParam);
   const debouncedSearchQuery = useDebounce(localSearchQuery, 400);
   const { store } = useStore();
+
+  // Fetch categories to map slug to ID
+  const { data: categories } = useQuery({
+    queryKey: ['categories', store?.id],
+    queryFn: async () => {
+      if (!store?.id) return [];
+      const { data, error } = await supabase
+        .from('categories')
+        .select('*')
+        .eq('store_id', store.id);
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!store?.id,
+  });
+
+  // Get category ID from slug
+  const categoryFilter = useMemo(() => {
+    if (!categorySlug || !categories) return null;
+    const category = categories.find(cat => createSlug(cat.name) === categorySlug);
+    return category?.id || null;
+  }, [categorySlug, categories]);
 
   // Update URL when debounced search query changes
   useEffect(() => {
@@ -92,7 +127,7 @@ export const ProductGrid = () => {
 
   // Fetch total count for pagination
   const { data: totalCount } = useQuery({
-    queryKey: ['menu-items-count', categoryFilter, debouncedSearchQuery, store?.id],
+    queryKey: ['menu-items-count', categoryFilter, showFeatured, debouncedSearchQuery, store?.id],
     queryFn: async () => {
       if (!store?.id) return 0;
       let query = supabase
@@ -100,6 +135,10 @@ export const ProductGrid = () => {
         .select('*', { count: 'exact', head: true })
         .eq('store_id', store.id)
         .eq('is_available', true);
+
+      if (showFeatured) {
+        query = query.eq('is_featured', true);
+      }
 
       if (categoryFilter) {
         query = query.eq('category_id', categoryFilter);
@@ -118,7 +157,7 @@ export const ProductGrid = () => {
 
   // Fetch paginated products
   const { data: products, isLoading } = useQuery({
-    queryKey: ['menu-items', categoryFilter, debouncedSearchQuery, sortBy, currentPage, store?.id],
+    queryKey: ['menu-items', categoryFilter, showFeatured, debouncedSearchQuery, sortBy, currentPage, store?.id],
     queryFn: async () => {
       if (!store?.id) return [];
 
@@ -131,6 +170,10 @@ export const ProductGrid = () => {
         .eq('store_id', store.id)
         .eq('is_available', true)
         .range(from, to);
+
+      if (showFeatured) {
+        query = query.eq('is_featured', true);
+      }
 
       if (categoryFilter) {
         query = query.eq('category_id', categoryFilter);

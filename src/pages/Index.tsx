@@ -9,8 +9,14 @@ import { useNavigate } from 'react-router-dom';
 import { useStoreTheme } from '@/hooks/useStoreTheme';
 import { StoreInfoWidget } from '@/components/catalog/StoreInfoWidget';
 import { FeaturedProducts } from '@/components/catalog/FeaturedProducts';
+import { FloatingCartButton } from '@/components/cart/FloatingCartButton';
+import { FloatingWhatsAppButton } from '@/components/catalog/FloatingWhatsAppButton';
+import { CatalogLimitBanner } from '@/components/catalog/CatalogLimitBanner';
+import { CatalogBlockedOverlay } from '@/components/catalog/CatalogBlockedOverlay';
+import { useViewLimitStatus } from '@/hooks/useViewLimitStatus';
 import { isMainDomain } from '@/lib/subdomain-validation';
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, useEffect } from 'react';
+import posthog from 'posthog-js';
 
 const LandingPage = lazy(() => import('./LandingPage'));
 
@@ -20,6 +26,35 @@ const Index = () => {
 
   // Apply store theme colors
   useStoreTheme();
+
+  // Check if catalog mode is enabled
+  const isCatalogMode = (store as any)?.catalog_mode ?? false;
+
+  // Get view limit status (only when catalog mode is enabled)
+  const { data: viewLimitStatus } = useViewLimitStatus(store?.id, isCatalogMode);
+
+  // Track catalog page views when in catalog mode
+  useEffect(() => {
+    // Only track if store is loaded and catalog mode is enabled
+    if (store?.id && isCatalogMode) {
+      try {
+        posthog.capture('catalog_page_view', {
+          store_id: store.id,
+          store_name: store.name,
+          catalog_mode: true,
+          page_url: window.location.href,
+          timestamp: new Date().toISOString(),
+        });
+
+        console.log('[PostHog] Catalog page view tracked:', {
+          store_id: store.id,
+          store_name: store.name,
+        });
+      } catch (error) {
+        console.error('[PostHog] Error tracking catalog page view:', error);
+      }
+    }
+  }, [store?.id, store?.name, isCatalogMode]);
 
   if (storeLoading) {
     return (
@@ -70,6 +105,16 @@ const Index = () => {
     <div className="min-h-screen bg-background pb-0">
       <Header />
 
+      {/* Catalog Limit Banner (80% warning) */}
+      {isCatalogMode && viewLimitStatus && !viewLimitStatus.isUnlimited && (
+        <CatalogLimitBanner
+          percentage={viewLimitStatus.percentage}
+          currentViews={viewLimitStatus.currentViews}
+          limit={viewLimitStatus.limit!}
+          exceeded={viewLimitStatus.exceeded}
+        />
+      )}
+
       {/* Categories Horizontal Scroll */}
       <CategoriesSection />
 
@@ -99,8 +144,24 @@ const Index = () => {
         </section>
       </div>
 
+      {/* Floating Cart Button */}
+      <FloatingCartButton />
+
+      {/* Floating WhatsApp Button (Catalog Mode) */}
+      <FloatingWhatsAppButton />
+
       {/* Footer */}
       <Footer />
+
+      {/* Catalog Blocked Overlay (when soft-limit exceeded) */}
+      {isCatalogMode && viewLimitStatus?.hardBlocked && !viewLimitStatus.isUnlimited && (
+        <CatalogBlockedOverlay
+          currentViews={viewLimitStatus.currentViews}
+          limit={viewLimitStatus.limit!}
+          softLimit={viewLimitStatus.softLimit!}
+          storeName={store?.name}
+        />
+      )}
     </div>
   );
 };

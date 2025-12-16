@@ -107,7 +107,7 @@ export function StoreInfoWidget({
 
         {/* Ver más button */}
         <Button variant="ghost" className="h-11 md:h-10 text-base md:text-sm font-medium gap-0 hover:bg-accent">
-          Ver más
+          Mas Info
           <ChevronRight className="w-4 h-4" />
         </Button>
       </div>

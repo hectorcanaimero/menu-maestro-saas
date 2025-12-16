@@ -3,10 +3,25 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { useSearchParams } from "react-router-dom";
 import { useStore } from "@/contexts/StoreContext";
+import { Star } from "lucide-react";
+import { useMemo } from "react";
+
+// Helper function to create URL-friendly slugs
+const createSlug = (text: string): string => {
+  return text
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '') // Remove accents
+    .replace(/[^a-z0-9\s-]/g, '') // Remove special chars
+    .trim()
+    .replace(/\s+/g, '-') // Replace spaces with hyphens
+    .replace(/-+/g, '-'); // Remove consecutive hyphens
+};
 
 export const CategoriesSection = () => {
   const [searchParams, setSearchParams] = useSearchParams();
-  const selectedCategory = searchParams.get("category");
+  const selectedCategorySlug = searchParams.get("category");
+  const showFeatured = searchParams.get("featured") === "true";
   const { store } = useStore();
 
   const { data: categories, isLoading } = useQuery({
@@ -24,11 +39,37 @@ export const CategoriesSection = () => {
     enabled: !!store?.id,
   });
 
-  const handleCategoryClick = (categoryId: string) => {
-    if (selectedCategory === categoryId) {
+  // Create a map of slug -> category ID for lookup
+  const categorySlugMap = useMemo(() => {
+    if (!categories) return new Map();
+    const map = new Map<string, string>();
+    categories.forEach(cat => {
+      const slug = createSlug(cat.name);
+      map.set(slug, cat.id);
+    });
+    return map;
+  }, [categories]);
+
+  // Get the selected category ID from the slug
+  const selectedCategoryId = useMemo(() => {
+    if (!selectedCategorySlug) return null;
+    return categorySlugMap.get(selectedCategorySlug) || null;
+  }, [selectedCategorySlug, categorySlugMap]);
+
+  const handleCategoryClick = (categoryName: string, categoryId: string) => {
+    const slug = createSlug(categoryName);
+    if (selectedCategorySlug === slug) {
       setSearchParams({});
     } else {
-      setSearchParams({ category: categoryId });
+      setSearchParams({ category: slug });
+    }
+  };
+
+  const handleFeaturedClick = () => {
+    if (showFeatured) {
+      setSearchParams({});
+    } else {
+      setSearchParams({ featured: "true" });
     }
   };
 
@@ -41,32 +82,48 @@ export const CategoriesSection = () => {
       <div className="container mx-auto px-4">
         <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
           <Button
-            variant={!selectedCategory ? "default" : "outline"}
+            variant={!selectedCategorySlug && !showFeatured ? "default" : "outline"}
             size="sm"
             onClick={() => setSearchParams({})}
             className={`rounded-full whitespace-nowrap ${
-              !selectedCategory 
-                ? "bg-primary text-primary-foreground" 
+              !selectedCategorySlug && !showFeatured
+                ? "bg-primary text-primary-foreground"
                 : "bg-background hover:bg-muted"
             }`}
           >
             Todos
           </Button>
-          {categories.map((category) => (
-            <Button
-              key={category.id}
-              variant={selectedCategory === category.id ? "default" : "outline"}
-              size="sm"
-              onClick={() => handleCategoryClick(category.id)}
-              className={`rounded-full whitespace-nowrap ${
-                selectedCategory === category.id 
-                  ? "bg-primary text-primary-foreground" 
-                  : "bg-background hover:bg-muted"
-              }`}
-            >
-              {category.name}
-            </Button>
-          ))}
+          <Button
+            variant={showFeatured ? "default" : "outline"}
+            size="sm"
+            onClick={handleFeaturedClick}
+            className={`rounded-full whitespace-nowrap ${
+              showFeatured
+                ? "bg-primary text-primary-foreground"
+                : "bg-background hover:bg-muted"
+            }`}
+          >
+            <Star className="w-4 h-4 mr-1" />
+            Destacados
+          </Button>
+          {categories.map((category) => {
+            const slug = createSlug(category.name);
+            return (
+              <Button
+                key={category.id}
+                variant={selectedCategorySlug === slug ? "default" : "outline"}
+                size="sm"
+                onClick={() => handleCategoryClick(category.name, category.id)}
+                className={`rounded-full whitespace-nowrap ${
+                  selectedCategorySlug === slug
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-background hover:bg-muted"
+                }`}
+              >
+                {category.name}
+              </Button>
+            );
+          })}
         </div>
       </div>
     </section>

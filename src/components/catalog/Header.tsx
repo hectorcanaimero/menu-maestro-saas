@@ -15,6 +15,9 @@ export const Header = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
+  // Check if catalog mode is enabled
+  const isCatalogMode = (store as any)?.catalog_mode ?? false;
+
   // Use custom logo if available
   const logoUrl = store?.logo_url;
 
@@ -42,7 +45,7 @@ export const Header = () => {
   ];
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header className="sticky top-0 z-50 w-full border-b border-border bg-background">
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
@@ -75,7 +78,7 @@ export const Header = () => {
 
           {/* Actions */}
           <div className="flex items-center gap-2">
-            <CartSheet />
+            {!isCatalogMode && <CartSheet />}
             {/* Mobile Menu Toggle */}
           </div>
         </div>

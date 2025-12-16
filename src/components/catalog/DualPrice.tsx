@@ -6,13 +6,14 @@ interface DualPriceProps {
   className?: string;
   size?: "sm" | "md" | "lg";
   style?: React.CSSProperties;
+  conversionTextColor?: string;
 }
 
 /**
  * Component to display dual currency pricing
  * Shows original price (USD/EUR) with converted VES price below if enabled
  */
-export function DualPrice({ price, className = "", size = "md", style }: DualPriceProps) {
+export function DualPrice({ price, className = "", size = "md", style, conversionTextColor }: DualPriceProps) {
   const formatPrice = useFormatPrice();
   const priceData = formatPrice(price);
 
@@ -42,7 +43,12 @@ export function DualPrice({ price, className = "", size = "md", style }: DualPri
   return (
     <div className={`flex flex-col gap-0.5 ${className}`} style={style}>
       <div className={classes.original}>{priceData.original}</div>
-      <div className={`${classes.converted} text-muted-foreground`}>{priceData.converted}</div>
+      <div
+        className={`${classes.converted} ${conversionTextColor ? '' : 'text-muted-foreground'}`}
+        style={conversionTextColor ? { color: conversionTextColor, opacity: 0.85 } : undefined}
+      >
+        {priceData.converted}
+      </div>
     </div>
   );
 }

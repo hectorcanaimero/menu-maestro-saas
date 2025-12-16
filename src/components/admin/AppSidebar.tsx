@@ -2,7 +2,6 @@ import {
   LayoutDashboard,
   ShoppingCart,
   FolderTree,
-  UtensilsCrossed,
   Settings,
   Users,
   ChefHat,
@@ -17,6 +16,7 @@ import {
   Ticket,
   Image,
   CreditCard,
+  Box,
 } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import {
@@ -35,10 +35,10 @@ import { useStore } from '@/contexts/StoreContext';
 
 const navItems = [
   { path: '/admin', label: 'Dashboard', icon: LayoutDashboard },
-  { path: '/admin/kitchen', label: 'Cocina', icon: ChefHat },
+  { path: '/admin/kitchen', label: 'Cocina', icon: ChefHat, requiresFoodBusiness: true },
   { path: '/admin/orders', label: 'Pedidos', icon: ShoppingCart },
   { path: '/admin/categories', label: 'Categorías', icon: FolderTree },
-  { path: '/admin/menu-items', label: 'Productos', icon: UtensilsCrossed },
+  { path: '/admin/menu-items', label: 'Productos', icon: Box },
   { path: '/admin/customers', label: 'Clientes', icon: Users },
   { path: '/admin/promotions', label: 'Promociones', icon: Tag },
   { path: '/admin/coupons', label: 'Cupones', icon: Ticket },
@@ -62,6 +62,17 @@ export function AppSidebar() {
   const { store } = useStore();
   const { data: hasDeliveryModule } = useModuleAccess('delivery');
 
+  // Check if the store is a food business
+  const isFoodBusiness = (store as any)?.is_food_business ?? true;
+
+  // Filter navigation items based on food business type
+  const filteredNavItems = navItems.filter((item) => {
+    if (item.requiresFoodBusiness) {
+      return isFoodBusiness;
+    }
+    return true;
+  });
+
   // Filter navigation items based on module access
   const filteredNavIntegration = navIntegration.filter((item) => {
     if (item.requiresModule === 'delivery') {
@@ -77,7 +88,7 @@ export function AppSidebar() {
           <SidebarGroupLabel className="mt-5">Administración</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {navItems.map((item) => {
+              {filteredNavItems.map((item) => {
                 const Icon = item.icon;
                 return (
                   <SidebarMenuItem key={item.path}>

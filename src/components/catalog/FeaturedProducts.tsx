@@ -6,13 +6,33 @@ import { useStore } from '@/contexts/StoreContext';
 import { Star, ChevronLeft, ChevronRight } from 'lucide-react';
 import useEmblaCarousel from 'embla-carousel-react';
 import Autoplay from 'embla-carousel-autoplay';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
+import { useSearchParams } from 'react-router-dom';
+
+// Helper function to create URL-friendly slugs
+const createSlug = (text: string): string => {
+  return text
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9\s-]/g, '')
+    .trim()
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-');
+};
 
 export const FeaturedProducts = () => {
   const { store } = useStore();
+  const [searchParams] = useSearchParams();
+  const categorySlug = searchParams.get("category");
+  const showFeatured = searchParams.get("featured") === "true";
   const [canScrollPrev, setCanScrollPrev] = useState(false);
   const [canScrollNext, setCanScrollNext] = useState(false);
+
+  // Hide carousel when a category is selected OR when viewing featured filter
+  // Only show when: viewing all products (no filters)
+  const shouldShowCarousel = !categorySlug && !showFeatured;
 
   const [emblaRef, emblaApi] = useEmblaCarousel(
     {
@@ -32,23 +52,52 @@ export const FeaturedProducts = () => {
     ],
   );
 
+  // Fetch categories to map slug to ID (only when needed)
+  const { data: categories } = useQuery({
+    queryKey: ['categories', store?.id],
+    queryFn: async () => {
+      if (!store?.id) return [];
+      const { data, error } = await supabase
+        .from('categories')
+        .select('*')
+        .eq('store_id', store.id);
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!store?.id && !!categorySlug && !showFeatured,
+  });
+
+  // Get category ID from slug
+  const selectedCategoryId = useMemo(() => {
+    if (!categorySlug || !categories || showFeatured) return null;
+    const category = categories.find(cat => createSlug(cat.name) === categorySlug);
+    return category?.id || null;
+  }, [categorySlug, categories, showFeatured]);
+
   const { data: featuredProducts, isLoading } = useQuery({
-    queryKey: ['featured-menu-items', store?.id],
+    queryKey: ['featured-menu-items', store?.id, selectedCategoryId, showFeatured],
     queryFn: async () => {
       if (!store?.id) return [];
 
-      const { data, error } = await supabase
+      let query = supabase
         .from('menu_items')
         .select('*')
         .eq('store_id', store.id)
         .eq('is_available', true)
-        .eq('is_featured', true)
-        .order('display_order', { ascending: true });
+        .eq('is_featured', true);
 
+      // If a specific category is selected (not "featured" filter), filter by category
+      if (selectedCategoryId && !showFeatured) {
+        query = query.eq('category_id', selectedCategoryId);
+      }
+
+      query = query.order('display_order', { ascending: true });
+
+      const { data, error } = await query;
       if (error) throw error;
       return data;
     },
-    enabled: !!store?.id,
+    enabled: !!store?.id && shouldShowCarousel,
   });
 
   const scrollPrev = useCallback(() => {
@@ -72,7 +121,13 @@ export const FeaturedProducts = () => {
     emblaApi.on('reInit', onSelect);
   }, [emblaApi, onSelect]);
 
-  // Don't render if no featured products
+  // Don't render if:
+  // 1. Shouldn't show carousel (category selected OR featured filter active)
+  // 2. No featured products
+  if (!shouldShowCarousel) {
+    return null;
+  }
+
   if (!isLoading && (!featuredProducts || featuredProducts.length === 0)) {
     return null;
   }

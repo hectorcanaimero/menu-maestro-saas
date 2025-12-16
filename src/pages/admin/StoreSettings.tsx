@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Switch } from '@/components/ui/switch';
 import { BusinessHoursTab } from '@/components/admin/BusinessHoursTab';
 import { PaymentSettingsTab } from '@/components/admin/PaymentSettingsTab';
 import { CurrencyConversionTab } from '@/components/admin/CurrencyConversionTab';
@@ -44,6 +45,8 @@ const storeSettingsSchema = z.object({
   operating_modes: z
     .array(z.enum(['delivery', 'pickup', 'digital_menu']))
     .min(1, 'Selecciona al menos un modo de funcionamiento'),
+  is_food_business: z.boolean().optional(),
+  catalog_mode: z.boolean().optional(),
 });
 
 type StoreSettingsForm = z.infer<typeof storeSettingsSchema>;
@@ -65,6 +68,8 @@ const StoreSettings = () => {
     resolver: zodResolver(storeSettingsSchema),
     defaultValues: {
       operating_modes: [],
+      is_food_business: true,
+      catalog_mode: false,
     },
   });
 
@@ -93,6 +98,8 @@ const StoreSettings = () => {
       setValue('email', store.email || '');
       setValue('currency', (store as any).currency || 'USD');
       setValue('operating_modes', store.operating_modes || ['delivery']);
+      setValue('is_food_business', (store as any).is_food_business ?? true);
+      setValue('catalog_mode', (store as any).catalog_mode ?? false);
     }
   }, [store, setValue]);
 
@@ -109,6 +116,8 @@ const StoreSettings = () => {
           email: data.email,
           currency: data.currency,
           operating_modes: data.operating_modes,
+          is_food_business: data.is_food_business,
+          catalog_mode: data.catalog_mode,
           updated_at: new Date().toISOString(),
         })
         .eq('id', store.id);
@@ -297,6 +306,44 @@ const StoreSettings = () => {
                     {errors.operating_modes && (
                       <p className="text-xs md:text-sm text-destructive">{errors.operating_modes.message}</p>
                     )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="is_food_business" className="text-sm md:text-base">
+                      Tipo de Empresa
+                    </Label>
+                    <div className="flex items-center justify-between p-4 border rounded-lg bg-muted/50">
+                      <div className="flex-1">
+                        <p className="text-sm font-medium">Negocio de Comida</p>
+                        <p className="text-xs text-muted-foreground">
+                          Activa esta opción si tu negocio es de comida. Esto mostrará características específicas como el menú de cocina.
+                        </p>
+                      </div>
+                      <Switch
+                        id="is_food_business"
+                        checked={watch('is_food_business') ?? true}
+                        onCheckedChange={(checked) => setValue('is_food_business', checked)}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="catalog_mode" className="text-sm md:text-base">
+                      Modo Catálogo
+                    </Label>
+                    <div className="flex items-center justify-between p-4 border rounded-lg bg-muted/50">
+                      <div className="flex-1">
+                        <p className="text-sm font-medium">Solo Visualización de Productos</p>
+                        <p className="text-xs text-muted-foreground">
+                          Muestra tus productos como catálogo sin funcionalidad de compra. Incluye botón de WhatsApp para consultas. Gratuito con límite de visitas mensuales.
+                        </p>
+                      </div>
+                      <Switch
+                        id="catalog_mode"
+                        checked={watch('catalog_mode') ?? false}
+                        onCheckedChange={(checked) => setValue('catalog_mode', checked)}
+                      />
+                    </div>
                   </div>
 
                   <Button

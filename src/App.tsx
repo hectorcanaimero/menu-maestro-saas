@@ -26,6 +26,7 @@ const ConfirmOrder = lazy(() => import("./pages/ConfirmOrder"));
 const MyOrders = lazy(() => import("./pages/MyOrders"));
 const TrackOrder = lazy(() => import("./pages/TrackOrder"));
 const ProductDetail = lazy(() => import("./pages/ProductDetail"));
+const DebugAuth = lazy(() => import("./pages/DebugAuth"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 // Admin routes - lazy load (heavy components)
@@ -53,6 +54,7 @@ const StoresManager = lazy(() => import("./pages/platform-admin/StoresManager"))
 const PlansManager = lazy(() => import("./pages/platform-admin/PlansManager"));
 const AdminsManager = lazy(() => import("./pages/platform-admin/AdminsManager"));
 const PostHogAnalytics = lazy(() => import("./pages/platform-admin/PostHogAnalytics"));
+const CatalogViewsManager = lazy(() => import("./pages/platform-admin/CatalogViewsManager"));
 import { PlatformAdminGuard } from "./components/platform-admin/PlatformAdminGuard";
 
 // Driver routes - PWA for delivery drivers
@@ -375,6 +377,14 @@ const AppContent = () => {
                       }
                     />
                     <Route
+                      path="catalogs"
+                      element={
+                        <SectionErrorBoundary>
+                          <CatalogViewsManager />
+                        </SectionErrorBoundary>
+                      }
+                    />
+                    <Route
                       path="plans"
                       element={
                         <SectionErrorBoundary>
@@ -425,6 +435,18 @@ const AppContent = () => {
                       </SectionErrorBoundary>
                     }
                   />
+
+                  {/* Debug route - only available in development */}
+                  {import.meta.env.DEV && (
+                    <Route
+                      path="/debug-auth"
+                      element={
+                        <SectionErrorBoundary>
+                          <DebugAuth />
+                        </SectionErrorBoundary>
+                      }
+                    />
+                  )}
 
                   {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                   <Route path="*" element={<NotFound />} />
