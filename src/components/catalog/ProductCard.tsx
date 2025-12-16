@@ -16,6 +16,7 @@ import { DualPrice } from '@/components/catalog/DualPrice';
 interface ProductCardProps {
   id: string;
   name: string;
+  catalog_mode: boolean;
   price: number;
   image_url: string | null;
   description?: string | null;
@@ -62,7 +63,7 @@ export const ProductCard = ({
 
     setShowExtrasDialog(true);
   };
-
+  console.log('catalog_mode', store?.catalog_mode);
   const handleQuickView = (e: React.MouseEvent) => {
     e.stopPropagation();
     const products = allProducts.length > 0 ? allProducts : [{ id, name, price, image_url, description, categoryId }];
@@ -178,15 +179,17 @@ export const ProductCard = ({
           </div>
 
           {/* Floating Add Button - Touch-friendly on mobile */}
-          <Button
-            size="icon"
-            onClick={() => navigate(`/products/${id}`)}
-            // onClick={handleAddToCart}
-            className="absolute bottom-2 right-2 sm:bottom-3 sm:right-3 h-9 w-9 sm:h-9 sm:w-9 rounded-full shadow-md bg-primary hover:bg-primary/90 z-10"
-            aria-label={`Agregar ${name} al carrito`}
-          >
-            <ShoppingCart className="h-5 w-5" />
-          </Button>
+          {!store?.catalog_mode ? (
+            <Button
+              size="icon"
+              onClick={() => navigate(`/products/${id}`)}
+              // onClick={handleAddToCart}
+              className="absolute bottom-2 right-2 sm:bottom-3 sm:right-3 h-9 w-9 sm:h-9 sm:w-9 rounded-full shadow-md bg-primary hover:bg-primary/90 z-10"
+              aria-label={`Agregar ${name} al carrito`}
+            >
+              <ShoppingCart className="h-5 w-5" />
+            </Button>
+          ) : null}
         </div>
       </Card>
     </>

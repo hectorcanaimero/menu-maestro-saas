@@ -47,10 +47,7 @@ export const ProductGrid = () => {
     queryKey: ['categories', store?.id],
     queryFn: async () => {
       if (!store?.id) return [];
-      const { data, error } = await supabase
-        .from('categories')
-        .select('*')
-        .eq('store_id', store.id);
+      const { data, error } = await supabase.from('categories').select('*').eq('store_id', store.id);
       if (error) throw error;
       return data;
     },
@@ -60,7 +57,7 @@ export const ProductGrid = () => {
   // Get category ID from slug
   const categoryFilter = useMemo(() => {
     if (!categorySlug || !categories) return null;
-    const category = categories.find(cat => createSlug(cat.name) === categorySlug);
+    const category = categories.find((cat) => createSlug(cat.name) === categorySlug);
     return category?.id || null;
   }, [categorySlug, categories]);
 

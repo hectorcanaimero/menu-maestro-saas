@@ -3,26 +3,16 @@ import { Phone, Mail, MapPin } from 'lucide-react';
 
 export const Footer = () => {
   const { store } = useStore();
-
   if (!store) return null;
 
   return (
-    <footer className="bg-card border-t mt-8 md:mt-12">
+    <footer className="bg-card border-t mt-8 md:mt-12 spac-y-12">
       <div className="container mx-auto p-4 md:px-6 md:py-10">
         {/* Main Footer Content */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
-          {/* Store Info Section */}
-          <div className="space-y-3">
-            <h3 className="font-bold text-lg md:text-xl">{store.name}</h3>
-            {store.description && (
-              <p className="text-sm md:text-base text-muted-foreground leading-relaxed">{store.description}</p>
-            )}
-          </div>
-
           {/* Contact Section */}
           <div className="space-y-3">
-            <h3 className="font-bold text-lg md:text-xl">Contacto</h3>
-            <div className="space-y-3">
+            <div className="flex justify-center gap-4">
               {store.phone && (
                 <a
                   href={`tel:${store.phone}`}
@@ -31,7 +21,6 @@ export const Footer = () => {
                   <div className="flex items-center justify-center w-10 h-10 md:w-8 md:h-8 rounded-full bg-muted group-hover:bg-muted/80 transition-colors flex-shrink-0">
                     <Phone className="w-5 h-5 md:w-4 md:h-4" />
                   </div>
-                  <span className="text-sm md:text-base break-all">{store.phone}</span>
                 </a>
               )}
               {store.email && (
@@ -42,7 +31,6 @@ export const Footer = () => {
                   <div className="flex items-center justify-center w-10 h-10 md:w-8 md:h-8 rounded-full bg-muted group-hover:bg-muted/80 transition-colors flex-shrink-0">
                     <Mail className="w-5 h-5 md:w-4 md:h-4" />
                   </div>
-                  <span className="text-sm md:text-base break-all">{store.email}</span>
                 </a>
               )}
               {store.address && (
@@ -60,15 +48,15 @@ export const Footer = () => {
         {/* Footer Bottom */}
         <div className="border-t mt-4 md:mt-6 pt-6 md:pt-8 text-center">
           <p className="text-sm md:text-base text-muted-foreground">
-            © {new Date().getFullYear()} {store.name}. Todos los derechos reservados.
+            © {new Date().getFullYear()}. Todos los derechos reservados.
           </p>
           <p className="mt-2 text-sm md:text-base text-muted-foreground">
-            Powered by{' '}
+            Menu generato por{' '}
             <a
               href="https://www.pideai.com"
               target="_blank"
               rel="noopener noreferrer"
-              className="underline hover:text-foreground"
+              className="underline hover:text-foreground text-primary"
             >
               PideAI
             </a>

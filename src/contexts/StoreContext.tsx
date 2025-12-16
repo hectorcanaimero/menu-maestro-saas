@@ -7,6 +7,8 @@ import * as Sentry from '@sentry/react';
 
 export interface Store {
   id: string;
+  catalog_mode: boolean;
+  is_food_business: boolean;
   subdomain: string;
   name: string;
   owner_id: string;
@@ -179,7 +181,7 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
       setIsStoreOwner(result.is_owner || false);
 
       // Set Sentry context for multi-tenant tracking
-      Sentry.setContext("store", {
+      Sentry.setContext('store', {
         store_id: storeData.id,
         store_name: storeData.name,
         subdomain: storeData.subdomain,
@@ -204,12 +206,12 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
     // CRITICAL: If user is authenticated but NOT the owner, sign them out
     // This prevents users from accessing admin panels of stores they don't own
     if (session?.user && !isOwner) {
-      console.warn('[StoreContext] User is authenticated but not the owner of this store. Checking if they own a different store...');
+      console.warn(
+        '[StoreContext] User is authenticated but not the owner of this store. Checking if they own a different store...',
+      );
 
       // Check if user owns a different store
-      const { data: userStore } = await supabase
-        .rpc('get_user_owned_store')
-        .single();
+      const { data: userStore } = await supabase.rpc('get_user_owned_store').single();
 
       if (userStore && userStore.subdomain !== storeData.subdomain) {
         // User owns a different store - sign them out and show message
@@ -237,8 +239,8 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
       });
 
       // Set additional tags
-      Sentry.setTag("is_store_owner", isOwner);
-      Sentry.setTag("user_role", isOwner ? "owner" : "customer");
+      Sentry.setTag('is_store_owner', isOwner);
+      Sentry.setTag('user_role', isOwner ? 'owner' : 'customer');
     }
 
     // Identify user in PostHog after checking ownership
@@ -274,12 +276,12 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
         }
 
         if (import.meta.env.DEV) {
-          console.log('[PostHog] User identified:', {
-            user_id: session.user.id,
-            email: '***@***.com', // Don't log email in console for security
-            store_id: storeData.id,
-            is_store_owner: isOwner,
-          });
+          // console.log('[PostHog] User identified:', {
+          //   user_id: session.user.id,
+          //   email: '***@***.com', // Don't log email in console for security
+          //   store_id: storeData.id,
+          //   is_store_owner: isOwner,
+          // });
         }
       } else {
         // Reset identification when user logs out

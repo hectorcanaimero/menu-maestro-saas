@@ -36,7 +36,7 @@ import { useStore } from '@/contexts/StoreContext';
 const navItems = [
   { path: '/admin', label: 'Dashboard', icon: LayoutDashboard },
   { path: '/admin/kitchen', label: 'Cocina', icon: ChefHat, requiresFoodBusiness: true },
-  { path: '/admin/orders', label: 'Pedidos', icon: ShoppingCart },
+  { path: '/admin/orders', label: 'Pedidos', icon: ShoppingCart, requiresCatalog: true },
   { path: '/admin/categories', label: 'Categorías', icon: FolderTree },
   { path: '/admin/menu-items', label: 'Productos', icon: Box },
   { path: '/admin/customers', label: 'Clientes', icon: Users },
@@ -63,12 +63,16 @@ export function AppSidebar() {
   const { data: hasDeliveryModule } = useModuleAccess('delivery');
 
   // Check if the store is a food business
-  const isFoodBusiness = (store as any)?.is_food_business ?? true;
+  const isFoodBusiness = store?.is_food_business ?? true;
+  const isCatalogMode = store?.catalog_mode ?? false;
 
   // Filter navigation items based on food business type
   const filteredNavItems = navItems.filter((item) => {
     if (item.requiresFoodBusiness) {
-      return isFoodBusiness;
+      return isFoodBusiness ? true : isCatalogMode ? false : true;
+    }
+    if (item.requiresCatalog) {
+      return !isCatalogMode;
     }
     return true;
   });
