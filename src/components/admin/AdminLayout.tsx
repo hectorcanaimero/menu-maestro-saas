@@ -4,10 +4,11 @@ import { supabase } from '@/integrations/supabase/client';
 import { useStore } from '@/contexts/StoreContext';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
-import { LogOut, ChefHat, Store as StoreIcon } from 'lucide-react';
+import { LogOut, Store as StoreIcon } from 'lucide-react';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { AppSidebar } from './AppSidebar';
 import { useOrderNotifications } from '@/hooks/useOrderNotifications';
+import logo from '@/assets/logo.svg';
 
 interface AdminLayoutProps {
   children: ReactNode;
@@ -76,11 +77,10 @@ const AdminLayout = ({ children, userEmail = '' }: AdminLayoutProps) => {
             <div className="px-3 sm:px-6 py-3 sm:py-4 flex justify-between items-center gap-2">
               <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
                 <SidebarTrigger />
-                <ChefHat className="w-10 h-10 sm:w-8 sm:h-8 text-primary flex-shrink-0" />
+                <img src={logo} alt="PideAI" className="w-10 h-10 sm:w-14 sm:h-14 flex-shrink-0" />
                 <div className="min-w-0 flex-1">
                   <h1 className="text-sm sm:text-xl font-bold truncate">Panel Admin</h1>
                   <p className="text-xs sm:text-sm text-muted-foreground truncate">{store.name}</p>
-                  <p className="text-xs text-muted-foreground hidden sm:block truncate">{userEmail}</p>
                 </div>
               </div>
 
@@ -96,7 +96,7 @@ const AdminLayout = ({ children, userEmail = '' }: AdminLayoutProps) => {
             </div>
           </header>
 
-          <main className="flex-1 p-3 sm:p-6 overflow-x-hidden max-h-[calc(100vh-64px)]">{children}</main>
+          <main className="flex-1 p-3 sm:p-6 overflow-x-hidden overflow-y-auto">{children}</main>
         </div>
       </div>
     </SidebarProvider>

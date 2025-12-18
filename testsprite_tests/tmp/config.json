@@ -1,0 +1,18 @@
+{
+  "status": "commited",
+  "type": "frontend",
+  "scope": "codebase",
+  "localEndpoint": "http://localhost:8080",
+  "loginUser": "knaimero@gmail.com",
+  "loginPassword": "Admin123",
+  "executionArgs": {
+    "projectName": "pideai",
+    "projectPath": "/Users/al3jandro/project/pideai/app",
+    "testIds": [],
+    "additionalInstruction": "",
+    "envs": {
+      "API_KEY": "sk-user-SCkmbTqyCs3qgCOW1fUhYlXRnw6C2Te68I0yuM3R_sMzbG1N5jDj0hvEmMfRFR1yXYT59Lp_hPvnHjzjeTBr4i7RLz-JyFOHZYHi6rMm6A4IJbmMzGPzFKZa3aRVlHg0juo"
+    }
+  },
+  "proxy": "http://310005cf-6a8d-4e85-82a1-685843533b2d:7kBucVpyvUdd8FETaHYeFXWUzLmJkEm9@tun.testsprite.com:8080"
+}

@@ -4,6 +4,8 @@ import AdminLayout from '@/components/admin/AdminLayout';
 import DashboardStats from '@/components/admin/DashboardStats';
 import { StoreQRCode } from '@/components/admin/StoreQRCode';
 import { CatalogViewsCard } from '@/components/admin/CatalogViewsCard';
+import { PostHogCatalogViewsCard } from '@/components/admin/PostHogCatalogViewsCard';
+import { AbandonedCartCard } from '@/components/admin/AbandonedCartCard';
 import { H2, Body } from '@/components/ui/typography';
 import { useChatwoot } from '@/hooks/useChatwoot';
 import { useStore } from '@/contexts/StoreContext';
@@ -58,12 +60,13 @@ const AdminDashboard = () => {
 
   return (
     <AdminLayout userEmail={userEmail}>
-      <div className="space-y-4 sm:space-y-6 max-w-7xl">
+      <div className="space-y-4 sm:space-y-6">
         <div>
           <H2 className="text-xl sm:text-2xl">Dashboard</H2>
           <Body className="text-muted-foreground text-sm sm:text-base">Bienvenido al panel de administración</Body>
         </div>
-        <CatalogViewsCard />
+
+        {/* General Stats */}
         <DashboardStats />
       </div>
     </AdminLayout>

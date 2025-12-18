@@ -1,46 +1,56 @@
-import { Eye, TrendingUp, AlertTriangle, Infinity, RefreshCw } from 'lucide-react';
+import { Eye, TrendingUp, AlertTriangle, Infinity, RefreshCw, BarChart3 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
-import { useViewLimitStatus } from '@/hooks/useViewLimitStatus';
+import { usePostHogViewLimitStatus } from '@/hooks/usePostHogViewLimitStatus';
+import { isPostHogAPIConfigured } from '@/lib/posthog-api';
 import { useStore } from '@/contexts/StoreContext';
 import { Badge } from '@/components/ui/badge';
 import { useQueryClient } from '@tanstack/react-query';
 
 /**
  * Card component to display catalog view usage in admin dashboard
- * Shows current views, limit, and percentage used
+ * Shows current views from PostHog and limits from subscription plan
+ * Uses PostHog for accurate view tracking instead of Supabase
  */
 export function CatalogViewsCard() {
   const { store } = useStore();
   const queryClient = useQueryClient();
 
   // Check if catalog mode is enabled
-  const isCatalogMode = (store as any)?.catalog_mode ?? false;
+  const isCatalogMode = store?.catalog_mode ?? false;
 
-  const { data: viewStatus, isLoading, refetch } = useViewLimitStatus(
+  // Use PostHog-based view limit status if API is configured
+  const usePostHog = isPostHogAPIConfigured();
+
+  const {
+    data: viewStatus,
+    isLoading,
+    refetch,
+  } = usePostHogViewLimitStatus(
     store?.id,
-    isCatalogMode // Only fetch if catalog mode is enabled
+    true, // Only fetch if catalog mode is enabled and PostHog is configured
   );
 
   // Don't show if catalog mode is disabled
-  if (!isCatalogMode) {
-    return null;
-  }
+  // if (!isCatalogMode) {
+  //   return null;
+  // }
 
   const handleRefresh = async () => {
     await refetch();
-    // Also invalidate view limit query
-    queryClient.invalidateQueries({ queryKey: ['view-limit-status', store?.id] });
+    // Also invalidate related queries
+    queryClient.invalidateQueries({ queryKey: ['posthog-view-limit-status', store?.id] });
+    queryClient.invalidateQueries({ queryKey: ['posthog-catalog-views', store?.id] });
   };
 
   if (isLoading) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Eye className="h-5 w-5" />
+          <CardTitle className="text-sm font-medium">
             Vistas de Catálogo
+            <Eye className="h-4 w-4 text-muted-foreground" />
           </CardTitle>
           <CardDescription>Cargando estadísticas...</CardDescription>
         </CardHeader>
@@ -101,24 +111,11 @@ export function CatalogViewsCard() {
 
   return (
     <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <div>
-            <CardTitle className="flex items-center gap-2">
-              <Eye className="h-5 w-5" />
-              Vistas de Catálogo
-            </CardTitle>
-            <CardDescription>Consumo del mes actual</CardDescription>
-          </div>
-          <div className="flex items-center gap-2">
-            {getStatusBadge()}
-            <Button variant="ghost" size="icon" onClick={handleRefresh}>
-              <RefreshCw className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <CardTitle className="text-sm font-medium">Vistas de Catálogo</CardTitle>
+        <Eye className="h-4 w-4 text-muted-foreground" />
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent>
         {/* View Count */}
         <div className="flex items-center justify-between">
           <div>
@@ -141,13 +138,7 @@ export function CatalogViewsCard() {
             <Progress
               value={Math.min(percentage, 100)}
               className="h-2"
-              indicatorClassName={
-                exceeded
-                  ? 'bg-red-600'
-                  : percentage >= 80
-                  ? 'bg-yellow-600'
-                  : 'bg-green-600'
-              }
+              indicatorClassName={exceeded ? 'bg-red-600' : percentage >= 80 ? 'bg-yellow-600' : 'bg-green-600'}
             />
             <div className="flex justify-between text-xs text-muted-foreground">
               <span>0</span>
@@ -159,9 +150,7 @@ export function CatalogViewsCard() {
         {/* Warning Messages */}
         {exceeded && !isUnlimited && (
           <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-            <p className="text-sm text-red-800 font-medium">
-              ⚠️ Has excedido el límite de vistas gratuitas
-            </p>
+            <p className="text-sm text-red-800 font-medium">⚠️ Has excedido el límite de vistas gratuitas</p>
             <p className="text-xs text-red-600 mt-1">
               Actualiza tu plan para continuar mostrando tu catálogo sin restricciones
             </p>
@@ -170,9 +159,7 @@ export function CatalogViewsCard() {
 
         {percentage >= 80 && !exceeded && !isUnlimited && (
           <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-            <p className="text-sm text-yellow-800 font-medium">
-              ⚠️ Estás cerca del límite de vistas
-            </p>
+            <p className="text-sm text-yellow-800 font-medium">⚠️ Estás cerca del límite de vistas</p>
             <p className="text-xs text-yellow-600 mt-1">
               Considera actualizar tu plan para evitar interrupciones en tu catálogo
             </p>

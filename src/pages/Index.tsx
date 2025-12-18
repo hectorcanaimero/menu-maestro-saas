@@ -13,7 +13,8 @@ import { FloatingCartButton } from '@/components/cart/FloatingCartButton';
 import { FloatingWhatsAppButton } from '@/components/catalog/FloatingWhatsAppButton';
 import { CatalogLimitBanner } from '@/components/catalog/CatalogLimitBanner';
 import { CatalogBlockedOverlay } from '@/components/catalog/CatalogBlockedOverlay';
-import { useViewLimitStatus } from '@/hooks/useViewLimitStatus';
+import { usePostHogViewLimitStatus } from '@/hooks/usePostHogViewLimitStatus';
+import { isPostHogAPIConfigured } from '@/lib/posthog-api';
 import { isMainDomain } from '@/lib/subdomain-validation';
 import { lazy, Suspense, useEffect } from 'react';
 import posthog from 'posthog-js';
@@ -30,8 +31,14 @@ const Index = () => {
   // Check if catalog mode is enabled
   const isCatalogMode = (store as any)?.catalog_mode ?? false;
 
+  // Use PostHog for view limits if configured
+  const usePostHog = isPostHogAPIConfigured();
+
   // Get view limit status (only when catalog mode is enabled)
-  const { data: viewLimitStatus } = useViewLimitStatus(store?.id, isCatalogMode);
+  const { data: viewLimitStatus } = usePostHogViewLimitStatus(
+    store?.id,
+    isCatalogMode && usePostHog
+  );
 
   // Track catalog page views when in catalog mode
   useEffect(() => {

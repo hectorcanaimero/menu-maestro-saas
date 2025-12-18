@@ -4,6 +4,9 @@ import { useStore } from '@/contexts/StoreContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ShoppingCart, DollarSign, TrendingUp } from 'lucide-react';
 import { StoreQRCode } from './StoreQRCode';
+import { PostHogCatalogViewsCard } from './PostHogCatalogViewsCard';
+import { AbandonedCartCard } from './AbandonedCartCard';
+import { CatalogViewsCard } from './CatalogViewsCard';
 
 interface Stats {
   totalOrders: number;
@@ -109,7 +112,10 @@ const DashboardStats = () => {
 
   return (
     <div className="space-y-8 sm:space-y-6 mb-6 sm:mb-8">
-      <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+      <PostHogCatalogViewsCard />
+      <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+        {/* Catalog Views Limit Card */}
+        <CatalogViewsCard />
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Pedidos</CardTitle>
@@ -143,7 +149,7 @@ const DashboardStats = () => {
           </CardContent>
         </Card>
       </div>
-
+      <AbandonedCartCard />
       <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-2">
         {stats.topProducts.length > 0 && (
           <Card>

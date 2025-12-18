@@ -1,0 +1,589 @@
+[
+  {
+    "id": "TC001",
+    "title": "Subdomain Routing Validity",
+    "description": "Verify that each store is uniquely identified and accessible via its functional subdomain and that invalid subdomains return a 404 error.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to a known valid store subdomain URL"
+      },
+      {
+        "type": "assertion",
+        "description": "Check that the store catalog and brand information load correctly"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to an invalid/nonexistent subdomain URL"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the system returns a 404 page with appropriate message"
+      }
+    ]
+  },
+  {
+    "id": "TC002",
+    "title": "Store Data Isolation via RLS",
+    "description": "Confirm store data is properly isolated and secured using row-level security policies so that stores cannot access others' data.",
+    "category": "security",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Log in as store owner A and attempt to query or access store B's data via backend endpoints or UI"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify access is denied and no data from store B is visible"
+      },
+      {
+        "type": "action",
+        "description": "Repeat the test with store B accessing store A data"
+      },
+      {
+        "type": "assertion",
+        "description": "Confirm similar data isolation behavior"
+      }
+    ]
+  },
+  {
+    "id": "TC003",
+    "title": "Customer Browsing and Catalog Viewing",
+    "description": "Ensure customers can browse the menu catalog with categories and view product details accurately.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Access the store via valid subdomain"
+      },
+      {
+        "type": "action",
+        "description": "Browse product categories from the catalog page"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify correct display of categories and corresponding products"
+      },
+      {
+        "type": "action",
+        "description": "Click on a product to access the product detail page"
+      },
+      {
+        "type": "assertion",
+        "description": "Check that detailed product info, images, prices, and extras are shown correctly"
+      }
+    ]
+  },
+  {
+    "id": "TC004",
+    "title": "Shopping Cart Persistence and Product Extras",
+    "description": "Verify that adding products with customizable extras to the cart persists correctly in localStorage and maintains uniqueness per store session.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Add a product with selected extras to the shopping cart"
+      },
+      {
+        "type": "assertion",
+        "description": "Check that the cart reflects proper product and extras combination"
+      },
+      {
+        "type": "action",
+        "description": "Reload or revisit the store page within the same session"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the cart contents persist accurately from localStorage"
+      },
+      {
+        "type": "action",
+        "description": "Add the same product with different extras to the cart"
+      },
+      {
+        "type": "assertion",
+        "description": "Ensure the cart distinguishes product-extras combos as unique entries"
+      }
+    ]
+  },
+  {
+    "id": "TC005",
+    "title": "Checkout Flow with Multi-Step Validation and Coupon Application",
+    "description": "Test the full checkout flow including customer info input, order mode selection (delivery or pickup), multi-step validation, coupon code application, and order creation.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Proceed to checkout with items in cart"
+      },
+      {
+        "type": "action",
+        "description": "Fill in valid customer contact and delivery/pickup information"
+      },
+      {
+        "type": "assertion",
+        "description": "Check for realtime validation feedback on all customer inputs"
+      },
+      {
+        "type": "action",
+        "description": "Apply a valid coupon code"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify coupon discount reflects correctly in order summary"
+      },
+      {
+        "type": "action",
+        "description": "Attempt to apply an invalid or expired coupon code"
+      },
+      {
+        "type": "assertion",
+        "description": "Confirm an appropriate error message is shown and discount is not applied"
+      },
+      {
+        "type": "action",
+        "description": "Complete the checkout by submitting the order"
+      },
+      {
+        "type": "assertion",
+        "description": "Ensure order is successfully created and confirmation is shown"
+      }
+    ]
+  },
+  {
+    "id": "TC006",
+    "title": "Real-time Order Notifications and Status Updates",
+    "description": "Verify that store owners receive real-time order notifications with audio alerts and that order status updates propagate correctly using Supabase Realtime.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Place an order as a customer"
+      },
+      {
+        "type": "assertion",
+        "description": "Check that a real-time notification is delivered to the store owner's admin interface with audio alert"
+      },
+      {
+        "type": "action",
+        "description": "Update the order status (e.g., from pending to preparing)"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify that order status updates in real-time on customer and admin UI"
+      }
+    ]
+  },
+  {
+    "id": "TC007",
+    "title": "Delivery Zones Configuration and Driver GPS Tracking",
+    "description": "Confirm that delivery zones are configured correctly with accurate pricing and that driver GPS tracking updates delivery statuses in real-time.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Configure multiple delivery zones with distinct pricing"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify that delivery prices during checkout reflect the configured zones correctly"
+      },
+      {
+        "type": "action",
+        "description": "Assign a driver to a delivery order"
+      },
+      {
+        "type": "assertion",
+        "description": "Confirm that driver GPS location updates are visible in real-time in the admin dashboard"
+      },
+      {
+        "type": "action",
+        "description": "Have the driver update delivery status and upload photo and signature proof via the PWA"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify all delivery proofs meet file size/format requirements and reflect correctly in order records"
+      }
+    ]
+  },
+  {
+    "id": "TC008",
+    "title": "WhatsApp Notification Integration",
+    "description": "Validate that WhatsApp message templates generate correct notifications with dynamic variables and send order and promotional messages successfully.",
+    "category": "integration",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Place an order triggering WhatsApp notification"
+      },
+      {
+        "type": "assertion",
+        "description": "Check that the order confirmation message is generated with correct dynamic details and delivered via WhatsApp"
+      },
+      {
+        "type": "action",
+        "description": "Create and send a promotional WhatsApp campaign using templates"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify all dynamic template variables populate correctly and messages send to target recipients"
+      }
+    ]
+  },
+  {
+    "id": "TC009",
+    "title": "Subscription and Feature Gating Enforcement",
+    "description": "Test subscription plans enforce feature limitations, monitor usage, and prompt upgrades when thresholds are reached.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Select and activate a subscription plan with defined feature limits"
+      },
+      {
+        "type": "action",
+        "description": "Use features up to the plan limit (e.g., maximum number of coupons or AI credits)"
+      },
+      {
+        "type": "assertion",
+        "description": "Confirm that usage is tracked and displayed accurately"
+      },
+      {
+        "type": "action",
+        "description": "Attempt to use features beyond subscription limits"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the system prompts an upgrade or restricts functionality"
+      }
+    ]
+  },
+  {
+    "id": "TC010",
+    "title": "User Authentication with Email Verification and Password Reset",
+    "description": "Ensure the authentication system supports secure sign-up with email verification and password reset workflows.",
+    "category": "security",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Register a new user account with valid email and password"
+      },
+      {
+        "type": "assertion",
+        "description": "Receive and verify email verification link and activate account successfully"
+      },
+      {
+        "type": "action",
+        "description": "Attempt login prior to email verification"
+      },
+      {
+        "type": "assertion",
+        "description": "Check login is denied with appropriate message"
+      },
+      {
+        "type": "action",
+        "description": "Use password reset function with registered email"
+      },
+      {
+        "type": "assertion",
+        "description": "Receive reset email and successfully update password using the reset link"
+      }
+    ]
+  },
+  {
+    "id": "TC011",
+    "title": "Analytics Event Tracking and Reporting",
+    "description": "Verify that key events such as funnel steps, abandoned cart, sales and catalog views are tracked by PostHog and reflected in analytics dashboards.",
+    "category": "functional",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Perform multiple order-related actions like browsing, adding to cart, checkout initiation, and order completion"
+      },
+      {
+        "type": "assertion",
+        "description": "Confirm corresponding analytics events are recorded in PostHog with accurate data"
+      },
+      {
+        "type": "action",
+        "description": "Access the admin analytics dashboard"
+      },
+      {
+        "type": "assertion",
+        "description": "Ensure charts and reports display up-to-date and correct metrics reflecting the tracked events"
+      }
+    ]
+  },
+  {
+    "id": "TC012",
+    "title": "Driver PWA Authentication and Delivery Workflow",
+    "description": "Validate that drivers can authenticate, toggle availability, receive and update delivery assignments, and complete deliveries with proof capture.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Login to Driver PWA with valid credentials"
+      },
+      {
+        "type": "assertion",
+        "description": "Check successful authentication and dashboard access"
+      },
+      {
+        "type": "action",
+        "description": "Toggle driver delivery availability status"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify status updates reflect correctly in system"
+      },
+      {
+        "type": "action",
+        "description": "Receive a delivery assignment"
+      },
+      {
+        "type": "assertion",
+        "description": "Confirm assignment details are shown in real-time"
+      },
+      {
+        "type": "action",
+        "description": "Update the delivery status through assigned stages (pickup, en route, delivered)"
+      },
+      {
+        "type": "action",
+        "description": "Capture photo and signature proof upon delivery completion"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify proof images upload rules and associate correctly to the delivery record"
+      }
+    ]
+  },
+  {
+    "id": "TC013",
+    "title": "Payment Methods and Payment Proof Upload",
+    "description": "Test multiple payment options are offered including bank transfer with payment proof upload, and ensure validations on uploaded files.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Select each available payment method during checkout"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify payment method options and UI behave as expected"
+      },
+      {
+        "type": "action",
+        "description": "For bank transfer payment, upload payment proof files"
+      },
+      {
+        "type": "assertion",
+        "description": "Confirm uploaded proof files meet size and format requirements otherwise show error"
+      },
+      {
+        "type": "action",
+        "description": "Submit payment information"
+      },
+      {
+        "type": "assertion",
+        "description": "Validate payment data is stored and reflected in order status"
+      }
+    ]
+  },
+  {
+    "id": "TC014",
+    "title": "Localization Support for Spanish Language and Dual Currency",
+    "description": "Verify UI and price displays switch correctly for Spanish translations and dual currency with automatic and manual exchange rate updates.",
+    "category": "functional",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Select Spanish language option in settings"
+      },
+      {
+        "type": "assertion",
+        "description": "Check that all UI text appears correctly in Spanish"
+      },
+      {
+        "type": "action",
+        "description": "Enable dual currency display and observe prices"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify prices show both original currency and Venezuelan Bolívar (VES) with correct conversion"
+      },
+      {
+        "type": "action",
+        "description": "Trigger automatic exchange rate update"
+      },
+      {
+        "type": "assertion",
+        "description": "Confirm exchange rate is updated and prices recalculated"
+      },
+      {
+        "type": "action",
+        "description": "Manually override exchange rate in admin settings"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify manual rate applies and reflects in pricing"
+      }
+    ]
+  },
+  {
+    "id": "TC015",
+    "title": "Live Chat Support Integration via Chatwoot",
+    "description": "Test that live chat embedded in the admin interface connects successfully, allows message sending and receiving.",
+    "category": "integration",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to admin dashboard with Chatwoot embedded"
+      },
+      {
+        "type": "assertion",
+        "description": "Ensure live chat widget loads correctly"
+      },
+      {
+        "type": "action",
+        "description": "Send a message through live chat"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify message is received and echoed back by support or test accounts"
+      }
+    ]
+  },
+  {
+    "id": "TC016",
+    "title": "AI-powered Photo Enhancement with Credit Deduction",
+    "description": "Ensure the AI photo enhancement feature enhances product photos while deducting credits from user subscription and prevents usage if credits are insufficient.",
+    "category": "functional",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Upload a product photo and invoke AI enhancement"
+      },
+      {
+        "type": "assertion",
+        "description": "Check that photo is enhanced and displayed with improved quality"
+      },
+      {
+        "type": "action",
+        "description": "Verify user AI credit count is decremented by correct amount"
+      },
+      {
+        "type": "action",
+        "description": "Attempt AI enhancement with zero or insufficient credits"
+      },
+      {
+        "type": "assertion",
+        "description": "Confirm the system blocks enhancement and prompts to purchase more credits or upgrade subscription"
+      }
+    ]
+  },
+  {
+    "id": "TC017",
+    "title": "Admin Dashboard Access Control",
+    "description": "Verify that only authenticated store owners can access admin features and panels, and unauthorized access is blocked.",
+    "category": "security",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Attempt to access admin dashboard URL without login"
+      },
+      {
+        "type": "assertion",
+        "description": "Check redirection to login page or access denied message"
+      },
+      {
+        "type": "action",
+        "description": "Login as a store customer or non-owner user"
+      },
+      {
+        "type": "action",
+        "description": "Attempt to access admin dashboard"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify access is forbidden or UI elements are hidden"
+      },
+      {
+        "type": "action",
+        "description": "Login as authenticated store owner"
+      },
+      {
+        "type": "assertion",
+        "description": "Confirm full access to admin features and controls"
+      }
+    ]
+  },
+  {
+    "id": "TC018",
+    "title": "Platform Uptime and Performance Testing",
+    "description": "Check platform uptime is maintained at 99.5% and page load times are under 2 seconds on 3G networks across key pages.",
+    "category": "performance",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Perform automated uptime monitoring over an extended period"
+      },
+      {
+        "type": "assertion",
+        "description": "Ensure uptime percentage is ≥ 99.5%"
+      },
+      {
+        "type": "action",
+        "description": "Simulate 3G network conditions on common user pages (catalog, checkout, order confirmation)"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify page load times remain under 2 seconds"
+      }
+    ]
+  },
+  {
+    "id": "TC019",
+    "title": "Security Standards Compliance for Data Encryption and Privacy",
+    "description": "Validate that all authentication data, personal information, and payment data are secured with encryption and privacy policies are enforced.",
+    "category": "security",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Perform penetration testing on authentication and payment flows"
+      },
+      {
+        "type": "assertion",
+        "description": "Confirm use of HTTPS/TLS encryption and secure storage of sensitive data"
+      },
+      {
+        "type": "action",
+        "description": "Review privacy policy enforcement in data handling and user consent screens"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify policies are presented clearly and followed during data collection"
+      }
+    ]
+  }
+]
