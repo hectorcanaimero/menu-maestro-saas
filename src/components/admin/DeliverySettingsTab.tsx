@@ -11,7 +11,7 @@ import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { toast } from 'sonner';
-import { Plus, Trash2, AlertTriangle, Clock } from 'lucide-react';
+import { Plus, Trash2, AlertTriangle, Clock, Gift, Settings } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -22,6 +22,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { ZoneFreeDeliveryDialog } from './ZoneFreeDeliveryDialog';
 
 const deliverySchema = z.object({
   estimated_delivery_time: z.string()
@@ -40,6 +41,8 @@ const deliverySchema = z.object({
   skip_payment_digital_menu: z.boolean().default(false),
   delivery_price_mode: z.enum(['fixed', 'by_zone']).default('fixed'),
   fixed_delivery_price: z.number().min(0).default(0),
+  free_delivery_enabled: z.boolean().default(false),
+  global_free_delivery_min_amount: z.number().min(0).nullable().optional(),
 });
 
 type DeliveryFormData = z.infer<typeof deliverySchema>;
@@ -49,6 +52,8 @@ interface DeliveryZone {
   zone_name: string;
   delivery_price: number;
   display_order: number | null;
+  free_delivery_enabled: boolean;
+  free_delivery_min_amount: number | null;
 }
 
 interface DeliverySettingsTabProps {
@@ -72,6 +77,8 @@ export const DeliverySettingsTab = ({ storeId, initialData }: DeliverySettingsTa
   const [zoneToDelete, setZoneToDelete] = useState<{ id: string; name: string } | null>(null);
   const [activeOrdersCount, setActiveOrdersCount] = useState(0);
   const [showTimeSuggestions, setShowTimeSuggestions] = useState(false);
+  const [freeDeliveryDialogOpen, setFreeDeliveryDialogOpen] = useState(false);
+  const [selectedZone, setSelectedZone] = useState<DeliveryZone | null>(null);
 
   const {
     register,
@@ -86,11 +93,13 @@ export const DeliverySettingsTab = ({ storeId, initialData }: DeliverySettingsTa
       skip_payment_digital_menu: initialData?.skip_payment_digital_menu || false,
       delivery_price_mode: (initialData?.delivery_price_mode as 'fixed' | 'by_zone') || 'fixed',
       fixed_delivery_price: initialData?.fixed_delivery_price || 0,
+      free_delivery_enabled: initialData?.free_delivery_enabled || false,
+      global_free_delivery_min_amount: initialData?.global_free_delivery_min_amount || null,
     },
   });
 
   const deliveryPriceMode = watch('delivery_price_mode');
-  const skipPaymentDigitalMenu = watch('skip_payment_digital_menu');
+  const freeDeliveryEnabled = watch('free_delivery_enabled');
 
   useEffect(() => {
     if (deliveryPriceMode === 'by_zone') {
@@ -124,6 +133,8 @@ export const DeliverySettingsTab = ({ storeId, initialData }: DeliverySettingsTa
           skip_payment_digital_menu: data.skip_payment_digital_menu,
           delivery_price_mode: data.delivery_price_mode,
           fixed_delivery_price: data.fixed_delivery_price,
+          free_delivery_enabled: data.free_delivery_enabled,
+          global_free_delivery_min_amount: data.global_free_delivery_min_amount,
         })
         .eq('id', storeId);
 
@@ -225,6 +236,11 @@ export const DeliverySettingsTab = ({ storeId, initialData }: DeliverySettingsTa
       setZoneToDelete(null);
       setActiveOrdersCount(0);
     }
+  };
+
+  const handleConfigureZoneFreeDelivery = (zone: DeliveryZone) => {
+    setSelectedZone(zone);
+    setFreeDeliveryDialogOpen(true);
   };
 
   return (
@@ -356,6 +372,7 @@ export const DeliverySettingsTab = ({ storeId, initialData }: DeliverySettingsTa
                         <TableRow>
                           <TableHead className="text-xs md:text-sm">Barrio</TableHead>
                           <TableHead className="text-xs md:text-sm">Precio</TableHead>
+                          {freeDeliveryEnabled && <TableHead className="text-xs md:text-sm">Delivery Gratis</TableHead>}
                           <TableHead className="text-right text-xs md:text-sm">Acción</TableHead>
                         </TableRow>
                       </TableHeader>
@@ -364,16 +381,43 @@ export const DeliverySettingsTab = ({ storeId, initialData }: DeliverySettingsTa
                           <TableRow key={zone.id}>
                             <TableCell className="font-medium text-xs md:text-sm">{zone.zone_name}</TableCell>
                             <TableCell className="text-xs md:text-sm">${zone.delivery_price.toFixed(2)}</TableCell>
+                            {freeDeliveryEnabled && (
+                              <TableCell className="text-xs md:text-sm">
+                                {zone.free_delivery_enabled ? (
+                                  <span className="text-green-600 dark:text-green-400">
+                                    {zone.free_delivery_min_amount
+                                      ? `$${zone.free_delivery_min_amount.toFixed(2)}+`
+                                      : 'Global'}
+                                  </span>
+                                ) : (
+                                  <span className="text-muted-foreground">No incluida</span>
+                                )}
+                              </TableCell>
+                            )}
                             <TableCell className="text-right">
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => handleDeleteZoneClick(zone.id, zone.zone_name)}
-                                className="h-9 w-9 md:h-8 md:w-8"
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </Button>
+                              <div className="flex justify-end gap-1">
+                                {freeDeliveryEnabled && (
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => handleConfigureZoneFreeDelivery(zone)}
+                                    className="h-9 w-9 md:h-8 md:w-8"
+                                    title="Configurar delivery gratis"
+                                  >
+                                    <Settings className="w-4 h-4" />
+                                  </Button>
+                                )}
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => handleDeleteZoneClick(zone.id, zone.zone_name)}
+                                  className="h-9 w-9 md:h-8 md:w-8"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </Button>
+                              </div>
                             </TableCell>
                           </TableRow>
                         ))}
@@ -413,6 +457,52 @@ export const DeliverySettingsTab = ({ storeId, initialData }: DeliverySettingsTa
                     </Table>
                   </div>
                 </div>
+              </div>
+            )}
+          </div>
+
+          {/* Free Delivery Settings */}
+          <div className="space-y-4 pt-4 border-t">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+              <div className="space-y-0.5">
+                <Label htmlFor="free_delivery_enabled" className="text-sm md:text-base flex items-center gap-2">
+                  <Gift className="w-4 h-4" />
+                  Delivery Gratis
+                </Label>
+                <p className="text-xs md:text-sm text-muted-foreground">
+                  Ofrece delivery gratis a partir de un monto mínimo de pedido
+                </p>
+              </div>
+              <Switch
+                id="free_delivery_enabled"
+                checked={freeDeliveryEnabled}
+                onCheckedChange={(checked) => setValue('free_delivery_enabled', checked)}
+                className="self-start md:self-auto"
+              />
+            </div>
+
+            {freeDeliveryEnabled && (
+              <div className="space-y-2 pl-0 md:pl-6">
+                <Label htmlFor="global_free_delivery_min_amount" className="text-sm md:text-base">
+                  Monto mínimo para delivery gratis
+                </Label>
+                <Input
+                  id="global_free_delivery_min_amount"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  {...register('global_free_delivery_min_amount', { valueAsNumber: true })}
+                  placeholder="Ej: 20.00"
+                  className="h-11 md:h-10 text-base md:text-sm"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Los clientes obtendrán delivery gratis cuando su pedido supere este monto
+                </p>
+                {deliveryPriceMode === 'by_zone' && (
+                  <p className="text-xs text-blue-600 dark:text-blue-400">
+                    💡 Puedes configurar montos personalizados para cada zona de entrega más abajo
+                  </p>
+                )}
               </div>
             )}
           </div>
@@ -464,6 +554,15 @@ export const DeliverySettingsTab = ({ storeId, initialData }: DeliverySettingsTa
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Free Delivery Configuration Dialog */}
+      <ZoneFreeDeliveryDialog
+        zone={selectedZone}
+        open={freeDeliveryDialogOpen}
+        onOpenChange={setFreeDeliveryDialogOpen}
+        onSaved={fetchZones}
+        globalMinAmount={watch('global_free_delivery_min_amount')}
+      />
     </form>
   );
 };

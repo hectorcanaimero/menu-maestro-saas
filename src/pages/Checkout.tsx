@@ -9,6 +9,7 @@ import { useStore } from "@/contexts/StoreContext";
 import { useStoreTheme } from "@/hooks/useStoreTheme";
 import { useStoreStatus } from "@/hooks/useStoreStatus";
 import { useCartTotals } from "@/hooks/useCartTotals";
+import { useDeliveryFeeCalculation } from "@/hooks/useDeliveryFeeCalculation";
 import { validateCouponCode, applyCouponDiscount, type Coupon } from "@/hooks/useCoupons";
 import { useFormatPrice } from "@/lib/priceFormatter";
 import { setSecureItem, getSecureItem, type SecureCustomerData } from "@/lib/secureStorage";
@@ -22,7 +23,7 @@ import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { toast } from "sonner";
-import { ArrowLeft, ArrowRight, Upload, X, Check, Tag } from "lucide-react";
+import { ArrowLeft, ArrowRight, Upload, X, Check, Tag, Gift } from "lucide-react";
 import InputMask from "react-input-mask";
 import posthog from "posthog-js";
 
@@ -36,6 +37,8 @@ interface DeliveryZone {
   id: string;
   zone_name: string;
   delivery_price: number;
+  free_delivery_enabled: boolean;
+  free_delivery_min_amount: number | null;
 }
 
 // Create validation schema for each step
@@ -153,7 +156,6 @@ const Checkout = () => {
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
   const [deliveryZones, setDeliveryZones] = useState<DeliveryZone[]>([]);
   const [orderType, setOrderType] = useState<"delivery" | "pickup">("delivery");
-  const [deliveryPrice, setDeliveryPrice] = useState(0);
   const [showClosedDialog, setShowClosedDialog] = useState(false);
 
   // Coupon state
@@ -165,7 +167,6 @@ const Checkout = () => {
 
   const totalSteps = orderType === "pickup" ? 3 : 3; // Same steps for all types
   const progress = (currentStep / totalSteps) * 100;
-  const grandTotal = discountedTotal + (orderType === "delivery" ? deliveryPrice : 0) - couponDiscount;
 
   // Track checkout_started event when component mounts
   useEffect(() => {
@@ -210,6 +211,25 @@ const Checkout = () => {
     },
     mode: "onChange",
   });
+
+  // Get selected delivery zone
+  const selectedZoneName = form.watch("address_neighborhood");
+  const selectedZone = deliveryZones.find((zone) => zone.zone_name === selectedZoneName) || null;
+
+  // Calculate delivery fee with free delivery support
+  const deliveryFeeCalc = useDeliveryFeeCalculation(
+    orderType === "delivery" && store ? {
+      delivery_price_mode: store.delivery_price_mode as 'fixed' | 'by_zone',
+      fixed_delivery_price: store.fixed_delivery_price || 0,
+      free_delivery_enabled: store.free_delivery_enabled || false,
+      global_free_delivery_min_amount: store.global_free_delivery_min_amount || null,
+    } : null,
+    selectedZone,
+    discountedTotal
+  );
+
+  const deliveryPrice = orderType === "delivery" ? deliveryFeeCalc.deliveryFee : 0;
+  const grandTotal = discountedTotal + deliveryPrice - couponDiscount;
 
   // Load saved customer data (encrypted) on mount
   useEffect(() => {
@@ -281,7 +301,7 @@ const Checkout = () => {
 
       const { data, error } = await supabase
         .from("delivery_zones")
-        .select("id, zone_name, delivery_price")
+        .select("id, zone_name, delivery_price, free_delivery_enabled, free_delivery_min_amount")
         .eq("store_id", store.id)
         .order("display_order", { ascending: true });
 
@@ -297,32 +317,6 @@ const Checkout = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [store?.id, store?.accept_cash, store?.delivery_price_mode]);
 
-  // Calculate delivery price based on mode (fixed or by zone)
-  useEffect(() => {
-    if (orderType !== "delivery" || !store) {
-      setDeliveryPrice(0);
-      return;
-    }
-
-    // Check delivery price mode
-    if (store.delivery_price_mode === 'fixed') {
-      setDeliveryPrice(store.fixed_delivery_price || 0);
-    } else if (store.delivery_price_mode === 'by_zone') {
-      const selectedZoneName = form.getValues("address_neighborhood");
-      if (!selectedZoneName || deliveryZones.length === 0) {
-        setDeliveryPrice(0);
-        return;
-      }
-
-      const selectedZone = deliveryZones.find((zone) => zone.zone_name === selectedZoneName);
-      if (selectedZone) {
-        setDeliveryPrice(selectedZone.delivery_price);
-      }
-    } else {
-      setDeliveryPrice(0);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [form.watch("address_neighborhood"), deliveryZones, orderType, store]);
 
   const handleNext = async () => {
     const isValid = await form.trigger();
@@ -761,11 +755,30 @@ const Checkout = () => {
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              {deliveryZones.map((zone) => (
-                                <SelectItem key={zone.id} value={zone.zone_name}>
-                                  {zone.zone_name} - {formatPrice(zone.delivery_price).original}
-                                </SelectItem>
-                              ))}
+                              {deliveryZones.map((zone) => {
+                                // Calculate if this zone would have free delivery
+                                const zoneFreeDelivery = store?.free_delivery_enabled && zone.free_delivery_enabled;
+                                const freeDeliveryThreshold = zone.free_delivery_min_amount ?? store?.global_free_delivery_min_amount;
+                                const wouldBeFree = zoneFreeDelivery && freeDeliveryThreshold && discountedTotal >= freeDeliveryThreshold;
+
+                                return (
+                                  <SelectItem key={zone.id} value={zone.zone_name}>
+                                    <div className="flex items-center justify-between w-full gap-2">
+                                      <span>{zone.zone_name}</span>
+                                      {wouldBeFree ? (
+                                        <span className="text-green-600 text-xs font-semibold flex items-center gap-1">
+                                          <Gift className="w-3 h-3" />
+                                          ¡GRATIS!
+                                        </span>
+                                      ) : (
+                                        <span className="text-muted-foreground text-xs">
+                                          {formatPrice(zone.delivery_price).original}
+                                        </span>
+                                      )}
+                                    </div>
+                                  </SelectItem>
+                                );
+                              })}
                             </SelectContent>
                           </Select>
                           <FormMessage />
@@ -1002,13 +1015,40 @@ const Checkout = () => {
                         </div>
                       </div>
                     )}
-                    {orderType === "delivery" && deliveryPrice > 0 && (
-                      <div className="flex justify-between text-sm items-start">
-                        <span>Costo de entrega</span>
-                        <div className="text-right">
-                          <DualPrice price={deliveryPrice} size="sm" />
-                        </div>
-                      </div>
+                    {orderType === "delivery" && (
+                      <>
+                        {deliveryFeeCalc.isFreeDelivery ? (
+                          <div className="flex justify-between text-sm items-start">
+                            <span className="text-green-600 flex items-center gap-1">
+                              <Gift className="w-4 h-4" />
+                              Costo de entrega
+                            </span>
+                            <div className="text-green-600 text-right font-semibold">
+                              ¡GRATIS!
+                            </div>
+                          </div>
+                        ) : deliveryPrice > 0 ? (
+                          <div className="flex justify-between text-sm items-start">
+                            <span>Costo de entrega</span>
+                            <div className="text-right">
+                              <DualPrice price={deliveryPrice} size="sm" />
+                            </div>
+                          </div>
+                        ) : null}
+
+                        {/* Show progress to free delivery */}
+                        {deliveryFeeCalc.canHaveFreeDelivery && !deliveryFeeCalc.isFreeDelivery && deliveryFeeCalc.amountNeededForFreeDelivery && deliveryFeeCalc.amountNeededForFreeDelivery > 0 && (
+                          <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-md p-3 text-xs">
+                            <p className="text-blue-900 dark:text-blue-100 font-medium flex items-center gap-1">
+                              <Gift className="w-3 h-3" />
+                              Delivery gratis
+                            </p>
+                            <p className="text-blue-700 dark:text-blue-300 mt-1">
+                              Agrega <DualPrice price={deliveryFeeCalc.amountNeededForFreeDelivery} size="xs" /> más para obtener delivery gratis
+                            </p>
+                          </div>
+                        )}
+                      </>
                     )}
                     <div className="flex justify-between font-bold text-lg pt-2 border-t items-start">
                       <span>Total</span>
