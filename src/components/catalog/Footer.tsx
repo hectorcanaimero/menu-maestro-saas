@@ -6,7 +6,7 @@ export const Footer = () => {
   if (!store) return null;
 
   return (
-    <footer className="bg-card border-t mt-8 md:mt-12 spac-y-12">
+    <footer className="bg-card border-t mt-8 md:mt-12 spac-y-12 pb-24 md:pb-6">
       <div className="container mx-auto p-4 md:px-6 md:py-10">
         {/* Main Footer Content */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
