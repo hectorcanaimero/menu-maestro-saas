@@ -587,7 +587,7 @@ const Checkout = () => {
       </div>
 
       {/* Content */}
-      <div className="container mx-auto px-4 py-6 max-w-2xl">
+      <div className="container mx-auto px-4 py-6 pb-28 max-w-2xl">
         <h2 className="text-2xl font-bold mb-6">{getStepTitle()}</h2>
 
         <Form {...form}>
@@ -886,21 +886,21 @@ const Checkout = () => {
 
                 {/* Coupon Input */}
                 <div className="space-y-3">
-                  <FormLabel className="flex items-center gap-2">
-                    <Tag className="h-4 w-4" />
+                  <FormLabel className="flex items-center gap-2 text-sm sm:text-base">
+                    <Tag className="h-4 w-4 flex-shrink-0" />
                     Cupón de Descuento
                   </FormLabel>
-                  
+
                   {appliedCoupon ? (
-                    <div className="p-4 bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-lg">
-                      <div className="flex items-center justify-between">
-                        <div className="flex-1">
+                    <div className="p-3 sm:p-4 bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-lg">
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
-                            <Check className="h-4 w-4 text-green-600" />
-                            <code className="font-mono font-bold text-green-600">{appliedCoupon.code}</code>
+                            <Check className="h-4 w-4 text-green-600 flex-shrink-0" />
+                            <code className="font-mono font-bold text-green-600 text-xs sm:text-sm truncate">{appliedCoupon.code}</code>
                           </div>
-                          <p className="text-sm text-green-600 mt-1 flex items-center gap-1">
-                            Ahorraste <DualPrice price={couponDiscount} size="sm" />
+                          <p className="text-xs sm:text-sm text-green-600 mt-1 flex items-center gap-1 flex-wrap">
+                            <span>Ahorraste</span> <DualPrice price={couponDiscount} size="sm" />
                           </p>
                         </div>
                         <Button
@@ -908,7 +908,7 @@ const Checkout = () => {
                           variant="ghost"
                           size="sm"
                           onClick={handleRemoveCoupon}
-                          className="text-green-600 hover:text-green-700"
+                          className="text-green-600 hover:text-green-700 flex-shrink-0"
                         >
                           <X className="h-4 w-4" />
                         </Button>
@@ -923,8 +923,8 @@ const Checkout = () => {
                             setCouponCode(e.target.value.toUpperCase());
                             setCouponError("");
                           }}
-                          placeholder="INGRESA TU CÓDIGO"
-                          className="flex-1 font-mono"
+                          placeholder="CÓDIGO"
+                          className="flex-1 font-mono text-xs sm:text-sm"
                           disabled={validatingCoupon}
                         />
                         <Button
@@ -932,12 +932,13 @@ const Checkout = () => {
                           onClick={handleApplyCoupon}
                           disabled={validatingCoupon || !couponCode.trim()}
                           variant="outline"
+                          className="whitespace-nowrap text-xs sm:text-sm px-3 sm:px-4"
                         >
                           {validatingCoupon ? "Validando..." : "Aplicar"}
                         </Button>
                       </div>
                       {couponError && (
-                        <p className="text-sm text-destructive">{couponError}</p>
+                        <p className="text-xs sm:text-sm text-destructive">{couponError}</p>
                       )}
                       <p className="text-xs text-muted-foreground">
                         Si tienes un cupón de descuento, ingrésalo aquí.
@@ -962,15 +963,15 @@ const Checkout = () => {
                 />
 
                 {/* Order Summary */}
-                <div className="bg-muted p-4 rounded-lg space-y-3 mt-6">
-                  <h3 className="font-semibold">Resumen del Pedido</h3>
+                <div className="bg-muted p-3 sm:p-4 rounded-lg space-y-3 mt-6">
+                  <h3 className="font-semibold text-base sm:text-lg">Resumen del Pedido</h3>
                   <div className="space-y-2">
                     {items.slice(0, 3).map((item) => (
-                      <div key={item.cartItemId || item.id} className="flex justify-between text-sm items-start">
-                        <span>
+                      <div key={item.cartItemId || item.id} className="flex justify-between text-xs sm:text-sm items-start gap-2">
+                        <span className="flex-1 min-w-0 break-words">
                           {item.quantity}x {item.name}
                         </span>
-                        <div className="text-price font-medium text-right">
+                        <div className="text-price font-medium text-right whitespace-nowrap flex-shrink-0">
                           <DualPrice
                             price={(item.price + (item.extras?.reduce((sum, e) => sum + e.price, 0) || 0)) * item.quantity}
                             size="sm"
@@ -984,31 +985,31 @@ const Checkout = () => {
                   </div>
                   <div className="pt-3 border-t space-y-2">
                     {totalSavings > 0 && (
-                      <div className="flex justify-between text-sm items-start">
-                        <span>Subtotal original</span>
-                        <div className="line-through text-muted-foreground text-right">
+                      <div className="flex justify-between text-xs sm:text-sm items-start gap-2">
+                        <span className="flex-1">Subtotal original</span>
+                        <div className="line-through text-muted-foreground text-right whitespace-nowrap flex-shrink-0">
                           <DualPrice price={originalTotal} size="sm" />
                         </div>
                       </div>
                     )}
                     {totalSavings > 0 && (
-                      <div className="flex justify-between text-sm items-start">
-                        <span className="text-green-600">Descuento promociones</span>
-                        <div className="text-green-600 text-right">
+                      <div className="flex justify-between text-xs sm:text-sm items-start gap-2">
+                        <span className="text-green-600 flex-1">Descuento promociones</span>
+                        <div className="text-green-600 text-right whitespace-nowrap flex-shrink-0">
                           -<DualPrice price={totalSavings} size="sm" />
                         </div>
                       </div>
                     )}
-                    <div className="flex justify-between text-sm items-start">
-                      <span>Subtotal</span>
-                      <div className="text-right">
+                    <div className="flex justify-between text-xs sm:text-sm items-start gap-2">
+                      <span className="flex-1">Subtotal</span>
+                      <div className="text-right whitespace-nowrap flex-shrink-0">
                         <DualPrice price={discountedTotal} size="sm" />
                       </div>
                     </div>
                     {couponDiscount > 0 && (
-                      <div className="flex justify-between text-sm items-start">
-                        <span className="text-green-600">Descuento cupón</span>
-                        <div className="text-green-600 text-right">
+                      <div className="flex justify-between text-xs sm:text-sm items-start gap-2">
+                        <span className="text-green-600 flex-1">Descuento cupón</span>
+                        <div className="text-green-600 text-right whitespace-nowrap flex-shrink-0">
                           -<DualPrice price={couponDiscount} size="sm" />
                         </div>
                       </div>
@@ -1016,19 +1017,19 @@ const Checkout = () => {
                     {orderType === "delivery" && (
                       <>
                         {deliveryFeeCalc.isFreeDelivery ? (
-                          <div className="flex justify-between text-sm items-start">
-                            <span className="text-green-600 flex items-center gap-1">
-                              <Gift className="w-4 h-4" />
-                              Costo de entrega
+                          <div className="flex justify-between text-xs sm:text-sm items-start gap-2">
+                            <span className="text-green-600 flex items-center gap-1 flex-1">
+                              <Gift className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
+                              <span className="break-words">Costo de entrega</span>
                             </span>
-                            <div className="text-green-600 text-right font-semibold">
+                            <div className="text-green-600 text-right font-semibold whitespace-nowrap flex-shrink-0">
                               ¡GRATIS!
                             </div>
                           </div>
                         ) : deliveryPrice > 0 ? (
-                          <div className="flex justify-between text-sm items-start">
-                            <span>Costo de entrega</span>
-                            <div className="text-right">
+                          <div className="flex justify-between text-xs sm:text-sm items-start gap-2">
+                            <span className="flex-1">Costo de entrega</span>
+                            <div className="text-right whitespace-nowrap flex-shrink-0">
                               <DualPrice price={deliveryPrice} size="sm" />
                             </div>
                           </div>
@@ -1036,28 +1037,28 @@ const Checkout = () => {
 
                         {/* Show progress to free delivery */}
                         {deliveryFeeCalc.canHaveFreeDelivery && !deliveryFeeCalc.isFreeDelivery && deliveryFeeCalc.amountNeededForFreeDelivery && deliveryFeeCalc.amountNeededForFreeDelivery > 0 && (
-                          <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-md p-3 text-xs">
+                          <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-md p-2 sm:p-3 text-xs">
                             <p className="text-blue-900 dark:text-blue-100 font-medium flex items-center gap-1">
-                              <Gift className="w-3 h-3" />
-                              Delivery gratis
+                              <Gift className="w-3 h-3 flex-shrink-0" />
+                              <span>Delivery gratis</span>
                             </p>
-                            <p className="text-blue-700 dark:text-blue-300 mt-1">
-                              Agrega <DualPrice price={deliveryFeeCalc.amountNeededForFreeDelivery} size="xs" /> más para obtener delivery gratis
+                            <p className="text-blue-700 dark:text-blue-300 mt-1 break-words">
+                              Agrega <DualPrice price={deliveryFeeCalc.amountNeededForFreeDelivery} size="sm" /> más para obtener delivery gratis
                             </p>
                           </div>
                         )}
                       </>
                     )}
-                    <div className="flex justify-between font-bold text-lg pt-2 border-t items-start">
-                      <span>Total</span>
-                      <div className="text-price text-right">
+                    <div className="flex justify-between font-bold text-base sm:text-lg pt-2 border-t items-start gap-2">
+                      <span className="flex-1">Total</span>
+                      <div className="text-price text-right whitespace-nowrap flex-shrink-0">
                         <DualPrice price={grandTotal} size="md" />
                       </div>
                     </div>
                   </div>
                   {store?.minimum_order_price && discountedTotal < store.minimum_order_price && (
-                    <Badge variant="destructive" className="w-full justify-center mt-3 flex items-center gap-1">
-                      Pedido mínimo: <DualPrice price={store.minimum_order_price} size="sm" />
+                    <Badge variant="destructive" className="w-full justify-center mt-3 flex items-center gap-1 text-xs sm:text-sm py-2">
+                      <span className="break-words">Pedido mínimo: <DualPrice price={store.minimum_order_price} size="sm" /></span>
                     </Badge>
                   )}
                 </div>
