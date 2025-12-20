@@ -1,14 +1,14 @@
-import { ShoppingCart } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { useCart } from "@/contexts/CartContext";
-import { useNavigate } from "react-router-dom";
-import { useCartTotals } from "@/hooks/useCartTotals";
-import { useStore } from "@/contexts/StoreContext";
-import { useStoreStatus } from "@/hooks/useStoreStatus";
-import { useState, useMemo } from "react";
-import { StoreClosedDialog } from "@/components/catalog/StoreClosedDialog";
-import { DualPrice } from "@/components/catalog/DualPrice";
-import posthog from "posthog-js";
+import { ShoppingCart } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { useCart } from '@/contexts/CartContext';
+import { useNavigate } from 'react-router-dom';
+import { useCartTotals } from '@/hooks/useCartTotals';
+import { useStore } from '@/contexts/StoreContext';
+import { useStoreStatus } from '@/hooks/useStoreStatus';
+import { useState, useMemo } from 'react';
+import { StoreClosedDialog } from '@/components/catalog/StoreClosedDialog';
+import { DualPrice } from '@/components/catalog/DualPrice';
+import posthog from 'posthog-js';
 
 /**
  * Calculate relative luminance of a color
@@ -27,7 +27,7 @@ const getLuminance = (r: number, g: number, b: number): number => {
  */
 const getContrastColor = (hexColor: string): string => {
   // Remove # if present
-  const hex = hexColor.replace(/^#/, "");
+  const hex = hexColor.replace(/^#/, '');
 
   // Convert to RGB
   const r = parseInt(hex.substring(0, 2), 16);
@@ -89,13 +89,13 @@ export const FloatingCartButton = () => {
       return;
     }
 
-    navigate("/checkout");
+    navigate('/checkout');
   };
 
   return (
     <>
       {/* Floating Button */}
-      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 w-[calc(100%-2rem)] max-w-md px-4">
+      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 w-[calc(100%-2rem)] max-w-md px-1">
         <Button
           onClick={handleClick}
           size="lg"
@@ -113,14 +113,10 @@ export const FloatingCartButton = () => {
               </span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-sm font-normal opacity-90">Ver carrito</span>
+              <span className="text-sm font-normal opacity-90">Comprar</span>
               <div className="h-6 w-px" style={{ backgroundColor: `${textColor}30` }} />
               <span className="font-bold">
-                <DualPrice
-                  price={discountedTotal}
-                  size="sm"
-                  conversionTextColor={textColor}
-                />
+                <DualPrice price={discountedTotal} size="sm" conversionTextColor={textColor} />
               </span>
             </div>
           </div>

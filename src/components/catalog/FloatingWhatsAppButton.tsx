@@ -1,7 +1,7 @@
-import { MessageCircle } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { useStore } from "@/contexts/StoreContext";
-import { useMemo } from "react";
+import { MessageCircle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { useStore } from '@/contexts/StoreContext';
+import { useMemo } from 'react';
 
 /**
  * Calculate relative luminance of a color
@@ -20,7 +20,7 @@ const getLuminance = (r: number, g: number, b: number): number => {
  */
 const getContrastColor = (hexColor: string): string => {
   // Remove # if present
-  const hex = hexColor.replace(/^#/, "");
+  const hex = hexColor.replace(/^#/, '');
 
   // Convert to RGB
   const r = parseInt(hex.substring(0, 2), 16);
@@ -43,7 +43,7 @@ export const FloatingWhatsAppButton = () => {
   const { store } = useStore();
 
   // Check if catalog mode is enabled
-  const isCatalogMode = (store as any)?.catalog_mode ?? false;
+  const isCatalogMode = store?.catalog_mode ?? false;
 
   // Calculate contrasting text color based on primary color
   const textColor = useMemo(() => {
@@ -61,7 +61,7 @@ export const FloatingWhatsAppButton = () => {
 
   const handleWhatsAppClick = () => {
     const message = encodeURIComponent(
-      `Hola ${store?.name || 'Tienda'}, estoy interesado en sus productos. ¿Podrían darme más información?`
+      `Hola ${store?.name || 'Tienda'}, estoy interesado en sus productos. ¿Podrían darme más información?`,
     );
     const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${message}`;
     window.open(whatsappUrl, '_blank');

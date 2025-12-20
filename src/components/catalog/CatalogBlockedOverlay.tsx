@@ -14,12 +14,7 @@ interface CatalogBlockedOverlayProps {
  * Overlay con blur que se muestra cuando se excede el soft-limit (límite + 100 vistas)
  * Bloquea el acceso al catálogo hasta que se actualice el plan
  */
-export function CatalogBlockedOverlay({
-  currentViews,
-  limit,
-  softLimit,
-  storeName,
-}: CatalogBlockedOverlayProps) {
+export function CatalogBlockedOverlay({ currentViews, limit, softLimit, storeName }: CatalogBlockedOverlayProps) {
   const navigate = useNavigate();
 
   return (
@@ -30,9 +25,7 @@ export function CatalogBlockedOverlay({
             <AlertTriangle className="h-8 w-8 text-yellow-600" />
           </div>
           <div>
-            <CardTitle className="text-2xl font-bold">
-              Límite de Vistas Alcanzado
-            </CardTitle>
+            <CardTitle className="text-2xl font-bold">Límite de Vistas Alcanzado</CardTitle>
             <CardDescription className="text-base mt-2">
               Tu catálogo ha alcanzado el límite de vistas gratuitas
             </CardDescription>
@@ -51,9 +44,7 @@ export function CatalogBlockedOverlay({
             </div>
             <div className="flex items-center justify-between">
               <span className="text-sm text-muted-foreground">Límite extendido:</span>
-              <span className="text-lg font-semibold text-yellow-600">
-                {softLimit.toLocaleString()}
-              </span>
+              <span className="text-lg font-semibold text-yellow-600">{softLimit.toLocaleString()}</span>
             </div>
           </div>
 
@@ -62,12 +53,10 @@ export function CatalogBlockedOverlay({
             <div className="flex items-start gap-3">
               <TrendingUp className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
               <div>
-                <p className="text-sm font-medium text-green-900">
-                  ¡Excelentes noticias!
-                </p>
+                <p className="text-sm font-medium text-green-900">¡Excelentes noticias!</p>
                 <p className="text-xs text-green-700 mt-1">
-                  Tu catálogo ha recibido {currentViews.toLocaleString()} visitas este mes.
-                  Tu negocio está creciendo. Actualiza tu plan para continuar recibiendo clientes.
+                  Tu catálogo ha recibido {currentViews.toLocaleString()} visitas este mes. Tu negocio está creciendo.
+                  Actualiza tu plan para continuar recibiendo clientes.
                 </p>
               </div>
             </div>
