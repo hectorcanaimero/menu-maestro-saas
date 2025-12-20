@@ -96,7 +96,8 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
       // Reload store when user signs in to get correct ownership status
-      if (event === 'SIGNED_IN') {
+      // BUT only if we don't already have store data (prevents reload on tab switch)
+      if (event === 'SIGNED_IN' && !store) {
         console.log('[StoreContext] User signed in, scheduling store reload...');
         // Defer loadStore to avoid deadlock - this is a Supabase best practice
         setTimeout(() => {
@@ -111,8 +112,8 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
 
         // Clear PostHog
         posthog.reset();
-      } else if (store) {
-        // Update ownership for other events
+      } else if (store && event !== 'TOKEN_REFRESHED') {
+        // Update ownership for other events (but skip TOKEN_REFRESHED to avoid reloads)
         const isOwner = session?.user?.id === store.owner_id;
         setIsStoreOwner(isOwner);
 
