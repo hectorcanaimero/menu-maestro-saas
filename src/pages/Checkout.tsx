@@ -61,7 +61,9 @@ const createStepSchema = (
         .string()
         .trim()
         .email({ message: "Debe ser un email válido" })
-        .max(255, { message: "El email no puede exceder 255 caracteres" }),
+        .max(255, { message: "El email no puede exceder 255 caracteres" })
+        .optional()
+        .or(z.literal("")),
       customer_phone: z
         .string()
         .trim()
@@ -494,16 +496,12 @@ const Checkout = () => {
     }
 
     const email = form.getValues("customer_email");
-    if (!email) {
-      toast.error("Ingresa tu email primero");
-      return;
-    }
 
     setValidatingCoupon(true);
     setCouponError("");
 
     try {
-      const result = await validateCouponCode(couponCode.trim(), store.id, email, discountedTotal);
+      const result = await validateCouponCode(couponCode.trim(), store.id, email || "", discountedTotal);
 
       if (!result.valid || !result.coupon) {
         setCouponError(result.error || "Cupón inválido");
@@ -674,7 +672,7 @@ const Checkout = () => {
                   name="customer_email"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Email *</FormLabel>
+                      <FormLabel>Email</FormLabel>
                       <FormControl>
                         <Input {...field} type="email" placeholder="tu@email.com" />
                       </FormControl>

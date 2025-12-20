@@ -53,7 +53,7 @@ interface DeliveryZone {
 
 // Form schema
 const step1Schema = z.object({
-  customer_email: z.string().email("Email inválido"),
+  customer_email: z.string().email("Email inválido").optional().or(z.literal("")),
   customer_name: z.string().min(2, "Nombre requerido"),
   customer_phone: z.string().min(10, "Teléfono inválido"),
   order_type: z.enum(["delivery", "pickup", "dine_in"]),
