@@ -7,14 +7,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { Plus, Trash2, GripVertical } from 'lucide-react';
-import {
-  Facebook,
-  Instagram,
-  Twitter,
-  Youtube,
-  Linkedin,
-  Globe,
-} from 'lucide-react';
+import { Facebook, Instagram, Twitter, Youtube, Linkedin, Globe, Phone } from 'lucide-react';
+import { FaWhatsapp, FaTelegram, FaTiktok } from 'react-icons/fa6';
 
 interface SocialLink {
   id: string;
@@ -31,13 +25,9 @@ const SOCIAL_PLATFORMS = [
   { value: 'facebook', label: 'Facebook', icon: Facebook },
   { value: 'instagram', label: 'Instagram', icon: Instagram },
   { value: 'twitter', label: 'Twitter / X', icon: Twitter },
-  { value: 'tiktok', label: 'TikTok', icon: Globe },
-  { value: 'youtube', label: 'YouTube', icon: Youtube },
-  { value: 'whatsapp', label: 'WhatsApp', icon: Globe },
-  { value: 'telegram', label: 'Telegram', icon: Globe },
-  { value: 'linkedin', label: 'LinkedIn', icon: Linkedin },
-  { value: 'website', label: 'Sitio Web', icon: Globe },
-  { value: 'other', label: 'Otro', icon: Globe },
+  { value: 'tiktok', label: 'TikTok', icon: FaTiktok },
+  { value: 'whatsapp', label: 'WhatsApp', icon: FaWhatsapp },
+  { value: 'telegram', label: 'Telegram', icon: FaTelegram },
 ];
 
 export const SocialLinksTab = ({ storeId }: SocialLinksTabProps) => {
@@ -122,10 +112,7 @@ export const SocialLinksTab = ({ storeId }: SocialLinksTabProps) => {
     if (!url.trim()) return;
 
     try {
-      const { error } = await supabase
-        .from('social_links')
-        .update({ url: url.trim() })
-        .eq('id', id);
+      const { error } = await supabase.from('social_links').update({ url: url.trim() }).eq('id', id);
 
       if (error) throw error;
       toast.success('URL actualizada');
@@ -141,7 +128,7 @@ export const SocialLinksTab = ({ storeId }: SocialLinksTabProps) => {
 
   const getPlatformIcon = (platform: string) => {
     const IconComponent = SOCIAL_PLATFORMS.find((p) => p.value === platform)?.icon || Globe;
-    return <IconComponent className="w-4 h-4" />;
+    return <IconComponent className="w-10 h-10" />;
   };
 
   return (
@@ -158,10 +145,7 @@ export const SocialLinksTab = ({ storeId }: SocialLinksTabProps) => {
         {links.length > 0 && (
           <div className="space-y-3">
             {links.map((link) => (
-              <div
-                key={link.id}
-                className="flex items-center gap-2 p-3 border rounded-lg bg-muted/30"
-              >
+              <div key={link.id} className="flex items-center gap-2 p-3 border rounded-lg bg-muted/30">
                 <div className="flex items-center gap-2 flex-1 min-w-0">
                   <GripVertical className="w-4 h-4 text-muted-foreground flex-shrink-0" />
                   {getPlatformIcon(link.platform)}
@@ -170,13 +154,11 @@ export const SocialLinksTab = ({ storeId }: SocialLinksTabProps) => {
                     <Input
                       value={link.url}
                       onChange={(e) => {
-                        const updatedLinks = links.map((l) =>
-                          l.id === link.id ? { ...l, url: e.target.value } : l
-                        );
+                        const updatedLinks = links.map((l) => (l.id === link.id ? { ...l, url: e.target.value } : l));
                         setLinks(updatedLinks);
                       }}
                       onBlur={(e) => handleUpdateUrl(link.id, e.target.value)}
-                      placeholder="URL o usuario"
+                      placeholder="URL"
                       className="h-8 text-xs mt-1"
                     />
                   </div>
@@ -203,38 +185,35 @@ export const SocialLinksTab = ({ storeId }: SocialLinksTabProps) => {
               <Label htmlFor="platform" className="text-xs md:text-sm">
                 Plataforma
               </Label>
-              <Select
-                value={newLink.platform}
-                onValueChange={(value) => setNewLink({ ...newLink, platform: value })}
-              >
+              <Select value={newLink.platform} onValueChange={(value) => setNewLink({ ...newLink, platform: value })}>
                 <SelectTrigger id="platform" className="h-10 md:h-9">
                   <SelectValue placeholder="Selecciona una red social" />
                 </SelectTrigger>
                 <SelectContent>
-                  {SOCIAL_PLATFORMS.filter(
-                    (platform) => !links.some((link) => link.platform === platform.value)
-                  ).map((platform) => (
-                    <SelectItem key={platform.value} value={platform.value}>
-                      <div className="flex items-center gap-2">
-                        <platform.icon className="w-4 h-4" />
-                        {platform.label}
-                      </div>
-                    </SelectItem>
-                  ))}
+                  {SOCIAL_PLATFORMS.filter((platform) => !links.some((link) => link.platform === platform.value)).map(
+                    (platform) => (
+                      <SelectItem key={platform.value} value={platform.value}>
+                        <div className="flex items-center gap-2">
+                          <platform.icon className="w-4 h-4" />
+                          {platform.label}
+                        </div>
+                      </SelectItem>
+                    ),
+                  )}
                 </SelectContent>
               </Select>
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="url" className="text-xs md:text-sm">
-                URL o Usuario
+                URL
               </Label>
               <div className="flex gap-2">
                 <Input
                   id="url"
                   value={newLink.url}
                   onChange={(e) => setNewLink({ ...newLink, url: e.target.value })}
-                  placeholder="https://... o @usuario"
+                  placeholder="https://..."
                   className="h-10 md:h-9"
                 />
                 <Button

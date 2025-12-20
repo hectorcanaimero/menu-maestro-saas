@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { useStore } from '@/contexts/StoreContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Phone, Mail, MapPin, Facebook, Instagram, Twitter, Youtube, Linkedin, Globe } from 'lucide-react';
+import { FaWhatsapp, FaTelegram, FaTiktok } from 'react-icons/fa6';
+import { unknown } from 'zod';
 
 interface SocialLink {
   id: string;
@@ -11,17 +13,15 @@ interface SocialLink {
 }
 
 const getSocialIcon = (platform: string) => {
-  const icons: Record<string, typeof Facebook> = {
+  const icons: Record = {
     facebook: Facebook,
     instagram: Instagram,
     twitter: Twitter,
     youtube: Youtube,
     linkedin: Linkedin,
-    tiktok: Globe,
-    whatsapp: Globe,
-    telegram: Globe,
-    website: Globe,
-    other: Globe,
+    tiktok: FaTiktok,
+    whatsapp: FaWhatsapp,
+    telegram: FaTelegram,
   };
   return icons[platform] || Globe;
 };
