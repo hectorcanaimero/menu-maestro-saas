@@ -1,6 +1,14 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ImageIcon, Star, Pencil, Trash2, Settings, Sparkles } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator
+} from "@/components/ui/dropdown-menu";
+import { ImageIcon, Star, Pencil, Trash2, Settings, Sparkles, MoreVertical, DollarSign, Tag, Image, Type } from "lucide-react";
 
 interface MenuItem {
   id: string;
@@ -21,13 +29,36 @@ interface MenuItemCardProps {
   onDelete: (id: string) => void;
   onManageExtras: (item: MenuItem) => void;
   onEnhanceWithAI?: (item: MenuItem) => void;
+  selected?: boolean;
+  onSelectChange?: (selected: boolean) => void;
+  onQuickEdit?: (itemId: string, field: 'name' | 'price' | 'category' | 'image') => void;
 }
 
-export const MenuItemCard = ({ item, categoryName, onEdit, onDelete, onManageExtras, onEnhanceWithAI }: MenuItemCardProps) => {
+export const MenuItemCard = ({
+  item,
+  categoryName,
+  onEdit,
+  onDelete,
+  onManageExtras,
+  onEnhanceWithAI,
+  selected = false,
+  onSelectChange,
+  onQuickEdit
+}: MenuItemCardProps) => {
   return (
-    <Card className="overflow-hidden hover:shadow-md transition-shadow">
+    <Card className={`overflow-hidden hover:shadow-md transition-all ${selected ? 'ring-2 ring-primary' : ''}`}>
       <CardContent className="p-4">
         <div className="flex gap-3">
+          {/* Checkbox for bulk selection */}
+          {onSelectChange && (
+            <div className="flex-shrink-0 pt-1">
+              <Checkbox
+                checked={selected}
+                onCheckedChange={onSelectChange}
+              />
+            </div>
+          )}
+
           {/* Image */}
           <div className="flex-shrink-0 relative group">
             {item.image_url ? (
@@ -110,22 +141,72 @@ export const MenuItemCard = ({ item, categoryName, onEdit, onDelete, onManageExt
                 <Settings className="w-3 h-3 mr-1" />
                 Extras
               </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => onEdit(item)}
-                className="h-8 px-2"
-              >
-                <Pencil className="w-3 h-3" />
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => onDelete(item.id)}
-                className="h-8 px-2"
-              >
-                <Trash2 className="w-3 h-3" />
-              </Button>
+
+              {/* Quick Edit Menu */}
+              {onQuickEdit && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-8 px-2"
+                    >
+                      <MoreVertical className="w-3 h-3" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => onQuickEdit(item.id, 'name')}>
+                      <Type className="w-4 h-4 mr-2" />
+                      Cambiar nombre
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => onQuickEdit(item.id, 'price')}>
+                      <DollarSign className="w-4 h-4 mr-2" />
+                      Cambiar precio
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => onQuickEdit(item.id, 'category')}>
+                      <Tag className="w-4 h-4 mr-2" />
+                      Cambiar categoría
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => onQuickEdit(item.id, 'image')}>
+                      <Image className="w-4 h-4 mr-2" />
+                      Cambiar imagen
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => onEdit(item)}>
+                      <Pencil className="w-4 h-4 mr-2" />
+                      Editar completo
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => onDelete(item.id)}
+                      className="text-red-600"
+                    >
+                      <Trash2 className="w-4 h-4 mr-2" />
+                      Eliminar
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
+
+              {!onQuickEdit && (
+                <>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => onEdit(item)}
+                    className="h-8 px-2"
+                  >
+                    <Pencil className="w-3 h-3" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => onDelete(item.id)}
+                    className="h-8 px-2"
+                  >
+                    <Trash2 className="w-3 h-3" />
+                  </Button>
+                </>
+              )}
             </div>
           </div>
         </div>

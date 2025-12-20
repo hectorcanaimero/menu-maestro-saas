@@ -8,14 +8,19 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Switch } from '@/components/ui/switch';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { toast } from 'sonner';
-import { Plus, Pencil, Trash2, Image as ImageIcon, Star, Settings, Sparkles } from 'lucide-react';
+import { Plus, Pencil, Trash2, Image as ImageIcon, Star, Settings, Sparkles, MoreVertical, DollarSign, Tag, Type, Image } from 'lucide-react';
 import { ProductExtrasManager } from './ProductExtrasManager';
 import { MenuItemCard } from './MenuItemCard';
 import { AIPhotoStudio } from './AIPhotoStudio';
+import { QuickEditDialog } from './QuickEditDialog';
+import { ImageSelectorDialog } from './ImageSelectorDialog';
+import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
 
 interface MenuItem {
   id: string;
@@ -46,6 +51,17 @@ const MenuItemsManager = () => {
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
   const [aiStudioOpen, setAiStudioOpen] = useState(false);
   const [aiStudioItem, setAiStudioItem] = useState<MenuItem | null>(null);
+
+  // Bulk selection
+  const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
+
+  // Quick edit dialogs
+  const [quickEditOpen, setQuickEditOpen] = useState(false);
+  const [quickEditField, setQuickEditField] = useState<'name' | 'price' | 'category'>('name');
+  const [quickEditItemId, setQuickEditItemId] = useState<string>('');
+  const [imageEditOpen, setImageEditOpen] = useState(false);
+  const [imageEditItemId, setImageEditItemId] = useState<string>('');
+
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -221,6 +237,84 @@ const MenuItemsManager = () => {
     setAiStudioOpen(true);
   };
 
+  // Bulk selection handlers
+  const toggleItemSelection = (itemId: string) => {
+    const newSelected = new Set(selectedItems);
+    if (newSelected.has(itemId)) {
+      newSelected.delete(itemId);
+    } else {
+      newSelected.add(itemId);
+    }
+    setSelectedItems(newSelected);
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedItems.size === items.length) {
+      setSelectedItems(new Set());
+    } else {
+      setSelectedItems(new Set(items.map(item => item.id)));
+    }
+  };
+
+  const handleBulkAvailabilityChange = async (isAvailable: boolean | null) => {
+    if (selectedItems.size === 0) {
+      toast.error('No hay productos seleccionados');
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('menu_items')
+        .update({ is_available: isAvailable })
+        .in('id', Array.from(selectedItems));
+
+      if (error) throw error;
+
+      toast.success(`${selectedItems.size} producto(s) actualizado(s)`);
+      setSelectedItems(new Set());
+      fetchData();
+    } catch (error) {
+      console.error('Error updating items:', error);
+      toast.error('Error al actualizar productos');
+    }
+  };
+
+  // Quick edit handlers
+  const handleQuickEdit = (itemId: string, field: 'name' | 'price' | 'category' | 'image') => {
+    if (field === 'image') {
+      setImageEditItemId(itemId);
+      setImageEditOpen(true);
+    } else {
+      setQuickEditItemId(itemId);
+      setQuickEditField(field);
+      setQuickEditOpen(true);
+    }
+  };
+
+  const getQuickEditItem = () => {
+    return items.find(item => item.id === quickEditItemId);
+  };
+
+  const getImageEditItem = () => {
+    return items.find(item => item.id === imageEditItemId);
+  };
+
+  const getQuickEditCurrentValue = () => {
+    const item = getQuickEditItem();
+    if (!item) return null;
+
+    switch (quickEditField) {
+      case 'name':
+        return item.name;
+      case 'price':
+        return item.price;
+      case 'category':
+        return item.category_id;
+      default:
+        return null;
+    }
+  };
+
   return (
     <>
       <ProductExtrasManager
@@ -235,6 +329,26 @@ const MenuItemsManager = () => {
         onOpenChange={setAiStudioOpen}
         menuItem={aiStudioItem}
         onImageUpdated={fetchData}
+      />
+
+      <QuickEditDialog
+        open={quickEditOpen}
+        onOpenChange={setQuickEditOpen}
+        itemId={quickEditItemId}
+        itemName={getQuickEditItem()?.name || ''}
+        field={quickEditField}
+        currentValue={getQuickEditCurrentValue()}
+        categories={categories}
+        onSuccess={fetchData}
+      />
+
+      <ImageSelectorDialog
+        open={imageEditOpen}
+        onOpenChange={setImageEditOpen}
+        itemId={imageEditItemId}
+        itemName={getImageEditItem()?.name || ''}
+        currentImageUrl={getImageEditItem()?.image_url || null}
+        onSuccess={fetchData}
       />
 
       <Card>
@@ -420,6 +534,48 @@ const MenuItemsManager = () => {
           </Dialog>
         </CardHeader>
         <CardContent>
+          {/* Bulk Actions Toolbar */}
+          {selectedItems.size > 0 && (
+            <div className="bg-primary/10 border border-primary/20 rounded-lg p-3 mb-4 flex items-center justify-between gap-4">
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  checked={selectedItems.size === items.length}
+                  onCheckedChange={toggleSelectAll}
+                />
+                <span className="text-sm font-medium">
+                  {selectedItems.size} producto(s) seleccionado(s)
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground mr-2">Cambiar estado:</span>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => handleBulkAvailabilityChange(true)}
+                  className="bg-green-50 hover:bg-green-100"
+                >
+                  Disponible
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => handleBulkAvailabilityChange(false)}
+                  className="bg-red-50 hover:bg-red-100"
+                >
+                  No disponible
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => handleBulkAvailabilityChange(null)}
+                  className="bg-gray-50 hover:bg-gray-100"
+                >
+                  No mostrar
+                </Button>
+              </div>
+            </div>
+          )}
+
           {/* Mobile View - Cards */}
           <div className="grid gap-4 md:hidden">
             {items.length === 0 ? (
@@ -437,6 +593,9 @@ const MenuItemsManager = () => {
                     setExtrasDialogOpen(true);
                   }}
                   onEnhanceWithAI={handleEnhanceWithAI}
+                  selected={selectedItems.has(item.id)}
+                  onSelectChange={(selected) => toggleItemSelection(item.id)}
+                  onQuickEdit={handleQuickEdit}
                 />
               ))
             )}
@@ -447,6 +606,12 @@ const MenuItemsManager = () => {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-12">
+                    <Checkbox
+                      checked={items.length > 0 && selectedItems.size === items.length}
+                      onCheckedChange={toggleSelectAll}
+                    />
+                  </TableHead>
                   <TableHead>Imagen</TableHead>
                   <TableHead>Nombre</TableHead>
                   <TableHead>Categoría</TableHead>
@@ -459,13 +624,19 @@ const MenuItemsManager = () => {
               <TableBody>
                 {items.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center text-muted-foreground">
+                    <TableCell colSpan={8} className="text-center text-muted-foreground">
                       No hay productos. Crea uno para empezar.
                     </TableCell>
                   </TableRow>
                 ) : (
                   items.map((item) => (
-                    <TableRow key={item.id}>
+                    <TableRow key={item.id} className={selectedItems.has(item.id) ? 'bg-primary/5' : ''}>
+                      <TableCell>
+                        <Checkbox
+                          checked={selectedItems.has(item.id)}
+                          onCheckedChange={() => toggleItemSelection(item.id)}
+                        />
+                      </TableCell>
                       <TableCell>
                         {item.image_url ? (
                           <img src={item.image_url} alt={item.name} className="w-16 h-16 object-cover rounded" />
@@ -520,12 +691,43 @@ const MenuItemsManager = () => {
                           >
                             <Settings className="w-4 h-4" />
                           </Button>
-                          <Button variant="ghost" size="icon" onClick={() => handleEdit(item)}>
-                            <Pencil className="w-4 h-4" />
-                          </Button>
-                          <Button variant="ghost" size="icon" onClick={() => handleDelete(item.id)}>
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon">
+                                <MoreVertical className="w-4 h-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem onClick={() => handleQuickEdit(item.id, 'name')}>
+                                <Type className="w-4 h-4 mr-2" />
+                                Cambiar nombre
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleQuickEdit(item.id, 'price')}>
+                                <DollarSign className="w-4 h-4 mr-2" />
+                                Cambiar precio
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleQuickEdit(item.id, 'category')}>
+                                <Tag className="w-4 h-4 mr-2" />
+                                Cambiar categoría
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleQuickEdit(item.id, 'image')}>
+                                <Image className="w-4 h-4 mr-2" />
+                                Cambiar imagen
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem onClick={() => handleEdit(item)}>
+                                <Pencil className="w-4 h-4 mr-2" />
+                                Editar completo
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => handleDelete(item.id)}
+                                className="text-red-600"
+                              >
+                                <Trash2 className="w-4 h-4 mr-2" />
+                                Eliminar
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         </div>
                       </TableCell>
                     </TableRow>
