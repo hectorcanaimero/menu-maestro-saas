@@ -223,7 +223,7 @@ const Checkout = () => {
     orderType === "delivery" && store ? {
       delivery_price_mode: store.delivery_price_mode as 'fixed' | 'by_zone',
       fixed_delivery_price: store.fixed_delivery_price || 0,
-      free_delivery_enabled: store.free_delivery_enabled || false,
+      free_delivery_enabled: store.free_delivery_enabled === true,
       global_free_delivery_min_amount: store.global_free_delivery_min_amount || null,
     } : null,
     selectedZone,
@@ -755,7 +755,7 @@ const Checkout = () => {
                             <SelectContent>
                               {deliveryZones.map((zone) => {
                                 // Calculate if this zone would have free delivery
-                                const zoneFreeDelivery = store?.free_delivery_enabled && zone.free_delivery_enabled;
+                                const zoneFreeDelivery = store?.free_delivery_enabled === true && zone.free_delivery_enabled === true;
                                 const freeDeliveryThreshold = zone.free_delivery_min_amount ?? store?.global_free_delivery_min_amount;
                                 const wouldBeFree = zoneFreeDelivery && freeDeliveryThreshold && discountedTotal >= freeDeliveryThreshold;
 
