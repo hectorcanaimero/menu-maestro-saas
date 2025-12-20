@@ -1,49 +1,81 @@
+import { useState, useEffect } from 'react';
 import { useStore } from '@/contexts/StoreContext';
-import { Phone, Mail, MapPin } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { Phone, Mail, MapPin, Facebook, Instagram, Twitter, Youtube, Linkedin, Globe } from 'lucide-react';
+
+interface SocialLink {
+  id: string;
+  platform: string;
+  url: string;
+  display_order: number;
+}
+
+const getSocialIcon = (platform: string) => {
+  const icons: Record<string, typeof Facebook> = {
+    facebook: Facebook,
+    instagram: Instagram,
+    twitter: Twitter,
+    youtube: Youtube,
+    linkedin: Linkedin,
+    tiktok: Globe,
+    whatsapp: Globe,
+    telegram: Globe,
+    website: Globe,
+    other: Globe,
+  };
+  return icons[platform] || Globe;
+};
 
 export const Footer = () => {
   const { store } = useStore();
+  const [socialLinks, setSocialLinks] = useState<SocialLink[]>([]);
+
+  useEffect(() => {
+    if (!store?.id) return;
+
+    const fetchSocialLinks = async () => {
+      const { data } = await supabase
+        .from('social_links')
+        .select('*')
+        .eq('store_id', store.id)
+        .order('display_order', { ascending: true });
+
+      if (data) {
+        setSocialLinks(data);
+      }
+    };
+
+    fetchSocialLinks();
+  }, [store?.id]);
+
   if (!store) return null;
 
   return (
     <footer className="bg-card border-t mt-8 md:mt-12 spac-y-12 pb-24 md:pb-6">
       <div className="container mx-auto p-4 md:px-6 md:py-10">
         {/* Main Footer Content */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
-          {/* Contact Section */}
-          <div className="space-y-3">
-            <div className="flex justify-center gap-4">
-              {store.phone && (
-                <a
-                  href={`tel:${store.phone}`}
-                  className="flex items-center gap-3 text-muted-foreground hover:text-foreground transition-colors group"
-                >
-                  <div className="flex items-center justify-center w-10 h-10 md:w-8 md:h-8 rounded-full bg-muted group-hover:bg-muted/80 transition-colors flex-shrink-0">
-                    <Phone className="w-5 h-5 md:w-4 md:h-4" />
-                  </div>
-                </a>
-              )}
-              {store.email && (
-                <a
-                  href={`mailto:${store.email}`}
-                  className="flex items-center gap-3 text-muted-foreground hover:text-foreground transition-colors group"
-                >
-                  <div className="flex items-center justify-center w-10 h-10 md:w-8 md:h-8 rounded-full bg-muted group-hover:bg-muted/80 transition-colors flex-shrink-0">
-                    <Mail className="w-5 h-5 md:w-4 md:h-4" />
-                  </div>
-                </a>
-              )}
-              {store.address && (
-                <div className="flex items-start gap-3 text-muted-foreground">
-                  <div className="flex items-center justify-center w-10 h-10 md:w-8 md:h-8 rounded-full bg-muted flex-shrink-0 mt-0.5">
-                    <MapPin className="w-5 h-5 md:w-4 md:h-4" />
-                  </div>
-                  <span className="text-sm md:text-base leading-relaxed">{store.address}</span>
-                </div>
-              )}
+        {/* Social Links */}
+        {socialLinks.length > 0 && (
+          <div className="mt-6 md:mt-8">
+            <div className="flex justify-center gap-3 flex-wrap">
+              {socialLinks.map((link) => {
+                const Icon = getSocialIcon(link.platform);
+                return (
+                  <a
+                    key={link.id}
+                    href={link.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-center w-10 h-10 md:w-9 md:h-9 rounded-full bg-muted hover:bg-muted/80 text-muted-foreground hover:text-foreground transition-colors"
+                    title={link.platform}
+                  >
+                    <Icon className="w-5 h-5 md:w-4 md:h-4" />
+                  </a>
+                );
+              })}
             </div>
           </div>
-        </div>
+        )}
 
         {/* Footer Bottom */}
         <div className="border-t mt-4 md:mt-6 pt-6 md:pt-8 text-center">

@@ -21,6 +21,7 @@ import { OrderSettingsTab } from '@/components/admin/OrderSettingsTab';
 import { DeliverySettingsTab } from '@/components/admin/DeliverySettingsTab';
 import { AdvancedSettingsTab } from '@/components/admin/AdvancedSettingsTab';
 import { DesignSettingsTab } from '@/components/admin/DesignSettingsTab';
+import { SocialLinksTab } from '@/components/admin/SocialLinksTab';
 import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
 
@@ -154,9 +155,12 @@ const StoreSettings = () => {
           <h1 className="text-2xl md:text-3xl font-bold">Configuración de Tienda</h1>
         </div>
         <Tabs defaultValue="company" className="w-full">
-          <TabsList className="inline-flex w-full overflow-x-auto overflow-y-hidden whitespace-nowrap rounded-lg bg-muted p-1 text-muted-foreground md:grid md:grid-cols-7 scrollbar-hide">
+          <TabsList className="inline-flex w-full overflow-x-auto overflow-y-hidden whitespace-nowrap rounded-lg bg-muted p-1 text-muted-foreground md:grid md:grid-cols-8 scrollbar-hide">
             <TabsTrigger value="company" className="min-w-[100px] md:min-w-0">
               Empresa
+            </TabsTrigger>
+            <TabsTrigger value="social" className="min-w-[100px] md:min-w-0">
+              Redes
             </TabsTrigger>
             <TabsTrigger value="design" className="min-w-[100px] md:min-w-0">
               Diseño
@@ -357,6 +361,10 @@ const StoreSettings = () => {
                 </form>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="social" className="mt-4 md:mt-6">
+            <SocialLinksTab storeId={store.id} />
           </TabsContent>
 
           <TabsContent value="design" className="mt-4 md:mt-6">
