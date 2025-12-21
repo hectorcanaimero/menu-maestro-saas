@@ -113,7 +113,7 @@ export const FloatingCartButton = () => {
               </span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-sm font-normal opacity-90">Comprar</span>
+              {/* <span className="text-sm font-normal opacity-90">Comprar</span> */}
               <div className="h-6 w-px" style={{ backgroundColor: `${textColor}30` }} />
               <span className="font-bold">
                 <DualPrice price={discountedTotal} size="sm" conversionTextColor={textColor} />

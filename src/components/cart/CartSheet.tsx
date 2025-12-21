@@ -1,17 +1,17 @@
-import { ShoppingCart, Plus, Minus, Trash2, X } from "lucide-react";
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { useCart } from "@/contexts/CartContext";
-import { useNavigate } from "react-router-dom";
-import { Badge } from "@/components/ui/badge";
-import { useCartTotals } from "@/hooks/useCartTotals";
-import { useFormatPrice } from "@/lib/priceFormatter";
-import { useStore } from "@/contexts/StoreContext";
-import { useStoreStatus } from "@/hooks/useStoreStatus";
-import { StoreClosedDialog } from "@/components/catalog/StoreClosedDialog";
-import { DualPrice } from "@/components/catalog/DualPrice";
-import posthog from "posthog-js";
+import { ShoppingCart, Plus, Minus, Trash2, X } from 'lucide-react';
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { useCart } from '@/contexts/CartContext';
+import { useNavigate } from 'react-router-dom';
+import { Badge } from '@/components/ui/badge';
+import { useCartTotals } from '@/hooks/useCartTotals';
+import { useFormatPrice } from '@/lib/priceFormatter';
+import { useStore } from '@/contexts/StoreContext';
+import { useStoreStatus } from '@/hooks/useStoreStatus';
+import { StoreClosedDialog } from '@/components/catalog/StoreClosedDialog';
+import { DualPrice } from '@/components/catalog/DualPrice';
+import posthog from 'posthog-js';
 
 export const CartSheet = () => {
   const { items, updateQuantity, removeItem, totalItems } = useCart();
@@ -46,7 +46,7 @@ export const CartSheet = () => {
       return;
     }
 
-    navigate("/checkout");
+    navigate('/checkout');
   };
 
   return (
@@ -74,34 +74,36 @@ export const CartSheet = () => {
             <div className="flex-1 flex flex-col items-center justify-center text-center py-12">
               <ShoppingCart className="w-16 h-16 text-muted-foreground mb-4" />
               <p className="text-lg text-muted-foreground">Tu carrito está vacío</p>
-              <p className="text-sm text-muted-foreground mt-2">Agrega platillos del menú para comenzar</p>
+              <p className="text-sm text-muted-foreground mt-2">Agrega productos del menú para comenzar</p>
             </div>
           ) : (
             <>
-              <div className="space-y-2 mb-4">
+              <div className="space-y-2 mb-4 p-4 rounded-lg border bg-card">
                 {totalSavings > 0 && (
                   <>
-                    <div className="flex justify-between items-center text-sm">
+                    <div className="flex justify-between items-center gap-4 text-sm">
                       <span className="text-muted-foreground">Subtotal:</span>
-                      <span className="line-through text-muted-foreground">
+                      <span className="line-through text-muted-foreground flex-shrink-0">
                         <DualPrice price={originalTotal} size="sm" />
                       </span>
                     </div>
-                    <div className="flex justify-between items-center text-sm">
+                    <div className="flex justify-between items-center gap-4 text-sm">
                       <span className="text-green-600">Descuento:</span>
-                      <span className="text-green-600">
+                      <span className="text-green-600 flex-shrink-0">
                         -<DualPrice price={totalSavings} size="sm" />
                       </span>
                     </div>
                   </>
                 )}
-                <div className="flex justify-between items-center text-lg font-bold">
+                <div className="flex justify-between items-center gap-4 text-lg font-bold">
                   <span>Total:</span>
-                  <DualPrice
-                    price={discountedTotal}
-                    size="sm"
-                    style={{ color: `hsl(var(--price-color, var(--primary)))` }}
-                  />
+                  <span className="flex-shrink-0">
+                    <DualPrice
+                      price={discountedTotal}
+                      size="sm"
+                      style={{ color: `hsl(var(--price-color, var(--primary)))` }}
+                    />
+                  </span>
                 </div>
               </div>
               <Button className="w-full" size="lg" onClick={handleCheckout}>
@@ -122,8 +124,16 @@ export const CartSheet = () => {
 
                       <div className="flex-1">
                         <h4 className="font-semibold">{item.name}</h4>
-                        <div className="text-sm font-semibold mt-1" style={{ color: `hsl(var(--price-color, var(--primary)))` }}>
-                          <DualPrice price={item.price} size="sm" />
+                        <div
+                          className="text-sm font-semibold mt-1"
+                          style={{ color: `hsl(var(--price-color, var(--primary)))` }}
+                        >
+                          <DualPrice
+                            price={
+                              (item.price + (item.extras?.reduce((sum, e) => sum + e.price, 0) || 0)) * item.quantity
+                            }
+                            size="sm"
+                          />
                         </div>
 
                         <div className="flex items-center gap-2 mt-2">
@@ -147,7 +157,7 @@ export const CartSheet = () => {
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-8 w-8 ml-auto"
+                            className="h-8 w-8 ml-auto ms-8"
                             onClick={() => removeItem(item.cartItemId || item.id)}
                           >
                             <Trash2 className="w-4 h-4" />
@@ -156,10 +166,12 @@ export const CartSheet = () => {
                       </div>
                       <div className="text-right">
                         <div className="font-semibold">
-                          <DualPrice
-                            price={(item.price + (item.extras?.reduce((sum, e) => sum + e.price, 0) || 0)) * item.quantity}
+                          {/* <DualPrice
+                            price={
+                              (item.price + (item.extras?.reduce((sum, e) => sum + e.price, 0) || 0)) * item.quantity
+                            }
                             size="sm"
-                          />
+                          /> */}
                         </div>
                         {item.extras && item.extras.length > 0 && (
                           <p className="text-xs text-muted-foreground mt-1">

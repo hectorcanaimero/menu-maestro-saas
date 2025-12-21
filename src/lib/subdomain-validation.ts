@@ -252,6 +252,33 @@ export function formatSubdomainDisplay(subdomain: string): string {
  * @returns True if the current domain is www.pideai.com, pideai.com, www.artex.lat, or artex.lat
  */
 export function isMainDomain(): boolean {
-  const subdomain = getSubdomainFromHostname();
-  return subdomain === 'www' || subdomain === '';
+  const hostname = window.location.hostname;
+
+  // En desarrollo, considerar localhost como dominio principal
+  if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname.startsWith('192.168.')) {
+    return true;
+  }
+
+  // En producción, verificar si es www o el dominio raíz
+  return hostname === 'www.pideai.com' ||
+         hostname === 'pideai.com' ||
+         hostname === 'www.artex.lat' ||
+         hostname === 'artex.lat';
+}
+
+/**
+ * Check if current hostname is specifically www.pideai.com (for platform admin access)
+ *
+ * @returns True only if the current domain is exactly www.pideai.com (or localhost in dev)
+ */
+export function isPlatformAdminDomain(): boolean {
+  const hostname = window.location.hostname;
+
+  // En desarrollo, permitir localhost
+  if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname.startsWith('192.168.')) {
+    return true;
+  }
+
+  // En producción, solo permitir www.pideai.com
+  return hostname === 'www.pideai.com';
 }

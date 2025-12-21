@@ -48,10 +48,10 @@ export function formatPrice(
 
   // Construct final price string
   if (decimalPlaces > 0 && decimalPart) {
-    return `${currencySymbol} ${formattedInteger}${decimalSeparator}${decimalPart}`;
+    return `${currencySymbol}${formattedInteger}${decimalSeparator}${decimalPart}`;
   }
 
-  return `${currencySymbol} ${formattedInteger}`;
+  return `${currencySymbol}${formattedInteger}`;
 }
 
 /**

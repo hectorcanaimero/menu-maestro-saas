@@ -114,18 +114,6 @@ export function QuickViewModal() {
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
     >
-      {/* Close button (mobile only - desktop has default X) */}
-      {isMobile && (
-        <Button
-          variant="ghost"
-          size="icon"
-          className="absolute top-2 right-2 z-50 h-10 w-10 rounded-full bg-background/80 backdrop-blur-sm"
-          onClick={closeQuickView}
-        >
-          <X className="h-5 w-5" />
-        </Button>
-      )}
-
       {/* Navigation arrows (desktop) */}
       {!isMobile && (
         <>

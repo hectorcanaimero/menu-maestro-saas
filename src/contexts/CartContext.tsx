@@ -150,12 +150,12 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       });
 
       if (existing) {
-        toast.success("Cantidad actualizada");
+        toast.success("Producto agregado al carrito");
         return current.map((i) =>
           i.cartItemId === cartItemId ? { ...i, quantity: i.quantity + 1 } : i
         );
       }
-      toast.success("Platillo agregado al carrito");
+      toast.success("Producto agregado al carrito");
       return [...current, { ...itemWithId, quantity: 1 }];
     });
   };
@@ -194,7 +194,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
 
       return current.filter((item) => item.cartItemId !== cartItemId);
     });
-    toast.success("Platillo eliminado");
+    toast.success("Producto eliminado del carrito");
   };
 
   const updateQuantity = (cartItemId: string, quantity: number) => {

@@ -129,8 +129,6 @@ export default function ProductDetail() {
       extras: selectedExtrasArray,
       categoryId: product.category_id,
     });
-
-    toast.success('Producto agregado al carrito');
   };
 
   if (loading) {

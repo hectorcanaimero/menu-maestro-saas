@@ -1,7 +1,8 @@
 import { ReactNode } from 'react';
 import { Navigate } from 'react-router-dom';
 import { usePlatformAdmin } from '@/hooks/usePlatformAdmin';
-import { Loader2 } from 'lucide-react';
+import { Loader2, ShieldAlert } from 'lucide-react';
+import { isPlatformAdminDomain } from '@/lib/subdomain-validation';
 
 interface PlatformAdminGuardProps {
   children: ReactNode;
@@ -10,10 +11,34 @@ interface PlatformAdminGuardProps {
 
 /**
  * Componente guard que protege rutas del panel de administración de plataforma
- * Solo permite acceso a usuarios con rol de platform admin
+ * Solo permite acceso a usuarios con rol de platform admin Y desde el dominio www.pideai.com
  */
 export function PlatformAdminGuard({ children, requiredRole }: PlatformAdminGuardProps) {
   const { isAdmin, role, isLoading } = usePlatformAdmin();
+
+  // PRIMERA VALIDACIÓN: Verificar que viene desde el dominio correcto
+  const isValidDomain = isPlatformAdminDomain();
+
+  if (!isValidDomain) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-background">
+        <div className="max-w-md p-6 bg-card rounded-lg border border-destructive text-center">
+          <ShieldAlert className="h-16 w-16 text-destructive mx-auto mb-4" />
+          <h2 className="text-2xl font-bold text-destructive mb-4">
+            Acceso Restringido
+          </h2>
+          <p className="text-muted-foreground mb-4">
+            El panel de administración de plataforma solo está disponible desde el dominio principal.
+          </p>
+          <p className="text-sm text-muted-foreground">
+            Dominio actual: <span className="font-semibold">{window.location.hostname}</span>
+            <br />
+            Dominio requerido: <span className="font-semibold text-primary">www.pideai.com</span>
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   // Mostrar loading mientras verifica permisos
   if (isLoading) {
