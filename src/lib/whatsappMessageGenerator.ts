@@ -29,6 +29,8 @@ interface OrderData {
   couponDiscount?: number;
   deliveryPrice?: number;
   tableNumber?: string;
+  exchangeRate?: number; // Tasa de cambio USD a BSF
+  paymentProofUrl?: string; // URL del comprobante de pago
 }
 
 interface StoreTemplates {
@@ -63,20 +65,39 @@ export const generateWhatsAppMessage = (
     couponDiscount = 0,
     deliveryPrice = 0,
     tableNumber = "",
+    exchangeRate = 0,
+    paymentProofUrl = "",
   } = orderData;
 
   // Format price function
   const formatPrice = (price: number): string => {
     const fixedPrice = price.toFixed(decimalPlaces);
     const [integer, decimal] = fixedPrice.split(".");
-    
+
     // Add thousands separator
     const formattedInteger = integer.replace(
       /\B(?=(\d{3})+(?!\d))/g,
       thousandsSeparator
     );
-    
+
     return `${currency} ${formattedInteger}${decimalSeparator}${decimal}`;
+  };
+
+  // Format price in bolivares (BSF)
+  const formatPriceBSF = (price: number): string => {
+    if (exchangeRate <= 0) return "";
+
+    const priceInBSF = price * exchangeRate;
+    const fixedPrice = priceInBSF.toFixed(2);
+    const [integer, decimal] = fixedPrice.split(".");
+
+    // Add thousands separator
+    const formattedInteger = integer.replace(
+      /\B(?=(\d{3})+(?!\d))/g,
+      "."
+    );
+
+    return `Bs. ${formattedInteger},${decimal}`;
   };
 
   // Generate products list
@@ -116,9 +137,12 @@ export const generateWhatsAppMessage = (
     templateMessage = templates.orderMessageTemplateDigitalMenu;
   }
 
+  // Calculate subtotals
+  const subtotalProducts = totalAmount - deliveryPrice - couponDiscount;
+
   // Replace tokens in order message template
   let finalMessage = templateMessage;
-  
+
   finalMessage = finalMessage.replace(/{order-number}/g, orderNumber);
   finalMessage = finalMessage.replace(/{order-date-time}/g, orderDateTime);
   finalMessage = finalMessage.replace(/{order-products}/g, productsList);
@@ -134,15 +158,24 @@ export const generateWhatsAppMessage = (
   finalMessage = finalMessage.replace(/{payment-type}/g, ""); // Not implemented
   finalMessage = finalMessage.replace(/{payment-status}/g, "Pendiente");
   finalMessage = finalMessage.replace(/{payment-change}/g, ""); // Not implemented
-  finalMessage = finalMessage.replace(/{payment-receipt-link}/g, ""); // Not implemented
+  finalMessage = finalMessage.replace(/{payment-receipt-link}/g, paymentProofUrl);
   finalMessage = finalMessage.replace(/{customer-address-number}/g, ""); // Not implemented
   finalMessage = finalMessage.replace(/{customer-address-complement}/g, ""); // Not implemented
   finalMessage = finalMessage.replace(/{customer-address-neighborhood}/g, ""); // Not implemented
   finalMessage = finalMessage.replace(/{customer-address-zipcode}/g, ""); // Not implemented
   finalMessage = finalMessage.replace(/{shipping-price}/g, deliveryPrice > 0 ? formatPrice(deliveryPrice) : "$0.00");
-  finalMessage = finalMessage.replace(/{shipping-price-bolivares}/g, ""); // Not implemented
-  finalMessage = finalMessage.replace(/{order-total-bolivares}/g, ""); // Not implemented
-  finalMessage = finalMessage.replace(/{order-subtotal-bolivares}/g, ""); // Not implemented
+
+  // New: Bolivares conversions
+  finalMessage = finalMessage.replace(/{shipping-price-bolivares}/g, deliveryPrice > 0 ? formatPriceBSF(deliveryPrice) : "Bs. 0,00");
+  finalMessage = finalMessage.replace(/{order-total-bolivares}/g, formatPriceBSF(totalAmount));
+  finalMessage = finalMessage.replace(/{order-subtotal-bolivares}/g, formatPriceBSF(subtotalProducts));
+
+  // Legacy support for old tag names (keeping compatibility)
+  finalMessage = finalMessage.replace(/{total_delivery_bsf}/g, deliveryPrice > 0 ? formatPriceBSF(deliveryPrice) : "Bs. 0,00");
+  finalMessage = finalMessage.replace(/{total_products_bsf}/g, formatPriceBSF(subtotalProducts));
+  finalMessage = finalMessage.replace(/{total_order_bsf}/g, formatPriceBSF(totalAmount));
+  finalMessage = finalMessage.replace(/{payment_proof_link}/g, paymentProofUrl);
+  finalMessage = finalMessage.replace(/{tracking_link}/g, trackingUrl)
 
   // Add notes if present
   if (notes) {
