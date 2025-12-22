@@ -9,17 +9,27 @@ import { usePostHog, useTrackScrollDepth } from '@/hooks/usePostHog';
 import { SEO } from '@/components/SEO';
 
 // Lazy load components below the fold for better performance
-const HowItWorks = lazy(() => import('@/components/landing/HowItWorks').then(m => ({ default: m.HowItWorks })));
-const Features = lazy(() => import('@/components/Features').then(m => ({ default: m.Features })));
-const UseCases = lazy(() => import('@/components/landing/UseCases').then(m => ({ default: m.UseCases })));
-const PricingSection = lazy(() => import('@/components/landing/PricingSection').then(m => ({ default: m.PricingSection })));
-const TestimonialsSection = lazy(() => import('@/components/landing/TestimonialsSection').then(m => ({ default: m.TestimonialsSection })));
-const TrustBadges = lazy(() => import('@/components/landing/TrustBadges').then(m => ({ default: m.TrustBadges })));
-const FAQSection = lazy(() => import('@/components/landing/FAQSection').then(m => ({ default: m.FAQSection })));
-const LandingFooter = lazy(() => import('@/components/landing/LandingFooter').then(m => ({ default: m.LandingFooter })));
-const WhatsAppWidget = lazy(() => import('@/components/landing/WhatsAppWidget').then(m => ({ default: m.WhatsAppWidget })));
-const ExitIntentPopup = lazy(() => import('@/components/landing/ExitIntentPopup').then(m => ({ default: m.ExitIntentPopup })));
-const StickyCTA = lazy(() => import('@/components/landing/StickyCTA').then(m => ({ default: m.StickyCTA })));
+const HowItWorks = lazy(() => import('@/components/landing/HowItWorks').then((m) => ({ default: m.HowItWorks })));
+const Features = lazy(() => import('@/components/Features').then((m) => ({ default: m.Features })));
+const UseCases = lazy(() => import('@/components/landing/UseCases').then((m) => ({ default: m.UseCases })));
+const PricingSection = lazy(() =>
+  import('@/components/landing/PricingSection').then((m) => ({ default: m.PricingSection })),
+);
+const TestimonialsSection = lazy(() =>
+  import('@/components/landing/TestimonialsSection').then((m) => ({ default: m.TestimonialsSection })),
+);
+const TrustBadges = lazy(() => import('@/components/landing/TrustBadges').then((m) => ({ default: m.TrustBadges })));
+const FAQSection = lazy(() => import('@/components/landing/FAQSection').then((m) => ({ default: m.FAQSection })));
+const LandingFooter = lazy(() =>
+  import('@/components/landing/LandingFooter').then((m) => ({ default: m.LandingFooter })),
+);
+const WhatsAppWidget = lazy(() =>
+  import('@/components/landing/WhatsAppWidget').then((m) => ({ default: m.WhatsAppWidget })),
+);
+const ExitIntentPopup = lazy(() =>
+  import('@/components/landing/ExitIntentPopup').then((m) => ({ default: m.ExitIntentPopup })),
+);
+const StickyCTA = lazy(() => import('@/components/landing/StickyCTA').then((m) => ({ default: m.StickyCTA })));
 
 // Loading skeleton component
 const SectionSkeleton = () => (
@@ -39,9 +49,7 @@ const SectionSkeleton = () => (
 const LandingPage = () => {
   const navigate = useNavigate();
   const { track, trackPageView } = usePostHog();
-  const [whatsappMessage, setWhatsappMessage] = useState(
-    '¡Hola! Me gustaría crear mi tienda con PideAI'
-  );
+  const [whatsappMessage, setWhatsappMessage] = useState('¡Hola! Me gustaría crear mi tienda con PideAI');
 
   // Track page view on mount
   useEffect(() => {
@@ -106,19 +114,16 @@ const LandingPage = () => {
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
           >
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">
-              ¿Listo para Digitalizar tu Negocio?
-            </h2>
+            <h2 className="text-3xl md:text-3xl font-bold mb-4">¿Listo para dejar atrás el desorden en tus pedidos?</h2>
             <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
-              Únete a cientos de negocios que ya están creciendo con PideAI. Comienza gratis
-              hoy mismo.
+              Únete a cientos de negocios que ya venden de forma más simple y ordenada.
             </p>
             <Button
               size="lg"
               onClick={() => {
                 track('final_cta_clicked', {
                   cta_location: 'bottom_section',
-                  cta_text: 'Crear Tienda Gratis',
+                  cta_text: 'Crear tienda gratis ahora',
                 });
                 navigate('/create-store');
               }}
@@ -134,11 +139,7 @@ const LandingPage = () => {
 
       <Suspense fallback={null}>
         {/* WhatsApp Widget Flotante */}
-        <WhatsAppWidget
-          phoneNumber="573123456789"
-          message={whatsappMessage}
-          position="bottom-right"
-        />
+        <WhatsAppWidget phoneNumber="573123456789" message={whatsappMessage} position="bottom-right" />
 
         {/* Exit Intent Popup */}
         <ExitIntentPopup />

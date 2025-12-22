@@ -1,354 +1,434 @@
-# Menu Maestro - Deployment con Docker Swarm + Traefik
+# 🚀 Menu Maestro - Deployment Guide
 
-Este directorio contiene toda la configuraci\u00f3n necesaria para deployar Menu Maestro en producci\u00f3n usando Docker Swarm con Traefik como reverse proxy.
+Documentación completa para deployar Menu Maestro en producción con Docker Swarm, Traefik v2 y Portainer.
 
-## Estructura de Archivos
+## 📋 Tabla de Contenidos
 
-```
-.
-\u251c\u2500\u2500 Dockerfile.production              # Multi-stage build optimizado con Nginx
-\u251c\u2500\u2500 nginx.conf                         # Configuraci\u00f3n de Nginx para SPA
-\u251c\u2500\u2500 docker-compose.swarm.yml          # Stack completo para Docker Swarm
-\u251c\u2500\u2500 .dockerignore                     # Archivos a ignorar en build
-\u251c\u2500\u2500 .env.production                   # Variables de entorno (crear desde .env.production.example)
-\u251c\u2500\u2500
-\u251c\u2500\u2500 scripts/
-\u2502   \u251c\u2500\u2500 build-docker-image.sh        # Script de build automatizado
-\u2502   \u251c\u2500\u2500 setup-swarm-secrets.sh       # Script para crear secrets
-\u2502   \u2514\u2500\u2500 deploy-to-swarm.sh           # Script de deployment
-\u251c\u2500\u2500
-\u2514\u2500\u2500 docs/
-    \u251c\u2500\u2500 PORTAINER_DEPLOYMENT.md      # Gu\u00eda completa de deployment
-    \u251c\u2500\u2500 TRAEFIK_SETUP.md             # Configuraci\u00f3n de Traefik
-    \u2514\u2500\u2500 DEPLOYMENT_QUICKSTART.md     # Quick start en 15 minutos
-```
+1. [Resumen Ejecutivo](#resumen-ejecutivo)
+2. [Arquitectura](#arquitectura)
+3. [Pre-requisitos](#pre-requisitos)
+4. [Quick Start](#quick-start)
+5. [Documentación Detallada](#documentación-detallada)
+6. [Troubleshooting](#troubleshooting)
 
-## Gu\u00edas de Deployment
+## 🎯 Resumen Ejecutivo
 
-### Para Principiantes
+Menu Maestro es una plataforma multi-tenant de pedidos en línea que soporta múltiples restaurantes con subdominios independientes:
 
-Si es tu primera vez deployando con Docker Swarm:
+- **Multi-tenant**: Cada tienda tiene su propio subdominio (ej: `tienda1.pideai.com`, `cafe.artex.lat`)
+- **Alta disponibilidad**: 3 replicas con load balancing automático
+- **Zero downtime**: Rolling updates sin interrupciones
+- **SSL automático**: Certificados Let's Encrypt vía Traefik
+- **Escalable**: Fácil de escalar horizontal y verticalmente
 
-1. **Lee primero**: `docs/PORTAINER_DEPLOYMENT.md`
-2. **Configura Traefik**: `docs/TRAEFIK_SETUP.md`
-3. **Sigue el paso a paso**: La gu\u00eda completa te llevar\u00e1 desde cero
+### URLs de Ejemplo
 
-### Para Usuarios Experimentados
+- Main domain: `https://pideai.com` (landing page)
+- Platform admin: `https://www.pideai.com` (admin platform)
+- Store 1: `https://tienda1.pideai.com`
+- Store 2: `https://restaurante-abc.artex.lat`
 
-Si ya tienes Docker Swarm y Traefik configurados:
-
-1. **Quick Start**: `docs/DEPLOYMENT_QUICKSTART.md`
-2. **Deploy en 15 minutos**: Sigue los 5 pasos r\u00e1pidos
-
-## Quick Start (TL;DR)
-
-```bash
-# 1. Configurar variables
-cp .env.production.example .env.production
-vim .env.production
-
-# 2. Build imagen
-./scripts/build-docker-image.sh --tag v1.0.0 --push
-
-# 3. Crear secrets
-./scripts/setup-swarm-secrets.sh
-
-# 4. Deploy
-./scripts/deploy-to-swarm.sh pideai
-
-# 5. Verificar
-docker service logs -f pideai_app
-curl https://tu-dominio.com/health
-```
-
-## Arquitectura
+## 🏗️ Arquitectura
 
 ```
-Internet
-   |
-   v
-[Traefik]
-   |-- SSL/TLS (Let's Encrypt)
-   |-- Subdomain Routing
-   |
-   v
-[Docker Swarm]
-   |
-   |-- Menu Maestro (2 r\u00e9plicas)
-   |   |-- Nginx
-   |   \u2514\u2500\u2500 React SPA
-   |
-   v
-[Supabase Cloud]
+Internet → DNS Wildcard → Traefik (SSL/Load Balancer)
+  → Docker Swarm (3 replicas) → Nginx + React SPA → Supabase
 ```
 
-## Caracter\u00edsticas del Deployment
+**Stack de tecnología:**
+- **Frontend**: React + TypeScript + Vite
+- **Web Server**: Nginx (Alpine)
+- **Orchestration**: Docker Swarm
+- **Reverse Proxy**: Traefik v2
+- **Backend**: Supabase (PostgreSQL + Auth + Realtime)
+- **Management**: Portainer
 
-- **Multi-stage Docker Build**: Imagen optimizada de ~25MB
-- **Zero Downtime Updates**: Rolling updates autom\u00e1ticos
-- **SSL Autom\u00e1tico**: Let's Encrypt con renovaci\u00f3n autom\u00e1tica
-- **Multi-tenant**: Routing por subdomain (*.pideai.com)
-- **Load Balancing**: Distribuci\u00f3n autom\u00e1tica de carga
-- **Health Checks**: Monitoreo autom\u00e1tico de containers
-- **Secrets Management**: Secrets seguros con Docker Swarm
+Ver diagrama completo: [ARCHITECTURE.md](./ARCHITECTURE.md)
 
-## Variables de Entorno Requeridas
+## ✅ Pre-requisitos
 
-```bash
-# Supabase (REQUERIDO)
-VITE_SUPABASE_PROJECT_ID=xxx
-VITE_SUPABASE_PUBLISHABLE_KEY=xxx
-VITE_SUPABASE_URL=https://xxx.supabase.co
-
-# PostHog Analytics (OPCIONAL)
-VITE_POSTHOG_KEY=phc_xxx
-VITE_POSTHOG_HOST=https://us.i.posthog.com
-VITE_POSTHOG_PERSONAL_KEY=phx_xxx
-```
-
-## Pre-requisitos
-
-### Software
-- Docker Engine 20.10+
-- Docker Swarm inicializado
-- Traefik deployado
-- Git
-
-### Infraestructura
-- Servidor con 2+ CPU cores
-- 4 GB RAM (8 GB recomendado)
-- 20 GB disco
-- Puertos 80 y 443 abiertos
+### Servidor
+- [x] VPS con Docker instalado (Ubuntu 22.04 recomendado)
+- [x] Mínimo: 4 vCPU, 8GB RAM, 160GB SSD
+- [x] Puertos abiertos: 80, 443, 9443 (Portainer)
 
 ### DNS
-- Dominio registrado
-- DNS configurado (wildcard: `*.pideai.com`)
-- Propagaci\u00f3n completa
+- [x] Dominio configurado con wildcard A records:
+  - `*.pideai.com` → IP_SERVIDOR
+  - `*.artex.lat` → IP_SERVIDOR
+  - `pideai.com` → IP_SERVIDOR
+  - `artex.lat` → IP_SERVIDOR
 
-## Comandos \u00datiles
+### Software
+- [x] Docker 20.10+
+- [x] Docker Compose v2
+- [x] Portainer (opcional pero recomendado)
+- [x] Traefik v2 con Let's Encrypt configurado
+
+## 🚀 Quick Start
+
+### Paso 1: Preparar el Servidor
 
 ```bash
-# Ver servicios
-docker service ls
+# Inicializar Docker Swarm
+docker swarm init
+
+# Crear network para Traefik
+docker network create --driver=overlay traefik-public
+
+# Verificar
+docker network ls | grep traefik-public
+```
+
+### Paso 2: Build de la Imagen
+
+```bash
+# Clonar el repositorio
+git clone https://github.com/hectorcanaimero/menu-maestro-saas.git
+cd menu-maestro-saas
+
+# Configurar variables de entorno
+export VITE_SUPABASE_PROJECT_ID=wdpexjymbiyjqwdttqhz
+export VITE_SUPABASE_URL=https://wdpexjymbiyjqwdttqhz.supabase.co
+export VITE_SUPABASE_PUBLISHABLE_KEY=your_supabase_key
+export VITE_POSTHOG_KEY=your_posthog_key
+export VITE_POSTHOG_HOST=https://us.i.posthog.com
+
+# Build usando el helper script
+chmod +x deploy-swarm.sh
+./deploy-swarm.sh build
+```
+
+**Alternativa**: Usar GitHub Actions para build automático al crear una tag:
+```bash
+git tag v3.0.3
+git push origin v3.0.3
+# GitHub Actions hará el build y push automáticamente
+```
+
+### Paso 3: Deploy en Portainer
+
+1. Accede a Portainer: `https://tu-servidor:9443`
+2. Ve a **Stacks** → **Add Stack**
+3. Nombre: `pideai`
+4. Pega el contenido de [docker-compose.swarm.yml](./docker-compose.swarm.yml)
+5. Click **Deploy the stack**
+
+**Alternativa CLI**:
+```bash
+./deploy-swarm.sh deploy
+```
+
+### Paso 4: Verificar Deployment
+
+```bash
+# Ver estado del stack
+docker stack ps pideai
 
 # Ver logs
-docker service logs -f pideai_app
+docker service logs pideai_app -f --tail 100
 
-# Escalar
-docker service scale pideai_app=4
+# Test endpoints
+curl -I https://pideai.com
+curl -I https://tienda1.pideai.com
+```
 
-# Actualizar
-docker service update --image nueva-imagen pideai_app
+**Desde el browser**:
+- https://pideai.com (debe cargar)
+- https://tienda1.pideai.com (debe cargar)
+- https://test.artex.lat (debe cargar)
 
-# Rollback
+## 📚 Documentación Detallada
+
+### Configuración y Setup
+- **[PORTAINER_DEPLOYMENT.md](./PORTAINER_DEPLOYMENT.md)** - Guía paso a paso para deployar en Portainer
+- **[TRAEFIK_CONFIG.md](./TRAEFIK_CONFIG.md)** - Configuración de Traefik con wildcard SSL
+- **[ARCHITECTURE.md](./ARCHITECTURE.md)** - Diagrama de arquitectura y flujo de datos
+
+### Archivos de Configuración
+- **[Dockerfile.production](./Dockerfile.production)** - Multi-stage build optimizado
+- **[docker-compose.swarm.yml](./docker-compose.swarm.yml)** - Stack configuration para Swarm
+- **[nginx.conf](./nginx.conf)** - Configuración de Nginx para SPA
+- **[deploy-swarm.sh](./deploy-swarm.sh)** - Script helper para deployment
+
+### Referencia
+- **[DOCKER_COMMANDS.md](./DOCKER_COMMANDS.md)** - Comandos útiles de Docker Swarm
+
+## 🔧 Operaciones Comunes
+
+### Actualizar a Nueva Versión
+
+```bash
+# Opción 1: Via script helper
+./deploy-swarm.sh update
+
+# Opción 2: Via Docker CLI
+docker service update --image ghcr.io/hectorcanaimero/menu-maestro-saas:v3.0.3 pideai_app
+
+# Opción 3: Via Portainer
+# Stacks → pideai → Editor → Cambiar tag → Update
+```
+
+### Escalar Replicas
+
+```bash
+# Via CLI
+docker service scale pideai_app=5
+
+# Via Portainer
+# Services → pideai_app → Scale → 5 replicas
+```
+
+### Ver Logs en Tiempo Real
+
+```bash
+# Todos los logs del servicio
+docker service logs pideai_app -f --tail 100
+
+# Logs de un container específico
+docker logs container_id -f
+```
+
+### Rollback a Versión Anterior
+
+```bash
+# Via CLI
 docker service rollback pideai_app
 
-# Eliminar
-docker stack rm pideai
+# Via Portainer
+# Services → pideai_app → Rollback
 ```
 
-## Troubleshooting
+## 🐛 Troubleshooting
 
-### Problema com\u00fan #1: Certificado SSL no se genera
+### Problema: Servicio no inicia
 
-**Soluci\u00f3n:**
+**Diagnóstico:**
 ```bash
+# Ver estado
+docker service ps pideai_app --no-trunc
+
+# Ver logs
+docker service logs pideai_app --tail 100
+
+# Inspeccionar servicio
+docker service inspect pideai_app --pretty
+```
+
+**Soluciones comunes:**
+1. Verificar que la imagen existe: `docker pull ghcr.io/hectorcanaimero/menu-maestro-saas:latest`
+2. Verificar que la network existe: `docker network ls | grep traefik-public`
+3. Verificar recursos del servidor: `docker stats`
+
+### Problema: No puedo acceder via HTTPS
+
+**Diagnóstico:**
+```bash
+# Test desde el servidor
+curl -I https://pideai.com
+
 # Verificar DNS
 dig pideai.com +short
+dig tienda1.pideai.com +short
 
 # Ver logs de Traefik
-docker service logs traefik_traefik | grep acme
-
-# Verificar puerto 80 abierto
-curl http://pideai.com/.well-known/acme-challenge/test
+docker service logs traefik_traefik -f
 ```
 
-### Problema com\u00fan #2: 502 Bad Gateway
+**Soluciones comunes:**
+1. Verificar DNS propagado (puede tomar hasta 48h)
+2. Verificar Traefik corriendo: `docker service ls | grep traefik`
+3. Verificar certificados: `cat /opt/traefik/letsencrypt/acme.json | jq .`
+4. Verificar firewall permite puertos 80 y 443
 
-**Soluci\u00f3n:**
-```bash
-# Ver logs del servicio
-docker service logs pideai_app
+### Problema: Subdominio no funciona
 
-# Verificar health check
-docker service ps pideai_app
-
-# Probar health check manualmente
-curl http://pideai.com/health
-```
-
-### Problema com\u00fan #3: Subdominios no funcionan
-
-**Soluci\u00f3n:**
+**Diagnóstico:**
 ```bash
 # Verificar DNS wildcard
-dig tienda1.pideai.com +short
-dig cualquier-cosa.pideai.com +short
+dig random-subdomain.pideai.com +short
 
-# Ambos deben retornar la IP del servidor
+# Test con curl
+curl -H "Host: test.pideai.com" http://localhost
+
+# Ver labels de Traefik
+docker service inspect pideai_app | jq '.[0].Spec.Labels'
 ```
 
-Ver `docs/PORTAINER_DEPLOYMENT.md` secci\u00f3n "Troubleshooting" para m\u00e1s problemas y soluciones.
+**Soluciones comunes:**
+1. Verificar wildcard DNS configurado: `*.pideai.com`
+2. Verificar regex de Traefik en labels
+3. Ver dashboard de Traefik para routing
 
-## Actualizaciones
+### Problema: Containers reiniciándose
 
-### Actualizar la Aplicaci\u00f3n
-
+**Diagnóstico:**
 ```bash
-# 1. Build nueva versi\u00f3n
-./scripts/build-docker-image.sh --tag v1.1.0 --push
+# Ver por qué están reiniciando
+docker service ps pideai_app --no-trunc
 
-# 2. Actualizar servicio (rolling update autom\u00e1tico)
-docker service update --image ghcr.io/usuario/menu-maestro:v1.1.0 pideai_app
+# Ver health check logs
+docker inspect container_id | jq '.[0].State.Health'
 
-# 3. Monitorear
-watch docker service ps pideai_app
+# Test health check manualmente
+docker exec -it container_id curl http://localhost/health
 ```
 
-### Actualizar Configuraci\u00f3n
+**Soluciones comunes:**
+1. Verificar `/health` endpoint responde
+2. Aumentar recursos: CPU/RAM
+3. Ver logs para errores: `docker logs container_id`
+
+Ver más en: [DOCKER_COMMANDS.md](./DOCKER_COMMANDS.md#troubleshooting-common-issues)
+
+## 📊 Monitoreo
+
+### Métricas Básicas
 
 ```bash
-# Editar stack
-vim docker-compose.swarm.yml
+# Ver estado de servicios
+docker service ls
 
-# Redeploy
-docker stack deploy -c docker-compose.swarm.yml pideai
-```
-
-## Monitoring y Logs
-
-```bash
-# Logs en tiempo real
-docker service logs -f pideai_app
-
-# Logs de las \u00faltimas 24 horas
-docker service logs --since 24h pideai_app
-
-# Filtrar errores
-docker service logs pideai_app | grep ERROR
-
-# Ver m\u00e9tricas de recursos
+# Ver uso de recursos
 docker stats
+
+# Ver tasks del stack
+docker stack ps pideai
+
+# Ver eventos en tiempo real
+docker events --filter 'type=service'
 ```
 
-## Backup y Restore
+### Health Checks
 
-### Backup
+El servicio tiene health checks automáticos:
+- **Endpoint**: `/health`
+- **Interval**: 30s
+- **Timeout**: 5s
+- **Retries**: 3
 
 ```bash
-# Backup de configuraci\u00f3n
-tar -czf backup-$(date +%Y%m%d).tar.gz \
-  docker-compose.swarm.yml \
-  nginx.conf \
-  .env.production \
-  scripts/
-
-# Listar secrets (no se pueden exportar, documentar nombres)
-docker secret ls > secrets-list.txt
+# Verificar health status
+docker service inspect pideai_app | jq '.[0].Spec.TaskTemplate.ContainerSpec.Healthcheck'
 ```
 
-### Restore
+## 🔒 Seguridad
 
+### Configurado automáticamente:
+- ✅ HTTPS obligatorio (HTTP → HTTPS redirect)
+- ✅ HSTS headers (Strict-Transport-Security)
+- ✅ CSP headers (Content-Security-Policy)
+- ✅ XSS Protection
+- ✅ Clickjacking protection
+- ✅ MIME sniffing protection
+- ✅ Certificados SSL automáticos (Let's Encrypt)
+
+### Recomendaciones adicionales:
+- [ ] Configurar firewall (UFW): solo puertos 80, 443, 22, 9443
+- [ ] Cambiar puerto SSH del default (22)
+- [ ] Configurar fail2ban
+- [ ] Habilitar rate limiting en Traefik
+- [ ] Configurar backups automáticos
+- [ ] Monitoreo con Prometheus/Grafana
+
+## 📈 Escalabilidad
+
+### Horizontal Scaling (Más Replicas)
 ```bash
-# Extraer backup
-tar -xzf backup-YYYYMMDD.tar.gz
+# Escalar a 5 replicas
+docker service scale pideai_app=5
 
-# Recrear secrets (desde .env.production)
-./scripts/setup-swarm-secrets.sh
-
-# Redeploy
-./scripts/deploy-to-swarm.sh pideai
+# Escalar a 10 replicas
+docker service scale pideai_app=10
 ```
 
-## Seguridad
-
-### Mejores Pr\u00e1cticas Implementadas
-
-- [x] Secrets management con Docker Swarm
-- [x] SSL/TLS con Let's Encrypt
-- [x] Security headers en Nginx
-- [x] No ejecutar como root en container
-- [x] Read-only filesystem donde sea posible
-- [x] Health checks configurados
-- [x] Resource limits definidos
-- [x] Logging habilitado
-
-### Recomendaciones Adicionales
-
-1. **Firewall**: Solo abrir puertos 22, 80, 443
-2. **SSH**: Deshabilitar password auth, solo usar keys
-3. **Updates**: Mantener Docker y Traefik actualizados
-4. **Monitoring**: Configurar alertas para servicios ca\u00eddos
-5. **Backups**: Automatizar backups de configuraci\u00f3n
-
-## Performance
-
-### Configuraci\u00f3n Actual
-
-- **Replicas**: 2 containers
-- **CPU**: 0.5 cores por container
-- **RAM**: 512MB por container
-- **Image size**: ~25MB (optimizado)
-
-### Escalamiento
-
-```bash
-# Escalar horizontalmente
-docker service scale pideai_app=4
-
-# Escalar verticalmente (editar docker-compose.swarm.yml)
+### Vertical Scaling (Más Recursos)
+Editar `docker-compose.swarm.yml`:
+```yaml
 resources:
   limits:
-    cpus: '1.0'
-    memory: 1G
+    cpus: '1.0'      # De 0.5 a 1.0
+    memory: 1024M    # De 512M a 1024M
 ```
 
-## CI/CD
+### Multi-Node Cluster
+```bash
+# En nodo manager
+docker swarm init
 
-El proyecto incluye un workflow de GitHub Actions para CI/CD autom\u00e1tico.
+# En nodos workers
+docker swarm join --token SWMTKN-xxx manager-ip:2377
 
-Ver: `.github/workflows/docker-build.yml`
+# Verificar cluster
+docker node ls
+```
 
-**Features:**
-- Build autom\u00e1tico en cada push
-- Push a GitHub Container Registry
-- Tagging autom\u00e1tico (commit SHA + latest)
-- Multi-platform builds (opcional)
+## 💰 Costos Estimados
 
-## Soporte
+### Single Server (Inicio)
+- VPS (4 vCPU, 8GB RAM): **$40-60/mes**
+- DNS (Cloudflare): **Gratis**
+- Container Registry (GHCR): **Gratis**
+- **Total: ~$40-60/mes**
 
-### Documentaci\u00f3n Completa
+### Multi-Node (Producción)
+- 3 VPS (2 vCPU, 4GB RAM cada uno): **$90/mes**
+- Load Balancer: **$12/mes**
+- **Total: ~$102/mes**
 
-- `docs/PORTAINER_DEPLOYMENT.md` - Gu\u00eda completa paso a paso
-- `docs/TRAEFIK_SETUP.md` - Configuraci\u00f3n de Traefik
-- `docs/DEPLOYMENT_QUICKSTART.md` - Quick start r\u00e1pido
+## 🔄 CI/CD con GitHub Actions
 
-### Recursos Externos
+El proyecto incluye workflow automático:
 
+```bash
+# Crear nueva versión
+git tag v3.0.3
+git push origin v3.0.3
+
+# GitHub Actions automáticamente:
+# 1. Build de la imagen
+# 2. Push a ghcr.io
+# 3. Tag como :latest y :v3.0.3
+```
+
+Ver: [.github/workflows/docker-publish.yml](.github/workflows/docker-publish.yml)
+
+## 📞 Soporte
+
+- **Documentación**: Revisa los archivos `.md` en este directorio
+- **Issues**: https://github.com/hectorcanaimero/menu-maestro-saas/issues
+- **Logs**: `docker service logs pideai_app -f`
+
+## 📝 Checklist de Deployment
+
+- [ ] Servidor con Docker instalado
+- [ ] Docker Swarm inicializado
+- [ ] Network `traefik-public` creada
+- [ ] DNS configurado (wildcards)
+- [ ] Traefik corriendo
+- [ ] Variables de entorno configuradas
+- [ ] Imagen buildeada y en registry
+- [ ] Stack deployado
+- [ ] Health checks pasando
+- [ ] HTTPS funcionando
+- [ ] Subdominios funcionando
+- [ ] Logs monitoreándose
+- [ ] Backup configurado
+
+## 🎓 Recursos Adicionales
+
+### Docker Swarm
 - [Docker Swarm Docs](https://docs.docker.com/engine/swarm/)
+- [Best Practices](https://docs.docker.com/engine/swarm/swarm-tutorial/)
+
+### Traefik v2
 - [Traefik Docs](https://doc.traefik.io/traefik/)
-- [Portainer Docs](https://docs.portainer.io/)
+- [Let's Encrypt](https://doc.traefik.io/traefik/https/acme/)
 
-### Obtener Ayuda
-
-1. Revisa la secci\u00f3n Troubleshooting en `docs/PORTAINER_DEPLOYMENT.md`
-2. Revisa logs: `docker service logs -f pideai_app`
-3. Abre un issue en GitHub con logs completos
+### Nginx
+- [Nginx Docs](https://nginx.org/en/docs/)
+- [SPA Configuration](https://www.nginx.com/blog/deploying-nginx-nginx-plus-docker/)
 
 ---
 
-## Changelog
-
-### Version 1.0.0 (2025-11-30)
-- Initial release
-- Docker Swarm support
-- Traefik integration
-- Multi-tenant subdomain routing
-- Automated scripts
-- Complete documentation
-
----
-
-**Mantenido por**: Menu Maestro Team
-**\u00daltima actualizaci\u00f3n**: 2025-11-30
-**Licencia**: MIT
+**¿Listo para deployar?** Empieza con [PORTAINER_DEPLOYMENT.md](./PORTAINER_DEPLOYMENT.md)

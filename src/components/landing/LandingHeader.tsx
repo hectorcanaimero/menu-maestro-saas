@@ -26,10 +26,7 @@ export const LandingHeader = () => {
             className="flex items-center hover:opacity-80 transition-opacity"
             aria-label="PideAI - Volver al inicio"
           >
-            <img src={logo} alt="PideAI" className="h-8 w-auto" />
-            <span className="text-2xl md:text-3xl lg:text-3xl text-primary font-bold leading-tight whitespace-nowrap ml-2 tracking-tight">
-              PideAI
-            </span>
+            <img src={logo} alt="PideAI" className="h-16 w-auto" />
           </button>
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-8">

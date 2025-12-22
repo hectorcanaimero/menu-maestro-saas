@@ -8,29 +8,28 @@ export const UseCases = () => {
   const cases = [
     {
       icon: Pizza,
-      title: 'Pizzerías',
-      tagline: 'Pedidos más rápidos, sin errores',
+      title: '🍕 Comida y Restaurantes',
+      tagline: 'Pedidos claros, menos errores y más control.',
       benefits: [
-        'Menú visual con fotos de cada pizza',
-        'Extras y modificaciones claras (sin piña, doble queso)',
-        'Control de inventario en tiempo real',
-        'Tiempo estimado de entrega automático',
+        'Menú visual con fotos y descripciones claras',
+        'Extras y personalizaciones bien definidas',
+        'Pedidos organizados desde el primer mensaje',
+        'Menos llamadas, menos confusión',
       ],
       stats: {
         metric: '+35%',
-        label: 'en pedidos de extras',
+        label: 'Más ventas y menos estrés en horas pico.',
       },
       color: 'from-orange-500 to-red-500',
     },
     {
       icon: Coffee,
-      title: 'Cafeterías',
-      tagline: 'Elimina filas, aumenta ventas',
+      title: '🛍️ Tiendas y Emprendimientos',
+      tagline: 'Catálogos claros para que tus clientes pidan sin escribir mil mensajes.',
       benefits: [
-        'Códigos QR en mesas para ordenar',
-        'Personalización de bebidas (leche, azúcar, tamaño)',
-        'Programa de lealtad integrado',
-        'Notificaciones cuando el pedido está listo',
+        'Catálogo con fotos, precios y variantes',
+        'Pedidos estructurados por WhatsApp',
+        'Control de productos y promociones',
       ],
       stats: {
         metric: '60%',
@@ -40,14 +39,9 @@ export const UseCases = () => {
     },
     {
       icon: UtensilsCrossed,
-      title: 'Restaurantes',
-      tagline: 'Gestión profesional de mesas',
-      benefits: [
-        'Menú digital multiidioma',
-        'Gestión de reservas y mesas',
-        'Comandas directas a cocina',
-        'Analytics de platillos más vendidos',
-      ],
+      title: '💄 Belleza & Servicios',
+      tagline: 'Organiza solicitudes, servicios y horarios desde un solo enlace.',
+      benefits: ['Enlace único para mostrar todo', 'Pedidos claros sin confusión', 'Mejor experiencia para el cliente'],
       stats: {
         metric: '45%',
         label: 'más eficiencia operativa',
@@ -56,8 +50,8 @@ export const UseCases = () => {
     },
     {
       icon: Truck,
-      title: 'Food Trucks',
-      tagline: 'Movilidad sin límites',
+      title: '🧾 Negocios por catálogo',
+      tagline: 'Ideal si vendes por WhatsApp y quieres más orden.',
       benefits: [
         'Actualiza ubicación en tiempo real',
         'Menú que cambia según disponibilidad',
@@ -83,11 +77,9 @@ export const UseCases = () => {
           viewport={{ once: true }}
           transition={{ duration: 0.5 }}
         >
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">
-            Perfecto para Tu Tipo de Negocio
-          </h2>
+          <h2 className="text-3xl md:text-4xl font-bold mb-4">Perfecto para Tu Tipo de Negocio</h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Soluciones adaptadas a las necesidades específicas de cada vertical gastronómica
+            No importa qué vendas: tus clientes pueden pedir de forma clara y ordenada.
           </p>
         </motion.div>
 
@@ -107,7 +99,7 @@ export const UseCases = () => {
                 aria-label={`Ver caso de uso para ${useCase.title}`}
                 aria-pressed={activeCase === index}
               >
-                <Icon size={20} aria-hidden="true" />
+                {/* <Icon size={20} aria-hidden="true" /> */}
                 <span className="text-sm md:text-base">{useCase.title}</span>
               </button>
             );
@@ -128,12 +120,8 @@ export const UseCases = () => {
               {/* Left: Benefits */}
               <div className="space-y-6">
                 <div>
-                  <h3 className="text-2xl md:text-3xl font-bold mb-2">
-                    {cases[activeCase].title}
-                  </h3>
-                  <p className="text-lg text-muted-foreground">
-                    {cases[activeCase].tagline}
-                  </p>
+                  <h3 className="text-2xl md:text-3xl font-bold mb-2">{cases[activeCase].title}</h3>
+                  <p className="text-lg text-muted-foreground">{cases[activeCase].tagline}</p>
                 </div>
 
                 <ul className="space-y-4">
@@ -154,12 +142,8 @@ export const UseCases = () => {
                 {/* Stats Badge */}
                 <div className="inline-flex items-center gap-3 bg-card border border-border rounded-lg px-6 py-4">
                   <div>
-                    <div className="text-3xl font-bold text-primary">
-                      {cases[activeCase].stats.metric}
-                    </div>
-                    <div className="text-sm text-muted-foreground">
-                      {cases[activeCase].stats.label}
-                    </div>
+                    <div className="text-3xl font-bold text-primary">{cases[activeCase].stats.metric}</div>
+                    <div className="text-sm text-muted-foreground">{cases[activeCase].stats.label}</div>
                   </div>
                 </div>
               </div>
@@ -175,7 +159,9 @@ export const UseCases = () => {
                   <div className="w-full h-full bg-background rounded-xl flex items-center justify-center">
                     {/* Placeholder for screenshot/mockup */}
                     <div className="text-center p-8">
-                      <div className={`w-20 h-20 mx-auto mb-4 rounded-2xl bg-gradient-to-br ${cases[activeCase].color} flex items-center justify-center`}>
+                      <div
+                        className={`w-20 h-20 mx-auto mb-4 rounded-2xl bg-gradient-to-br ${cases[activeCase].color} flex items-center justify-center`}
+                      >
                         {(() => {
                           const Icon = cases[activeCase].icon;
                           return <Icon size={40} className="text-white" aria-hidden="true" />;
@@ -190,8 +176,12 @@ export const UseCases = () => {
 
                 {/* Decorative elements */}
                 <div className="absolute -z-10 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full">
-                  <div className={`absolute top-0 right-0 w-72 h-72 bg-gradient-to-br ${cases[activeCase].color} rounded-full opacity-10 blur-3xl`} />
-                  <div className={`absolute bottom-0 left-0 w-64 h-64 bg-gradient-to-tr ${cases[activeCase].color} rounded-full opacity-10 blur-3xl`} />
+                  <div
+                    className={`absolute top-0 right-0 w-72 h-72 bg-gradient-to-br ${cases[activeCase].color} rounded-full opacity-10 blur-3xl`}
+                  />
+                  <div
+                    className={`absolute bottom-0 left-0 w-64 h-64 bg-gradient-to-tr ${cases[activeCase].color} rounded-full opacity-10 blur-3xl`}
+                  />
                 </div>
               </div>
             </div>

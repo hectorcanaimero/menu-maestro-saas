@@ -1,4 +1,5 @@
 import { Facebook, Instagram, Twitter, Mail } from 'lucide-react';
+import logo from '@/assets/logo.svg';
 
 export const LandingFooter = () => {
   return (
@@ -7,7 +8,7 @@ export const LandingFooter = () => {
         <div className="grid md:grid-cols-4 gap-8 mb-8">
           {/* Brand */}
           <div>
-            <h3 className="text-xl font-bold text-primary mb-4">PideAI</h3>
+            <img src={logo} alt="PideAI" className="h-16 w-auto" />
             <p className="text-muted-foreground text-sm">
               Digitaliza tu negocio y aumenta tus ventas con nuestra plataforma todo-en-uno.
             </p>
@@ -83,25 +84,13 @@ export const LandingFooter = () => {
 
           {/* Social Links */}
           <div className="flex gap-4">
-            <a
-              href="#"
-              className="text-muted-foreground hover:text-primary transition-colors"
-              aria-label="Facebook"
-            >
+            <a href="#" className="text-muted-foreground hover:text-primary transition-colors" aria-label="Facebook">
               <Facebook size={20} />
             </a>
-            <a
-              href="#"
-              className="text-muted-foreground hover:text-primary transition-colors"
-              aria-label="Instagram"
-            >
+            <a href="#" className="text-muted-foreground hover:text-primary transition-colors" aria-label="Instagram">
               <Instagram size={20} />
             </a>
-            <a
-              href="#"
-              className="text-muted-foreground hover:text-primary transition-colors"
-              aria-label="Twitter"
-            >
+            <a href="#" className="text-muted-foreground hover:text-primary transition-colors" aria-label="Twitter">
               <Twitter size={20} />
             </a>
             <a

@@ -6,27 +6,24 @@ export const HowItWorks = () => {
     {
       icon: Store,
       title: 'Crea tu Tienda',
-      description:
-        'Regístrate y configura tu tienda en minutos. Agrega tu logo, colores y información básica.',
+      description: 'Regístrate y configura tu negocio con tu logo, colores y datos básicos.',
     },
     {
       icon: Palette,
-      title: 'Personaliza tu Catálogo',
-      description:
-        'Añade tus productos con fotos, precios, descripciones y extras. Organiza por categorías.',
+      title: 'Arma tu tienda',
+      description: 'Agrega productos, precios, extras y categorías de forma sencilla.',
     },
     {
       icon: ShoppingCart,
       title: 'Recibe Pedidos',
-      description:
-        'Comparte tu link único o código QR. Recibe y gestiona pedidos en tiempo real desde tu panel.',
+      description: 'Comparte tu link o QR y comienza a recibir pedidos organizados en tiempo real.',
     },
   ];
 
   return (
     <section id="how-it-works" className="py-20 px-4 bg-muted/30">
       <div className="container mx-auto">
-        <motion.div 
+        <motion.div
           className="text-center mb-16"
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -34,9 +31,7 @@ export const HowItWorks = () => {
           transition={{ duration: 0.5 }}
         >
           <h2 className="text-3xl md:text-4xl font-bold mb-4">Cómo Funciona</h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            En solo 3 pasos simples, tu negocio estará listo para recibir pedidos online
-          </p>
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">Empieza a recibir pedidos en solo 3 pasos</p>
         </motion.div>
 
         <div className="grid md:grid-cols-3 gap-8">

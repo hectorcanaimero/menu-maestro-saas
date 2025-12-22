@@ -5,28 +5,29 @@ const features = [
   {
     icon: QrCode,
     title: 'Códigos QR',
-    description: 'Genera códigos QR personalizados para cada mesa. Tus clientes acceden al menú instantáneamente.',
+    description:
+      'Genera códigos QR personalizados para mesas, mostrador o delivery y deja que tus clientes vean el menú y pidan sin preguntar.',
   },
   {
     icon: MessageCircle,
     title: 'Integración WhatsApp',
-    description: 'Recibe pedidos directamente por WhatsApp con plantillas automáticas y notificaciones en tiempo real.',
+    description: 'Los pedidos llegan organizados por WhatsApp, con notificaciones claras según el estado de la orden.',
   },
   {
     icon: DollarSign,
     title: 'Conversión de Monedas',
     description:
-      'Conversión automática EUR/USD a bolívares venezolanos (VES) con tasas del BCV actualizadas cada hora. Configura tasas manuales si lo prefieres.',
+      'Muestra precios en dólares con conversión automática a bolívares según la tasa BCV o manuales, sin dolores de cabeza.',
   },
   {
     icon: Percent,
     title: 'Cupones de Descuento',
-    description: 'Crea cupones personalizados con porcentaje o monto fijo. Controla validez y usos por cliente.',
+    description: 'Crea cupones para atraer más clientes, controlar promociones y aumentar la recompra.',
   },
   {
     icon: Tag,
     title: 'Promociones',
-    description: 'Configura promociones automáticas: 2x1, descuentos por categoría, ofertas especiales y más.',
+    description: 'Activa ofertas por categorías, combos o productos especiales en pocos clics.',
   },
   // {
   //   icon: Truck,
@@ -35,8 +36,8 @@ const features = [
   // },
   {
     icon: BarChart3,
-    title: 'Analytics Avanzados',
-    description: 'Dashboard completo con ventas, productos populares, clientes frecuentes y métricas clave.',
+    title: 'Analíticas',
+    description: 'Visualiza qué vendes más, cuándo y a quién, para tomar mejores decisiones.',
   },
 ];
 
@@ -45,9 +46,11 @@ export const Features = () => {
     <section className="py-20 px-4 bg-primary/5">
       <div className="container mx-auto">
         <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4 text-foreground">Todo lo que Necesitas</h2>
+          <h2 className="text-3xl md:text-4xl font-bold mb-4 text-foreground">
+            Haz que pedir en tu negocio sea fácil para tus clientes
+          </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Herramientas profesionales diseñadas específicamente para restaurantes modernos
+            Herramientas pensadas para que tus clientes pidan mejor y tú trabajes con más tranquilidad.
           </p>
         </div>
 

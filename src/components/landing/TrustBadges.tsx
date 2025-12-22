@@ -10,18 +10,18 @@ export const TrustBadges = () => {
     },
     {
       icon: Lock,
-      title: 'Datos Protegidos',
-      description: 'Cumplimiento GDPR y protección total',
+      title: 'Datos Seguros',
+      description: 'Protección y buenas prácticas de seguridad.',
     },
     {
       icon: CreditCard,
       title: 'Sin Comisiones',
-      description: '0% de comisión en tus ventas',
+      description: 'Lo que vendes es tuyo.',
     },
     {
       icon: CheckCircle2,
-      title: 'Planes a medida',
-      description: 'Pensado para emprendedores y negocios pequeños',
+      title: 'Planes flexibles',
+      description: 'Crece a tu ritmo, sin ataduras.',
     },
   ];
 

@@ -72,11 +72,9 @@ export const StickyCTA = () => {
             <div className="flex items-center justify-between gap-4">
               {/* Text */}
               <div className="flex-1 min-w-0">
-                <p className="font-semibold text-sm md:text-base truncate">
-                  ¿Listo para digitalizar tu negocio?
-                </p>
+                <p className="font-semibold text-sm md:text-base truncate">¿Listo para digitalizar tu negocio?</p>
                 <p className="text-xs md:text-sm text-muted-foreground hidden sm:block">
-                  <span className="font-semibold text-primary">30 días gratis</span> • Sin tarjeta de crédito
+                  <span className="font-semibold text-primary"> Empieza gratis</span> • Sin pagos ni datos bancarios.
                 </p>
               </div>
 
@@ -87,7 +85,7 @@ export const StickyCTA = () => {
                 className="flex-shrink-0"
                 aria-label="Crear tienda gratis desde barra sticky"
               >
-                <span className="hidden sm:inline">Crear Tienda Gratis</span>
+                <span className="hidden sm:inline">Crear Tienda Gratis Ahora</span>
                 <span className="sm:hidden">Comenzar</span>
                 <ArrowRight className="ml-2" size={16} aria-hidden="true" />
               </Button>

@@ -40,19 +40,21 @@ export const LandingHero = () => {
                 <span role="img" aria-label="Celebración">
                   🎉
                 </span>{' '}
-                Plan Gratuito Disponible
+                Comienza gratis
               </span>
-              <span className="text-sm text-muted-foreground">• Sin tarjeta de crédito</span>
+              <span className="text-sm text-muted-foreground">• Sin pagos ni datos bancarios</span>
             </div>
 
             <div className="space-y-4">
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight">
-                Pedidos Fáciles y Rápidos con <span className="text-primary">WhatsApp</span>
+              <h1 className="text-4xl md:text-5xl lg:text-5xl font-bold leading-tight">
+                Recibe pedidos claros y ordenados sin volver loco tu <span className="text-primary">WhatsApp</span>
               </h1>
               <p className="text-lg md:text-xl text-muted-foreground">
-                Crea tu menú digital en minutos y recibe pedidos por WhatsApp.{' '}
-                <span className="font-bold text-foreground">Solo $1 al día</span> con{' '}
-                <span className="font-bold text-primary">0% de comisión</span> en tus ventas.
+                Crea tu catálogo o menú digital en minutos y permite que tus clientes pidan solos, sin confusiones ni
+                mensajes eternos.
+              </p>
+              <p className="text-lg md:text-xl text-muted-foreground">
+                Centraliza tus pedidos, evita errores y mejora la experiencia de tus clientes desde el primer día.
               </p>
             </div>
 
@@ -68,10 +70,10 @@ export const LandingHero = () => {
               <Button
                 size="lg"
                 variant="outline"
-                onClick={() => navigate('/auth')}
+                // onClick={() => navigate('/auth')}
                 aria-label="Iniciar sesión en tu cuenta existente"
               >
-                Iniciar Sesión
+                Ver como funciona
               </Button>
             </div>
 
@@ -79,15 +81,15 @@ export const LandingHero = () => {
             <div className="space-y-3 pt-4">
               <div className="flex items-center gap-2 text-foreground">
                 <CheckCircle2 size={20} className="text-primary" />
-                <span className="font-medium">Plan gratuito disponible • Planes de pago desde $1 al día</span>
+                <span className="font-medium">Sin comisiones por venta</span>
               </div>
               <div className="flex items-center gap-2 text-foreground">
                 <CheckCircle2 size={20} className="text-primary" />
-                <span>Listo en menos de 5 minutos</span>
+                <span>Precios en dólares y bolívares</span>
               </div>
               <div className="flex items-center gap-2 text-foreground">
                 <CheckCircle2 size={20} className="text-primary" />
-                <span>Sin esperas • Sin filas • Sin papel</span>
+                <span>Ideal para restaurantes, cafés y cualquier negocio que quiera digitalizarse</span>
               </div>
             </div>
           </motion.div>
@@ -102,19 +104,19 @@ export const LandingHero = () => {
           >
             <div className="bg-card p-6 rounded-lg border border-border hover:border-primary transition-colors">
               <div className="text-3xl font-bold text-primary mb-2">500+</div>
-              <div className="text-muted-foreground">Restaurantes Activos</div>
+              <div className="text-muted-foreground">Negocios activos que ya reciben pedidos más ordenados</div>
             </div>
             <div className="bg-card p-6 rounded-lg border border-border hover:border-primary transition-colors">
               <div className="text-3xl font-bold text-primary mb-2">50K+</div>
-              <div className="text-muted-foreground">Pedidos Procesados</div>
+              <div className="text-muted-foreground">Pedidos procesados sin errores ni confusión</div>
             </div>
             <div className="bg-card p-6 rounded-lg border border-border hover:border-primary transition-colors">
               <div className="text-3xl font-bold text-primary mb-2">99%</div>
-              <div className="text-muted-foreground">Satisfacción</div>
+              <div className="text-muted-foreground">Negocios satisfechos con la experiencia</div>
             </div>
             <div className="bg-card p-6 rounded-lg border border-border hover:border-primary transition-colors">
               <div className="text-3xl font-bold text-primary mb-2">24/7</div>
-              <div className="text-muted-foreground">Soporte</div>
+              <div className="text-muted-foreground">Soporte disponible cuando lo necesites</div>
             </div>
           </motion.div>
         </div>

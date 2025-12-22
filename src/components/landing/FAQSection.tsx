@@ -1,15 +1,10 @@
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from '@/components/ui/accordion';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { motion } from 'framer-motion';
 
 export const FAQSection = () => {
   const faqs = [
     {
-      question: '¿Necesito conocimientos técnicos para usar PideAI?',
+      question: '¿Necesito conocimientos técnicos para usar PideAí?',
       answer:
         'No, PideAI está diseñado para ser intuitivo y fácil de usar. Cualquier persona puede configurar su tienda en minutos sin necesidad de conocimientos técnicos.',
     },
@@ -30,8 +25,7 @@ export const FAQSection = () => {
     },
     {
       question: '¿Hay límite de productos que puedo agregar?',
-      answer:
-        'No, en todos nuestros planes puedes agregar productos ilimitados a tu catálogo digital.',
+      answer: 'No, en todos nuestros planes puedes agregar productos ilimitados a tu catálogo digital.',
     },
     {
       question: '¿Ofrecen soporte técnico?',
@@ -43,7 +37,7 @@ export const FAQSection = () => {
   return (
     <section className="py-20 px-4">
       <div className="container mx-auto max-w-3xl">
-        <motion.div 
+        <motion.div
           className="text-center mb-16"
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -51,9 +45,7 @@ export const FAQSection = () => {
           transition={{ duration: 0.5 }}
         >
           <h2 className="text-3xl md:text-4xl font-bold mb-4">Preguntas Frecuentes</h2>
-          <p className="text-lg text-muted-foreground">
-            Resolvemos tus dudas sobre PideAI
-          </p>
+          <p className="text-lg text-muted-foreground">Resolvemos tus dudas sobre PideAI</p>
         </motion.div>
 
         <motion.div
@@ -62,18 +54,14 @@ export const FAQSection = () => {
           viewport={{ once: true }}
           transition={{ duration: 0.5, delay: 0.2 }}
         >
-          <Accordion type="single" collapsible className="w-full">
-          {faqs.map((faq, index) => (
-            <AccordionItem key={index} value={`item-${index}`}>
-              <AccordionTrigger className="text-left">
-                {faq.question}
-              </AccordionTrigger>
-              <AccordionContent className="text-muted-foreground">
-                {faq.answer}
-              </AccordionContent>
-            </AccordionItem>
-          ))}
-        </Accordion>
+          <Accordion type="single" collapsible defaultValue="item-0" className="w-full">
+            {faqs.map((faq, index) => (
+              <AccordionItem key={index} value={`item-${index}`}>
+                <AccordionTrigger className="text-left">{faq.question}</AccordionTrigger>
+                <AccordionContent className="text-muted-foreground">{faq.answer}</AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
         </motion.div>
       </div>
     </section>

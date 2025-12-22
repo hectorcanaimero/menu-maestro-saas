@@ -18,13 +18,13 @@ export const PricingSection = () => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
             track('pricing_section_viewed', {
-              plans_count: dbPlans?.filter(p => p.is_active).length || 0,
+              plans_count: dbPlans?.filter((p) => p.is_active).length || 0,
             });
             observer.disconnect();
           }
         });
       },
-      { threshold: 0.3 }
+      { threshold: 0.3 },
     );
 
     const element = document.getElementById('pricing');
@@ -36,42 +36,41 @@ export const PricingSection = () => {
   }, [dbPlans, track]);
 
   // Transform DB plans to display format
-  const plans = dbPlans?.filter(plan => plan.is_active).map((plan, index) => {
-    // Determine if this is the popular plan (typically the middle one or based on sort_order)
-    const isPopular = index === 1 || plan.display_name.toLowerCase().includes('business');
+  const plans =
+    dbPlans
+      ?.filter((plan) => plan.is_active)
+      .map((plan, index) => {
+        // Determine if this is the popular plan (typically the middle one or based on sort_order)
+        const isPopular = index === 1 || plan.display_name.toLowerCase().includes('business');
 
-    // Build features array from plan data
-    const features = [
-      ...(plan.features || []),
-      plan.limits.max_products === -1
-        ? 'Productos ilimitados'
-        : `Hasta ${plan.limits.max_products} productos`,
-      plan.limits.max_orders_per_month === -1
-        ? 'Pedidos ilimitados'
-        : `Hasta ${plan.limits.max_orders_per_month} pedidos/mes`,
-      ...(plan.modules?.whatsapp_monthly ? ['Integración WhatsApp'] : []),
-      ...(plan.modules?.delivery_monthly ? ['Gestión de delivery'] : []),
-      `${plan.limits.max_ai_credits_per_month} créditos IA/mes`,
-      'Panel de administración',
-      'Códigos QR personalizados',
-      '0% de comisión en ventas',
-    ];
+        // Build features array from plan data
+        const features = [
+          ...(plan.features || []),
+          plan.limits.max_products === -1 ? 'Productos ilimitados' : `Hasta ${plan.limits.max_products} productos`,
+          plan.limits.max_orders_per_month === -1
+            ? 'Pedidos ilimitados'
+            : `Hasta ${plan.limits.max_orders_per_month} pedidos/mes`,
+          ...(plan.modules?.whatsapp_monthly ? ['Integración WhatsApp'] : []),
+          ...(plan.modules?.delivery_monthly ? ['Gestión de delivery'] : []),
+          `${plan.limits.max_ai_credits_per_month} créditos IA/mes`,
+          'Panel de administración',
+          'Códigos QR personalizados',
+          '0% de comisión en ventas',
+        ];
 
-    return {
-      name: plan.display_name,
-      price: `$${plan.price_monthly}`,
-      period: '/mes',
-      description: plan.description,
-      features: features.slice(0, 8), // Limit to 8 features for better UX
-      cta: plan.trial_duration_days > 0
-        ? `Probar ${plan.trial_duration_days} Días Gratis`
-        : 'Comenzar Ahora',
-      popular: isPopular,
-      badge: isPopular ? null : (index === 0 ? null : 'Más Completo'),
-      planId: plan.id,
-      trialDays: plan.trial_duration_days,
-    };
-  }) || [];
+        return {
+          name: plan.display_name,
+          price: `$${plan.price_monthly}`,
+          period: '/mes',
+          description: plan.description,
+          features: features.slice(0, 8), // Limit to 8 features for better UX
+          cta: plan.trial_duration_days > 0 ? `Probar ${plan.trial_duration_days} Días Gratis` : 'Comenzar Ahora',
+          popular: isPopular,
+          badge: isPopular ? null : index === 0 ? null : 'Más Completo',
+          planId: plan.id,
+          trialDays: plan.trial_duration_days,
+        };
+      }) || [];
 
   // Loading skeleton
   if (isLoading) {
@@ -113,11 +112,9 @@ export const PricingSection = () => {
           viewport={{ once: true }}
           transition={{ duration: 0.5 }}
         >
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">
-            Planes que se Adaptan a tu Negocio
-          </h2>
+          <h2 className="text-3xl md:text-4xl font-bold mb-4">Planes que se adaptan al tamaño y ritmo de tu negocio</h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Plan gratuito disponible para siempre. Planes de pago con opciones flexibles. Sin tarjeta de crédito requerida.
+            Empieza gratis, sin pagos iniciales ni datos bancarios. Elige un plan solo cuando lo necesites.
           </p>
         </motion.div>
 
@@ -126,9 +123,7 @@ export const PricingSection = () => {
             <motion.div
               key={plan.planId}
               className={`relative bg-card rounded-lg border ${
-                plan.popular
-                  ? 'border-primary shadow-lg scale-105'
-                  : 'border-border hover:border-primary'
+                plan.popular ? 'border-primary shadow-lg scale-105' : 'border-border hover:border-primary'
               } p-8 transition-all`}
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -137,7 +132,10 @@ export const PricingSection = () => {
             >
               {plan.popular && (
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground px-3 py-1 rounded-full text-xs sm:text-sm font-semibold shadow-lg whitespace-nowrap">
-                  <span role="img" aria-label="Estrella">⭐</span> Más Popular
+                  <span role="img" aria-label="Estrella">
+                    ⭐
+                  </span>{' '}
+                  Más Popular
                 </div>
               )}
               {plan.badge && !plan.popular && (
