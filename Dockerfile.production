@@ -88,7 +88,7 @@ RUN apk add --no-cache \
     && rm -rf /var/cache/apk/*
 
 # Configurar timezone (ajustar seg\u00fan necesidad)
-ENV TZ=America/Mexico_City
+ENV TZ=America/Caracas
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 # Copiar configuraci\u00f3n personalizada de Nginx

@@ -156,8 +156,22 @@ export function getSubdomainFromHostname(): string {
       // Extract subdomain (first part before domain)
       const domainParts = domain.split('.');
       const subdomainParts = parts.slice(0, parts.length - domainParts.length);
-      return subdomainParts.join('.');
+      const subdomain = subdomainParts.join('.');
+
+      console.log('Extracted subdomain:', subdomain);
+
+      // Si es 'www', tratar como dominio principal (no es un subdomain de tienda)
+      if (subdomain === 'www') {
+        return ''; // Retornar string vacía para indicar dominio principal
+      }
+
+      return subdomain;
     }
+  }
+
+  // Si es exactamente el dominio raíz (pideai.com o artex.lat)
+  if (SUPPORTED_DOMAINS.includes(hostname as any)) {
+    return ''; // Dominio principal
   }
 
   // Fallback
@@ -258,12 +272,14 @@ export function isMainDomain(): boolean {
   if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname.startsWith('192.168.')) {
     return true;
   }
-
+  console.log('hostname', hostname);
   // En producción, verificar si es www o el dominio raíz
-  return hostname === 'www.pideai.com' ||
-         hostname === 'pideai.com' ||
-         hostname === 'www.artex.lat' ||
-         hostname === 'artex.lat';
+  return (
+    hostname === 'www.pideai.com' ||
+    hostname === 'pideai.com' ||
+    hostname === 'www.artex.lat' ||
+    hostname === 'artex.lat'
+  );
 }
 
 /**

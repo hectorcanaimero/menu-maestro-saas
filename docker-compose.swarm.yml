@@ -1,253 +1,134 @@
-# ============================================================================
-# Docker Swarm Stack para Menu Maestro (PideAI)
-# ============================================================================
-#
-# Este archivo est\u00e1 optimizado para deployment en Portainer con:
-# - Docker Swarm como orquestador
-# - Traefik como reverse proxy y SSL termination
-# - Multi-tenant subdomain routing (*.pideai.com)
-# - Rolling updates con zero downtime
-# - Health checks autom\u00e1ticos
-# - Secrets management con Docker Swarm
-#
-# IMPORTANTE:
-# - Reemplazar "pideai.com" con tu dominio real
-# - Crear los secrets antes de deployar el stack
-# - Asegurar que la network "traefik-public" existe
-# - Configurar DNS wildcard (*.tudominio.com -> IP del servidor)
-#
-# ============================================================================
-
 version: '3.8'
 
-# ----------------------------------------------------------------------------
-# SECRETS - Variables sensibles (crear antes de deployar)
-# ----------------------------------------------------------------------------
-# Comandos para crear secrets:
-#
-# echo "wdpexjymbiyjqwdttqhz" | docker secret create pideai_supabase_project_id -
-# echo "tu_supabase_publishable_key" | docker secret create pideai_supabase_key -
-# echo "https://wdpexjymbiyjqwdttqhz.supabase.co" | docker secret create pideai_supabase_url -
-# echo "phc_tu_posthog_key" | docker secret create pideai_posthog_key -
-# echo "https://us.i.posthog.com" | docker secret create pideai_posthog_host -
-# echo "phx_tu_posthog_personal_key" | docker secret create pideai_posthog_personal_key -
-#
-secrets:
-  supabase_project_id:
-    external: true
-    name: pideai_supabase_project_id
-  supabase_key:
-    external: true
-    name: pideai_supabase_key
-  supabase_url:
-    external: true
-    name: pideai_supabase_url
-  posthog_key:
-    external: true
-    name: pideai_posthog_key
-  posthog_host:
-    external: true
-    name: pideai_posthog_host
-  posthog_personal_key:
-    external: true
-    name: pideai_posthog_personal_key
-
-# ----------------------------------------------------------------------------
-# NETWORKS
-# ----------------------------------------------------------------------------
 networks:
-  traefik-public:
+  network_public:
     external: true
-    name: traefik-public
 
-# ----------------------------------------------------------------------------
-# SERVICES
-# ----------------------------------------------------------------------------
 services:
-  # --------------------------------------------------------------------------
-  # Menu Maestro App
-  # --------------------------------------------------------------------------
   app:
-    # Imagen Docker (ajustar registry y tag seg\u00fan tu CI/CD)
-    # Opciones:
-    # 1. Registry p\u00fablico: ghcr.io/usuario/menu-maestro:latest
-    # 2. Registry privado: registry.tudominio.com/menu-maestro:latest
-    # 3. Docker Hub: usuario/menu-maestro:latest
     image: ghcr.io/hectorcanaimero/menu-maestro-saas:latest
 
-    # Nombre del servicio en Swarm
     networks:
-      - traefik-public
+      - network_public
 
-    # Configuraci\u00f3n de deployment
     deploy:
-      # ------------------------------------------------------------------------
-      # Replicas y modo de deployment
-      # ------------------------------------------------------------------------
       mode: replicated
-      replicas: 2 # N\u00famero de containers (ajustar seg\u00fan carga)
+      replicas: 3
 
-      # ------------------------------------------------------------------------
-      # Placement constraints (opcional)
-      # ------------------------------------------------------------------------
-      # placement:
-      #   constraints:
-      #     - node.role == worker
-      #     - node.labels.region == us-east
+      placement:
+        preferences:
+          - spread: node.id
 
-      # ------------------------------------------------------------------------
-      # Rolling Updates - Zero Downtime Deployment
-      # ------------------------------------------------------------------------
       update_config:
-        parallelism: 1 # Actualizar 1 container a la vez
-        delay: 10s # Esperar 10s entre actualizaciones
-        failure_action: rollback # Rollback autom\u00e1tico si falla
-        monitor: 30s # Monitorear 30s despu\u00e9s de cada update
-        max_failure_ratio: 0.3 # M\u00e1x 30% de fallos tolerados
-        order: start-first # Iniciar nuevo antes de detener viejo
+        parallelism: 1
+        delay: 15s
+        failure_action: rollback
+        monitor: 30s
+        max_failure_ratio: 0.3
+        order: start-first
 
-      # ------------------------------------------------------------------------
-      # Rollback configuration
-      # ------------------------------------------------------------------------
       rollback_config:
         parallelism: 1
-        delay: 5s
+        delay: 10s
         failure_action: pause
         monitor: 30s
+        order: start-first
 
-      # ------------------------------------------------------------------------
-      # Restart Policy
-      # ------------------------------------------------------------------------
       restart_policy:
         condition: on-failure
         delay: 5s
         max_attempts: 3
         window: 120s
 
-      # ------------------------------------------------------------------------
-      # Resource Limits
-      # ------------------------------------------------------------------------
-      # IMPORTANTE: Ajustar seg\u00fan recursos del servidor
       resources:
         limits:
-          cpus: '0.5' # M\u00e1ximo 50% de 1 CPU por container
-          memory: 512M # M\u00e1ximo 512MB RAM por container
+          cpus: '0.5'
+          memory: 512M
         reservations:
-          cpus: '0.25' # M\u00ednimo garantizado
+          cpus: '0.25'
           memory: 256M
 
-      # ------------------------------------------------------------------------
-      # Traefik Labels - Routing Configuration
-      # ------------------------------------------------------------------------
       labels:
-        # ======================================================================
-        # CONFIGURACI\u00d3N PRINCIPAL - CAMBIAR "pideai.com" POR TU DOMINIO
-        # ======================================================================
-
-        # Enable Traefik for this service
+        # ====================================================================
+        # TRAEFIK CONFIGURATION
+        # ====================================================================
         - "traefik.enable=true"
+        - "traefik.docker.network=network_public"
 
-        # Docker Swarm mode
-        - "traefik.docker.network=traefik-public"
+        # Service configuration (CRITICAL - define el puerto del container)
+        - "traefik.http.services.pideai.loadbalancer.server.port=80"
 
-        # ----------------------------------------------------------------------
+        # ====================================================================
         # HTTP Router (Port 80) - Redirect to HTTPS
-        # ----------------------------------------------------------------------
-        # Regla de routing: Capturar dominio principal + todos los subdominios
-        - "traefik.http.routers.pideai-http.rule=Host(`pideai.com`) || HostRegexp(`^[a-z0-9-]+\\.pideai\\.com$$`)"
+        # ====================================================================
+        - "traefik.http.routers.pideai-http.rule=Host(`artex.lat`) || Host(`www.artex.lat`) || HostRegexp(`{subdomain:[a-z0-9-]+}.artex.lat`)"
         - "traefik.http.routers.pideai-http.entrypoints=web"
         - "traefik.http.routers.pideai-http.middlewares=redirect-to-https"
 
-        # ----------------------------------------------------------------------
-        # HTTPS Router (Port 443) - Main Router
-        # ----------------------------------------------------------------------
-        # Regla de routing: Soporta wildcard subdomain (*.pideai.com)
-        # Ejemplos que funcionar\u00e1n:
-        # - https://pideai.com
-        # - https://tienda1.pideai.com
-        # - https://restaurante-abc.pideai.com
-        - "traefik.http.routers.pideai-https.rule=Host(`pideai.com`) || HostRegexp(`^[a-z0-9-]+\\.pideai\\.com$$`)"
+        # ====================================================================
+        # HTTPS Router (Port 443) - Main Router with Wildcard SSL
+        # ====================================================================
+        - "traefik.http.routers.pideai-https.rule=Host(`artex.lat`) || Host(`www.artex.lat`) || HostRegexp(`{subdomain:[a-z0-9-]+}.artex.lat`)"
         - "traefik.http.routers.pideai-https.entrypoints=websecure"
         - "traefik.http.routers.pideai-https.tls=true"
-        - "traefik.http.routers.pideai-https.tls.certresolver=letsencrypt"
-
-        # Aplicar middlewares al router HTTPS
+        - "traefik.http.routers.pideai-https.tls.certresolver=cloudflare"
         - "traefik.http.routers.pideai-https.middlewares=security-headers,compression"
 
-        # ----------------------------------------------------------------------
-        # Service Configuration
-        # ----------------------------------------------------------------------
-        # Puerto interno del container (Nginx escucha en puerto 80)
-        - "traefik.http.services.pideai.loadbalancer.server.port=80"
+        # Wildcard SSL Certificate (DNS-01 Challenge via Cloudflare)
+        - "traefik.http.routers.pideai-https.tls.domains[0].main=artex.lat"
+        - "traefik.http.routers.pideai-https.tls.domains[0].sans=*.artex.lat"
 
-        # Health check configuration
-        - "traefik.http.services.pideai.loadbalancer.healthcheck.path=/health"
-        - "traefik.http.services.pideai.loadbalancer.healthcheck.interval=30s"
-        - "traefik.http.services.pideai.loadbalancer.healthcheck.timeout=5s"
+        # ====================================================================
+        # MIDDLEWARES
+        # ====================================================================
 
-        # Sticky sessions (opcional, para mantener usuario en mismo container)
-        # - "traefik.http.services.pideai.loadbalancer.sticky.cookie=true"
-        # - "traefik.http.services.pideai.loadbalancer.sticky.cookie.name=pideai_server"
-
-        # ----------------------------------------------------------------------
-        # Middleware: Redirect HTTP to HTTPS
-        # ----------------------------------------------------------------------
+        # Redirect HTTP -> HTTPS
         - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
         - "traefik.http.middlewares.redirect-to-https.redirectscheme.permanent=true"
 
-        # ----------------------------------------------------------------------
-        # Middleware: Security Headers
-        # ----------------------------------------------------------------------
-        # HSTS (HTTP Strict Transport Security)
+        # Security Headers
         - "traefik.http.middlewares.security-headers.headers.stsSeconds=31536000"
         - "traefik.http.middlewares.security-headers.headers.stsIncludeSubdomains=true"
         - "traefik.http.middlewares.security-headers.headers.stsPreload=true"
-
-        # Content Security Policy (ajustar seg\u00fan necesidad)
-        - "traefik.http.middlewares.security-headers.headers.contentSecurityPolicy=default-src 'self' https:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://us.i.posthog.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://wdpexjymbiyjqwdttqhz.supabase.co https://us.i.posthog.com wss://wdpexjymbiyjqwdttqhz.supabase.co"
-
-        # Other security headers
+        - "traefik.http.middlewares.security-headers.headers.forceSTSHeader=true"
         - "traefik.http.middlewares.security-headers.headers.frameDeny=true"
         - "traefik.http.middlewares.security-headers.headers.contentTypeNosniff=true"
         - "traefik.http.middlewares.security-headers.headers.browserXssFilter=true"
         - "traefik.http.middlewares.security-headers.headers.referrerPolicy=strict-origin-when-cross-origin"
+        - "traefik.http.middlewares.security-headers.headers.permissionsPolicy=camera=(), microphone=(), geolocation=(), payment=()"
 
-        # ----------------------------------------------------------------------
-        # Middleware: Compression
-        # ----------------------------------------------------------------------
+        # Content Security Policy (con soporte completo para PostHog)
+        - "traefik.http.middlewares.security-headers.headers.contentSecurityPolicy=default-src 'self' https:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://us.i.posthog.com https://us-assets.i.posthog.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https: blob:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' https://*.supabase.co https://us.i.posthog.com https://us-assets.i.posthog.com wss://*.supabase.co; worker-src 'self' blob:; frame-ancestors 'self'; base-uri 'self'; form-action 'self'"
+
+        # Compression
         - "traefik.http.middlewares.compression.compress=true"
 
-        # ----------------------------------------------------------------------
-        # Middleware: Rate Limiting (opcional)
-        # ----------------------------------------------------------------------
-        # Protecci\u00f3n contra DDoS y abuse
+        # ====================================================================
+        # LOAD BALANCER HEALTH CHECKS
+        # ====================================================================
+        - "traefik.http.services.pideai.loadbalancer.healthcheck.path=/health"
+        - "traefik.http.services.pideai.loadbalancer.healthcheck.interval=30s"
+        - "traefik.http.services.pideai.loadbalancer.healthcheck.timeout=5s"
+
+        # ====================================================================
+        # STICKY SESSIONS (Optional - descomenta si lo necesitas)
+        # ====================================================================
+        # - "traefik.http.services.pideai.loadbalancer.sticky.cookie=true"
+        # - "traefik.http.services.pideai.loadbalancer.sticky.cookie.name=pideai_server"
+        # - "traefik.http.services.pideai.loadbalancer.sticky.cookie.httpOnly=true"
+        # - "traefik.http.services.pideai.loadbalancer.sticky.cookie.secure=true"
+
+        # ====================================================================
+        # RATE LIMITING (Optional - descomenta para protección DDoS)
+        # ====================================================================
         # - "traefik.http.middlewares.rate-limit.ratelimit.average=100"
+        # - "traefik.http.middlewares.rate-limit.ratelimit.period=1s"
         # - "traefik.http.middlewares.rate-limit.ratelimit.burst=200"
 
-    # --------------------------------------------------------------------------
-    # Health Check (Docker level)
-    # --------------------------------------------------------------------------
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost/health"]
-      interval: 30s
-      timeout: 5s
-      retries: 3
-      start_period: 15s
-
-    # --------------------------------------------------------------------------
-    # Environment Variables (no sensibles)
-    # --------------------------------------------------------------------------
-    # NOTA: Las variables sensibles se pasan como secrets
     environment:
-      # Node environment
       - NODE_ENV=production
+      - TZ=America/Caracas
 
-      # Timezone
-      - TZ=America/Mexico_City
-
-    # --------------------------------------------------------------------------
-    # Logging Configuration
-    # --------------------------------------------------------------------------
     logging:
       driver: "json-file"
       options:
