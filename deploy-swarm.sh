@@ -118,10 +118,10 @@ deploy_stack() {
     fi
 
     # Verificar que la network existe
-    if ! docker network ls | grep -q "traefik-public"; then
-        print_warning "La network 'traefik-public' no existe"
+    if ! docker network ls | grep -q "network_public"; then
+        print_warning "La network 'network_public' no existe"
         echo "Creando network..."
-        docker network create --driver=overlay traefik-public
+        docker network create --driver=overlay network_public
         print_success "Network creada"
     fi
 

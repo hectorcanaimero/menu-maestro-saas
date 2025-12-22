@@ -2,17 +2,21 @@
 
 ## ✨ Cambios Realizados
 
-### 1. Docker Compose para Swarm (ACTUALIZADO)
+### 1. Docker Compose para Swarm (ACTUALIZADO) ✅
 **Archivo**: `docker-compose.swarm.yml`
 
 **Cambios principales**:
 - ✅ **Regex de Traefik corregido** para multitenancy
   - Antes: `HostRegexp(\`^[a-z0-9-]+\\.pideai\\.com$$\`)`
-  - Ahora: `HostRegexp(\`{subdomain:[a-z0-9-]+}.pideai.com\`)`
+  - Ahora: `HostRegexp(\`{subdomain:[a-z0-9-]+}.artex.lat\`)`
 
-- ✅ **Soporte para dos dominios** (pideai.com + artex.lat)
-  - Routing para ambos dominios
-  - Wildcard SSL para ambos
+- ✅ **Configuración para artex.lat**
+  - Routing para artex.lat y todos sus subdominios
+  - Wildcard SSL via Cloudflare DNS-01 challenge
+
+- ✅ **CSP Headers actualizados para PostHog**
+  - Agregado `worker-src 'self' blob:` para web workers
+  - Agregado `https://us-assets.i.posthog.com` a `connect-src`
 
 - ✅ **Eliminados secrets** (incompatibles con Vite build-time vars)
   - Las variables deben estar en la imagen buildeada
@@ -21,6 +25,9 @@
   - 3 replicas por defecto
   - Rolling updates con zero downtime
   - Health checks configurados
+
+- ✅ **Port label crítico**
+  - `traefik.http.services.pideai.loadbalancer.server.port=80` configurado
 
 ### 2. Dockerfile (YA EXISTENTE - SIN CAMBIOS)
 **Archivo**: `Dockerfile.production`
