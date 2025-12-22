@@ -1,0 +1,94 @@
+version: '3.8'
+
+networks:
+  network_public:
+    external: true
+
+services:
+  traefik:
+    image: traefik:v2.10
+
+    command:
+      # ====================================================================
+      # API y Dashboard
+      # ====================================================================
+      - "--api.dashboard=true"
+      - "--api.insecure=true"
+
+      # ====================================================================
+      # Providers
+      # ====================================================================
+      - "--providers.docker=true"
+      - "--providers.docker.swarmMode=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--providers.docker.network=network_public"
+
+      # ====================================================================
+      # Entrypoints
+      # ====================================================================
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+
+      # ====================================================================
+      # Certificate Resolver - Cloudflare DNS Challenge (Global API Key)
+      # ====================================================================
+      - "--certificatesresolvers.cloudflare.acme.dnschallenge=true"
+      - "--certificatesresolvers.cloudflare.acme.dnschallenge.provider=cloudflare"
+      - "--certificatesresolvers.cloudflare.acme.dnschallenge.resolvers=1.1.1.1:53,8.8.8.8:53"
+      - "--certificatesresolvers.cloudflare.acme.email=knaimero@gmail.com"
+      - "--certificatesresolvers.cloudflare.acme.storage=/etc/traefik/letsencrypt/acme.json"
+
+      # OPCIONAL: Descomentar para usar Let's Encrypt Staging (testing)
+      # - "--certificatesresolvers.cloudflare.acme.caserver=https://acme-staging-v02.api.letsencrypt.org/directory"
+
+      # ====================================================================
+      # Certificate Resolver - HTTP Challenge (Fallback)
+      # ====================================================================
+      - "--certificatesresolvers.letsencryptresolver.acme.httpchallenge=true"
+      - "--certificatesresolvers.letsencryptresolver.acme.httpchallenge.entrypoint=web"
+      - "--certificatesresolvers.letsencryptresolver.acme.email=knaimero@gmail.com"
+      - "--certificatesresolvers.letsencryptresolver.acme.storage=/etc/traefik/letsencrypt/acme-http.json"
+
+      # ====================================================================
+      # Logging
+      # ====================================================================
+      - "--log.level=INFO"
+      - "--accesslog=true"
+
+    environment:
+      # IMPORTANTE: Para Global API Key usar CF_API_EMAIL y CF_API_KEY
+      # NO usar CF_DNS_API_TOKEN
+      - CF_API_EMAIL=knaimero@gmail.com
+      - CF_API_KEY=TU_GLOBAL_API_KEY_AQUI
+      - TZ=America/Caracas
+
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8080:8080"
+
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /etc/traefik/letsencrypt:/etc/traefik/letsencrypt
+
+    networks:
+      - network_public
+
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+      labels:
+        # Traefik Dashboard (opcional)
+        - "traefik.enable=true"
+        - "traefik.http.routers.api.rule=Host(`traefik.artex.lat`)"
+        - "traefik.http.routers.api.entrypoints=websecure"
+        - "traefik.http.routers.api.service=api@internal"
+        - "traefik.http.routers.api.tls.certresolver=cloudflare"
+        - "traefik.http.services.api.loadbalancer.server.port=8080"
