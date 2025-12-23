@@ -32,11 +32,6 @@ export function useAutoUpdateRates(storeId: string | undefined, enabled: boolean
 
         if (result.success) {
           lastUpdateRef.current = now;
-          console.log('[BCV Auto-Update] Rates updated successfully:', {
-            usd: result.usdRate,
-            eur: result.eurRate,
-          });
-
           // Optional: Show silent notification
           // toast.success('Tasas de cambio actualizadas', { duration: 2000 });
         } else {

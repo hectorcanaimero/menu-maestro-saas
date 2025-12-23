@@ -32,7 +32,6 @@ export async function fetchUSDtoVES(): Promise<number> {
       throw new Error('Invalid exchange rate received');
     }
 
-    console.log(`[BCV] USD → VES: ${rate} (updated: ${data[0].fechaActualizacion})`);
     return rate;
   } catch (error) {
     console.error('[BCV] Error fetching USD → VES rate:', error);
@@ -64,7 +63,6 @@ export async function fetchEURtoVES(): Promise<number> {
       throw new Error('Invalid exchange rate received');
     }
 
-    console.log(`[BCV] EUR → VES: ${rate} (updated: ${data[0].fechaActualizacion})`);
     return rate;
   } catch (error) {
     console.error('[BCV] Error fetching EUR → VES rate:', error);
@@ -80,7 +78,7 @@ export async function fetchEURtoVES(): Promise<number> {
  * @returns Promise with success status and rates
  */
 export async function updateExchangeRates(
-  storeId?: string | null
+  storeId?: string | null,
 ): Promise<{ success: boolean; usdRate?: number; eurRate?: number; error?: string }> {
   try {
     // Fetch both rates in parallel
@@ -118,24 +116,16 @@ export async function updateExchangeRates(
 
     // Upsert rates (insert or update if exists)
     for (const insert of inserts) {
-      const { error } = await supabase
-        .from('exchange_rates')
-        .upsert(insert, {
-          onConflict: 'from_currency,to_currency,store_id',
-          ignoreDuplicates: false,
-        });
+      const { error } = await supabase.from('exchange_rates').upsert(insert, {
+        onConflict: 'from_currency,to_currency,store_id',
+        ignoreDuplicates: false,
+      });
 
       if (error) {
         console.error(`[BCV] Error upserting ${insert.from_currency} → ${insert.to_currency}:`, error);
         throw error;
       }
     }
-
-    console.log('[BCV] Exchange rates updated successfully', {
-      usdRate,
-      eurRate,
-      storeId: storeId || 'global',
-    });
 
     return {
       success: true,
@@ -144,8 +134,6 @@ export async function updateExchangeRates(
     };
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    console.error('[BCV] Error updating exchange rates:', errorMessage);
-
     return {
       success: false,
       error: errorMessage,
@@ -165,7 +153,7 @@ export async function updateExchangeRates(
 export async function getLatestExchangeRate(
   fromCurrency: 'USD' | 'EUR',
   toCurrency: 'VES',
-  storeId?: string | null
+  storeId?: string | null,
 ): Promise<{ rate: number; lastUpdate: string; source: string } | null> {
   try {
     const { data, error } = await supabase

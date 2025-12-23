@@ -11,6 +11,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { recordCouponUsage } from '@/hooks/useCoupons';
 import { generateWhatsAppMessage, redirectToWhatsApp } from '@/lib/whatsappMessageGenerator';
+import { getLatestExchangeRate } from '@/lib/bcv-fetcher';
 import type { CartItem } from '@/contexts/CartContext';
 import type { Store } from '@/contexts/StoreContext';
 
@@ -266,10 +267,42 @@ export async function prepareWhatsAppRedirect(
     orderMessageTemplateDigitalMenu: store.order_message_template_digital_menu || '📱 *Nuevo Pedido #{order-number}*\n\n{order-products}\n\n*Total:* {order-total}\n\n*Cliente:* {customer-name}\n*Mesa:* {order-table}',
   };
 
-  // Build tracking URL
-  const trackingUrl = fullOrder.tracking_code
-    ? `${window.location.origin}/track/${fullOrder.tracking_code}`
-    : '';
+  // Build tracking URL using store subdomain
+  let trackingUrl = '';
+  if (fullOrder.tracking_code) {
+    // Build URL based on environment
+    const isDev = import.meta.env.DEV;
+    if (isDev) {
+      // In development, use localhost with subdomain in path or query param
+      trackingUrl = `http://localhost:8080/track/${fullOrder.tracking_code}`;
+    } else {
+      // In production, use subdomain-based URL
+      const baseUrl = import.meta.env.VITE_APP_BASE_URL || 'pideai.com';
+      trackingUrl = `https://${store.subdomain}.${baseUrl}/track/${fullOrder.tracking_code}`;
+    }
+  }
+
+  // Get exchange rate for bolivar conversion
+  let exchangeRate = 0;
+
+  if (store.enable_currency_conversion) {
+    if (store.use_manual_exchange_rate && store.manual_usd_ves_rate) {
+      // Use manual exchange rate
+      exchangeRate = store.manual_usd_ves_rate;
+    } else {
+      // Fetch automatic exchange rate from database
+      const rateData = await getLatestExchangeRate('USD', 'VES', store.id);
+      if (rateData) {
+        exchangeRate = rateData.rate;
+      } else {
+        // Fallback to global rate if store-specific rate not found
+        const globalRateData = await getLatestExchangeRate('USD', 'VES', null);
+        if (globalRateData) {
+          exchangeRate = globalRateData.rate;
+        }
+      }
+    }
+  }
 
   // Build order data for message generation
   const orderData = {
@@ -291,7 +324,7 @@ export async function prepareWhatsAppRedirect(
     couponDiscount: fullOrder.coupon_discount || 0,
     deliveryPrice: fullOrder.delivery_price || 0,
     tableNumber: fullOrder.table_number || undefined,
-    exchangeRate: store.exchange_rate || 0,
+    exchangeRate,
     paymentProofUrl: fullOrder.payment_proof_url || '',
   };
 

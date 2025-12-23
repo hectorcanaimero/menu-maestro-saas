@@ -58,12 +58,9 @@ export const ProductCard = ({
   const bestDeal = getBestPromotion(productPromotions, price);
 
   const handleAddToCart = (e: React.MouseEvent) => {
-    console.log('object');
     e.stopPropagation();
-
     setShowExtrasDialog(true);
   };
-  console.log('catalog_mode', store?.catalog_mode);
   const handleQuickView = (e: React.MouseEvent) => {
     e.stopPropagation();
     const products = allProducts.length > 0 ? allProducts : [{ id, name, price, image_url, description, categoryId }];

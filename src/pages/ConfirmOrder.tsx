@@ -1,21 +1,21 @@
-import { useEffect, useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
-import { useCart } from "@/contexts/CartContext";
-import { useStore } from "@/contexts/StoreContext";
-import { useStoreTheme } from "@/hooks/useStoreTheme";
-import { useCartTotals } from "@/hooks/useCartTotals";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import { toast } from "sonner";
-import { ArrowLeft, Edit, Loader2, MapPin, User, Mail, Phone, CreditCard, FileText, Hash, Ticket } from "lucide-react";
-import { useFormatPrice } from "@/lib/priceFormatter";
-import { DualPrice } from "@/components/catalog/DualPrice";
-import { findOrCreateCustomer } from "@/services/customerService";
-import { completeOrder } from "@/services/orderService";
-import { redirectToWhatsApp } from "@/lib/whatsappMessageGenerator";
-import posthog from "posthog-js";
+import { useEffect, useState } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { useCart } from '@/contexts/CartContext';
+import { useStore } from '@/contexts/StoreContext';
+import { useStoreTheme } from '@/hooks/useStoreTheme';
+import { useCartTotals } from '@/hooks/useCartTotals';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
+import { toast } from 'sonner';
+import { ArrowLeft, Edit, Loader2, MapPin, User, Mail, Phone, CreditCard, FileText, Hash, Ticket } from 'lucide-react';
+import { useFormatPrice } from '@/lib/priceFormatter';
+import { DualPrice } from '@/components/catalog/DualPrice';
+import { findOrCreateCustomer } from '@/services/customerService';
+import { completeOrder } from '@/services/orderService';
+import { redirectToWhatsApp } from '@/lib/whatsappMessageGenerator';
+import posthog from 'posthog-js';
 
 interface OrderData {
   customer_name: string;
@@ -29,7 +29,7 @@ interface OrderData {
   table_number?: string;
   notes?: string;
   payment_method?: string;
-  order_type: "delivery" | "pickup";
+  order_type: 'delivery' | 'pickup';
   payment_proof_url?: string;
   country?: string;
   delivery_price?: number;
@@ -65,18 +65,18 @@ const ConfirmOrder = () => {
       setOrderData(stateOrderData);
     } else {
       // If no data, redirect back to checkout
-      toast.error("No se encontraron datos del pedido");
-      navigate("/checkout");
+      toast.error('No se encontraron datos del pedido');
+      navigate('/checkout');
     }
   }, [location.state, navigate]);
 
   const handleEdit = () => {
-    navigate("/checkout");
+    navigate('/checkout');
   };
 
   const handleConfirm = async () => {
     if (!orderData || !store?.id) {
-      toast.error("Datos incompletos");
+      toast.error('Datos incompletos');
       return;
     }
 
@@ -103,7 +103,7 @@ const ConfirmOrder = () => {
         grandTotal,
         deliveryPrice,
         couponDiscount,
-        store
+        store,
       );
 
       // Track order_placed event in PostHog
@@ -130,23 +130,23 @@ const ConfirmOrder = () => {
 
       // Handle WhatsApp redirect if configured
       if (result.shouldRedirectToWhatsApp && result.whatsappNumber && result.whatsappMessage) {
-        toast.success("¡Pedido realizado! Redirigiendo a WhatsApp...");
+        toast.success('¡Pedido realizado! Redirigiendo a WhatsApp...');
         clearCart();
 
         setTimeout(() => {
           redirectToWhatsApp(result.whatsappNumber!, result.whatsappMessage!);
-          navigate("/");
+          navigate('/');
         }, 1500);
         return;
       }
 
       // Success! Clear cart and redirect
-      toast.success("¡Pedido realizado con éxito!");
+      toast.success('¡Pedido realizado con éxito!');
       clearCart();
-      navigate("/");
+      navigate('/');
     } catch (error) {
-      console.error("Error creating order:", error);
-      toast.error("Error al crear el pedido");
+      console.error('Error creating order:', error);
+      toast.error('Error al crear el pedido');
     } finally {
       setLoading(false);
     }
@@ -162,10 +162,10 @@ const ConfirmOrder = () => {
 
   const getOrderTypeLabel = () => {
     switch (orderData.order_type) {
-      case "delivery":
-        return "Entrega a Domicilio";
-      case "pickup":
-        return "Recoger en Tienda";
+      case 'delivery':
+        return 'Entrega a Domicilio';
+      case 'pickup':
+        return 'Recoger en Tienda';
       default:
         return orderData.order_type;
     }
@@ -174,12 +174,7 @@ const ConfirmOrder = () => {
   return (
     <div className="min-h-screen bg-background py-4 md:py-8">
       <div className="container mx-auto px-3 md:px-4 max-w-4xl">
-        <Button
-          variant="ghost"
-          onClick={() => navigate("/checkout")}
-          className="mb-4 md:mb-6 -ml-2"
-          size="sm"
-        >
+        <Button variant="ghost" onClick={() => navigate('/checkout')} className="mb-4 md:mb-6 -ml-2" size="sm">
           <ArrowLeft className="w-4 h-4 mr-2" />
           Volver
         </Button>
@@ -197,7 +192,9 @@ const ConfirmOrder = () => {
             <CardHeader className="pb-3 md:pb-6">
               <CardTitle className="flex items-center justify-between text-base md:text-lg">
                 <span>Tipo de Orden</span>
-                <Badge variant="secondary" className="text-xs md:text-sm">{getOrderTypeLabel()}</Badge>
+                <Badge variant="secondary" className="text-xs md:text-sm">
+                  {getOrderTypeLabel()}
+                </Badge>
               </CardTitle>
             </CardHeader>
           </Card>
@@ -241,7 +238,7 @@ const ConfirmOrder = () => {
           </Card>
 
           {/* Delivery Information */}
-          {orderData.order_type === "delivery" && orderData.delivery_address && (
+          {orderData.order_type === 'delivery' && orderData.delivery_address && (
             <Card>
               <CardHeader className="pb-3 md:pb-6">
                 <CardTitle className="flex items-center gap-2 text-base md:text-lg">
@@ -255,7 +252,9 @@ const ConfirmOrder = () => {
                   <p className="text-xs md:text-sm text-muted-foreground">Número: {orderData.address_number}</p>
                 )}
                 {orderData.address_complement && (
-                  <p className="text-xs md:text-sm text-muted-foreground break-words">Complemento: {orderData.address_complement}</p>
+                  <p className="text-xs md:text-sm text-muted-foreground break-words">
+                    Complemento: {orderData.address_complement}
+                  </p>
                 )}
                 {orderData.address_neighborhood && (
                   <p className="text-xs md:text-sm text-muted-foreground">Barrio: {orderData.address_neighborhood}</p>
@@ -343,9 +342,7 @@ const ConfirmOrder = () => {
                       )}
                       <div className="flex-1 min-w-0">
                         <h4 className="font-medium text-sm md:text-base line-clamp-2">{item.name}</h4>
-                        <p className="text-xs md:text-sm text-muted-foreground">
-                          Cantidad: {item.quantity}
-                        </p>
+                        <p className="text-xs md:text-sm text-muted-foreground">Cantidad: {item.quantity}</p>
                         {item.extras && item.extras.length > 0 && (
                           <div className="mt-1 md:mt-2 text-xs md:text-sm text-muted-foreground space-y-0.5 md:space-y-1">
                             {item.extras.map((extra, idx) => (
@@ -363,7 +360,9 @@ const ConfirmOrder = () => {
                     <div className="text-right flex-shrink-0">
                       <div className="font-semibold text-sm md:text-base">
                         <DualPrice
-                          price={(item.price + (item.extras?.reduce((sum, e) => sum + e.price, 0) || 0)) * item.quantity}
+                          price={
+                            (item.price + (item.extras?.reduce((sum, e) => sum + e.price, 0) || 0)) * item.quantity
+                          }
                           size="sm"
                         />
                       </div>
@@ -376,21 +375,21 @@ const ConfirmOrder = () => {
 
               <div className="space-y-1.5 md:space-y-2">
                 {totalSavings > 0 && (
-                    <>
-                      <div className="flex justify-between text-xs md:text-sm items-start gap-2">
-                        <span className="text-muted-foreground">Subtotal original:</span>
-                        <div className="line-through text-muted-foreground text-right flex-shrink-0">
-                          <DualPrice price={originalTotal} size="sm" />
-                        </div>
+                  <>
+                    <div className="flex justify-between text-xs md:text-sm items-start gap-2">
+                      <span className="text-muted-foreground">Subtotal original:</span>
+                      <div className="line-through text-muted-foreground text-right flex-shrink-0">
+                        <DualPrice price={originalTotal} size="sm" />
                       </div>
-                      <div className="flex justify-between text-xs md:text-sm items-start gap-2">
-                        <span className="text-green-600">Descuento:</span>
-                        <div className="text-green-600 text-right flex-shrink-0">
-                          -<DualPrice price={totalSavings} size="sm" />
-                        </div>
+                    </div>
+                    <div className="flex justify-between text-xs md:text-sm items-start gap-2">
+                      <span className="text-green-600">Descuento:</span>
+                      <div className="text-green-600 text-right flex-shrink-0">
+                        -<DualPrice price={totalSavings} size="sm" />
                       </div>
-                    </>
-                  )}
+                    </div>
+                  </>
+                )}
                 <div className="flex justify-between text-xs md:text-sm items-start gap-2">
                   <span>Subtotal:</span>
                   <div className="text-right flex-shrink-0">
@@ -405,7 +404,7 @@ const ConfirmOrder = () => {
                     </div>
                   </div>
                 )}
-                {orderData?.order_type === "delivery" && deliveryPrice > 0 && (
+                {orderData?.order_type === 'delivery' && deliveryPrice > 0 && (
                   <div className="flex justify-between text-xs md:text-sm items-start gap-2">
                     <span>Costo de entrega:</span>
                     <div className="text-right flex-shrink-0">
@@ -426,28 +425,18 @@ const ConfirmOrder = () => {
 
           {/* Action Buttons */}
           <div className="flex flex-col sm:flex-row gap-3 md:gap-4 pb-4">
-            <Button
-              variant="outline"
-              onClick={handleEdit}
-              className="flex-1 h-11 md:h-12"
-              size="lg"
-            >
+            <Button variant="outline" onClick={handleEdit} className="flex-1 h-11 md:h-12" size="lg">
               <Edit className="w-4 h-4 mr-2" />
-              <span className="text-sm md:text-base">Editar Pedido</span>
+              <span className="text-sm md:text-base py-3">Editar Pedido</span>
             </Button>
-            <Button
-              onClick={handleConfirm}
-              disabled={loading}
-              className="flex-1 h-11 md:h-12"
-              size="lg"
-            >
+            <Button onClick={handleConfirm} disabled={loading} className="flex-1 h-11 md:h-12" size="lg">
               {loading ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                   <span className="text-sm md:text-base">Procesando...</span>
                 </>
               ) : (
-                <span className="text-sm md:text-base">Confirmar Pedido</span>
+                <span className="text-sm md:text-base py-3">Confirmar Pedido</span>
               )}
             </Button>
           </div>

@@ -27,12 +27,12 @@ interface Order {
   }>;
 }
 
-export function useOrderTracking(orderId: string) {
+export function useOrderTracking(trackingCode: string) {
   const [realtimeOrder, setRealtimeOrder] = useState<Order | null>(null);
 
-  // Fetch initial order data
+  // Fetch initial order data by tracking_code
   const { data: order, isLoading, error, refetch } = useQuery({
-    queryKey: ['order-tracking', orderId],
+    queryKey: ['order-tracking', trackingCode],
     queryFn: async (): Promise<Order> => {
       const { data, error } = await supabase
         .from('orders')
@@ -49,28 +49,28 @@ export function useOrderTracking(orderId: string) {
             )
           )
         `)
-        .eq('id', orderId)
+        .eq('tracking_code', trackingCode)
         .single();
 
       if (error) throw error;
       return data;
     },
-    enabled: !!orderId,
+    enabled: !!trackingCode,
   });
 
   // Subscribe to real-time updates
   useEffect(() => {
-    if (!orderId) return;
+    if (!trackingCode || !order?.id) return;
 
     const channel = supabase
-      .channel(`order-tracking:${orderId}`)
+      .channel(`order-tracking:${trackingCode}`)
       .on(
         'postgres_changes',
         {
           event: 'UPDATE',
           schema: 'public',
           table: 'orders',
-          filter: `id=eq.${orderId}`,
+          filter: `id=eq.${order.id}`,
         },
         (payload) => {
           const newOrder = payload.new as Order;
@@ -101,7 +101,7 @@ export function useOrderTracking(orderId: string) {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [orderId, refetch]);
+  }, [trackingCode, order?.id, refetch]);
 
   // Use realtime data if available, otherwise use query data
   const currentOrder = realtimeOrder || order;
