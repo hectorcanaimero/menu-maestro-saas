@@ -338,11 +338,31 @@ export function OrderSettingsTab({ storeId, initialData }: OrderSettingsTabProps
                     <li>
                       <code>{'{shipping-price}'}</code> - Precio del envío
                     </li>
+                    <li>
+                      <code>{'{order-track-page}'}</code> - Enlace de rastreo del pedido
+                    </li>
+                    <li>
+                      <code>{'{order-total-bolivares}'}</code> - Total del pedido en bolívares (requiere tasa de cambio)
+                    </li>
+                    <li>
+                      <code>{'{order-subtotal-bolivares}'}</code> - Subtotal de productos en bolívares
+                    </li>
+                    <li>
+                      <code>{'{shipping-price-bolivares}'}</code> - Precio del envío en bolívares
+                    </li>
                   </ul>
                 </details>
                 <p className="text-xs md:text-sm text-muted-foreground">
                   <strong>Importante:</strong> El token <code>{'{order-products}'}</code> es requerido y listará los
                   productos según el template definido arriba.
+                </p>
+                <p className="text-xs md:text-sm text-muted-foreground mt-2">
+                  <strong>Nota:</strong> Para que las conversiones a bolívares funcionen, debe configurar la tasa de
+                  cambio en la sección de{' '}
+                  <a href="#currency-conversion" className="text-primary hover:underline">
+                    Conversión de Moneda
+                  </a>
+                  .
                 </p>
               </div>
             </div>

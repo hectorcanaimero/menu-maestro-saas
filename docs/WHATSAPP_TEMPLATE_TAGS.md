@@ -8,12 +8,10 @@ Este documento describe todas las etiquetas disponibles para personalizar los me
 |----------|-------------|---------|
 | `{order-number}` | Número de la orden | F700CD7C |
 | `{order-date-time}` | Fecha y hora de la orden | 20/12/2024, 15:30 |
-| `{order-products}` | Lista de productos (usa template de producto) | Ver sección de productos |
+| `{order-products}` | Lista de productos (usa template de producto) **REQUERIDO** | Ver sección de productos |
 | `{order-total}` | Total de la orden en USD | USD 44,98 |
-| `{order-track-page}` | URL de rastreo de la orden | https://pideai.com/track/... |
+| `{order-track-page}` | ✅ URL de rastreo de la orden | https://tienda.pideai.com/track/F700CD7C |
 | `{order-table}` | Número de mesa (para pedidos en mesa) | Mesa 5 |
-| `{order-coupon-code}` | Código de cupón aplicado | DESCUENTO10 |
-| `{order-coupon-discount}` | Descuento del cupón | -USD 5,00 |
 
 ## Etiquetas de Cliente
 
@@ -22,38 +20,45 @@ Este documento describe todas las etiquetas disponibles para personalizar los me
 | `{customer-name}` | Nombre del cliente | Miguel |
 | `{customer-phone}` | Teléfono del cliente | +58 (424) 314-8415 |
 | `{customer-address}` | Dirección completa | Av paseo caroni, 167, Casa q, Las delicias |
+| `{customer-address-number}` | Número de la dirección | 167 |
+| `{customer-address-complement}` | Complemento de la dirección | Casa q |
+| `{customer-address-neighborhood}` | Barrio | Las delicias |
+| `{customer-address-zipcode}` | Código postal | 8001 |
 
 ## Etiquetas de Pago
 
 | Etiqueta | Descripción | Ejemplo |
 |----------|-------------|---------|
 | `{payment-method}` | Método de pago | Pago Móvil |
-| `{payment-status}` | Estado del pago | Pendiente |
-| `{payment-receipt-link}` | **NUEVO** - Link del comprobante de pago | https://storage.supabase.co/... |
-| `{payment_proof_link}` | **NUEVO** - Alias de payment-receipt-link | https://storage.supabase.co/... |
+| `{payment-change}` | Cambio a devolver | Bs. 50,00 |
+| `{payment-receipt-link}` | ✅ **NUEVO** - Link del comprobante de pago | https://storage.supabase.co/payment/abc.jpg |
+| `{payment_proof_link}` | ✅ Alias de payment-receipt-link | https://storage.supabase.co/payment/abc.jpg |
 
 ## Etiquetas de Delivery
 
 | Etiqueta | Descripción | Ejemplo |
 |----------|-------------|---------|
 | `{shipping-price}` | Costo del delivery en USD | USD 5,00 |
-| `{shipping-price-bolivares}` | **NUEVO** - Costo del delivery en BSF | Bs. 175,00 |
-| `{total_delivery_bsf}` | **NUEVO** - Alias de shipping-price-bolivares | Bs. 175,00 |
+| `{shipping-price-bolivares}` | ✅ **NUEVO** - Costo del delivery en BSF | Bs. 175,00 |
+| `{total_delivery_bsf}` | ✅ Alias de shipping-price-bolivares | Bs. 175,00 |
 
 ## Etiquetas de Conversión a Bolívares
 
+**Nota:** Requiere configurar la tasa de cambio (exchangeRate) al generar el mensaje.
+
 | Etiqueta | Descripción | Ejemplo |
 |----------|-------------|---------|
-| `{order-total-bolivares}` | **NUEVO** - Total de la orden en BSF | Bs. 1.574,30 |
-| `{order-subtotal-bolivares}` | **NUEVO** - Subtotal de productos en BSF | Bs. 1.399,30 |
-| `{total_order_bsf}` | **NUEVO** - Alias de order-total-bolivares | Bs. 1.574,30 |
-| `{total_products_bsf}` | **NUEVO** - Alias de order-subtotal-bolivares | Bs. 1.399,30 |
+| `{order-total-bolivares}` | ✅ **NUEVO** - Total de la orden en BSF | Bs. 1.574,30 |
+| `{order-subtotal-bolivares}` | ✅ **NUEVO** - Subtotal de productos en BSF (sin delivery) | Bs. 1.399,30 |
+| `{total_order_bsf}` | ✅ Alias de order-total-bolivares | Bs. 1.574,30 |
+| `{total_products_bsf}` | ✅ Alias de order-subtotal-bolivares | Bs. 1.399,30 |
 
 ## Etiquetas de Rastreo
 
 | Etiqueta | Descripción | Ejemplo |
 |----------|-------------|---------|
-| `{tracking_link}` | **NUEVO** - Link de rastreo de orden | https://pideai.com/track/... |
+| `{order-track-page}` | ✅ Link de rastreo de orden (token oficial) | https://tienda.pideai.com/track/F700CD7C |
+| `{tracking_link}` | ✅ Alias de order-track-page | https://tienda.pideai.com/track/F700CD7C |
 
 ## Template de Producto
 
