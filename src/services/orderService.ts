@@ -266,6 +266,11 @@ export async function prepareWhatsAppRedirect(
     orderMessageTemplateDigitalMenu: store.order_message_template_digital_menu || '📱 *Nuevo Pedido #{order-number}*\n\n{order-products}\n\n*Total:* {order-total}\n\n*Cliente:* {customer-name}\n*Mesa:* {order-table}',
   };
 
+  // Build tracking URL
+  const trackingUrl = fullOrder.tracking_code
+    ? `${window.location.origin}/track/${fullOrder.tracking_code}`
+    : '';
+
   // Build order data for message generation
   const orderData = {
     orderNumber: fullOrder.id.slice(0, 8).toUpperCase(),
@@ -281,9 +286,13 @@ export async function prepareWhatsAppRedirect(
     decimalPlaces: store.decimal_places || 2,
     decimalSeparator: store.decimal_separator || '.',
     thousandsSeparator: store.thousands_separator || ',',
+    trackingUrl,
     couponCode: fullOrder.coupon_code || undefined,
     couponDiscount: fullOrder.coupon_discount || 0,
     deliveryPrice: fullOrder.delivery_price || 0,
+    tableNumber: fullOrder.table_number || undefined,
+    exchangeRate: store.exchange_rate || 0,
+    paymentProofUrl: fullOrder.payment_proof_url || '',
   };
 
   // Generate WhatsApp message
