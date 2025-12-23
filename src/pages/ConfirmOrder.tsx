@@ -172,68 +172,69 @@ const ConfirmOrder = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background py-8">
-      <div className="container mx-auto px-4 max-w-4xl">
+    <div className="min-h-screen bg-background py-4 md:py-8">
+      <div className="container mx-auto px-3 md:px-4 max-w-4xl">
         <Button
           variant="ghost"
           onClick={() => navigate("/checkout")}
-          className="mb-6"
+          className="mb-4 md:mb-6 -ml-2"
+          size="sm"
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
           Volver
         </Button>
 
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold mb-2">Confirmar Pedido</h1>
-          <p className="text-muted-foreground">
+        <div className="text-center mb-6 md:mb-8">
+          <h1 className="text-2xl md:text-3xl font-bold mb-2">Confirmar Pedido</h1>
+          <p className="text-sm md:text-base text-muted-foreground">
             Revisa los detalles de tu pedido antes de confirmar
           </p>
         </div>
 
-        <div className="grid gap-6">
+        <div className="grid gap-4 md:gap-6">
           {/* Order Type */}
           <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center justify-between">
+            <CardHeader className="pb-3 md:pb-6">
+              <CardTitle className="flex items-center justify-between text-base md:text-lg">
                 <span>Tipo de Orden</span>
-                <Badge variant="secondary">{getOrderTypeLabel()}</Badge>
+                <Badge variant="secondary" className="text-xs md:text-sm">{getOrderTypeLabel()}</Badge>
               </CardTitle>
             </CardHeader>
           </Card>
 
           {/* Customer Information */}
           <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center justify-between">
+            <CardHeader className="pb-3 md:pb-6">
+              <CardTitle className="flex items-center justify-between text-base md:text-lg">
                 <span>Información del Cliente</span>
-                <Button variant="ghost" size="sm" onClick={handleEdit}>
-                  <Edit className="w-4 h-4 mr-1" />
-                  Editar
+                <Button variant="ghost" size="sm" onClick={handleEdit} className="h-8 px-2 md:px-3">
+                  <Edit className="w-3 h-3 md:w-4 md:h-4 md:mr-1" />
+                  <span className="hidden md:inline">Editar</span>
                 </Button>
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="flex items-start gap-3">
-                <User className="w-5 h-5 text-muted-foreground mt-0.5" />
-                <div>
-                  <p className="text-sm text-muted-foreground">Nombre</p>
-                  <p className="font-medium">{orderData.customer_name}</p>
+            <CardContent className="space-y-3 pt-0">
+              <div className="flex items-start gap-2 md:gap-3">
+                <User className="w-4 h-4 md:w-5 md:h-5 text-muted-foreground mt-0.5 flex-shrink-0" />
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs md:text-sm text-muted-foreground">Nombre</p>
+                  <p className="font-medium text-sm md:text-base break-words">{orderData.customer_name}</p>
                 </div>
               </div>
               <Separator />
-              <div className="flex items-start gap-3">
-                <Mail className="w-5 h-5 text-muted-foreground mt-0.5" />
-                <div>
-                  <p className="text-sm text-muted-foreground">Email</p>
-                  <p className="font-medium">{orderData.customer_email}</p>
+              <div className="flex items-start gap-2 md:gap-3">
+                <Mail className="w-4 h-4 md:w-5 md:h-5 text-muted-foreground mt-0.5 flex-shrink-0" />
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs md:text-sm text-muted-foreground">Email</p>
+                  <p className="font-medium text-sm md:text-base break-all">{orderData.customer_email}</p>
                 </div>
               </div>
               <Separator />
-              <div className="flex items-start gap-3">
-                <Phone className="w-5 h-5 text-muted-foreground mt-0.5" />
-                <div>
-                  <p className="text-sm text-muted-foreground">Teléfono</p>
-                  <p className="font-medium">{orderData.customer_phone}</p>
+              <div className="flex items-start gap-2 md:gap-3">
+                <Phone className="w-4 h-4 md:w-5 md:h-5 text-muted-foreground mt-0.5 flex-shrink-0" />
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs md:text-sm text-muted-foreground">Teléfono</p>
+                  <p className="font-medium text-sm md:text-base">{orderData.customer_phone}</p>
                 </div>
               </div>
             </CardContent>
@@ -242,25 +243,25 @@ const ConfirmOrder = () => {
           {/* Delivery Information */}
           {orderData.order_type === "delivery" && orderData.delivery_address && (
             <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <MapPin className="w-5 h-5" />
+              <CardHeader className="pb-3 md:pb-6">
+                <CardTitle className="flex items-center gap-2 text-base md:text-lg">
+                  <MapPin className="w-4 h-4 md:w-5 md:h-5 flex-shrink-0" />
                   Información de Entrega
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-2">
-                <p className="font-medium">{orderData.delivery_address}</p>
+              <CardContent className="space-y-2 pt-0">
+                <p className="font-medium text-sm md:text-base break-words">{orderData.delivery_address}</p>
                 {orderData.address_number && (
-                  <p className="text-muted-foreground">Número: {orderData.address_number}</p>
+                  <p className="text-xs md:text-sm text-muted-foreground">Número: {orderData.address_number}</p>
                 )}
                 {orderData.address_complement && (
-                  <p className="text-muted-foreground">Complemento: {orderData.address_complement}</p>
+                  <p className="text-xs md:text-sm text-muted-foreground break-words">Complemento: {orderData.address_complement}</p>
                 )}
                 {orderData.address_neighborhood && (
-                  <p className="text-muted-foreground">Barrio: {orderData.address_neighborhood}</p>
+                  <p className="text-xs md:text-sm text-muted-foreground">Barrio: {orderData.address_neighborhood}</p>
                 )}
                 {orderData.address_zipcode && (
-                  <p className="text-muted-foreground">Código Postal: {orderData.address_zipcode}</p>
+                  <p className="text-xs md:text-sm text-muted-foreground">Código Postal: {orderData.address_zipcode}</p>
                 )}
               </CardContent>
             </Card>
@@ -269,16 +270,16 @@ const ConfirmOrder = () => {
           {/* Payment Method */}
           {orderData.payment_method && (
             <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <CreditCard className="w-5 h-5" />
+              <CardHeader className="pb-3 md:pb-6">
+                <CardTitle className="flex items-center gap-2 text-base md:text-lg">
+                  <CreditCard className="w-4 h-4 md:w-5 md:h-5 flex-shrink-0" />
                   Método de Pago
                 </CardTitle>
               </CardHeader>
-              <CardContent>
-                <p className="font-medium">{orderData.payment_method}</p>
+              <CardContent className="pt-0">
+                <p className="font-medium text-sm md:text-base">{orderData.payment_method}</p>
                 {orderData.payment_proof_url && (
-                  <Badge variant="outline" className="mt-2">
+                  <Badge variant="outline" className="mt-2 text-xs">
                     Comprobante adjunto
                   </Badge>
                 )}
@@ -289,18 +290,18 @@ const ConfirmOrder = () => {
           {/* Applied Coupon */}
           {orderData.coupon_code && couponDiscount > 0 && (
             <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Ticket className="w-5 h-5" />
+              <CardHeader className="pb-3 md:pb-6">
+                <CardTitle className="flex items-center gap-2 text-base md:text-lg">
+                  <Ticket className="w-4 h-4 md:w-5 md:h-5 flex-shrink-0" />
                   Cupón Aplicado
                 </CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="flex items-center justify-between">
-                  <Badge variant="secondary" className="text-base px-3 py-1">
+              <CardContent className="pt-0">
+                <div className="flex items-center justify-between gap-2">
+                  <Badge variant="secondary" className="text-xs md:text-base px-2 md:px-3 py-0.5 md:py-1">
                     {orderData.coupon_code}
                   </Badge>
-                  <div className="text-green-600 font-semibold">
+                  <div className="text-green-600 font-semibold text-sm md:text-base">
                     -<DualPrice price={couponDiscount} size="sm" />
                   </div>
                 </div>
@@ -311,54 +312,56 @@ const ConfirmOrder = () => {
           {/* Notes */}
           {orderData.notes && (
             <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <FileText className="w-5 h-5" />
+              <CardHeader className="pb-3 md:pb-6">
+                <CardTitle className="flex items-center gap-2 text-base md:text-lg">
+                  <FileText className="w-4 h-4 md:w-5 md:h-5 flex-shrink-0" />
                   Notas Adicionales
                 </CardTitle>
               </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">{orderData.notes}</p>
+              <CardContent className="pt-0">
+                <p className="text-xs md:text-sm text-muted-foreground break-words">{orderData.notes}</p>
               </CardContent>
             </Card>
           )}
 
           {/* Order Summary */}
           <Card>
-            <CardHeader>
-              <CardTitle>Resumen del Pedido</CardTitle>
+            <CardHeader className="pb-3 md:pb-6">
+              <CardTitle className="text-base md:text-lg">Resumen del Pedido</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-3 md:space-y-4 pt-0">
               {items.map((item) => (
-                <div key={item.cartItemId || item.id} className="pb-4 border-b last:border-0">
-                  <div className="flex justify-between items-start">
-                    <div className="flex gap-3 flex-1">
+                <div key={item.cartItemId || item.id} className="pb-3 md:pb-4 border-b last:border-0 last:pb-0">
+                  <div className="flex justify-between items-start gap-2 md:gap-3">
+                    <div className="flex gap-2 md:gap-3 flex-1 min-w-0">
                       {item.image_url && (
                         <img
                           src={item.image_url}
                           alt={item.name}
-                          className="w-16 h-16 object-cover rounded"
+                          className="w-12 h-12 md:w-16 md:h-16 object-cover rounded flex-shrink-0"
                         />
                       )}
-                      <div className="flex-1">
-                        <h4 className="font-medium">{item.name}</h4>
-                        <p className="text-sm text-muted-foreground">
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-medium text-sm md:text-base line-clamp-2">{item.name}</h4>
+                        <p className="text-xs md:text-sm text-muted-foreground">
                           Cantidad: {item.quantity}
                         </p>
                         {item.extras && item.extras.length > 0 && (
-                          <div className="mt-2 text-sm text-muted-foreground space-y-1">
+                          <div className="mt-1 md:mt-2 text-xs md:text-sm text-muted-foreground space-y-0.5 md:space-y-1">
                             {item.extras.map((extra, idx) => (
-                              <div key={idx} className="flex justify-between items-start">
-                                <span>+ {extra.name}</span>
-                                <DualPrice price={extra.price} size="sm" />
+                              <div key={idx} className="flex justify-between items-start gap-1">
+                                <span className="line-clamp-1">+ {extra.name}</span>
+                                <span className="flex-shrink-0">
+                                  <DualPrice price={extra.price} size="sm" />
+                                </span>
                               </div>
                             ))}
                           </div>
                         )}
                       </div>
                     </div>
-                    <div className="text-right">
-                      <div className="font-semibold">
+                    <div className="text-right flex-shrink-0">
+                      <div className="font-semibold text-sm md:text-base">
                         <DualPrice
                           price={(item.price + (item.extras?.reduce((sum, e) => sum + e.price, 0) || 0)) * item.quantity}
                           size="sm"
@@ -371,49 +374,49 @@ const ConfirmOrder = () => {
 
               <Separator />
 
-              <div className="space-y-2">
+              <div className="space-y-1.5 md:space-y-2">
                 {totalSavings > 0 && (
                     <>
-                      <div className="flex justify-between text-sm items-start">
+                      <div className="flex justify-between text-xs md:text-sm items-start gap-2">
                         <span className="text-muted-foreground">Subtotal original:</span>
-                        <div className="line-through text-muted-foreground text-right">
+                        <div className="line-through text-muted-foreground text-right flex-shrink-0">
                           <DualPrice price={originalTotal} size="sm" />
                         </div>
                       </div>
-                      <div className="flex justify-between text-sm items-start">
+                      <div className="flex justify-between text-xs md:text-sm items-start gap-2">
                         <span className="text-green-600">Descuento:</span>
-                        <div className="text-green-600 text-right">
+                        <div className="text-green-600 text-right flex-shrink-0">
                           -<DualPrice price={totalSavings} size="sm" />
                         </div>
                       </div>
                     </>
                   )}
-                <div className="flex justify-between text-sm items-start">
+                <div className="flex justify-between text-xs md:text-sm items-start gap-2">
                   <span>Subtotal:</span>
-                  <div className="text-right">
+                  <div className="text-right flex-shrink-0">
                     <DualPrice price={discountedTotal} size="sm" />
                   </div>
                 </div>
                 {couponDiscount > 0 && (
-                  <div className="flex justify-between text-sm items-start">
-                    <span className="text-green-600">Cupón ({orderData.coupon_code}):</span>
-                    <div className="text-green-600 text-right">
+                  <div className="flex justify-between text-xs md:text-sm items-start gap-2">
+                    <span className="text-green-600 line-clamp-1">Cupón ({orderData.coupon_code}):</span>
+                    <div className="text-green-600 text-right flex-shrink-0">
                       -<DualPrice price={couponDiscount} size="sm" />
                     </div>
                   </div>
                 )}
                 {orderData?.order_type === "delivery" && deliveryPrice > 0 && (
-                  <div className="flex justify-between text-sm items-start">
+                  <div className="flex justify-between text-xs md:text-sm items-start gap-2">
                     <span>Costo de entrega:</span>
-                    <div className="text-right">
+                    <div className="text-right flex-shrink-0">
                       <DualPrice price={deliveryPrice} size="sm" />
                     </div>
                   </div>
                 )}
                 <Separator />
-                <div className="flex justify-between items-start text-lg font-bold">
+                <div className="flex justify-between items-start text-base md:text-lg font-bold gap-2">
                   <span>Total:</span>
-                  <div className="text-primary text-right">
+                  <div className="text-primary text-right flex-shrink-0">
                     <DualPrice price={grandTotal} size="lg" />
                   </div>
                 </div>
@@ -422,29 +425,29 @@ const ConfirmOrder = () => {
           </Card>
 
           {/* Action Buttons */}
-          <div className="flex gap-4">
+          <div className="flex flex-col sm:flex-row gap-3 md:gap-4 pb-4">
             <Button
               variant="outline"
               onClick={handleEdit}
-              className="flex-1"
+              className="flex-1 h-11 md:h-12"
               size="lg"
             >
               <Edit className="w-4 h-4 mr-2" />
-              Editar Pedido
+              <span className="text-sm md:text-base">Editar Pedido</span>
             </Button>
             <Button
               onClick={handleConfirm}
               disabled={loading}
-              className="flex-1"
+              className="flex-1 h-11 md:h-12"
               size="lg"
             >
               {loading ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Procesando...
+                  <span className="text-sm md:text-base">Procesando...</span>
                 </>
               ) : (
-                "Confirmar Pedido"
+                <span className="text-sm md:text-base">Confirmar Pedido</span>
               )}
             </Button>
           </div>
