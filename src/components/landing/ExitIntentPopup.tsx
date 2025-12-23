@@ -95,7 +95,10 @@ export const ExitIntentPopup = () => {
               </button>
 
               {/* Decorative gradient */}
-              <div className="absolute -top-20 -right-20 w-40 h-40 bg-gradient-to-br from-primary/20 to-primary/5 rounded-full blur-3xl" aria-hidden="true" />
+              <div
+                className="absolute -top-20 -right-20 w-40 h-40 bg-gradient-to-br from-primary/20 to-primary/5 rounded-full blur-3xl"
+                aria-hidden="true"
+              />
 
               {/* Content */}
               <div className="relative space-y-6">
@@ -107,11 +110,12 @@ export const ExitIntentPopup = () => {
                 {/* Text */}
                 <div>
                   <h3 id="exit-intent-title" className="text-2xl font-bold mb-2">
-                    ¡Espera! No Te Vayas Sin Tu Oferta
+                    ¡Espera! Empieza gratis sin pagar nada
                   </h3>
                   <p className="text-muted-foreground">
-                    Crea tu tienda ahora y obtén <span className="font-bold text-primary">30 días completamente gratis</span>.
-                    Sin tarjeta de crédito. Sin compromiso.
+                    Crea tu tienda ahora y comienza a recibir
+                    <span className="font-bold text-primary">pedidos sin costo inicial</span>. No pedimos tarjeta, no
+                    cobramos automáticamente y tú decides si continuar.
                   </p>
                 </div>
 
@@ -119,27 +123,22 @@ export const ExitIntentPopup = () => {
                 <div className="space-y-3 bg-muted/30 rounded-lg p-4">
                   <div className="flex items-center gap-2 text-sm">
                     <div className="w-1.5 h-1.5 bg-primary rounded-full" aria-hidden="true" />
-                    <span>Listo en menos de 5 minutos</span>
+                    <span>Lista tu tienda en menos de 5 minutos</span>
                   </div>
                   <div className="flex items-center gap-2 text-sm">
                     <div className="w-1.5 h-1.5 bg-primary rounded-full" aria-hidden="true" />
-                    <span>0% de comisión en tus ventas</span>
+                    <span>Pedidos claros y sin comisión</span>
                   </div>
                   <div className="flex items-center gap-2 text-sm">
                     <div className="w-1.5 h-1.5 bg-primary rounded-full" aria-hidden="true" />
-                    <span>Cancela cuando quieras</span>
+                    <span>Cancela o continúa cuando tú quieras</span>
                   </div>
                 </div>
 
                 {/* CTAs */}
                 <div className="space-y-3">
-                  <Button
-                    size="lg"
-                    className="w-full"
-                    onClick={handleCTA}
-                    aria-label="Crear tienda gratis ahora"
-                  >
-                    Crear Mi Tienda Gratis
+                  <Button size="lg" className="w-full" onClick={handleCTA} aria-label="Crear tienda gratis ahora">
+                    Crear mi tienda gratis
                     <ArrowRight className="ml-2" size={20} aria-hidden="true" />
                   </Button>
                   <button
@@ -147,13 +146,14 @@ export const ExitIntentPopup = () => {
                     className="w-full text-sm text-muted-foreground hover:text-foreground transition-colors"
                     aria-label="Continuar navegando"
                   >
-                    No gracias, seguiré explorando
+                    Seguir explorando
                   </button>
                 </div>
 
                 {/* Trust indicator */}
                 <p className="text-xs text-center text-muted-foreground">
-                  Únete a <span className="font-semibold text-foreground">500+ restaurantes</span> que ya usan PideAI
+                  Únete a <span className="font-semibold text-foreground">Más de 500 negocios500+ restaurantes</span> ya
+                  usan PideAí para ordenar sus pedidos
                 </p>
               </div>
             </div>

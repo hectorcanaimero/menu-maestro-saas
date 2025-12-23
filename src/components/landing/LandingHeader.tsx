@@ -45,9 +45,9 @@ export const LandingHeader = () => {
           </nav>
           {/* Desktop CTAs */}
           <div className="hidden md:flex items-center space-x-4">
-            <Button variant="ghost" onClick={() => navigate('/auth')}>
+            {/* <Button variant="ghost" onClick={() => navigate('/auth')}>
               Iniciar Sesión
-            </Button>
+            </Button> */}
             <Button onClick={() => navigate('/create-store')}>Crear Tienda Gratis</Button>
           </div>
           {/* Mobile Menu Button */}
