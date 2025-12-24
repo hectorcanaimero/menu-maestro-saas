@@ -147,7 +147,9 @@ export function getSubdomainFromHostname(): string {
 
   // Development mode (localhost)
   if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname.startsWith('192.168.')) {
-    return localStorage.getItem('dev_subdomain') || 'totus';
+    const devSubdomain = localStorage.getItem('dev_subdomain') || 'www';
+    // If dev_subdomain is 'www', return empty string to indicate main domain
+    return devSubdomain === 'www' ? '' : devSubdomain;
   }
 
   // Production mode - check all supported domains
@@ -159,6 +161,7 @@ export function getSubdomainFromHostname(): string {
       const subdomain = subdomainParts.join('.');
 
       console.log('Extracted subdomain:', subdomain);
+      console.log('AQUI');
 
       // Si es 'www', tratar como dominio principal (no es un subdomain de tienda)
       if (subdomain === 'www') {

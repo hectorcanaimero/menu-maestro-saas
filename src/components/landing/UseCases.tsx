@@ -68,7 +68,7 @@ export const UseCases = () => {
 
   return (
     <section className="py-20 px-4 bg-background">
-      <div className="container mx-auto">
+      <div className="container mx-auto px-2 sm:px-6 lg:px-12">
         {/* Header */}
         <motion.div
           className="text-center mb-12"
@@ -187,6 +187,16 @@ export const UseCases = () => {
             </div>
           </motion.div>
         </AnimatePresence>
+        {/* Additional Info */}
+        <motion.div
+          className="text-center mt-12"
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5, delay: 0.6 }}
+        >
+          <p className="text-muted-foreground">No importa qué vendas. Lo importante es cómo te piden.</p>
+        </motion.div>
       </div>
     </section>
   );

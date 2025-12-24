@@ -44,7 +44,7 @@ const features = [
 export const Features = () => {
   return (
     <section className="py-20 px-4 bg-primary/5">
-      <div className="container mx-auto">
+      <div className="container mx-auto px-2 sm:px-6 lg:px-12">
         <div className="text-center mb-16">
           <h2 className="text-3xl md:text-4xl font-bold mb-4 text-foreground">
             Haz que pedir en tu negocio sea fácil para tus clientes

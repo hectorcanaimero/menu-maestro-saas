@@ -1,21 +1,21 @@
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { toast } from "sonner";
-import { Store, ArrowLeft, CheckCircle2, XCircle, Loader2, Globe, Copy } from "lucide-react";
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { toast } from 'sonner';
+import { Store, ArrowLeft, CheckCircle2, XCircle, Loader2, Globe, Copy } from 'lucide-react';
 import {
   validateSubdomainFormat,
   generateSubdomainSuggestions,
   getCurrentDomain,
   formatSubdomainDisplay,
-} from "@/lib/subdomain-validation";
-import { ProgressSteps } from "@/components/ui/progress-steps";
+} from '@/lib/subdomain-validation';
+import { ProgressSteps } from '@/components/ui/progress-steps';
 
 const CreateStore = () => {
   const navigate = useNavigate();
@@ -28,21 +28,23 @@ const CreateStore = () => {
   } | null>(null);
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [formData, setFormData] = useState({
-    subdomain: "",
-    name: "",
-    description: "",
-    phone: "",
-    email: "",
-    address: "",
+    subdomain: '',
+    name: '',
+    description: '',
+    phone: '',
+    email: '',
+    address: '',
   });
 
   // Check authentication on mount
   useEffect(() => {
     const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       if (!session) {
-        toast.info("Primero debes crear una cuenta");
-        navigate("/auth");
+        toast.info('Primero debes crear una cuenta');
+        navigate('/auth');
         return;
       }
       setCheckingAuth(false);
@@ -63,7 +65,7 @@ const CreateStore = () => {
       if (!clientValidation.isValid) {
         setSubdomainValidation({
           isValid: false,
-          message: clientValidation.errorMessage || "Subdomain inválido",
+          message: clientValidation.errorMessage || 'Subdomain inválido',
         });
         setValidatingSubdomain(false);
         return;
@@ -75,10 +77,10 @@ const CreateStore = () => {
       });
 
       if (error) {
-        console.error("Error validating subdomain:", error);
+        console.error('Error validating subdomain:', error);
         setSubdomainValidation({
           isValid: false,
-          message: "Error al validar el subdominio",
+          message: 'Error al validar el subdominio',
         });
         return;
       }
@@ -86,7 +88,7 @@ const CreateStore = () => {
       const result = data?.[0];
       setSubdomainValidation({
         isValid: result?.is_valid || false,
-        message: result?.error_message || (result?.is_valid ? "✓ Disponible" : "No disponible"),
+        message: result?.error_message || (result?.is_valid ? '✓ Disponible' : 'No disponible'),
       });
 
       // Generate suggestions if invalid
@@ -95,10 +97,10 @@ const CreateStore = () => {
         setSuggestions(newSuggestions);
       }
     } catch (error) {
-      console.error("Error validating subdomain:", error);
+      console.error('Error validating subdomain:', error);
       setSubdomainValidation({
         isValid: false,
-        message: "Error al validar el subdominio",
+        message: 'Error al validar el subdominio',
       });
     } finally {
       setValidatingSubdomain(false);
@@ -136,16 +138,18 @@ const CreateStore = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const { data: { session } } = await supabase.auth.getSession();
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
     if (!session) {
-      toast.error("Debes iniciar sesión para crear una tienda");
-      navigate("/auth");
+      toast.error('Debes iniciar sesión para crear una tienda');
+      navigate('/auth');
       return;
     }
 
     // Final validation check
     if (!subdomainValidation?.isValid) {
-      toast.error("Por favor, elige un subdominio válido");
+      toast.error('Por favor, elige un subdominio válido');
       return;
     }
 
@@ -153,7 +157,7 @@ const CreateStore = () => {
     try {
       // Server-side validation will also be enforced by DB constraints and triggers
       const { data, error } = await supabase
-        .from("stores")
+        .from('stores')
         .insert([
           {
             subdomain: formData.subdomain.toLowerCase(),
@@ -169,12 +173,12 @@ const CreateStore = () => {
         .single();
 
       if (error) {
-        if (error.code === "23505") {
-          toast.error("Este subdominio ya está en uso");
-        } else if (error.message?.includes("reserved")) {
-          toast.error("Este subdominio está reservado y no puede ser usado");
-        } else if (error.message?.includes("format")) {
-          toast.error("El formato del subdominio no es válido");
+        if (error.code === '23505') {
+          toast.error('Este subdominio ya está en uso');
+        } else if (error.message?.includes('reserved')) {
+          toast.error('Este subdominio está reservado y no puede ser usado');
+        } else if (error.message?.includes('format')) {
+          toast.error('El formato del subdominio no es válido');
         } else {
           throw error;
         }
@@ -182,14 +186,14 @@ const CreateStore = () => {
       }
 
       // For development, save subdomain to localStorage
-      localStorage.setItem("dev_subdomain", formData.subdomain);
+      localStorage.setItem('dev_subdomain', formData.subdomain);
 
-      toast.success("¡Tienda creada con éxito!");
-      navigate("/admin/dashboard");
+      toast.success('¡Tienda creada con éxito!');
+      navigate('/admin/dashboard');
       window.location.reload(); // Reload to apply new store context
     } catch (error) {
-      console.error("Error creating store:", error);
-      toast.error("Error al crear la tienda");
+      console.error('Error creating store:', error);
+      toast.error('Error al crear la tienda');
     } finally {
       setLoading(false);
     }
@@ -208,18 +212,14 @@ const CreateStore = () => {
   }
 
   const steps = [
-    { title: "Crear Cuenta", description: "Registro y verificación" },
-    { title: "Configurar Tienda", description: "Detalles de tu negocio" },
+    { title: 'Crear Cuenta', description: 'Registro y verificación' },
+    { title: 'Configurar Tienda', description: 'Detalles de tu negocio' },
   ];
 
   return (
     <div className="min-h-screen bg-background py-8">
       <div className="container mx-auto px-4 max-w-2xl">
-        <Button
-          variant="ghost"
-          onClick={() => navigate("/")}
-          className="mb-6"
-        >
+        <Button variant="ghost" onClick={() => navigate('/')} className="mb-6">
           <ArrowLeft className="w-4 h-4 mr-2" />
           Volver
         </Button>
@@ -230,9 +230,7 @@ const CreateStore = () => {
               <Store className="w-6 h-6 text-primary" />
               <CardTitle>Crear Tu Tienda Online</CardTitle>
             </div>
-            <CardDescription>
-              Configura tu menú digital y comienza a recibir pedidos en línea
-            </CardDescription>
+            <CardDescription>Configura tu menú digital y comienza a recibir pedidos en línea</CardDescription>
             <ProgressSteps steps={steps} currentStep={1} className="mt-6" />
           </CardHeader>
           <CardContent>
@@ -260,11 +258,7 @@ const CreateStore = () => {
                       required
                       pattern="[a-z0-9-]+"
                       className={
-                        subdomainValidation
-                          ? subdomainValidation.isValid
-                            ? "border-green-500"
-                            : "border-red-500"
-                          : ""
+                        subdomainValidation ? (subdomainValidation.isValid ? 'border-green-500' : 'border-red-500') : ''
                       }
                     />
                     {validatingSubdomain && (
@@ -280,16 +274,10 @@ const CreateStore = () => {
                       </div>
                     )}
                   </div>
-                  <span className="text-sm text-muted-foreground whitespace-nowrap">
-                    .{getCurrentDomain()}
-                  </span>
+                  <span className="text-sm text-muted-foreground whitespace-nowrap">.{getCurrentDomain()}</span>
                 </div>
                 {subdomainValidation && (
-                  <p
-                    className={`text-xs ${
-                      subdomainValidation.isValid ? "text-green-600" : "text-red-600"
-                    }`}
-                  >
+                  <p className={`text-xs ${subdomainValidation.isValid ? 'text-green-600' : 'text-red-600'}`}>
                     {subdomainValidation.message}
                   </p>
                 )}
@@ -337,7 +325,7 @@ const CreateStore = () => {
                         variant="ghost"
                         onClick={() => {
                           navigator.clipboard.writeText(formatSubdomainDisplay(formData.subdomain));
-                          toast.success("URL copiada al portapapeles");
+                          toast.success('URL copiada al portapapeles');
                         }}
                         aria-label="Copiar URL"
                       >
@@ -353,9 +341,7 @@ const CreateStore = () => {
                 <Textarea
                   id="description"
                   value={formData.description}
-                  onChange={(e) =>
-                    setFormData({ ...formData, description: e.target.value })
-                  }
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   placeholder="Describe tu negocio..."
                   rows={3}
                 />
@@ -367,9 +353,7 @@ const CreateStore = () => {
                   id="email"
                   type="email"
                   value={formData.email}
-                  onChange={(e) =>
-                    setFormData({ ...formData, email: e.target.value })
-                  }
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   placeholder="contacto@mitienda.com"
                 />
               </div>
@@ -380,9 +364,7 @@ const CreateStore = () => {
                   id="phone"
                   type="tel"
                   value={formData.phone}
-                  onChange={(e) =>
-                    setFormData({ ...formData, phone: e.target.value })
-                  }
+                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                   placeholder="+55 (11) 99999-9999"
                 />
               </div>
@@ -392,9 +374,7 @@ const CreateStore = () => {
                 <Textarea
                   id="address"
                   value={formData.address}
-                  onChange={(e) =>
-                    setFormData({ ...formData, address: e.target.value })
-                  }
+                  onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                   placeholder="Dirección de tu negocio..."
                   rows={2}
                 />
@@ -406,7 +386,7 @@ const CreateStore = () => {
                 size="lg"
                 disabled={loading || !subdomainValidation?.isValid || validatingSubdomain}
               >
-                {loading ? "Creando..." : "Crear Tienda"}
+                {loading ? 'Creando...' : 'Crear Tienda'}
               </Button>
             </form>
           </CardContent>

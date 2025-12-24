@@ -13,7 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
-import { ArrowLeft, ArrowRight, Check, Loader2, Plus, Minus, X, ShoppingCart, User, MapPin, CreditCard } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, Loader2, Plus, Minus, X, ShoppingCart, User, MapPin } from "lucide-react";
 import posthog from "posthog-js";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -21,7 +21,6 @@ import { useStore } from "@/contexts/StoreContext";
 import { useAdminCart } from "@/hooks/useAdminCart";
 import { useFormatPrice } from "@/lib/priceFormatter";
 import { findOrCreateCustomer } from "@/services/customerService";
-import { PaymentMethodSelector } from "./PaymentMethodSelector";
 import { ProductExtrasDialog } from "@/components/catalog/ProductExtrasDialog";
 
 interface AdminOrderCreateProps {
@@ -88,14 +87,13 @@ export const AdminOrderCreate = ({ open, onOpenChange, onSuccess }: AdminOrderCr
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [deliveryZones, setDeliveryZones] = useState<DeliveryZone[]>([]);
   const [deliveryPrice, setDeliveryPrice] = useState(0);
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string | null>(null);
   const [notes, setNotes] = useState("");
 
   // Product extras dialog
   const [showExtrasDialog, setShowExtrasDialog] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<MenuItem | null>(null);
 
-  const totalSteps = 4;
+  const totalSteps = 3;
   const progress = (currentStep / totalSteps) * 100;
 
   // Form setup without automatic validation
@@ -234,16 +232,12 @@ export const AdminOrderCreate = ({ open, onOpenChange, onSuccess }: AdminOrderCr
         setCurrentStep(3);
       }
     }
-    // Step 3: Validate products
+    // Step 3: Validate products and submit
     else if (currentStep === 3) {
       if (items.length === 0) {
         toast.error("Agrega al menos un producto");
         return;
       }
-      setCurrentStep(4);
-    }
-    // Step 4: Submit
-    else {
       handleSubmit();
     }
   };
@@ -262,11 +256,6 @@ export const AdminOrderCreate = ({ open, onOpenChange, onSuccess }: AdminOrderCr
 
     if (items.length === 0) {
       toast.error("Agrega al menos un producto");
-      return;
-    }
-
-    if (!selectedPaymentMethod) {
-      toast.error("Selecciona un método de pago");
       return;
     }
 
@@ -312,7 +301,7 @@ export const AdminOrderCreate = ({ open, onOpenChange, onSuccess }: AdminOrderCr
         p_items: orderItems,
         p_delivery_address: formData.order_type === "delivery" ? formData.delivery_address : undefined,
         p_notes: notes || undefined,
-        p_payment_method: selectedPaymentMethod,
+        p_payment_method: null,
         p_delivery_price: deliveryPrice,
       });
 
@@ -331,7 +320,6 @@ export const AdminOrderCreate = ({ open, onOpenChange, onSuccess }: AdminOrderCr
           order_id: result.order_id,
           order_total: grandTotal,
           items_count: items.length,
-          payment_method: selectedPaymentMethod,
           order_type: formData.order_type,
         });
       } catch (e) {
@@ -344,7 +332,6 @@ export const AdminOrderCreate = ({ open, onOpenChange, onSuccess }: AdminOrderCr
       clearCart();
       form.reset();
       setCurrentStep(1);
-      setSelectedPaymentMethod(null);
       setNotes("");
       onOpenChange(false);
 
@@ -368,8 +355,6 @@ export const AdminOrderCreate = ({ open, onOpenChange, onSuccess }: AdminOrderCr
         return orderType === "delivery" ? "Información de Entrega" : orderType === "pickup" ? "Recoger en Tienda" : "Servicio en Mesa";
       case 3:
         return "Agregar Productos";
-      case 4:
-        return "Método de Pago y Confirmación";
       default:
         return "";
     }
@@ -394,7 +379,7 @@ export const AdminOrderCreate = ({ open, onOpenChange, onSuccess }: AdminOrderCr
             <div className="flex items-center justify-between">
               <DialogTitle className="text-xl">Crear Pedido Manual</DialogTitle>
               <div className="flex items-center gap-2">
-                {[1, 2, 3, 4].map((step) => (
+                {[1, 2, 3].map((step) => (
                   <div
                     key={step}
                     className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
@@ -418,7 +403,6 @@ export const AdminOrderCreate = ({ open, onOpenChange, onSuccess }: AdminOrderCr
               {currentStep === 1 && <User className="w-5 h-5" />}
               {currentStep === 2 && <MapPin className="w-5 h-5" />}
               {currentStep === 3 && <ShoppingCart className="w-5 h-5" />}
-              {currentStep === 4 && <CreditCard className="w-5 h-5" />}
               {getStepTitle()}
             </h3>
 
@@ -541,7 +525,7 @@ export const AdminOrderCreate = ({ open, onOpenChange, onSuccess }: AdminOrderCr
                                 <SelectContent>
                                   {deliveryZones.map((zone) => (
                                     <SelectItem key={zone.id} value={zone.zone_name}>
-                                      {zone.zone_name} - {formatPrice(zone.delivery_price)}
+                                      {zone.zone_name} - {formatPrice(zone.delivery_price).original}
                                     </SelectItem>
                                   ))}
                                 </SelectContent>
@@ -554,7 +538,7 @@ export const AdminOrderCreate = ({ open, onOpenChange, onSuccess }: AdminOrderCr
                         {deliveryPrice > 0 && (
                           <div className="p-3 bg-muted rounded-lg">
                             <p className="text-sm">
-                              Costo de envío: <span className="font-semibold">{formatPrice(deliveryPrice)}</span>
+                              Costo de envío: <span className="font-semibold">{formatPrice(deliveryPrice).original}</span>
                             </p>
                           </div>
                         )}
@@ -599,7 +583,7 @@ export const AdminOrderCreate = ({ open, onOpenChange, onSuccess }: AdminOrderCr
                               />
                             )}
                             <p className="text-sm font-medium truncate">{item.name}</p>
-                            <p className="text-xs text-primary font-semibold">{formatPrice(item.price)}</p>
+                            <p className="text-xs text-primary font-semibold">{formatPrice(item.price).original}</p>
                           </CardContent>
                         </Card>
                       ))}
@@ -628,7 +612,7 @@ export const AdminOrderCreate = ({ open, onOpenChange, onSuccess }: AdminOrderCr
                                     + {item.extras.map(e => e.name).join(", ")}
                                   </p>
                                 )}
-                                <p className="text-xs text-primary">{formatPrice(item.price)}</p>
+                                <p className="text-xs text-primary">{formatPrice(item.price).original}</p>
                               </div>
                               <div className="flex items-center gap-2">
                                 <Button
@@ -665,24 +649,18 @@ export const AdminOrderCreate = ({ open, onOpenChange, onSuccess }: AdminOrderCr
                         </div>
                       )}
                     </div>
-                  </div>
-                )}
 
-                {/* Step 4: Payment & Confirmation */}
-                {currentStep === 4 && (
-                  <div className="space-y-4">
-                    <PaymentMethodSelector
-                      selectedMethod={selectedPaymentMethod}
-                      onSelect={setSelectedPaymentMethod}
-                    />
+                    <Separator />
 
+                    {/* Order Notes */}
                     <div>
-                      <FormLabel>Notas del pedido (opcional)</FormLabel>
+                      <label className="text-sm font-medium">Notas del pedido (opcional)</label>
                       <Textarea
                         value={notes}
                         onChange={(e) => setNotes(e.target.value)}
                         placeholder="Instrucciones especiales, alergias, etc."
                         rows={2}
+                        className="mt-2"
                       />
                     </div>
 
@@ -694,23 +672,24 @@ export const AdminOrderCreate = ({ open, onOpenChange, onSuccess }: AdminOrderCr
                       <div className="space-y-1 text-sm">
                         <div className="flex justify-between">
                           <span>Subtotal ({items.length} productos)</span>
-                          <span>{formatPrice(totalPrice)}</span>
+                          <span>{formatPrice(totalPrice).original}</span>
                         </div>
                         {deliveryPrice > 0 && (
                           <div className="flex justify-between">
                             <span>Envío</span>
-                            <span>{formatPrice(deliveryPrice)}</span>
+                            <span>{formatPrice(deliveryPrice).original}</span>
                           </div>
                         )}
                         <Separator className="my-2" />
                         <div className="flex justify-between font-semibold text-lg">
                           <span>Total</span>
-                          <span className="text-primary">{formatPrice(grandTotal)}</span>
+                          <span className="text-primary">{formatPrice(grandTotal).original}</span>
                         </div>
                       </div>
                     </div>
                   </div>
                 )}
+
 
                 {/* Navigation Buttons */}
                 <div className="flex justify-between pt-4">
@@ -734,7 +713,7 @@ export const AdminOrderCreate = ({ open, onOpenChange, onSuccess }: AdminOrderCr
                         <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                         Creando...
                       </>
-                    ) : currentStep === 4 ? (
+                    ) : currentStep === 3 ? (
                       <>
                         <Check className="w-4 h-4 mr-2" />
                         Crear Pedido

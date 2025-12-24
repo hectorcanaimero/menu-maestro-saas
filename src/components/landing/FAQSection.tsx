@@ -36,7 +36,7 @@ export const FAQSection = () => {
 
   return (
     <section className="py-20 px-4">
-      <div className="container mx-auto max-w-3xl">
+      <div className="container mx-auto max-w-3xl px-2 sm:px-6 lg:px-12">
         <motion.div
           className="text-center mb-16"
           initial={{ opacity: 0, y: 20 }}

@@ -29,7 +29,7 @@ export interface OrderData {
   table_number?: string;
   notes?: string;
   payment_method?: string;
-  order_type: 'delivery' | 'pickup' | 'digital_menu';
+  order_type: 'delivery' | 'pickup' | 'dine_in' | 'digital_menu';
   payment_proof_url?: string;
   country?: string;
   delivery_price?: number;
@@ -91,10 +91,10 @@ export function buildFullAddress(orderData: OrderData, store: Store): string | n
 }
 
 /**
- * Build order notes including table number for digital menu orders
+ * Build order notes including table number for digital menu and dine-in orders
  */
 export function buildOrderNotes(orderData: OrderData): string | null {
-  if (orderData.order_type === 'digital_menu' && orderData.table_number) {
+  if ((orderData.order_type === 'digital_menu' || orderData.order_type === 'dine_in') && orderData.table_number) {
     return `Mesa: ${orderData.table_number}${orderData.notes ? `\n${orderData.notes}` : ''}`;
   }
 
@@ -329,7 +329,7 @@ export async function prepareWhatsAppRedirect(
   };
 
   // Generate WhatsApp message
-  const message = generateWhatsAppMessage(orderData, templates, orderType as 'delivery' | 'pickup' | 'digital_menu');
+  const message = generateWhatsAppMessage(orderData, templates, orderType as 'delivery' | 'pickup' | 'dine_in' | 'digital_menu');
 
   return {
     shouldRedirect: true,

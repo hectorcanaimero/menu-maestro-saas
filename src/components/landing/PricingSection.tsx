@@ -76,7 +76,7 @@ export const PricingSection = () => {
   if (isLoading) {
     return (
       <section id="pricing" className="py-20 px-4">
-        <div className="container mx-auto">
+        <div className="container mx-auto px-2 sm:px-6 lg:px-12">
           <div className="text-center mb-16">
             <div className="h-10 bg-muted rounded w-1/2 mx-auto mb-4 animate-pulse" />
             <div className="h-6 bg-muted rounded w-2/3 mx-auto animate-pulse" />

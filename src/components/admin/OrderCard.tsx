@@ -116,6 +116,11 @@ export const OrderCard = ({ order, onStatusChange, onViewDetails, onDriverAssign
         icon: Store,
         color: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100 border-blue-300',
       },
+      dine_in: {
+        label: 'Servicio en Mesa',
+        icon: Utensils,
+        color: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100 border-green-300',
+      },
       digital_menu: {
         label: 'En Tienda',
         icon: Utensils,

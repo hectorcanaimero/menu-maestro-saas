@@ -40,7 +40,7 @@ interface StoreTemplates {
   orderMessageTemplateDigitalMenu: string;
 }
 
-type OrderType = 'delivery' | 'pickup' | 'digital_menu';
+type OrderType = 'delivery' | 'pickup' | 'dine_in' | 'digital_menu';
 
 export const generateWhatsAppMessage = (
   orderData: OrderData,
@@ -128,7 +128,7 @@ export const generateWhatsAppMessage = (
   let templateMessage = templates.orderMessageTemplateDelivery;
   if (orderType === 'pickup') {
     templateMessage = templates.orderMessageTemplatePickup;
-  } else if (orderType === 'digital_menu') {
+  } else if (orderType === 'digital_menu' || orderType === 'dine_in') {
     templateMessage = templates.orderMessageTemplateDigitalMenu;
   }
 

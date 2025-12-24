@@ -152,8 +152,8 @@ export const ExitIntentPopup = () => {
 
                 {/* Trust indicator */}
                 <p className="text-xs text-center text-muted-foreground">
-                  Únete a <span className="font-semibold text-foreground">Más de 500 negocios500+ restaurantes</span> ya
-                  usan PideAí para ordenar sus pedidos
+                  <span className="font-semibold text-foreground">Más de 500 negocios</span> ya usan PideAí para ordenar
+                  sus pedidos
                 </p>
               </div>
             </div>

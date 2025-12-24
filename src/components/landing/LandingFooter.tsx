@@ -4,7 +4,7 @@ import logo from '@/assets/logo.svg';
 export const LandingFooter = () => {
   return (
     <footer className="bg-muted/30 border-t border-border py-12 px-4">
-      <div className="container mx-auto">
+      <div className="container mx-auto px-2 sm:px-6 lg:px-12">
         <div className="grid md:grid-cols-4 gap-8 mb-8">
           {/* Brand */}
           <div>

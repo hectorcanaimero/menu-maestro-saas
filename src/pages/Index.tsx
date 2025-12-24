@@ -13,10 +13,12 @@ import { FloatingCartButton } from '@/components/cart/FloatingCartButton';
 import { FloatingWhatsAppButton } from '@/components/catalog/FloatingWhatsAppButton';
 import { CatalogLimitBanner } from '@/components/catalog/CatalogLimitBanner';
 import { CatalogBlockedOverlay } from '@/components/catalog/CatalogBlockedOverlay';
+import { OrderLimitOverlay } from '@/components/catalog/OrderLimitOverlay';
 import { usePostHogViewLimitStatus } from '@/hooks/usePostHogViewLimitStatus';
+import { useSubscription } from '@/hooks/useSubscription';
 import { isPostHogAPIConfigured } from '@/lib/posthog-api';
 import { isMainDomain } from '@/lib/subdomain-validation';
-import { lazy, Suspense, useEffect } from 'react';
+import { lazy, Suspense, useEffect, useMemo } from 'react';
 import posthog from 'posthog-js';
 
 const LandingPage = lazy(() => import('./LandingPage'));
@@ -29,16 +31,35 @@ const Index = () => {
   useStoreTheme();
 
   // Check if catalog mode is enabled
-  const isCatalogMode = (store as any)?.catalog_mode ?? false;
+  const isCatalogMode = store?.catalog_mode ?? false;
 
   // Use PostHog for view limits if configured
   const usePostHog = isPostHogAPIConfigured();
 
   // Get view limit status (only when catalog mode is enabled)
-  const { data: viewLimitStatus } = usePostHogViewLimitStatus(
-    store?.id,
-    isCatalogMode && usePostHog
-  );
+  const { data: viewLimitStatus } = usePostHogViewLimitStatus(store?.id, isCatalogMode && usePostHog);
+
+  // Get subscription and usage stats (for order limits when NOT in catalog mode)
+  const { usage } = useSubscription();
+
+  // Determine if catalog should be blurred based on plan limits
+  const shouldBlurCatalog = useMemo(() => {
+    if (isCatalogMode) {
+      // Catalog mode ON: Check view limits
+      return viewLimitStatus?.exceeded && !viewLimitStatus?.isUnlimited;
+    } else {
+      // Catalog mode OFF (e-commerce): Check order limits
+      if (!usage?.orders_this_month) return false;
+
+      const { current, limit, unlimited } = usage.orders_this_month;
+
+      // Don't blur if unlimited
+      if (unlimited || limit === null || limit === -1) return false;
+
+      // Blur if current orders >= limit
+      return current >= limit;
+    }
+  }, [isCatalogMode, viewLimitStatus, usage]);
 
   // Track catalog page views when in catalog mode
   useEffect(() => {
@@ -122,33 +143,36 @@ const Index = () => {
         />
       )}
 
-      {/* Categories Horizontal Scroll */}
-      <CategoriesSection />
+      {/* Main content wrapper with conditional blur */}
+      <div className={shouldBlurCatalog ? 'blur-md pointer-events-none select-none' : ''}>
+        {/* Categories Horizontal Scroll */}
+        <CategoriesSection />
 
-      <div className="container mx-auto px-4">
-        {/* Store Info Widget */}
-        {store && (
-          <section className="pt-4 md:pt-6">
-            <StoreInfoWidget
-              storeId={store.id}
-              storeName={store.name}
-              estimatedDeliveryTime={store.estimated_delivery_time}
-              address={store.address}
-              phone={store.phone}
-              email={store.email}
-              description={store.description}
-              forceStatus={store.force_status}
-            />
+        <div className="container mx-auto px-4">
+          {/* Store Info Widget */}
+          {store && (
+            <section className="pt-4 md:pt-6">
+              <StoreInfoWidget
+                storeId={store.id}
+                storeName={store.name}
+                estimatedDeliveryTime={store.estimated_delivery_time}
+                address={store.address}
+                phone={store.phone}
+                email={store.email}
+                description={store.description}
+                forceStatus={store.force_status}
+              />
+            </section>
+          )}
+
+          {/* Featured Products Section */}
+          <FeaturedProducts />
+
+          {/* All Products Section with Grid/List Toggle */}
+          <section id="productos">
+            <ProductGrid />
           </section>
-        )}
-
-        {/* Featured Products Section */}
-        <FeaturedProducts />
-
-        {/* All Products Section with Grid/List Toggle */}
-        <section id="productos">
-          <ProductGrid />
-        </section>
+        </div>
       </div>
 
       {/* Floating Cart Button */}
@@ -160,15 +184,24 @@ const Index = () => {
       {/* Footer */}
       <Footer />
 
-      {/* Catalog Blocked Overlay (when soft-limit exceeded) */}
-      {isCatalogMode && viewLimitStatus?.hardBlocked && !viewLimitStatus.isUnlimited && (
+      {/* Order Limit Overlay (e-commerce mode - when order limit exceeded) */}
+      {/* {!isCatalogMode && shouldBlurCatalog && usage?.orders_this_month && (
+        <OrderLimitOverlay
+          currentOrders={usage.orders_this_month.current}
+          limit={usage.orders_this_month.limit!}
+          storeName={store?.name}
+        />
+      )} */}
+
+      {/* Catalog Blocked Overlay (catalog mode - when soft-limit exceeded) */}
+      {/* {isCatalogMode && viewLimitStatus?.hardBlocked && !viewLimitStatus.isUnlimited && (
         <CatalogBlockedOverlay
           currentViews={viewLimitStatus.currentViews}
           limit={viewLimitStatus.limit!}
           softLimit={viewLimitStatus.softLimit!}
           storeName={store?.name}
         />
-      )}
+      )} */}
     </div>
   );
 };

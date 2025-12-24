@@ -24,8 +24,8 @@ export const LandingHero = () => {
 
   return (
     <section ref={ref} className="pt-32 pb-20 px-4 relative overflow-hidden">
-      <div className="container mx-auto">
-        <div className="grid md:grid-cols-2 gap-12 items-center">
+      <div className="container mx-auto px-2 sm:px-6 lg:px-12">
+        <div className="grid lg:grid-cols-2 gap-12 items-center">
           {/* Content */}
           <motion.div
             className="space-y-8"
@@ -49,11 +49,11 @@ export const LandingHero = () => {
               <h1 className="text-4xl md:text-5xl lg:text-5xl font-bold leading-tight">
                 Recibe pedidos claros y ordenados sin volver loco tu <span className="text-primary">WhatsApp</span>
               </h1>
-              <p className="text-lg md:text-xl text-muted-foreground">
+              <p className="text-muted-foreground">
                 Crea tu catálogo o menú digital en minutos y permite que tus clientes pidan solos, sin confusiones ni
                 mensajes eternos.
               </p>
-              <p className="text-lg md:text-xl text-muted-foreground">
+              <p className="text-muted-foreground">
                 Centraliza tus pedidos, evita errores y mejora la experiencia de tus clientes desde el primer día.
               </p>
             </div>
@@ -89,14 +89,14 @@ export const LandingHero = () => {
               </div>
               <div className="flex items-center gap-2 text-foreground">
                 <CheckCircle2 size={20} className="text-primary" />
-                <span>Ideal para restaurantes, cafés y cualquier negocio que quiera digitalizarse</span>
+                <span>Ideal para digitalizarse</span>
               </div>
             </div>
           </motion.div>
 
           {/* Stats */}
           <motion.div
-            className="grid grid-cols-2 gap-6"
+            className="grid md:grid-cols-2 gap-6"
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}

@@ -1,21 +1,21 @@
 {
   "agents": [
     {
-      "name": "orchestrator",
+      "name": "alejandro",
       "description": "Master coordinator that receives user requests and orchestrates other agents (developer, posthog, supabase, security) to complete features, fix bugs, and optimize the application. The single point of contact for complex multi-agent workflows.",
       "prompt_file": "prompts/orchestrator-agent.md",
       "tools": ["all"],
       "model": "sonnet"
     },
     {
-      "name": "developer",
+      "name": "yenny",
       "description": "Senior Full-Stack Developer specialized in building mobile-first features with React, TypeScript, Supabase. Follows strict workflow: analyze issue → implement with tests → validate → document. Expert in multi-tenant architecture and responsive design.",
       "prompt_file": "prompts/developer-agent.md",
       "tools": ["all"],
       "model": "sonnet"
     },
     {
-      "name": "posthog",
+      "name": "danilo",
       "description": "Senior Analytics Engineer specialized in PostHog analytics, conversion funnels, event tracking, and data-driven insights. Has access to PostHog MCP for creating dashboards, insights, and analyzing user behavior in the multi-tenant food ordering platform.",
       "prompt_file": "prompts/posthog-agent.md",
       "tools": ["all"],
@@ -23,7 +23,7 @@
       "model": "sonnet"
     },
     {
-      "name": "supabase",
+      "name": "simon",
       "description": "Supabase database expert for schema design, SQL queries, RLS policies, migrations, Edge Functions, and performance optimization. Has access to Supabase MCP for database introspection and management.",
       "prompt_file": "supabase-agent.md",
       "tools": ["all"],
@@ -31,7 +31,7 @@
       "model": "sonnet"
     },
     {
-      "name": "security",
+      "name": "rafael",
       "description": "Security Engineer & QA Specialist for security audits, code quality reviews, testing strategy, accessibility compliance, and multi-tenant isolation validation. Guardian of security and reliability.",
       "prompt_file": "prompts/security-agent.md",
       "tools": ["all"],
@@ -45,10 +45,25 @@
       "model": "sonnet"
     },
     {
-      "name": "ux-validator",
+      "name": "miguel",
       "description": "UX Validator & Usability Expert for validating user experience, accessibility (WCAG 2.1), mobile-first design, and providing actionable insights. Analyzes interfaces for usability, consistency, friction points, and performance UX. Automatically validates after UI implementations.",
       "prompt_file": "prompts/ux-validator-agent.md",
       "tools": ["all"],
+      "model": "sonnet"
+    },
+    {
+      "name": "sofia",
+      "description": "Marketing Digital & Content Specialist for copywriting, landing page optimization, UX writing, SEO content strategy, and conversion optimization. Expert in food-tech SaaS messaging for both B2B (restaurants) and B2C (consumers). Creates compelling copy that converts.",
+      "prompt_file": "prompts/sofia-marketing-agent.md",
+      "tools": ["all"],
+      "model": "sonnet"
+    },
+    {
+      "name": "carlos",
+      "description": "QA Automation Engineer specialized in E2E testing (Playwright), unit testing (Vitest), accessibility testing (WCAG 2.1), and visual regression. Writes comprehensive test suites, maintains test infrastructure, and integrates with CI/CD. Has access to TestSprite MCP for automated test generation.",
+      "prompt_file": "prompts/qa-agent.md",
+      "tools": ["all"],
+      "mcp_servers": ["testsprite"],
       "model": "sonnet"
     }
   ]

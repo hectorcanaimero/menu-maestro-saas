@@ -26,8 +26,6 @@ export function useAutoUpdateRates(storeId: string | undefined, enabled: boolean
           return;
         }
 
-        console.log('[BCV Auto-Update] Fetching exchange rates...');
-
         const result = await updateExchangeRates(storeId);
 
         if (result.success) {
