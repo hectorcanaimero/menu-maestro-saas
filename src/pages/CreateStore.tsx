@@ -47,6 +47,18 @@ const CreateStore = () => {
         navigate('/auth');
         return;
       }
+
+      // Check if user already has a store
+      const { data: userStore } = await supabase.rpc('get_user_owned_store').single();
+
+      if (userStore) {
+        // User already has a store - log them out and redirect to auth
+        await supabase.auth.signOut();
+        toast.error('Ya tienes una tienda creada. Por favor, inicia sesión en tu tienda existente.');
+        navigate('/auth');
+        return;
+      }
+
       setCheckingAuth(false);
     };
     checkAuth();

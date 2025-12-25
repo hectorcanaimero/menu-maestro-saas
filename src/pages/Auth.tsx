@@ -61,9 +61,6 @@ const Auth = () => {
     setIsLoading(true);
 
     try {
-      // Get current subdomain
-      const currentSubdomain = getSubdomainFromHostname();
-
       const { data, error } = await supabase.auth.signInWithPassword({
         email: loginData.email,
         password: loginData.password,
@@ -84,59 +81,36 @@ const Auth = () => {
         setIsLoading(false);
         return;
       }
-      console.log('data', data);
-      // Verify user owns a store and that it matches the current subdomain
-      const { data: session } = await supabase.auth.getSession();
-      const userId = session.session?.user.id;
+
+      // Get user's store
+      const { data: userStore, error: storeError } = await supabase.rpc('get_user_owned_store').single();
 
       // Debug logging in development
       if (import.meta.env.DEV) {
         console.log('[AUTH DEBUG]', {
           email: loginData.email,
-          userId,
-          subdomain: currentSubdomain,
+          userId: data.session.user.id,
+          userStore,
+          storeError,
         });
-      }
-
-      const { data: userStore, error: storeError } = await supabase.rpc('get_user_owned_store').single();
-
-      // Debug RPC result
-      if (import.meta.env.DEV) {
-        console.log('[AUTH DEBUG] RPC get_user_owned_store:', { userStore, storeError });
       }
 
       if (!userStore) {
-        // User doesn't own any store - log them out and show error
-        await supabase.auth.signOut();
-
-        // More specific error message
-        const errorMsg = storeError
-          ? `Error al verificar tienda: ${storeError.message}`
-          : `No se encontró tienda asociada a ${loginData.email}. Verifica que el owner_id de tu tienda coincida con tu user_id: ${userId}`;
-
-        toast.error(errorMsg, { duration: 8000 });
-        console.error('[AUTH ERROR]', { userId, email: loginData.email, error: storeError });
-
-        setIsLoading(false);
-        navigate('/create-store');
-        return;
-      }
-
-      // Check if user is trying to login to their own store
-      if (userStore.subdomain !== currentSubdomain) {
-        // User is trying to login to a different store - not allowed!
-        await supabase.auth.signOut();
-        const currentDomain = getCurrentDomain();
-        toast.error(`Solo puedes iniciar sesión en tu propia tienda: ${userStore.subdomain}.${currentDomain}`, {
-          duration: 6000,
-        });
+        // User doesn't own any store - redirect to onboarding
+        toast.info('Completa el registro de tu tienda');
+        navigate('/onboarding/personal');
         setIsLoading(false);
         return;
       }
 
-      // Success - user is logging into their own store
-      toast.success('¡Bienvenido!');
-      navigate('/admin');
+      // Success - redirect to user's store admin
+      const currentDomain = getCurrentDomain();
+      const storeAdminUrl = `${window.location.protocol}//${userStore.subdomain}.${currentDomain}/admin`;
+
+      toast.success('¡Bienvenido! Redirigiendo a tu tienda...');
+
+      // Redirect to the user's store admin
+      window.location.href = storeAdminUrl;
     } catch (error) {
       console.error('Error during login:', error);
       toast.error('Error al iniciar sesión');
@@ -174,7 +148,7 @@ const Auth = () => {
         navigate('/verify-email', {
           state: {
             email: signupData.email,
-            nextStep: '/create-store', // Where to go after verification
+            nextStep: '/onboarding/personal', // Where to go after verification - NEW ONBOARDING FLOW
           },
         });
       }

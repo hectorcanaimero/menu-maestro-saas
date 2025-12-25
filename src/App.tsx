@@ -21,6 +21,11 @@ const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const UpdatePassword = lazy(() => import("./pages/UpdatePassword"));
 const CreateStore = lazy(() => import("./pages/CreateStore"));
 const LandingPage = lazy(() => import("./pages/LandingPage"));
+
+// Onboarding routes - multi-step wizard
+const OnboardingPersonal = lazy(() => import("./pages/onboarding/OnboardingPersonal"));
+const OnboardingBusiness = lazy(() => import("./pages/onboarding/OnboardingBusiness"));
+const OnboardingSubdomain = lazy(() => import("./pages/onboarding/OnboardingSubdomain"));
 const Checkout = lazy(() => import("./pages/Checkout"));
 const ConfirmOrder = lazy(() => import("./pages/ConfirmOrder"));
 const MyOrders = lazy(() => import("./pages/MyOrders"));
@@ -140,6 +145,31 @@ const AppContent = () => {
                     element={
                       <SectionErrorBoundary>
                         <CreateStore />
+                      </SectionErrorBoundary>
+                    }
+                  />
+                  {/* Onboarding Routes - Multi-step wizard */}
+                  <Route
+                    path="/onboarding/personal"
+                    element={
+                      <SectionErrorBoundary>
+                        <OnboardingPersonal />
+                      </SectionErrorBoundary>
+                    }
+                  />
+                  <Route
+                    path="/onboarding/business"
+                    element={
+                      <SectionErrorBoundary>
+                        <OnboardingBusiness />
+                      </SectionErrorBoundary>
+                    }
+                  />
+                  <Route
+                    path="/onboarding/subdomain"
+                    element={
+                      <SectionErrorBoundary>
+                        <OnboardingSubdomain />
                       </SectionErrorBoundary>
                     }
                   />
