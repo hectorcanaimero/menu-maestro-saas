@@ -1,13 +1,9 @@
-import { useState } from 'react';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ShoppingCart, Eye, Tag } from 'lucide-react';
-import { useCart } from '@/contexts/CartContext';
 import { useStore } from '@/contexts/StoreContext';
 import { useNavigate } from 'react-router-dom';
-import { toast } from 'sonner';
-import { ProductExtrasDialog } from './ProductExtrasDialog';
 import { useProductPromotions, getBestPromotion } from '@/hooks/usePromotions';
 import { useQuickView } from '@/hooks/useQuickView';
 import { useFormatPrice } from '@/lib/priceFormatter';
@@ -46,11 +42,9 @@ export const ProductCard = ({
   index = 0,
   allProducts = [],
 }: ProductCardProps) => {
-  const { addItem } = useCart();
   const { store } = useStore();
   const navigate = useNavigate();
   const { openQuickView } = useQuickView();
-  const [showExtrasDialog, setShowExtrasDialog] = useState(false);
   const formatPrice = useFormatPrice();
 
   // Get applicable promotions for this product
@@ -59,33 +53,21 @@ export const ProductCard = ({
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setShowExtrasDialog(true);
+    // Navigate to product detail page where extras can be selected
+    navigate(`/products/${id}`);
   };
+
   const handleQuickView = (e: React.MouseEvent) => {
     e.stopPropagation();
     const products = allProducts.length > 0 ? allProducts : [{ id, name, price, image_url, description, categoryId }];
     openQuickView({ id, name, price, image_url, description, categoryId }, products, index);
   };
 
-  const handleConfirmWithExtras = (extras: Array<{ id: string; name: string; price: number }>) => {
-    addItem({ id, name, price, image_url, extras, categoryId });
-  };
-
   const isGridView = layout === 'grid';
   const hasDiscount = !!bestDeal;
 
   return (
-    <>
-      <ProductExtrasDialog
-        open={showExtrasDialog}
-        onOpenChange={setShowExtrasDialog}
-        productId={id}
-        productName={name}
-        productPrice={price}
-        onConfirm={handleConfirmWithExtras}
-      />
-
-      <Card
+    <Card
         className={`group h-full overflow-hidden border border-border/40 hover:border-border hover:shadow-lg transition-all duration-300 bg-card cursor-pointer rounded-lg relative ${
           compact ? 'max-w-[200px]' : ''
         }`}
@@ -179,8 +161,7 @@ export const ProductCard = ({
           {!store?.catalog_mode ? (
             <Button
               size="icon"
-              onClick={() => navigate(`/products/${id}`)}
-              // onClick={handleAddToCart}
+              onClick={handleAddToCart}
               className="absolute bottom-2 right-2 sm:bottom-3 sm:right-3 h-9 w-9 sm:h-9 sm:w-9 rounded-full shadow-md bg-primary hover:bg-primary/90 z-10"
               aria-label={`Agregar ${name} al carrito`}
             >
@@ -189,6 +170,5 @@ export const ProductCard = ({
           ) : null}
         </div>
       </Card>
-    </>
   );
 };

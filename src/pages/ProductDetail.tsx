@@ -8,12 +8,15 @@ import { Badge } from '@/components/ui/badge';
 import { ShoppingCart, ArrowLeft, Tag } from 'lucide-react';
 import { useCart } from '@/contexts/CartContext';
 import { Skeleton } from '@/components/ui/skeleton';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
 import { useStoreTheme } from '@/hooks/useStoreTheme';
 import { useProductPromotions, getBestPromotion } from '@/hooks/usePromotions';
 import { useStore } from '@/contexts/StoreContext';
 import { useFormatPrice } from '@/lib/priceFormatter';
 import { DualPrice } from '@/components/catalog/DualPrice';
+import { useProductExtraGroups } from '@/hooks/useExtraGroups';
 
 interface Product {
   id: string;
@@ -25,23 +28,18 @@ interface Product {
   is_available: boolean | null;
 }
 
-interface ProductExtra {
-  id: string;
-  name: string;
-  price: number;
-  is_available: boolean | null;
-}
-
 export default function ProductDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { addItem } = useCart();
   const { store } = useStore();
   const [product, setProduct] = useState<Product | null>(null);
-  const [extras, setExtras] = useState<ProductExtra[]>([]);
-  const [selectedExtras, setSelectedExtras] = useState<Set<string>>(new Set());
+  const [selectedExtras, setSelectedExtras] = useState<Map<string, Set<string>>>(new Map());
   const [loading, setLoading] = useState(true);
   const formatPrice = useFormatPrice();
+
+  // Get grouped extras for this product
+  const { data: groupedExtras, isLoading: extrasLoading } = useProductExtraGroups(id || '');
 
   // Apply store theme colors
   useStoreTheme();
@@ -70,56 +68,104 @@ export default function ProductDetail() {
       }
 
       setProduct(productData);
-
-      // Fetch product extras
-      const { data: extrasData } = await supabase
-        .from('product_extras')
-        .select('*')
-        .eq('menu_item_id', id)
-        .eq('is_available', true)
-        .order('display_order', { ascending: true });
-
-      if (extrasData) {
-        setExtras(extrasData);
-      }
-
       setLoading(false);
     };
 
     fetchProduct();
   }, [id, navigate]);
 
-  const toggleExtra = (extraId: string) => {
+  const toggleExtra = (groupId: string, extraId: string, isSingle: boolean) => {
     setSelectedExtras((prev) => {
-      const newSet = new Set(prev);
-      if (newSet.has(extraId)) {
-        newSet.delete(extraId);
+      const newMap = new Map(prev);
+      const groupSelections = newMap.get(groupId) || new Set();
+
+      if (isSingle) {
+        // For single selection groups, replace the selection
+        newMap.set(groupId, new Set([extraId]));
       } else {
-        newSet.add(extraId);
+        // For multiple selection groups, toggle the extra
+        if (groupSelections.has(extraId)) {
+          groupSelections.delete(extraId);
+        } else {
+          groupSelections.add(extraId);
+        }
+        newMap.set(groupId, groupSelections);
       }
-      return newSet;
+
+      return newMap;
     });
   };
 
   const calculateTotalPrice = () => {
     if (!product) return 0;
     const basePrice = bestDeal ? bestDeal.discountedPrice : product.price;
-    const extrasTotal = extras
-      .filter((extra) => selectedExtras.has(extra.id))
-      .reduce((sum, extra) => sum + extra.price, 0);
+
+    let extrasTotal = 0;
+    if (groupedExtras) {
+      groupedExtras.forEach((groupedExtra) => {
+        const selections = selectedExtras.get(groupedExtra.group.id);
+        if (selections) {
+          groupedExtra.extras.forEach((extra) => {
+            if (selections.has(extra.id)) {
+              extrasTotal += extra.price;
+            }
+          });
+        }
+      });
+    }
+
     return basePrice + extrasTotal;
   };
 
-  const handleAddToCart = () => {
-    if (!product) return;
+  const validateSelections = (): boolean => {
+    if (!groupedExtras) return true;
 
-    const selectedExtrasArray = extras
-      .filter((extra) => selectedExtras.has(extra.id))
-      .map((extra) => ({
-        id: extra.id,
-        name: extra.name,
-        price: extra.price,
-      }));
+    for (const groupedExtra of groupedExtras) {
+      const { group } = groupedExtra;
+      const selections = selectedExtras.get(group.id);
+      const selectionCount = selections?.size || 0;
+
+      if (group.is_required && selectionCount === 0) {
+        toast.error(`Debes seleccionar al menos una opción en "${group.name}"`);
+        return false;
+      }
+
+      if (group.min_selections && selectionCount < group.min_selections) {
+        toast.error(`Debes seleccionar al menos ${group.min_selections} opciones en "${group.name}"`);
+        return false;
+      }
+
+      if (group.max_selections && selectionCount > group.max_selections) {
+        toast.error(`Puedes seleccionar máximo ${group.max_selections} opciones en "${group.name}"`);
+        return false;
+      }
+    }
+
+    return true;
+  };
+
+  const handleAddToCart = () => {
+    if (!product || !validateSelections()) return;
+
+    // Flatten selected extras from all groups
+    const selectedExtrasArray: Array<{ id: string; name: string; price: number }> = [];
+
+    if (groupedExtras) {
+      groupedExtras.forEach((groupedExtra) => {
+        const selections = selectedExtras.get(groupedExtra.group.id);
+        if (selections) {
+          groupedExtra.extras.forEach((extra) => {
+            if (selections.has(extra.id)) {
+              selectedExtrasArray.push({
+                id: extra.id,
+                name: extra.name,
+                price: extra.price,
+              });
+            }
+          });
+        }
+      });
+    }
 
     addItem({
       id: product.id,
@@ -224,34 +270,90 @@ export default function ProductDetail() {
               </div>
             )}
 
-            {/* Extras Section */}
-            {extras.length > 0 && (
-              <div className="space-y-3 border-t border-border pt-4">
+            {/* Extras Groups Section */}
+            {!extrasLoading && groupedExtras && groupedExtras.length > 0 && (
+              <div className="space-y-6 border-t border-border pt-4">
                 <h2 className="text-lg font-semibold text-foreground">Personaliza tu pedido</h2>
-                <div className="space-y-2">
-                  {extras.map((extra) => (
-                    <label
-                      key={extra.id}
-                      className="flex items-center justify-between p-3 rounded-lg border border-border hover:bg-muted/50 cursor-pointer transition-colors"
-                    >
-                      <div className="flex items-center gap-3">
-                        <input
-                          type="checkbox"
-                          checked={selectedExtras.has(extra.id)}
-                          onChange={() => toggleExtra(extra.id)}
-                          className="w-4 h-4 rounded border-border text-primary focus:ring-primary"
-                        />
-                        <span className="text-foreground font-medium">{extra.name}</span>
+                {groupedExtras.map((groupedExtra) => {
+                  const { group, extras } = groupedExtra;
+                  const isSingle = group.selection_type === 'single';
+                  const groupSelections = selectedExtras.get(group.id);
+
+                  return (
+                    <div key={group.id} className="space-y-3">
+                      <div className="flex items-center gap-2">
+                        <h3 className="text-base font-semibold text-foreground">{group.name}</h3>
+                        {group.is_required && <span className="text-destructive">*</span>}
                       </div>
-                      <div
-                        className="text-sm font-semibold"
-                        style={{ color: `hsl(var(--price-color, var(--primary)))` }}
-                      >
-                        +<DualPrice price={extra.price} size="sm" />
-                      </div>
-                    </label>
-                  ))}
-                </div>
+
+                      {group.description && (
+                        <p className="text-sm text-muted-foreground">{group.description}</p>
+                      )}
+
+                      {isSingle ? (
+                        <RadioGroup
+                          value={groupSelections?.values().next().value || ''}
+                          onValueChange={(value) => toggleExtra(group.id, value, true)}
+                        >
+                          <div className="space-y-2">
+                            {extras.map((extra) => (
+                              <label
+                                key={extra.id}
+                                className="flex items-center justify-between p-3 rounded-lg border border-border hover:bg-muted/50 cursor-pointer transition-colors"
+                              >
+                                <div className="flex items-center gap-3">
+                                  <RadioGroupItem value={extra.id} id={extra.id} />
+                                  <span className="text-foreground font-medium">{extra.name}</span>
+                                </div>
+                                <div
+                                  className="text-sm font-semibold"
+                                  style={{ color: `hsl(var(--price-color, var(--primary)))` }}
+                                >
+                                  {extra.price > 0 && '+'}
+                                  <DualPrice price={extra.price} size="sm" />
+                                </div>
+                              </label>
+                            ))}
+                          </div>
+                        </RadioGroup>
+                      ) : (
+                        <div className="space-y-2">
+                          {extras.map((extra) => (
+                            <label
+                              key={extra.id}
+                              className="flex items-center justify-between p-3 rounded-lg border border-border hover:bg-muted/50 cursor-pointer transition-colors"
+                            >
+                              <div className="flex items-center gap-3">
+                                <Checkbox
+                                  checked={groupSelections?.has(extra.id) || false}
+                                  onCheckedChange={() => toggleExtra(group.id, extra.id, false)}
+                                />
+                                <span className="text-foreground font-medium">{extra.name}</span>
+                              </div>
+                              <div
+                                className="text-sm font-semibold"
+                                style={{ color: `hsl(var(--price-color, var(--primary)))` }}
+                              >
+                                {extra.price > 0 && '+'}
+                                <DualPrice price={extra.price} size="sm" />
+                              </div>
+                            </label>
+                          ))}
+                        </div>
+                      )}
+
+                      {(group.min_selections || group.max_selections) && (
+                        <p className="text-xs text-muted-foreground">
+                          {group.min_selections && group.max_selections
+                            ? `Selecciona entre ${group.min_selections} y ${group.max_selections} opciones`
+                            : group.min_selections
+                            ? `Selecciona al menos ${group.min_selections} ${group.min_selections === 1 ? 'opción' : 'opciones'}`
+                            : `Selecciona máximo ${group.max_selections} ${group.max_selections === 1 ? 'opción' : 'opciones'}`}
+                        </p>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             )}
 

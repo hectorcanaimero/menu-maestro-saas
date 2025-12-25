@@ -17,6 +17,7 @@ import {
   Image,
   CreditCard,
   Box,
+  Layers,
 } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import {
@@ -39,6 +40,7 @@ const navItems = [
   { path: '/admin/orders', label: 'Pedidos', icon: ShoppingCart, requiresCatalog: true },
   { path: '/admin/categories', label: 'Categorías', icon: FolderTree },
   { path: '/admin/menu-items', label: 'Productos', icon: Box },
+  { path: '/admin/extra-groups', label: 'Grupos de Extras', icon: Layers },
   { path: '/admin/customers', label: 'Clientes', icon: Users },
   { path: '/admin/promotions', label: 'Promociones', icon: Tag },
   { path: '/admin/coupons', label: 'Cupones', icon: Ticket },

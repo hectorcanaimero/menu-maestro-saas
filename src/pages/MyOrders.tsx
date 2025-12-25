@@ -13,6 +13,11 @@ interface OrderItem {
   quantity: number;
   price_at_time: number;
   item_name: string;
+  extras?: Array<{
+    id: string;
+    name: string;
+    price: number;
+  }>;
 }
 
 interface Order {
@@ -137,15 +142,31 @@ const MyOrders = () => {
                 <CardContent className="space-y-4">
                   <div>
                     <h4 className="font-semibold mb-2">Platillos:</h4>
-                    <div className="space-y-2">
-                      {order.order_items.map((item) => (
-                        <div key={item.id} className="flex justify-between text-sm">
-                          <span>
-                            {item.quantity}x {item.item_name}
-                          </span>
-                          <span className="font-medium">${(item.price_at_time * item.quantity).toFixed(2)}</span>
-                        </div>
-                      ))}
+                    <div className="space-y-3">
+                      {order.order_items.map((item) => {
+                        const extrasTotal = item.extras?.reduce((sum, extra) => sum + extra.price, 0) || 0;
+                        const itemTotal = (item.price_at_time + extrasTotal) * item.quantity;
+
+                        return (
+                          <div key={item.id} className="space-y-1">
+                            <div className="flex justify-between text-sm">
+                              <span>
+                                {item.quantity}x {item.item_name}
+                              </span>
+                              <span className="font-medium">${itemTotal.toFixed(2)}</span>
+                            </div>
+                            {item.extras && item.extras.length > 0 && (
+                              <div className="pl-4 space-y-0.5">
+                                {item.extras.map((extra) => (
+                                  <p key={extra.id} className="text-xs text-muted-foreground">
+                                    + {extra.name} (${extra.price.toFixed(2)})
+                                  </p>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
 

@@ -171,13 +171,14 @@ export async function createOrder(params: CreateOrderParams): Promise<CreateOrde
 export async function createOrderItems(params: CreateOrderItemsParams): Promise<void> {
   const { orderId, items } = params;
 
-  // Create order items
+  // Create order items (now including extras as JSONB)
   const orderItems = items.map((item) => ({
     order_id: orderId,
     menu_item_id: item.id,
     quantity: item.quantity,
     price_at_time: item.price,
     item_name: item.name,
+    extras: item.extras || [], // Store extras as JSONB array
   }));
 
   const { data: createdItems, error: itemsError } = await supabase

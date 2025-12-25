@@ -967,16 +967,27 @@ const Checkout = () => {
                   <h3 className="font-semibold text-base sm:text-lg">Resumen del Pedido</h3>
                   <div className="space-y-2">
                     {items.slice(0, 3).map((item) => (
-                      <div key={item.cartItemId || item.id} className="flex justify-between text-xs sm:text-sm items-start gap-2">
-                        <span className="flex-1 min-w-0 break-words">
-                          {item.quantity}x {item.name}
-                        </span>
-                        <div className="text-price font-medium text-right whitespace-nowrap flex-shrink-0">
-                          <DualPrice
-                            price={(item.price + (item.extras?.reduce((sum, e) => sum + e.price, 0) || 0)) * item.quantity}
-                            size="sm"
-                          />
+                      <div key={item.cartItemId || item.id} className="space-y-1">
+                        <div className="flex justify-between text-xs sm:text-sm items-start gap-2">
+                          <span className="flex-1 min-w-0 break-words">
+                            {item.quantity}x {item.name}
+                          </span>
+                          <div className="text-price font-medium text-right whitespace-nowrap flex-shrink-0">
+                            <DualPrice
+                              price={(item.price + (item.extras?.reduce((sum, e) => sum + e.price, 0) || 0)) * item.quantity}
+                              size="sm"
+                            />
+                          </div>
                         </div>
+                        {item.extras && item.extras.length > 0 && (
+                          <div className="pl-4 space-y-0.5">
+                            {item.extras.map((extra) => (
+                              <p key={extra.id} className="text-xs text-muted-foreground">
+                                + {extra.name}
+                              </p>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     ))}
                     {items.length > 3 && (

@@ -1,24 +1,29 @@
-import { useState, useEffect } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
-import { supabase } from "@/integrations/supabase/client";
-import { Loader2 } from "lucide-react";
-import { useMediaQuery } from "@/hooks/useMediaQuery";
-
-interface ProductExtra {
-  id: string;
-  name: string;
-  price: number;
-  is_available: boolean | null;
-}
+import { useState, useEffect, useMemo } from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Loader2, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { useMediaQuery } from '@/hooks/useMediaQuery';
+import { useProductExtraGroups, useUngroupedExtras } from '@/hooks/useExtraGroups';
+import {
+  validateExtrasSelection,
+  getDefaultSelections,
+  calculateExtrasTotal,
+  getSelectedExtrasDetails,
+} from '@/services/extraGroupsService';
+import type { ExtrasSelection, GroupedExtras } from '@/types/extras';
 
 interface SelectedExtra {
   id: string;
   name: string;
   price: number;
+  group_id?: string | null;
+  group_name?: string | null;
 }
 
 interface ProductExtrasDialogProps {
@@ -38,40 +43,72 @@ export const ProductExtrasDialog = ({
   productPrice,
   onConfirm,
 }: ProductExtrasDialogProps) => {
-  const [extras, setExtras] = useState<ProductExtra[]>([]);
-  const [selectedExtras, setSelectedExtras] = useState<Set<string>>(new Set());
-  const [loading, setLoading] = useState(true);
-  const isMobile = useMediaQuery("(max-width: 768px)");
+  const isMobile = useMediaQuery('(max-width: 768px)');
 
+  // Fetch grouped and ungrouped extras
+  const { data: groupedExtras, isLoading: loadingGroups } = useProductExtraGroups(productId);
+  const { data: ungroupedExtras, isLoading: loadingUngrouped } = useUngroupedExtras(productId);
+
+  const [selection, setSelection] = useState<ExtrasSelection>({});
+  const [ungroupedSelection, setUngroupedSelection] = useState<Set<string>>(new Set());
+
+  const loading = loadingGroups || loadingUngrouped;
+
+  // Initialize with default selections when dialog opens
   useEffect(() => {
-    if (open) {
-      loadExtras();
-      // Reset selections when opening
-      setSelectedExtras(new Set());
+    if (open && groupedExtras) {
+      const defaults = getDefaultSelections(groupedExtras);
+      setSelection(defaults);
+      setUngroupedSelection(new Set());
     }
-  }, [open, productId]);
+  }, [open, groupedExtras]);
 
-  const loadExtras = async () => {
-    setLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from("product_extras")
-        .select("*")
-        .eq("menu_item_id", productId)
-        .eq("is_available", true)
-        .order("display_order", { ascending: true });
+  // Validate selection
+  const validationResult = useMemo(() => {
+    if (!groupedExtras) return { isValid: true, errors: [] };
+    return validateExtrasSelection(selection, groupedExtras);
+  }, [selection, groupedExtras]);
 
-      if (error) throw error;
-      setExtras(data || []);
-    } catch (error) {
-      console.error("Error loading extras:", error);
-    } finally {
-      setLoading(false);
-    }
+  // Calculate totals
+  const groupedTotal = useMemo(() => {
+    if (!groupedExtras) return 0;
+    return calculateExtrasTotal(selection, groupedExtras);
+  }, [selection, groupedExtras]);
+
+  const ungroupedTotal = useMemo(() => {
+    if (!ungroupedExtras) return 0;
+    return ungroupedExtras
+      .filter((e) => ungroupedSelection.has(e.id))
+      .reduce((sum, e) => sum + e.price, 0);
+  }, [ungroupedSelection, ungroupedExtras]);
+
+  const totalPrice = productPrice + groupedTotal + ungroupedTotal;
+
+  // Toggle selection for a group
+  const toggleGroupSelection = (groupId: string, extraId: string, selectionType: 'single' | 'multiple') => {
+    setSelection((prev) => {
+      const newSelection = { ...prev };
+      const current = newSelection[groupId] || [];
+
+      if (selectionType === 'single') {
+        // For single selection, replace with new selection
+        newSelection[groupId] = [extraId];
+      } else {
+        // For multiple selection, toggle
+        if (current.includes(extraId)) {
+          newSelection[groupId] = current.filter((id) => id !== extraId);
+        } else {
+          newSelection[groupId] = [...current, extraId];
+        }
+      }
+
+      return newSelection;
+    });
   };
 
-  const toggleExtra = (extraId: string) => {
-    setSelectedExtras((prev) => {
+  // Toggle ungrouped extra
+  const toggleUngroupedExtra = (extraId: string) => {
+    setUngroupedSelection((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(extraId)) {
         newSet.delete(extraId);
@@ -83,25 +120,50 @@ export const ProductExtrasDialog = ({
   };
 
   const handleConfirm = () => {
-    const selected = extras
-      .filter((extra) => selectedExtras.has(extra.id))
-      .map((extra) => ({
-        id: extra.id,
-        name: extra.name,
-        price: extra.price,
-      }));
+    // Validate before confirming
+    if (!validationResult.isValid) {
+      return;
+    }
 
-    onConfirm(selected);
-    setSelectedExtras(new Set());
+    // Get selected extras from groups
+    const groupedSelectedExtras = groupedExtras ? getSelectedExtrasDetails(selection, groupedExtras) : [];
+
+    // Get selected ungrouped extras
+    const ungroupedSelectedExtras =
+      ungroupedExtras
+        ?.filter((e) => ungroupedSelection.has(e.id))
+        .map((e) => ({
+          id: e.id,
+          name: e.name,
+          price: e.price,
+          group_id: null,
+          group_name: null,
+        })) || [];
+
+    // Combine and confirm
+    const allSelectedExtras = [...groupedSelectedExtras, ...ungroupedSelectedExtras];
+    onConfirm(allSelectedExtras);
+    setSelection({});
+    setUngroupedSelection(new Set());
     onOpenChange(false);
   };
 
-  const calculateTotal = () => {
-    const extrasTotal = extras
-      .filter((extra) => selectedExtras.has(extra.id))
-      .reduce((sum, extra) => sum + extra.price, 0);
-    return productPrice + extrasTotal;
+  // Check if group is complete (for required groups)
+  const isGroupComplete = (group: GroupedExtras): boolean => {
+    const selectedCount = (selection[group.group.id] || []).length;
+    return selectedCount >= group.group.min_selections;
   };
+
+  // Count completed required groups
+  const completedRequiredGroups = useMemo(() => {
+    if (!groupedExtras) return 0;
+    return groupedExtras.filter((g) => g.group.is_required && isGroupComplete(g)).length;
+  }, [groupedExtras, selection]);
+
+  const totalRequiredGroups = useMemo(() => {
+    if (!groupedExtras) return 0;
+    return groupedExtras.filter((g) => g.group.is_required).length;
+  }, [groupedExtras]);
 
   const Content = () => (
     <>
@@ -109,40 +171,191 @@ export const ProductExtrasDialog = ({
         <div className="flex justify-center py-12 md:py-8">
           <Loader2 className="h-10 w-10 md:h-8 md:w-8 animate-spin text-primary" />
         </div>
-      ) : extras.length === 0 ? (
+      ) : !groupedExtras || (groupedExtras.length === 0 && (!ungroupedExtras || ungroupedExtras.length === 0)) ? (
         <div className="py-12 md:py-8 text-center text-muted-foreground text-base md:text-sm">
           Este producto no tiene extras disponibles
         </div>
       ) : (
-        <div className="space-y-4 md:space-y-3">
-          <p className="text-base md:text-sm text-muted-foreground px-4 md:px-0">
-            Selecciona los extras que deseas agregar:
-          </p>
-          <div className="space-y-2 md:space-y-3 px-4 md:px-0">
-            {extras.map((extra) => (
-              <div
-                key={extra.id}
-                className="flex items-center gap-3 p-4 md:p-3 rounded-lg border hover:bg-accent/50 transition-colors cursor-pointer min-h-[60px] md:min-h-0"
-                onClick={() => toggleExtra(extra.id)}
-              >
-                <Checkbox
-                  id={extra.id}
-                  checked={selectedExtras.has(extra.id)}
-                  onCheckedChange={() => toggleExtra(extra.id)}
-                  className="h-5 w-5 md:h-4 md:w-4"
-                />
-                <Label
-                  htmlFor={extra.id}
-                  className="flex-1 cursor-pointer flex justify-between items-center gap-3"
-                >
-                  <span className="text-base md:text-sm font-medium">{extra.name}</span>
-                  <span className="text-base md:text-sm font-semibold whitespace-nowrap" style={{ color: `hsl(var(--price-color, var(--foreground)))` }}>
-                    +${extra.price.toFixed(2)}
-                  </span>
-                </Label>
+        <div className="space-y-6 md:space-y-4">
+          {/* Progress indicator for required groups */}
+          {totalRequiredGroups > 0 && (
+            <Alert className="border-primary/50">
+              <CheckCircle2 className="h-4 w-4" />
+              <AlertDescription className="text-xs">
+                {completedRequiredGroups} de {totalRequiredGroups} grupos requeridos completados
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {/* Grouped Extras */}
+          {groupedExtras && groupedExtras.length > 0 && (
+            <div className="space-y-6 md:space-y-4 px-4 md:px-0">
+              {groupedExtras.map((groupedExtra) => {
+                const { group, extras } = groupedExtra;
+                const selectedIds = selection[group.id] || [];
+                const groupError = validationResult.errors.find((e) => e.groupId === group.id);
+                const isComplete = isGroupComplete(groupedExtra);
+
+                return (
+                  <div
+                    key={group.id}
+                    className={`space-y-3 md:space-y-2 p-4 md:p-3 rounded-lg border-2 transition-colors ${
+                      groupError ? 'border-destructive bg-destructive/5' : isComplete ? 'border-primary/30 bg-primary/5' : 'border-border'
+                    }`}
+                  >
+                    {/* Group Header */}
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <h4 className="font-semibold text-base md:text-sm">
+                          {group.name}
+                          {group.is_required && <span className="text-destructive ml-1">*</span>}
+                        </h4>
+                        {isComplete && group.is_required && (
+                          <CheckCircle2 className="w-4 h-4 text-primary" />
+                        )}
+                      </div>
+                      {group.description && (
+                        <p className="text-xs text-muted-foreground">{group.description}</p>
+                      )}
+                      {/* Selection hints */}
+                      <div className="flex gap-2 flex-wrap">
+                        {group.is_required && (
+                          <Badge variant="default" className="text-xs">
+                            Requerido
+                          </Badge>
+                        )}
+                        {group.min_selections > 0 && (
+                          <Badge variant="outline" className="text-xs">
+                            Mín: {group.min_selections}
+                          </Badge>
+                        )}
+                        {group.max_selections && (
+                          <Badge variant="outline" className="text-xs">
+                            Máx: {group.max_selections}
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Group Error */}
+                    {groupError && (
+                      <Alert variant="destructive" className="py-2">
+                        <AlertCircle className="h-4 w-4" />
+                        <AlertDescription className="text-xs">{groupError.message}</AlertDescription>
+                      </Alert>
+                    )}
+
+                    {/* Extras List */}
+                    {group.selection_type === 'single' ? (
+                      // Radio buttons for single selection
+                      <RadioGroup
+                        value={selectedIds[0] || ''}
+                        onValueChange={(value) => toggleGroupSelection(group.id, value, 'single')}
+                      >
+                        <div className="space-y-2">
+                          {extras.map((extra) => (
+                            <div
+                              key={extra.id}
+                              className="flex items-center gap-3 p-3 md:p-2 rounded-md border hover:bg-accent/50 transition-colors cursor-pointer min-h-[56px] md:min-h-0"
+                              onClick={() => toggleGroupSelection(group.id, extra.id, 'single')}
+                            >
+                              <RadioGroupItem value={extra.id} id={extra.id} className="flex-shrink-0" />
+                              <Label
+                                htmlFor={extra.id}
+                                className="flex-1 cursor-pointer flex justify-between items-center gap-3"
+                              >
+                                <span className="text-base md:text-sm font-medium">{extra.name}</span>
+                                {extra.price > 0 && (
+                                  <span
+                                    className="text-base md:text-sm font-semibold whitespace-nowrap"
+                                    style={{ color: `hsl(var(--price-color, var(--foreground)))` }}
+                                  >
+                                    +${extra.price.toFixed(2)}
+                                  </span>
+                                )}
+                              </Label>
+                            </div>
+                          ))}
+                        </div>
+                      </RadioGroup>
+                    ) : (
+                      // Checkboxes for multiple selection
+                      <div className="space-y-2">
+                        {extras.map((extra) => (
+                          <div
+                            key={extra.id}
+                            className="flex items-center gap-3 p-3 md:p-2 rounded-md border hover:bg-accent/50 transition-colors cursor-pointer min-h-[56px] md:min-h-0"
+                            onClick={() => toggleGroupSelection(group.id, extra.id, 'multiple')}
+                          >
+                            <Checkbox
+                              id={extra.id}
+                              checked={selectedIds.includes(extra.id)}
+                              onCheckedChange={() => toggleGroupSelection(group.id, extra.id, 'multiple')}
+                              className="h-5 w-5 md:h-4 md:w-4 flex-shrink-0"
+                            />
+                            <Label
+                              htmlFor={extra.id}
+                              className="flex-1 cursor-pointer flex justify-between items-center gap-3"
+                            >
+                              <span className="text-base md:text-sm font-medium">{extra.name}</span>
+                              {extra.price > 0 && (
+                                <span
+                                  className="text-base md:text-sm font-semibold whitespace-nowrap"
+                                  style={{ color: `hsl(var(--price-color, var(--foreground)))` }}
+                                >
+                                  +${extra.price.toFixed(2)}
+                                </span>
+                              )}
+                            </Label>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Ungrouped Extras (Backward Compatibility) */}
+          {ungroupedExtras && ungroupedExtras.length > 0 && (
+            <div className="space-y-3 md:space-y-2 px-4 md:px-0">
+              <div className="flex items-center gap-2">
+                <h4 className="font-semibold text-base md:text-sm">Extras Adicionales</h4>
+                <Badge variant="secondary" className="text-xs">
+                  Opcional
+                </Badge>
               </div>
-            ))}
-          </div>
+              <div className="space-y-2">
+                {ungroupedExtras.map((extra) => (
+                  <div
+                    key={extra.id}
+                    className="flex items-center gap-3 p-4 md:p-3 rounded-lg border hover:bg-accent/50 transition-colors cursor-pointer min-h-[60px] md:min-h-0"
+                    onClick={() => toggleUngroupedExtra(extra.id)}
+                  >
+                    <Checkbox
+                      id={`ungrouped-${extra.id}`}
+                      checked={ungroupedSelection.has(extra.id)}
+                      onCheckedChange={() => toggleUngroupedExtra(extra.id)}
+                      className="h-5 w-5 md:h-4 md:w-4"
+                    />
+                    <Label
+                      htmlFor={`ungrouped-${extra.id}`}
+                      className="flex-1 cursor-pointer flex justify-between items-center gap-3"
+                    >
+                      <span className="text-base md:text-sm font-medium">{extra.name}</span>
+                      <span
+                        className="text-base md:text-sm font-semibold whitespace-nowrap"
+                        style={{ color: `hsl(var(--price-color, var(--foreground)))` }}
+                      >
+                        +${extra.price.toFixed(2)}
+                      </span>
+                    </Label>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
     </>
@@ -153,13 +366,16 @@ export const ProductExtrasDialog = ({
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 md:gap-2">
         <div className="flex-1">
           <p className="text-sm text-muted-foreground">Total</p>
-          <p className="text-xl md:text-lg font-bold" style={{ color: `hsl(var(--price-color, var(--foreground)))` }}>
-            ${calculateTotal().toFixed(2)}
+          <p
+            className="text-xl md:text-lg font-bold"
+            style={{ color: `hsl(var(--price-color, var(--foreground)))` }}
+          >
+            ${totalPrice.toFixed(2)}
           </p>
         </div>
         <Button
           onClick={handleConfirm}
-          disabled={loading}
+          disabled={loading || !validationResult.isValid}
           className="w-full sm:w-auto h-12 md:h-10 text-base md:text-sm font-medium"
         >
           Agregar al carrito

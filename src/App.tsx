@@ -36,6 +36,7 @@ const AdminKitchen = lazy(() => import("./pages/admin/AdminKitchen"));
 const AdminAnalytics = lazy(() => import("./pages/admin/AdminAnalytics"));
 const AdminCategories = lazy(() => import("./pages/admin/AdminCategories"));
 const AdminMenuItems = lazy(() => import("./pages/admin/AdminMenuItems"));
+const AdminExtraGroups = lazy(() => import("./pages/admin/AdminExtraGroups"));
 const AdminCustomers = lazy(() => import("./pages/admin/AdminCustomers"));
 const AdminPromotions = lazy(() => import("./pages/admin/AdminPromotions"));
 const AdminCoupons = lazy(() => import("./pages/admin/AdminCoupons"));
@@ -248,6 +249,16 @@ const AppContent = () => {
                       <ProtectedRoute>
                         <SectionErrorBoundary>
                           <AdminMenuItems />
+                        </SectionErrorBoundary>
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/admin/extra-groups"
+                    element={
+                      <ProtectedRoute>
+                        <SectionErrorBoundary>
+                          <AdminExtraGroups />
                         </SectionErrorBoundary>
                       </ProtectedRoute>
                     }
