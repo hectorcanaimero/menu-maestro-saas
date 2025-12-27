@@ -56,7 +56,7 @@ services:
         - "traefik.docker.network=network_public"
 
         # Service configuration (CRITICAL - define el puerto del container)
-        - "traefik.http.services.pideai.loadbalancer.server.port=3000"
+        - "traefik.http.services.pideai.loadbalancer.server.port=80"
 
         # ====================================================================
         # HTTP Router (Port 80) - Redirect to HTTPS
