@@ -11,6 +11,7 @@ import { StoreInfoWidget } from '@/components/catalog/StoreInfoWidget';
 import { FeaturedProducts } from '@/components/catalog/FeaturedProducts';
 import { FloatingCartButton } from '@/components/cart/FloatingCartButton';
 import { FloatingWhatsAppButton } from '@/components/catalog/FloatingWhatsAppButton';
+import { FloatingShareButton } from '@/components/catalog/FloatingShareButton';
 import { CatalogLimitBanner } from '@/components/catalog/CatalogLimitBanner';
 import { CatalogBlockedOverlay } from '@/components/catalog/CatalogBlockedOverlay';
 import { OrderLimitOverlay } from '@/components/catalog/OrderLimitOverlay';
@@ -174,6 +175,9 @@ const Index = () => {
           </section>
         </div>
       </div>
+
+      {/* Floating Share Button */}
+      <FloatingShareButton />
 
       {/* Floating Cart Button */}
       <FloatingCartButton />
