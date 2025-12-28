@@ -177,7 +177,10 @@ export default function ProductDetail() {
     });
 
     // Navigate back to store after adding to cart
-    navigate('/');
+    // Use setTimeout to ensure the cart state updates and toast shows before navigation
+    setTimeout(() => {
+      navigate('/');
+    }, 100);
   };
 
   if (loading) {
@@ -289,9 +292,7 @@ export default function ProductDetail() {
                         {group.is_required && <span className="text-destructive">*</span>}
                       </div>
 
-                      {group.description && (
-                        <p className="text-sm text-muted-foreground">{group.description}</p>
-                      )}
+                      {group.description && <p className="text-sm text-muted-foreground">{group.description}</p>}
 
                       {isSingle ? (
                         <RadioGroup
@@ -350,8 +351,12 @@ export default function ProductDetail() {
                           {group.min_selections && group.max_selections
                             ? `Selecciona entre ${group.min_selections} y ${group.max_selections} opciones`
                             : group.min_selections
-                            ? `Selecciona al menos ${group.min_selections} ${group.min_selections === 1 ? 'opción' : 'opciones'}`
-                            : `Selecciona máximo ${group.max_selections} ${group.max_selections === 1 ? 'opción' : 'opciones'}`}
+                            ? `Selecciona al menos ${group.min_selections} ${
+                                group.min_selections === 1 ? 'opción' : 'opciones'
+                              }`
+                            : `Selecciona máximo ${group.max_selections} ${
+                                group.max_selections === 1 ? 'opción' : 'opciones'
+                              }`}
                         </p>
                       )}
                     </div>
@@ -378,7 +383,7 @@ export default function ProductDetail() {
               disabled={!product.is_available}
               className="w-full h-14 text-lg font-semibold bg-primary hover:bg-primary/90 shadow-lg"
             >
-              <ShoppingCart className="w-5 h-5 mr-2" />
+              <ShoppingCart className="w-8 h-8 mr-2" />
               {product.is_available ? 'Agregar al carrito' : 'No disponible'}
             </Button>
           </div>
