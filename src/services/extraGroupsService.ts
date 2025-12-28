@@ -471,3 +471,45 @@ export function getSelectedExtrasDetails(
 
   return selectedExtras;
 }
+
+/**
+ * Reorder extra groups by updating display_order in batch
+ */
+export async function reorderGroups(groups: { id: string; display_order: number }[]): Promise<void> {
+  // Update each group's display_order
+  const updates = groups.map(({ id, display_order }) =>
+    supabase
+      .from('extra_groups')
+      .update({ display_order })
+      .eq('id', id)
+  );
+
+  const results = await Promise.all(updates);
+
+  // Check for errors
+  const errors = results.filter(r => r.error);
+  if (errors.length > 0) {
+    throw new Error(`Failed to update ${errors.length} groups`);
+  }
+}
+
+/**
+ * Reorder product extras by updating display_order in batch
+ */
+export async function reorderExtras(extras: { id: string; display_order: number }[]): Promise<void> {
+  // Update each extra's display_order
+  const updates = extras.map(({ id, display_order }) =>
+    supabase
+      .from('product_extras')
+      .update({ display_order })
+      .eq('id', id)
+  );
+
+  const results = await Promise.all(updates);
+
+  // Check for errors
+  const errors = results.filter(r => r.error);
+  if (errors.length > 0) {
+    throw new Error(`Failed to update ${errors.length} extras`);
+  }
+}

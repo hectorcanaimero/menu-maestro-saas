@@ -192,6 +192,8 @@ export const ProductExtrasDialog = ({
             <div className="space-y-6 md:space-y-4 px-4 md:px-0">
               {groupedExtras.map((groupedExtra) => {
                 const { group, extras } = groupedExtra;
+                // Sort extras by display_order to ensure correct ordering
+                const sortedExtras = [...extras].sort((a, b) => a.display_order - b.display_order);
                 const selectedIds = selection[group.id] || [];
                 const groupError = validationResult.errors.find((e) => e.groupId === group.id);
                 const isComplete = isGroupComplete(groupedExtra);
@@ -253,7 +255,7 @@ export const ProductExtrasDialog = ({
                         onValueChange={(value) => toggleGroupSelection(group.id, value, 'single')}
                       >
                         <div className="space-y-2">
-                          {extras.map((extra) => (
+                          {sortedExtras.map((extra) => (
                             <div
                               key={extra.id}
                               className="flex items-center gap-3 p-3 md:p-2 rounded-md border hover:bg-accent/50 transition-colors cursor-pointer min-h-[56px] md:min-h-0"
@@ -281,7 +283,7 @@ export const ProductExtrasDialog = ({
                     ) : (
                       // Checkboxes for multiple selection
                       <div className="space-y-2">
-                        {extras.map((extra) => (
+                        {sortedExtras.map((extra) => (
                           <div
                             key={extra.id}
                             className="flex items-center gap-3 p-3 md:p-2 rounded-md border hover:bg-accent/50 transition-colors cursor-pointer min-h-[56px] md:min-h-0"

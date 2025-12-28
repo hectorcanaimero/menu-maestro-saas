@@ -288,3 +288,63 @@ export function useSetProductOverride() {
     },
   });
 }
+
+/**
+ * Hook to reorder extra groups
+ * Updates display_order for multiple groups in batch
+ */
+export function useReorderExtraGroups() {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: async (groups: { id: string; display_order: number }[]) => {
+      return extraGroupsService.reorderGroups(groups);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: extraGroupsKeys.all });
+      toast({
+        title: 'Orden actualizado',
+        description: 'El orden de los grupos ha sido guardado exitosamente',
+      });
+    },
+    onError: (error) => {
+      console.error('Error reordering groups:', error);
+      toast({
+        title: 'Error',
+        description: 'No se pudo actualizar el orden de los grupos',
+        variant: 'destructive',
+      });
+    },
+  });
+}
+
+/**
+ * Hook to reorder product extras within a group
+ * Updates display_order for multiple extras in batch
+ */
+export function useReorderProductExtras() {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: async (extras: { id: string; display_order: number }[]) => {
+      return extraGroupsService.reorderExtras(extras);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: extraGroupsKeys.all });
+      toast({
+        title: 'Orden actualizado',
+        description: 'El orden de los extras ha sido guardado exitosamente',
+      });
+    },
+    onError: (error) => {
+      console.error('Error reordering extras:', error);
+      toast({
+        title: 'Error',
+        description: 'No se pudo actualizar el orden de los extras',
+        variant: 'destructive',
+      });
+    },
+  });
+}

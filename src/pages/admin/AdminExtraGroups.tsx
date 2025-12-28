@@ -37,9 +37,13 @@ import {
   useCreateProductExtra,
   useUpdateProductExtra,
   useDeleteProductExtra,
+  useReorderExtraGroups,
+  useReorderProductExtras,
 } from '@/hooks/useExtraGroups';
 import type { ExtraGroup, SelectionType, CreateExtraGroupData, ProductExtra } from '@/types/extras';
 import { AssignGroupDialog } from '@/components/admin/AssignGroupDialog';
+import { ExtraGroupsSortable } from '@/components/admin/ExtraGroupsSortable';
+import { ProductExtrasSortable } from '@/components/admin/ProductExtrasSortable';
 
 export default function AdminExtraGroups() {
   const { store } = useStore();
@@ -47,9 +51,11 @@ export default function AdminExtraGroups() {
   const createGroup = useCreateExtraGroup();
   const updateGroup = useUpdateExtraGroup();
   const deleteGroup = useDeleteExtraGroup();
+  const reorderGroups = useReorderExtraGroups();
   const createExtra = useCreateProductExtra();
   const updateExtra = useUpdateProductExtra();
   const deleteExtra = useDeleteProductExtra();
+  const reorderExtras = useReorderProductExtras();
 
   const [isGroupDialogOpen, setIsGroupDialogOpen] = useState(false);
   const [isExtrasDialogOpen, setIsExtrasDialogOpen] = useState(false);
@@ -88,12 +94,14 @@ export default function AdminExtraGroups() {
     enabled: !!managingGroupId,
   });
 
-  // Filter groups based on tab
-  const filteredGroups = groups?.filter((g) => {
-    if (activeTab === 'category') return g.category_id !== null;
-    if (activeTab === 'product') return g.category_id === null;
-    return true;
-  });
+  // Filter and sort groups based on tab
+  const filteredGroups = groups
+    ?.filter((g) => {
+      if (activeTab === 'category') return g.category_id !== null;
+      if (activeTab === 'product') return g.category_id === null;
+      return true;
+    })
+    .sort((a, b) => a.display_order - b.display_order);
 
   const handleOpenGroupDialog = (group?: ExtraGroup) => {
     if (group) {
@@ -250,18 +258,19 @@ export default function AdminExtraGroups() {
             {isLoading ? (
               <div className="text-center py-12">Cargando grupos...</div>
             ) : filteredGroups && filteredGroups.length > 0 ? (
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {filteredGroups.map((group) => (
+              <ExtraGroupsSortable
+                groups={filteredGroups}
+                onReorder={(updates) => reorderGroups.mutate(updates)}
+                renderGroup={(group) => (
                   <GroupCard
-                    key={group.id}
                     group={group}
                     onEdit={() => handleOpenGroupDialog(group)}
                     onDelete={() => handleDeleteGroup(group.id)}
                     onManageExtras={() => handleOpenExtrasDialog(group.id)}
                     onAssign={() => handleOpenAssignDialog(group.id)}
                   />
-                ))}
-              </div>
+                )}
+              />
             ) : (
               <Card>
                 <CardContent className="py-12 text-center text-muted-foreground">
@@ -296,6 +305,7 @@ export default function AdminExtraGroups() {
           createExtra={createExtra}
           updateExtra={updateExtra}
           deleteExtra={deleteExtra}
+          reorderExtras={reorderExtras}
         />
 
         {/* Assign to Products Dialog */}
@@ -574,6 +584,7 @@ function ExtrasDialog({
   createExtra,
   updateExtra,
   deleteExtra,
+  reorderExtras,
 }: {
   open: boolean;
   onClose: () => void;
@@ -584,6 +595,7 @@ function ExtrasDialog({
   createExtra: any;
   updateExtra: any;
   deleteExtra: any;
+  reorderExtras: any;
 }) {
   const [editingExtra, setEditingExtra] = useState<ProductExtra | null>(null);
   const [extraName, setExtraName] = useState('');
@@ -719,9 +731,11 @@ function ExtrasDialog({
                 </CardContent>
               </Card>
             ) : (
-              <div className="space-y-2">
-                {extras.map((extra) => (
-                  <Card key={extra.id}>
+              <ProductExtrasSortable
+                extras={extras}
+                onReorder={(updates) => reorderExtras.mutate(updates)}
+                renderExtra={(extra) => (
+                  <Card>
                     <CardContent className="py-3">
                       <div className="flex items-center justify-between">
                         <div className="flex-1">
@@ -744,8 +758,8 @@ function ExtrasDialog({
                       </div>
                     </CardContent>
                   </Card>
-                ))}
-              </div>
+                )}
+              />
             )}
           </div>
         </div>
