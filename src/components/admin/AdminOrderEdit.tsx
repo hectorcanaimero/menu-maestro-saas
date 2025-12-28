@@ -74,7 +74,7 @@ interface CartItem {
 
 const formSchema = z.object({
   customer_name: z.string().min(2, "Nombre requerido"),
-  customer_email: z.string().email("Email inválido"),
+  customer_email: z.string().email("Email inválido").optional().or(z.literal("")),
   customer_phone: z.string().min(10, "Teléfono inválido"),
   delivery_address: z.string().optional(),
   notes: z.string().optional(),
@@ -98,6 +98,7 @@ export const AdminOrderEdit = ({ open, onOpenChange, orderId, onSuccess }: Admin
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string | null>(null);
   const [showExtrasDialog, setShowExtrasDialog] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<MenuItem | null>(null);
+  const [showProductSelector, setShowProductSelector] = useState(false);
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -213,6 +214,7 @@ export const AdminOrderEdit = ({ open, onOpenChange, orderId, onSuccess }: Admin
 
   const handleAddProduct = (item: MenuItem) => {
     setSelectedProduct(item);
+    setShowProductSelector(false); // Close product selector
     setShowExtrasDialog(true);
   };
 
@@ -435,7 +437,7 @@ export const AdminOrderEdit = ({ open, onOpenChange, orderId, onSuccess }: Admin
                         type="button"
                         variant="outline"
                         size="sm"
-                        onClick={() => setShowExtrasDialog(true)}
+                        onClick={() => setShowProductSelector(!showProductSelector)}
                       >
                         <Plus className="w-4 h-4 mr-2" />
                         Agregar Producto
@@ -443,69 +445,123 @@ export const AdminOrderEdit = ({ open, onOpenChange, orderId, onSuccess }: Admin
                     )}
                   </div>
 
+                  {/* Product Selector */}
+                  {showProductSelector && canEdit && (
+                    <Card className="border-2 border-primary/20">
+                      <CardContent className="p-4">
+                        <div className="flex items-center justify-between mb-3">
+                          <h4 className="font-medium">Seleccionar Producto</h4>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setShowProductSelector(false)}
+                          >
+                            <X className="w-4 h-4" />
+                          </Button>
+                        </div>
+                        <div className="grid gap-2 max-h-60 overflow-y-auto">
+                          {menuItems.map((item) => {
+                            const priceDisplay = formatPrice(item.price);
+                            return (
+                              <Button
+                                key={item.id}
+                                type="button"
+                                variant="outline"
+                                className="justify-between h-auto p-3 hover:bg-primary/5"
+                                onClick={() => handleAddProduct(item)}
+                              >
+                                <div className="flex items-center gap-3">
+                                  {item.image_url && (
+                                    <img
+                                      src={item.image_url}
+                                      alt={item.name}
+                                      className="w-10 h-10 rounded object-cover"
+                                    />
+                                  )}
+                                  <div className="text-left">
+                                    <p className="font-medium">{item.name}</p>
+                                    <p className="text-sm text-muted-foreground">
+                                      {priceDisplay.original}
+                                    </p>
+                                  </div>
+                                </div>
+                                <Plus className="w-4 h-4" />
+                              </Button>
+                            );
+                          })}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+
                   {items.length === 0 ? (
                     <p className="text-muted-foreground text-center py-8">No hay productos en este pedido</p>
                   ) : (
                     <div className="space-y-3">
-                      {items.map((item) => (
-                        <Card key={item.cartItemId}>
-                          <CardContent className="p-4 flex items-center gap-3">
-                            <div className="flex-1 min-w-0">
-                              <p className="font-medium text-sm truncate">{item.item_name}</p>
-                              {item.extras.length > 0 && (
+                      {items.map((item) => {
+                        const unitPrice = formatPrice(item.price_at_time);
+                        const totalItemPrice = formatPrice(
+                          (item.price_at_time + item.extras.reduce((s, e) => s + e.price, 0)) *
+                            item.quantity
+                        );
+                        return (
+                          <Card key={item.cartItemId}>
+                            <CardContent className="p-4 flex items-center gap-3">
+                              <div className="flex-1 min-w-0">
+                                <p className="font-medium text-sm truncate">{item.item_name}</p>
+                                {item.extras.length > 0 && (
+                                  <p className="text-xs text-muted-foreground">
+                                    + {item.extras.map(e => e.name).join(", ")}
+                                  </p>
+                                )}
                                 <p className="text-xs text-muted-foreground">
-                                  + {item.extras.map(e => e.name).join(", ")}
+                                  {unitPrice.original} c/u
                                 </p>
-                              )}
-                              <p className="text-xs text-muted-foreground">
-                                {formatPrice(item.price_at_time)} c/u
+                              </div>
+
+                              <div className="flex items-center gap-2">
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="icon"
+                                  className="h-7 w-7"
+                                  onClick={() => updateQuantity(item.cartItemId, item.quantity - 1)}
+                                  disabled={!canEdit}
+                                >
+                                  <Minus className="w-3 h-3" />
+                                </Button>
+                                <span className="w-8 text-center font-medium">{item.quantity}</span>
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="icon"
+                                  className="h-7 w-7"
+                                  onClick={() => updateQuantity(item.cartItemId, item.quantity + 1)}
+                                  disabled={!canEdit}
+                                >
+                                  <Plus className="w-3 h-3" />
+                                </Button>
+                              </div>
+
+                              <p className="font-semibold text-sm w-20 text-right">
+                                {totalItemPrice.original}
                               </p>
-                            </div>
 
-                            <div className="flex items-center gap-2">
                               <Button
                                 type="button"
-                                variant="outline"
+                                variant="ghost"
                                 size="icon"
                                 className="h-7 w-7"
-                                onClick={() => updateQuantity(item.cartItemId, item.quantity - 1)}
+                                onClick={() => removeItem(item.cartItemId)}
                                 disabled={!canEdit}
                               >
-                                <Minus className="w-3 h-3" />
+                                <X className="w-4 h-4" />
                               </Button>
-                              <span className="w-8 text-center font-medium">{item.quantity}</span>
-                              <Button
-                                type="button"
-                                variant="outline"
-                                size="icon"
-                                className="h-7 w-7"
-                                onClick={() => updateQuantity(item.cartItemId, item.quantity + 1)}
-                                disabled={!canEdit}
-                              >
-                                <Plus className="w-3 h-3" />
-                              </Button>
-                            </div>
-
-                            <p className="font-semibold text-sm w-20 text-right">
-                              {formatPrice(
-                                (item.price_at_time + item.extras.reduce((s, e) => s + e.price, 0)) *
-                                  item.quantity
-                              )}
-                            </p>
-
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="icon"
-                              className="h-7 w-7"
-                              onClick={() => removeItem(item.cartItemId)}
-                              disabled={!canEdit}
-                            >
-                              <X className="w-4 h-4" />
-                            </Button>
-                          </CardContent>
-                        </Card>
-                      ))}
+                            </CardContent>
+                          </Card>
+                        );
+                      })}
                     </div>
                   )}
                 </div>
@@ -572,18 +628,18 @@ export const AdminOrderEdit = ({ open, onOpenChange, orderId, onSuccess }: Admin
                 <div className="bg-muted p-4 rounded-lg space-y-2">
                   <div className="flex justify-between text-sm">
                     <span>Subtotal</span>
-                    <span>{formatPrice(totalPrice)}</span>
+                    <span>{formatPrice(totalPrice).original}</span>
                   </div>
                   {(order?.delivery_price ?? 0) > 0 && (
                     <div className="flex justify-between text-sm">
                       <span>Envío</span>
-                      <span>{formatPrice(order?.delivery_price ?? 0)}</span>
+                      <span>{formatPrice(order?.delivery_price ?? 0).original}</span>
                     </div>
                   )}
                   <Separator />
                   <div className="flex justify-between font-semibold text-lg">
                     <span>Total</span>
-                    <span className="text-primary">{formatPrice(grandTotal)}</span>
+                    <span className="text-primary">{formatPrice(grandTotal).original}</span>
                   </div>
                 </div>
 
