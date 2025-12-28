@@ -152,11 +152,21 @@ export const generateWhatsAppMessage = (
     couponDiscount > 0 ? `-${formatPrice(couponDiscount)}` : '$0.00',
   );
   finalMessage = finalMessage.replace(/{order-table}/g, tableNumber || 'N/A');
-  finalMessage = finalMessage.replace(/{order-track-page}/g, trackingUrl);
+  // Format tracking URL with descriptive text instead of raw URL
+  const trackingLink = trackingUrl
+    ? `Ver seguimiento del pedido: ${trackingUrl}`
+    : '';
+  finalMessage = finalMessage.replace(/{order-track-page}/g, trackingLink);
+
+  // Format payment proof URL with descriptive text to avoid preview thumbnail
+  const paymentProofLink = paymentProofUrl
+    ? `📎 Descargar comprobante de pago:\n${paymentProofUrl}`
+    : '';
+  finalMessage = finalMessage.replace(/{payment-receipt-link}/g, paymentProofLink);
+
   finalMessage = finalMessage.replace(/{payment-type}/g, ''); // Not implemented
   finalMessage = finalMessage.replace(/{payment-status}/g, 'Pendiente');
   finalMessage = finalMessage.replace(/{payment-change}/g, ''); // Not implemented
-  finalMessage = finalMessage.replace(/{payment-receipt-link}/g, paymentProofUrl);
   finalMessage = finalMessage.replace(/{customer-address-number}/g, ''); // Not implemented
   finalMessage = finalMessage.replace(/{customer-address-complement}/g, ''); // Not implemented
   finalMessage = finalMessage.replace(/{customer-address-neighborhood}/g, ''); // Not implemented
@@ -178,8 +188,8 @@ export const generateWhatsAppMessage = (
   );
   finalMessage = finalMessage.replace(/{total_products_bsf}/g, formatPriceBSF(subtotalProducts));
   finalMessage = finalMessage.replace(/{total_order_bsf}/g, formatPriceBSF(totalAmount));
-  finalMessage = finalMessage.replace(/{payment_proof_link}/g, paymentProofUrl);
-  finalMessage = finalMessage.replace(/{tracking_link}/g, trackingUrl);
+  finalMessage = finalMessage.replace(/{payment_proof_link}/g, paymentProofLink);
+  finalMessage = finalMessage.replace(/{tracking_link}/g, trackingLink);
 
   // Add notes if present
   if (notes) {
