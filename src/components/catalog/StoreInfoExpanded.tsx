@@ -2,6 +2,8 @@ import { cn } from '@/lib/utils';
 import { useState, useEffect } from 'react';
 import { useStore } from '@/contexts/StoreContext';
 import { supabase } from '@/integrations/supabase/client';
+import { useStoreStatus } from '@/hooks/useStoreStatus';
+import { Badge } from '@/components/ui/badge';
 import {
   FileText,
   Clock,
@@ -54,7 +56,17 @@ interface StoreInfoExpandedProps {
   businessHours: StoreHour[];
 }
 
-const DAYS = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
+// Orden para mostrar: Lunes primero, Domingo al final
+// Pero el value corresponde a getDay(): 0=Domingo, 1=Lunes, etc.
+const DAYS_ORDER = [
+  { value: 1, label: 'Lunes' },
+  { value: 2, label: 'Martes' },
+  { value: 3, label: 'Miércoles' },
+  { value: 4, label: 'Jueves' },
+  { value: 5, label: 'Viernes' },
+  { value: 6, label: 'Sábado' },
+  { value: 0, label: 'Domingo' },
+];
 
 /**
  * StoreInfoExpanded Component
@@ -86,8 +98,9 @@ export function StoreInfoExpanded({
     return acc;
   }, {} as Record<number, typeof businessHours>);
 
-  const currentDay = new Date().getDay();
+  const currentDayOfWeek = new Date().getDay();
   const { store } = useStore();
+  const { status: storeStatus } = useStoreStatus(store?.id, store?.force_status || null);
   const [socialLinks, setSocialLinks] = useState<SocialLink[]>([]);
   console.log(store);
   useEffect(() => {
@@ -120,23 +133,43 @@ export function StoreInfoExpanded({
       {/* Business Hours Section */}
       {businessHours.length > 0 && (
         <div className="space-y-3">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <Clock className="w-5 h-5 text-primary" />
             <h4 className="font-semibold text-foreground">Horarios de atención</h4>
+            <Badge
+              variant={storeStatus.isOpen ? "default" : "secondary"}
+              className={cn(
+                "font-semibold",
+                storeStatus.isOpen && "bg-green-600 hover:bg-green-700",
+                !storeStatus.isOpen && "bg-red-600 hover:bg-red-700"
+              )}
+            >
+              {storeStatus.isOpen ? "Abierto" : "Cerrado"}
+            </Badge>
+            {storeStatus.forceStatus === "force_open" && (
+              <span className="text-xs text-green-600 font-medium">
+                (Forzado abierto)
+              </span>
+            )}
+            {storeStatus.forceStatus === "force_closed" && (
+              <span className="text-xs text-red-600 font-medium">
+                (Forzado cerrado)
+              </span>
+            )}
           </div>
           <div className="space-y-2 ml-7">
-            {DAYS.map((dayName, dayIndex) => {
-              const dayHours = groupedHours[dayIndex] || [];
-              const isToday = currentDay === dayIndex;
+            {DAYS_ORDER.map((day) => {
+              const dayHours = groupedHours[day.value] || [];
+              const isToday = currentDayOfWeek === day.value;
 
               if (dayHours.length === 0) {
                 return (
                   <div
-                    key={dayIndex}
+                    key={day.value}
                     className={cn('flex justify-between items-center py-2 px-3 rounded-lg', isToday && 'bg-accent')}
                   >
                     <span className={cn('text-sm font-medium', isToday && 'text-primary')}>
-                      {dayName}
+                      {day.label}
                       {isToday && ' (Hoy)'}
                     </span>
                     <span className="text-sm text-muted-foreground">Cerrado</span>
@@ -146,11 +179,11 @@ export function StoreInfoExpanded({
 
               return (
                 <div
-                  key={dayIndex}
+                  key={day.value}
                   className={cn('flex justify-between items-start py-2 px-3 rounded-lg', isToday && 'bg-accent')}
                 >
                   <span className={cn('text-sm font-medium', isToday && 'text-primary')}>
-                    {dayName}
+                    {day.label}
                     {isToday && ' (Hoy)'}
                   </span>
                   <div className="text-sm text-right space-y-1">

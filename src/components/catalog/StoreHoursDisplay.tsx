@@ -17,7 +17,17 @@ interface StoreHoursDisplayProps {
   forceStatus: "normal" | "force_open" | "force_closed" | null;
 }
 
-const DAYS = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
+// Orden correcto: JavaScript getDay() retorna 0=Domingo, 1=Lunes, ..., 6=Sábado
+// Pero mostramos en orden Lunes-Domingo para mejor UX
+const DAYS_ORDER = [
+  { value: 1, label: "Lunes" },
+  { value: 2, label: "Martes" },
+  { value: 3, label: "Miércoles" },
+  { value: 4, label: "Jueves" },
+  { value: 5, label: "Viernes" },
+  { value: 6, label: "Sábado" },
+  { value: 0, label: "Domingo" },
+];
 
 export function StoreHoursDisplay({ storeId, forceStatus }: StoreHoursDisplayProps) {
   const { status, loading } = useStoreStatus(storeId, forceStatus);
@@ -31,6 +41,8 @@ export function StoreHoursDisplay({ storeId, forceStatus }: StoreHoursDisplayPro
     acc[hour.day_of_week].push(hour);
     return acc;
   }, {} as Record<number, typeof status.allHours>);
+
+  const currentDayOfWeek = new Date().getDay();
 
   return (
     <Dialog>
@@ -84,21 +96,21 @@ export function StoreHoursDisplay({ storeId, forceStatus }: StoreHoursDisplayPro
               No hay horarios configurados
             </p>
           ) : (
-            DAYS.map((dayName, dayIndex) => {
-              const dayHours = groupedHours[dayIndex] || [];
-              const isToday = new Date().getDay() === dayIndex;
+            DAYS_ORDER.map((day) => {
+              const dayHours = groupedHours[day.value] || [];
+              const isToday = currentDayOfWeek === day.value;
 
               if (dayHours.length === 0) {
                 return (
                   <div
-                    key={dayIndex}
+                    key={day.value}
                     className={cn(
                       "flex justify-between items-center py-2 px-3 rounded-lg",
                       isToday && "bg-accent"
                     )}
                   >
                     <span className={cn("font-medium", isToday && "text-primary")}>
-                      {dayName}
+                      {day.label}
                       {isToday && " (Hoy)"}
                     </span>
                     <span className="text-sm text-muted-foreground flex items-center gap-1">
@@ -111,14 +123,14 @@ export function StoreHoursDisplay({ storeId, forceStatus }: StoreHoursDisplayPro
 
               return (
                 <div
-                  key={dayIndex}
+                  key={day.value}
                   className={cn(
                     "flex justify-between items-start py-2 px-3 rounded-lg",
                     isToday && "bg-accent"
                   )}
                 >
                   <span className={cn("font-medium", isToday && "text-primary")}>
-                    {dayName}
+                    {day.label}
                     {isToday && " (Hoy)"}
                   </span>
                   <div className="text-sm text-right space-y-1">
