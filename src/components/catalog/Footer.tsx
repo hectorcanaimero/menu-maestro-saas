@@ -83,7 +83,7 @@ export const Footer = () => {
             © {new Date().getFullYear()}. Todos los derechos reservados.
           </p>
           <p className="mt-2 text-sm md:text-base text-muted-foreground">
-            Menu generato por{' '}
+            Menu generado por{' '}
             <a
               href="https://www.pideai.com"
               target="_blank"
