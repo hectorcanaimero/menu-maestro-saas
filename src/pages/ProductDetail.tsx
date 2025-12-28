@@ -175,6 +175,9 @@ export default function ProductDetail() {
       extras: selectedExtrasArray,
       categoryId: product.category_id,
     });
+
+    // Navigate back to store after adding to cart
+    navigate('/');
   };
 
   if (loading) {
@@ -206,7 +209,7 @@ export default function ProductDetail() {
     <div className="min-h-screen flex flex-col bg-background">
       <Header />
 
-      <main className="flex-1 container mx-auto px-4 py-8">
+      <main className="flex-1 container mx-auto px-4 py-8 pb-24">
         {/* Back Button */}
         <Button variant="ghost" onClick={() => navigate('/')} className="mb-6 hover:bg-muted">
           <ArrowLeft className="w-4 h-4 mr-2" />
@@ -214,7 +217,7 @@ export default function ProductDetail() {
         </Button>
 
         {/* Product Details Grid */}
-        <div className="grid md:grid-cols-2 gap-8 lg:gap-12 mb-16">
+        <div className="grid md:grid-cols-2 gap-8 lg:gap-12">
           {/* Image Gallery - For now single image, can be enhanced later */}
           <div className="space-y-4">
             <div className="aspect-square overflow-hidden rounded-lg border border-border bg-muted/30 relative">
@@ -357,25 +360,30 @@ export default function ProductDetail() {
               </div>
             )}
 
-            <div className="space-y-3 pt-4">
-              {!store?.catalog_mode ? (
-                <Button
-                  onClick={handleAddToCart}
-                  disabled={!product.is_available}
-                  className="w-full h-12 text-lg bg-primary hover:bg-primary/90"
-                >
-                  <ShoppingCart className="w-5 h-5 mr-2" />
-                  {product.is_available ? 'Agregar al carrito' : 'No disponible'}
-                </Button>
-              ) : null}
-
-              {!product.is_available && (
+            {!product.is_available && (
+              <div className="pt-4">
                 <p className="text-sm text-destructive text-center">Este producto no está disponible actualmente</p>
-              )}
-            </div>
+              </div>
+            )}
           </div>
         </div>
       </main>
+
+      {/* Floating Add to Cart Button */}
+      {!store?.catalog_mode && (
+        <div className="fixed bottom-0 left-0 right-0 z-40 bg-background/95 backdrop-blur-sm border-t border-border p-4 shadow-lg">
+          <div className="container mx-auto max-w-2xl">
+            <Button
+              onClick={handleAddToCart}
+              disabled={!product.is_available}
+              className="w-full h-14 text-lg font-semibold bg-primary hover:bg-primary/90 shadow-lg"
+            >
+              <ShoppingCart className="w-5 h-5 mr-2" />
+              {product.is_available ? 'Agregar al carrito' : 'No disponible'}
+            </Button>
+          </div>
+        </div>
+      )}
 
       <Footer />
     </div>
