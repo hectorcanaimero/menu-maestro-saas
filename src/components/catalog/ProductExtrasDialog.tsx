@@ -258,13 +258,13 @@ export const ProductExtrasDialog = ({
                           {sortedExtras.map((extra) => (
                             <div
                               key={extra.id}
-                              className="flex items-center gap-3 p-3 md:p-2 rounded-md border hover:bg-accent/50 transition-colors cursor-pointer min-h-[56px] md:min-h-0"
+                              className="flex items-center gap-3 p-3 md:p-2 rounded-md border hover:bg-accent/50 transition-colors cursor-pointer"
                               onClick={() => toggleGroupSelection(group.id, extra.id, 'single')}
                             >
-                              <RadioGroupItem value={extra.id} id={extra.id} className="flex-shrink-0" />
+                              <RadioGroupItem value={extra.id} id={extra.id} className="flex-shrink-0 self-center" />
                               <Label
                                 htmlFor={extra.id}
-                                className="flex-1 cursor-pointer flex justify-between items-center gap-3"
+                                className="flex-1 cursor-pointer flex justify-between items-center gap-3 py-1"
                               >
                                 <span className="text-base md:text-sm font-medium">{extra.name}</span>
                                 {extra.price > 0 && (
@@ -286,18 +286,18 @@ export const ProductExtrasDialog = ({
                         {sortedExtras.map((extra) => (
                           <div
                             key={extra.id}
-                            className="flex items-center gap-3 p-3 md:p-2 rounded-md border hover:bg-accent/50 transition-colors cursor-pointer min-h-[56px] md:min-h-0"
+                            className="flex items-center gap-3 p-3 md:p-2 rounded-md border hover:bg-accent/50 transition-colors cursor-pointer"
                             onClick={() => toggleGroupSelection(group.id, extra.id, 'multiple')}
                           >
                             <Checkbox
                               id={extra.id}
                               checked={selectedIds.includes(extra.id)}
                               onCheckedChange={() => toggleGroupSelection(group.id, extra.id, 'multiple')}
-                              className="h-5 w-5 md:h-4 md:w-4 flex-shrink-0"
+                              className="h-5 w-5 md:h-4 md:w-4 flex-shrink-0 self-center"
                             />
                             <Label
                               htmlFor={extra.id}
-                              className="flex-1 cursor-pointer flex justify-between items-center gap-3"
+                              className="flex-1 cursor-pointer flex justify-between items-center gap-3 py-1"
                             >
                               <span className="text-base md:text-sm font-medium">{extra.name}</span>
                               {extra.price > 0 && (
@@ -332,18 +332,18 @@ export const ProductExtrasDialog = ({
                 {ungroupedExtras.map((extra) => (
                   <div
                     key={extra.id}
-                    className="flex items-center gap-3 p-4 md:p-3 rounded-lg border hover:bg-accent/50 transition-colors cursor-pointer min-h-[60px] md:min-h-0"
+                    className="flex items-center gap-3 p-4 md:p-3 rounded-lg border hover:bg-accent/50 transition-colors cursor-pointer"
                     onClick={() => toggleUngroupedExtra(extra.id)}
                   >
                     <Checkbox
                       id={`ungrouped-${extra.id}`}
                       checked={ungroupedSelection.has(extra.id)}
                       onCheckedChange={() => toggleUngroupedExtra(extra.id)}
-                      className="h-5 w-5 md:h-4 md:w-4"
+                      className="h-5 w-5 md:h-4 md:w-4 self-center"
                     />
                     <Label
                       htmlFor={`ungrouped-${extra.id}`}
-                      className="flex-1 cursor-pointer flex justify-between items-center gap-3"
+                      className="flex-1 cursor-pointer flex justify-between items-center gap-3 py-1"
                     >
                       <span className="text-base md:text-sm font-medium">{extra.name}</span>
                       <span
@@ -364,7 +364,7 @@ export const ProductExtrasDialog = ({
   );
 
   const Footer = () => (
-    <div className="sticky bottom-0 bg-background border-t pt-4 pb-4 md:pb-0 px-4 md:px-0 -mx-4 md:mx-0 mt-auto">
+    <div className="bg-background border-t pt-4">
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 md:gap-2">
         <div className="flex-1">
           <p className="text-sm text-muted-foreground">Total</p>
@@ -394,11 +394,13 @@ export const ProductExtrasDialog = ({
             <SheetTitle className="text-lg text-left">Personalizar: {productName}</SheetTitle>
           </SheetHeader>
 
-          <div className="flex-1 overflow-y-auto py-4">
+          <div className="flex-1 overflow-y-auto py-4 min-h-0">
             <Content />
           </div>
 
-          <Footer />
+          <div className="mt-auto">
+            <Footer />
+          </div>
         </SheetContent>
       </Sheet>
     );
@@ -406,16 +408,18 @@ export const ProductExtrasDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md max-h-[85vh] flex flex-col">
-        <DialogHeader>
+      <DialogContent className="max-w-md max-h-[85vh] flex flex-col p-0">
+        <DialogHeader className="px-6 pt-6">
           <DialogTitle>Personalizar: {productName}</DialogTitle>
         </DialogHeader>
 
-        <div className="flex-1 overflow-y-auto -mx-6 px-6">
+        <div className="flex-1 overflow-y-auto px-6 min-h-0">
           <Content />
         </div>
 
-        <Footer />
+        <div className="mt-auto px-6 pb-6">
+          <Footer />
+        </div>
       </DialogContent>
     </Dialog>
   );

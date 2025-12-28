@@ -263,7 +263,7 @@ export default function ProductDetail() {
                 )}
               </div>
               {bestDeal && (
-                <Badge variant="secondary" className="mt-2 flex items-center gap-1">
+                <Badge variant="outline" className="mt-2 flex items-center gap-3">
                   Ahorra <DualPrice price={bestDeal.savings} size="sm" />
                 </Badge>
               )}
