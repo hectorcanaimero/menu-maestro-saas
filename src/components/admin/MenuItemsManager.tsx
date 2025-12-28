@@ -105,8 +105,10 @@ const MenuItemsManager = () => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (!file.type.startsWith('image/')) {
-      toast.error('Por favor selecciona una imagen');
+    // Only allow JPG and PNG
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+    if (!allowedTypes.includes(file.type.toLowerCase())) {
+      toast.error('Solo se permiten imágenes JPG y PNG');
       return;
     }
 
@@ -455,7 +457,7 @@ const MenuItemsManager = () => {
                           <Input
                             id="image"
                             type="file"
-                            accept="image/*"
+                            accept="image/jpeg,image/jpg,image/png"
                             onChange={handleImageUpload}
                             disabled={uploading}
                             className="h-11 md:h-10 text-base md:text-sm"

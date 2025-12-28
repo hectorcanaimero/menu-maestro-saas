@@ -31,8 +31,10 @@ export const ImageSelectorDialog = ({
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (!file.type.startsWith('image/')) {
-      toast.error('Por favor selecciona una imagen');
+    // Only allow JPG and PNG
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+    if (!allowedTypes.includes(file.type.toLowerCase())) {
+      toast.error('Solo se permiten imágenes JPG y PNG');
       return;
     }
 
@@ -154,7 +156,7 @@ export const ImageSelectorDialog = ({
             <input
               ref={fileInputRef}
               type="file"
-              accept="image/*"
+              accept="image/jpeg,image/jpg,image/png"
               onChange={handleFileSelect}
               className="hidden"
               id="image-upload"

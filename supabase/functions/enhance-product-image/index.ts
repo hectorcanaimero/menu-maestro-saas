@@ -48,6 +48,13 @@ async function imageUrlToBase64(url: string): Promise<{ data: string; mimeType: 
   }
 
   const contentType = response.headers.get('content-type') || 'image/jpeg';
+
+  // Validate image format - only accept PNG, JPG, JPEG
+  const allowedFormats = ['image/png', 'image/jpeg', 'image/jpg'];
+  if (!allowedFormats.includes(contentType.toLowerCase())) {
+    throw new Error(`Formato de imagen no soportado: ${contentType}. Solo se aceptan PNG, JPG, JPEG.`);
+  }
+
   const arrayBuffer = await response.arrayBuffer();
   const bytes = new Uint8Array(arrayBuffer);
 
