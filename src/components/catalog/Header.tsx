@@ -78,6 +78,18 @@ export const Header = () => {
 
           {/* Actions */}
           <div className="flex items-center gap-2">
+            {/* Admin Button - Only visible for store owners */}
+            {isStoreOwner && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigate('/admin')}
+                className="gap-2"
+              >
+                <Settings className="h-4 w-4" />
+                <span className="hidden sm:inline">Ir al Admin</span>
+              </Button>
+            )}
             {!isCatalogMode && <CartSheet />}
             {/* Mobile Menu Toggle */}
           </div>
