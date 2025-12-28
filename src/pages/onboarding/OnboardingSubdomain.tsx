@@ -7,17 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { toast } from 'sonner';
 import { OnboardingLayout } from '@/components/onboarding/OnboardingLayout';
-import {
-  ArrowLeft,
-  Loader2,
-  CheckCircle2,
-  XCircle,
-  Globe,
-  Copy,
-  Sparkles,
-  Edit3,
-  Check,
-} from 'lucide-react';
+import { ArrowLeft, Loader2, CheckCircle2, XCircle, Globe, Copy, Sparkles, Edit3, Check } from 'lucide-react';
 import {
   validateSubdomainFormat,
   generateSubdomainSuggestions,
@@ -256,11 +246,7 @@ const OnboardingSubdomain = () => {
   }
 
   return (
-    <OnboardingLayout
-      currentStep={3}
-      title="Tu URL Única"
-      description="Elige la dirección web de tu tienda online"
-    >
+    <OnboardingLayout currentStep={3} title="Tu URL Única" description="Elige la dirección web de tu tienda online">
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Auto-generated subdomain display */}
         {!isEditing && subdomain && (
@@ -269,19 +255,12 @@ const OnboardingSubdomain = () => {
             <AlertTitle className="text-primary">Subdominio Sugerido</AlertTitle>
             <AlertDescription>
               <div className="mt-2 space-y-3">
-                <p className="text-sm text-muted-foreground">
-                  Basado en el nombre de tu negocio, te sugerimos:
-                </p>
+                <p className="text-sm text-muted-foreground">Basado en el nombre de tu negocio, te sugerimos:</p>
                 <div className="flex items-center gap-2">
                   <code className="text-base font-semibold bg-background px-3 py-2 rounded border flex-1">
                     {subdomain}
                   </code>
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="outline"
-                    onClick={() => setIsEditing(true)}
-                  >
+                  <Button type="button" size="sm" variant="outline" onClick={() => setIsEditing(true)}>
                     <Edit3 className="h-4 w-4 mr-1" />
                     Editar
                   </Button>
@@ -305,11 +284,7 @@ const OnboardingSubdomain = () => {
                   required
                   pattern="[a-z0-9-]+"
                   className={
-                    subdomainValidation
-                      ? subdomainValidation.isValid
-                        ? 'border-green-500'
-                        : 'border-red-500'
-                      : ''
+                    subdomainValidation ? (subdomainValidation.isValid ? 'border-green-500' : 'border-red-500') : ''
                   }
                   autoFocus
                 />
@@ -326,26 +301,15 @@ const OnboardingSubdomain = () => {
                   </div>
                 )}
               </div>
-              <span className="text-sm text-muted-foreground whitespace-nowrap">
-                .{getCurrentDomain()}
-              </span>
+              <span className="text-sm text-muted-foreground whitespace-nowrap">.{getCurrentDomain()}</span>
               {subdomainValidation?.isValid && (
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  onClick={() => setIsEditing(false)}
-                >
+                <Button type="button" size="sm" variant="outline" onClick={() => setIsEditing(false)}>
                   <Check className="h-4 w-4" />
                 </Button>
               )}
             </div>
             {subdomainValidation && (
-              <p
-                className={`text-xs ${
-                  subdomainValidation.isValid ? 'text-green-600' : 'text-red-600'
-                }`}
-              >
+              <p className={`text-xs ${subdomainValidation.isValid ? 'text-green-600' : 'text-red-600'}`}>
                 {subdomainValidation.message}
               </p>
             )}
@@ -367,7 +331,7 @@ const OnboardingSubdomain = () => {
                   key={suggestion}
                   type="button"
                   onClick={() => handleUseSuggestion(suggestion)}
-                  className="text-sm px-3 py-2 bg-secondary hover:bg-secondary/80 rounded-md transition-colors border border-transparent hover:border-primary"
+                  className="text-sm px-3 py-2 bg-background hover:bg-accent rounded-md transition-colors border border-secondary hover:border-primary"
                 >
                   {suggestion}
                 </button>
