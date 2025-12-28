@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,12 +7,14 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, ArrowLeft } from 'lucide-react';
 import { PasswordStrengthMeter } from '@/components/ui/password-strength-meter';
 import { getSubdomainFromHostname, getCurrentDomain } from '@/lib/subdomain-validation';
 
 const Auth = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const mode = searchParams.get('mode'); // 'login' or 'signup'
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [loginData, setLoginData] = useState({ email: '', password: '' });
@@ -159,21 +161,32 @@ const Auth = () => {
     }
   };
 
+  // Determine which tab to show based on URL parameter or default to login
+  const defaultTab = mode === 'signup' ? 'signup' : 'login';
+  // Show tabs only if no mode is specified
+  const showTabs = !mode;
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-primary/5 p-4">
-      <Card className="w-full max-w-md">
+      <div className="w-full max-w-md">
+        <Button variant="ghost" onClick={() => navigate('/')} className="mb-4">
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          Volver al inicio
+        </Button>
+        <Card className="w-full">
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl font-bold text-center">Panel de Administración</CardTitle>
           <CardDescription className="text-center">Accede para gestionar tu menú de restaurante</CardDescription>
         </CardHeader>
         <CardContent>
-          <Tabs defaultValue="login" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="login">Iniciar Sesión</TabsTrigger>
-              <TabsTrigger value="signup">Registrarse</TabsTrigger>
-            </TabsList>
+          {showTabs ? (
+            <Tabs defaultValue={defaultTab} className="w-full">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="login">Iniciar Sesión</TabsTrigger>
+                <TabsTrigger value="signup">Registrarse</TabsTrigger>
+              </TabsList>
 
-            <TabsContent value="login">
+              <TabsContent value="login">
               <form onSubmit={handleLogin} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="login-email">Correo Electrónico</Label>
@@ -276,10 +289,118 @@ const Auth = () => {
                   {isLoading ? 'Creando cuenta...' : 'Crear Cuenta'}
                 </Button>
               </form>
-            </TabsContent>
-          </Tabs>
+              </TabsContent>
+            </Tabs>
+          ) : (
+            // Single form view when mode is specified
+            <div className="w-full">
+              {mode === 'login' ? (
+                <form onSubmit={handleLogin} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="login-email">Correo Electrónico</Label>
+                    <Input
+                      id="login-email"
+                      type="email"
+                      placeholder="tu@correo.com"
+                      value={loginData.email}
+                      onChange={(e) => setLoginData({ ...loginData, email: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="login-password">Contraseña</Label>
+                    <div className="relative">
+                      <Input
+                        id="login-password"
+                        type={showPassword ? 'text' : 'password'}
+                        placeholder="••••••••"
+                        value={loginData.password}
+                        onChange={(e) => setLoginData({ ...loginData, password: e.target.value })}
+                        required
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                        aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                      >
+                        {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                      </button>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div></div>
+                    <Button
+                      type="button"
+                      variant="link"
+                      className="text-sm px-0"
+                      onClick={() => navigate('/reset-password')}
+                    >
+                      ¿Olvidaste tu contraseña?
+                    </Button>
+                  </div>
+                  <Button type="submit" className="w-full" disabled={isLoading}>
+                    {isLoading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
+                  </Button>
+                </form>
+              ) : (
+                <form onSubmit={handleSignup} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-name">Nombre Completo</Label>
+                    <Input
+                      id="signup-name"
+                      type="text"
+                      placeholder="Tu nombre"
+                      value={signupData.fullName}
+                      onChange={(e) => setSignupData({ ...signupData, fullName: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-email">Correo Electrónico</Label>
+                    <Input
+                      id="signup-email"
+                      type="email"
+                      placeholder="tu@correo.com"
+                      value={signupData.email}
+                      onChange={(e) => setSignupData({ ...signupData, email: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-password">Contraseña</Label>
+                    <div className="relative">
+                      <Input
+                        id="signup-password"
+                        type={showPassword ? 'text' : 'password'}
+                        placeholder="••••••••"
+                        value={signupData.password}
+                        onChange={(e) => setSignupData({ ...signupData, password: e.target.value })}
+                        required
+                        minLength={8}
+                        aria-describedby="password-strength"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                        aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                      >
+                        {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                      </button>
+                    </div>
+                    <PasswordStrengthMeter password={signupData.password} className="mt-2" />
+                  </div>
+                  <Button type="submit" className="w-full" disabled={isLoading}>
+                    {isLoading ? 'Creando cuenta...' : 'Crear Cuenta'}
+                  </Button>
+                </form>
+              )}
+            </div>
+          )}
         </CardContent>
-      </Card>
+        </Card>
+      </div>
     </div>
   );
 };

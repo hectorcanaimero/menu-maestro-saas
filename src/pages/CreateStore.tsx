@@ -300,8 +300,8 @@ const CreateStore = () => {
                 )}
                 {suggestions.length > 0 && !subdomainValidation?.isValid && (
                   <div className="mt-2">
-                    <p className="text-xs text-muted-foreground mb-1">Sugerencias:</p>
-                    <div className="flex flex-wrap gap-1">
+                    <p className="text-xs font-medium text-foreground mb-2">Sugerencias disponibles:</p>
+                    <div className="flex flex-wrap gap-2">
                       {suggestions.slice(0, 3).map((suggestion) => (
                         <button
                           key={suggestion}
@@ -310,7 +310,7 @@ const CreateStore = () => {
                             setFormData({ ...formData, subdomain: suggestion });
                             validateSubdomainServer(suggestion);
                           }}
-                          className="text-xs px-2 py-1 bg-secondary hover:bg-secondary/80 rounded-md"
+                          className="text-sm px-3 py-1.5 bg-primary/10 hover:bg-primary/20 border border-primary/30 text-primary font-medium rounded-md transition-colors"
                           aria-label={`Usar subdominio ${suggestion}`}
                         >
                           {suggestion}

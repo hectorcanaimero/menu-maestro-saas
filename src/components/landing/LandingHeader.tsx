@@ -45,10 +45,10 @@ export const LandingHeader = () => {
           </nav>
           {/* Desktop CTAs */}
           <div className="hidden md:flex items-center space-x-4">
-            {/* <Button variant="ghost" onClick={() => navigate('/auth')}>
-              Iniciar Sesión
-            </Button> */}
-            <Button onClick={() => navigate('/create-store')}>Crear Tienda Gratis</Button>
+            <Button variant="ghost" onClick={() => navigate('/auth?mode=login')}>
+              Accede a Plataforma
+            </Button>
+            <Button onClick={() => navigate('/auth?mode=signup')}>Crear Tienda Gratis</Button>
           </div>
           {/* Mobile Menu Button */}
           <button className="md:hidden" onClick={() => setIsMenuOpen(!isMenuOpen)} aria-label="Toggle menu">
@@ -72,10 +72,10 @@ export const LandingHeader = () => {
               Cómo Funciona
             </button>
             <div className="space-y-2 pt-4">
-              <Button variant="outline" className="w-full" onClick={() => navigate('/auth')}>
+              <Button variant="outline" className="w-full" onClick={() => navigate('/auth?mode=login')}>
                 Iniciar Sesión
               </Button>
-              <Button className="w-full" onClick={() => navigate('/create-store')}>
+              <Button className="w-full" onClick={() => navigate('/auth?mode=signup')}>
                 Crear Tienda Gratis
               </Button>
             </div>
