@@ -75,6 +75,7 @@ RUN if [ ! -f "dist/index.html" ]; then \
 # Mostrar tama\u00f1o del build (para debugging)
 RUN du -sh dist && ls -lh dist/
 
+
 # ----------------------------------------------------------------------------
 # Stage 2: Imagen de producci\u00f3n con Nginx
 # ----------------------------------------------------------------------------
