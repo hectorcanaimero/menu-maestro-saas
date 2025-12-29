@@ -1,11 +1,12 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useStore } from '@/contexts/StoreContext';
+import type { PaymentMethod } from '@/types/payment-methods';
 
 export function usePaymentMethods() {
   const { store } = useStore();
 
-  return useQuery({
+  return useQuery<PaymentMethod[]>({
     queryKey: ['payment-methods', store?.id],
     queryFn: async () => {
       if (!store?.id) throw new Error('Store ID required');
@@ -18,7 +19,7 @@ export function usePaymentMethods() {
         .order('display_order', { ascending: true });
 
       if (error) throw error;
-      return data;
+      return data as PaymentMethod[];
     },
     enabled: !!store?.id,
   });

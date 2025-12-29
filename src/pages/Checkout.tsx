@@ -23,15 +23,22 @@ import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { toast } from "sonner";
-import { ArrowLeft, ArrowRight, Upload, X, Check, Tag, Gift } from "lucide-react";
+import { ArrowLeft, ArrowRight, Upload, X, Check, Tag, Gift, Copy } from "lucide-react";
 import InputMask from "react-input-mask";
 import posthog from "posthog-js";
-
-interface PaymentMethod {
-  id: string;
-  name: string;
-  description: string | null;
-}
+import type {
+  PaymentMethod,
+  PagoMovilDetails,
+  ZelleDetails,
+  BinanceDetails,
+  OtrosDetails,
+} from "@/types/payment-methods";
+import {
+  formatPagoMovilCopyText,
+  formatZelleCopyText,
+  formatBinanceCopyText,
+  formatOtrosCopyText,
+} from "@/types/payment-methods";
 
 interface DeliveryZone {
   id: string;
@@ -274,7 +281,7 @@ const Checkout = () => {
 
       const { data, error } = await supabase
         .from("payment_methods")
-        .select("id, name, description")
+        .select("id, name, description, payment_type, payment_details")
         .eq("store_id", store.id)
         .eq("is_active", true)
         .order("display_order", { ascending: true });
@@ -834,30 +841,103 @@ const Checkout = () => {
                   <FormField
                     control={form.control}
                     name="payment_method"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Método de Pago *</FormLabel>
-                        <div className="space-y-2">
-                          {paymentMethods.map((method) => (
-                            <Button
-                              key={method.id}
-                              type="button"
-                              variant={field.value === method.name ? "default" : "outline"}
-                              className="w-full h-auto py-4 justify-start"
-                              onClick={() => field.onChange(method.name)}
-                            >
-                              <div className="text-left">
-                                <div className="font-semibold">{method.name}</div>
-                                {method.description && (
-                                  <div className="text-xs opacity-80 mt-1">{method.description}</div>
+                    render={({ field }) => {
+                      const selectedMethod = paymentMethods.find((m) => m.name === field.value);
+
+                      // Helper function to copy payment details
+                      const handleCopyPaymentDetails = async (method: PaymentMethod) => {
+                        let copyText = "";
+
+                        if (method.payment_type === "pago_movil" && method.payment_details) {
+                          copyText = formatPagoMovilCopyText(method.payment_details as PagoMovilDetails);
+                        } else if (method.payment_type === "zelle" && method.payment_details) {
+                          copyText = formatZelleCopyText(method.payment_details as ZelleDetails);
+                        } else if (method.payment_type === "binance" && method.payment_details) {
+                          copyText = formatBinanceCopyText(method.payment_details as BinanceDetails);
+                        } else if (method.payment_type === "otros" && method.payment_details) {
+                          copyText = formatOtrosCopyText(method.payment_details as OtrosDetails);
+                        } else if (method.description) {
+                          copyText = method.description;
+                        }
+
+                        if (copyText) {
+                          try {
+                            await navigator.clipboard.writeText(copyText);
+                            toast.success("¡Datos de pago copiados!");
+                          } catch (error) {
+                            console.error("Error copying payment details:", error);
+                            toast.error("No se pudo copiar los datos");
+                          }
+                        }
+                      };
+
+                      return (
+                        <FormItem>
+                          <FormLabel>Método de Pago *</FormLabel>
+                          <div className="space-y-2">
+                            {paymentMethods.map((method) => (
+                              <div key={method.id} className="relative">
+                                <Button
+                                  type="button"
+                                  variant={field.value === method.name ? "default" : "outline"}
+                                  className="w-full h-auto py-4 justify-start pr-12"
+                                  onClick={() => field.onChange(method.name)}
+                                >
+                                  <div className="text-left flex-1">
+                                    <div className="font-semibold">{method.name}</div>
+                                    {/* Show payment details based on type */}
+                                    {field.value === method.name && method.payment_details && (
+                                      <div className="text-xs opacity-90 mt-2 space-y-1">
+                                        {method.payment_type === "pago_movil" && (
+                                          <>
+                                            <div className="font-mono">
+                                              {(method.payment_details as PagoMovilDetails).bank_code}{" "}
+                                              {(method.payment_details as PagoMovilDetails).cedula}{" "}
+                                              {(method.payment_details as PagoMovilDetails).phone}
+                                            </div>
+                                          </>
+                                        )}
+                                        {method.payment_type === "zelle" && (
+                                          <>
+                                            <div>Email: {(method.payment_details as ZelleDetails).email}</div>
+                                            <div>Titular: {(method.payment_details as ZelleDetails).holder_name}</div>
+                                          </>
+                                        )}
+                                        {method.payment_type === "binance" && (
+                                          <div className="font-mono">
+                                            ID: {(method.payment_details as BinanceDetails).key}
+                                          </div>
+                                        )}
+                                        {method.payment_type === "otros" && method.description && (
+                                          <div>{method.description}</div>
+                                        )}
+                                      </div>
+                                    )}
+                                  </div>
+                                </Button>
+
+                                {/* Copy button - only show when selected */}
+                                {field.value === method.name && (method.payment_details || method.description) && (
+                                  <Button
+                                    type="button"
+                                    size="sm"
+                                    variant="ghost"
+                                    className="absolute right-2 top-2"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleCopyPaymentDetails(method);
+                                    }}
+                                  >
+                                    <Copy className="w-4 h-4" />
+                                  </Button>
                                 )}
                               </div>
-                            </Button>
-                          ))}
-                        </div>
-                        <FormMessage />
-                      </FormItem>
-                    )}
+                            ))}
+                          </div>
+                          <FormMessage />
+                        </FormItem>
+                      );
+                    }}
                   />
                 )}
 

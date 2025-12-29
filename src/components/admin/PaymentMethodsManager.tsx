@@ -6,6 +6,13 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Table,
   TableBody,
   TableCell,
@@ -23,14 +30,15 @@ import {
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { Plus, Edit, Trash2, Loader2 } from "lucide-react";
-
-interface PaymentMethod {
-  id: string;
-  name: string;
-  description: string | null;
-  is_active: boolean | null;
-  display_order: number | null;
-}
+import type {
+  PaymentMethod,
+  PaymentMethodType,
+  PagoMovilDetails,
+  ZelleDetails,
+  BinanceDetails,
+  OtrosDetails,
+} from "@/types/payment-methods";
+import { VENEZUELAN_BANKS } from "@/types/payment-methods";
 
 interface PaymentMethodsManagerProps {
   storeId: string;
@@ -41,10 +49,29 @@ export function PaymentMethodsManager({ storeId }: PaymentMethodsManagerProps) {
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingMethod, setEditingMethod] = useState<PaymentMethod | null>(null);
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{
+    name: string;
+    description: string;
+    is_active: boolean;
+    payment_type: PaymentMethodType;
+    payment_details: {
+      // Pago Movil
+      bank_code?: string;
+      cedula?: string;
+      phone?: string;
+      // Zelle
+      email?: string;
+      holder_name?: string;
+      // Binance
+      key?: string;
+      // Otros (uses name + description)
+    };
+  }>({
     name: "",
     description: "",
     is_active: true,
+    payment_type: "otros",
+    payment_details: {},
   });
   const [saving, setSaving] = useState(false);
 
@@ -77,10 +104,18 @@ export function PaymentMethodsManager({ storeId }: PaymentMethodsManagerProps) {
         name: method.name,
         description: method.description || "",
         is_active: method.is_active ?? true,
+        payment_type: method.payment_type,
+        payment_details: method.payment_details || {},
       });
     } else {
       setEditingMethod(null);
-      setFormData({ name: "", description: "", is_active: true });
+      setFormData({
+        name: "",
+        description: "",
+        is_active: true,
+        payment_type: "otros",
+        payment_details: {},
+      });
     }
     setDialogOpen(true);
   };
@@ -89,6 +124,53 @@ export function PaymentMethodsManager({ storeId }: PaymentMethodsManagerProps) {
     if (!formData.name.trim()) {
       toast.error("El nombre es requerido");
       return;
+    }
+
+    // Validate required fields based on payment type
+    if (formData.payment_type === "pago_movil") {
+      if (!formData.payment_details.bank_code || !formData.payment_details.cedula || !formData.payment_details.phone) {
+        toast.error("Pago Móvil requiere código de banco, cédula y teléfono");
+        return;
+      }
+    } else if (formData.payment_type === "zelle") {
+      if (!formData.payment_details.email || !formData.payment_details.holder_name) {
+        toast.error("Zelle requiere email y nombre del titular");
+        return;
+      }
+    } else if (formData.payment_type === "binance") {
+      if (!formData.payment_details.key) {
+        toast.error("Binance requiere la clave");
+        return;
+      }
+    } else if (formData.payment_type === "otros") {
+      if (!formData.description.trim()) {
+        toast.error("Otros requiere una descripción");
+        return;
+      }
+    }
+
+    // Build payment details based on type
+    let payment_details = null;
+    if (formData.payment_type === "pago_movil") {
+      payment_details = {
+        bank_code: formData.payment_details.bank_code,
+        cedula: formData.payment_details.cedula,
+        phone: formData.payment_details.phone,
+      };
+    } else if (formData.payment_type === "zelle") {
+      payment_details = {
+        email: formData.payment_details.email,
+        holder_name: formData.payment_details.holder_name,
+      };
+    } else if (formData.payment_type === "binance") {
+      payment_details = {
+        key: formData.payment_details.key,
+      };
+    } else if (formData.payment_type === "otros") {
+      payment_details = {
+        name: formData.name,
+        description: formData.description,
+      };
     }
 
     setSaving(true);
@@ -101,6 +183,8 @@ export function PaymentMethodsManager({ storeId }: PaymentMethodsManagerProps) {
             name: formData.name,
             description: formData.description || null,
             is_active: formData.is_active,
+            payment_type: formData.payment_type,
+            payment_details: payment_details,
             updated_at: new Date().toISOString(),
           })
           .eq("id", editingMethod.id);
@@ -114,6 +198,8 @@ export function PaymentMethodsManager({ storeId }: PaymentMethodsManagerProps) {
           name: formData.name,
           description: formData.description || null,
           is_active: formData.is_active,
+          payment_type: formData.payment_type,
+          payment_details: payment_details,
           display_order: methods.length,
         });
 
@@ -194,28 +280,185 @@ export function PaymentMethodsManager({ storeId }: PaymentMethodsManagerProps) {
                 Configura la información del método de pago
               </DialogDescription>
             </DialogHeader>
-            <div className="space-y-4 py-4">
+            <div className="space-y-4 py-4 max-h-[70vh] overflow-y-auto">
+              {/* Payment Type Selection */}
+              <div className="space-y-2">
+                <Label>Tipo de Método de Pago *</Label>
+                <div className="grid grid-cols-2 gap-2">
+                  <Button
+                    type="button"
+                    variant={formData.payment_type === "pago_movil" ? "default" : "outline"}
+                    className="h-auto py-3"
+                    onClick={() => setFormData({ ...formData, payment_type: "pago_movil", payment_details: {} })}
+                  >
+                    Pago Móvil
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={formData.payment_type === "zelle" ? "default" : "outline"}
+                    className="h-auto py-3"
+                    onClick={() => setFormData({ ...formData, payment_type: "zelle", payment_details: {} })}
+                  >
+                    Zelle
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={formData.payment_type === "binance" ? "default" : "outline"}
+                    className="h-auto py-3"
+                    onClick={() => setFormData({ ...formData, payment_type: "binance", payment_details: {} })}
+                  >
+                    Binance
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={formData.payment_type === "otros" ? "default" : "outline"}
+                    className="h-auto py-3"
+                    onClick={() => setFormData({ ...formData, payment_type: "otros", payment_details: {} })}
+                  >
+                    Otros
+                  </Button>
+                </div>
+              </div>
+
+              {/* Common Fields */}
               <div className="space-y-2">
                 <Label htmlFor="name">Nombre *</Label>
                 <Input
                   id="name"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  placeholder="Ej: Pago Móvil, Zelle, Transferencia"
+                  placeholder="Ej: Pago Móvil Banesco, Mi Zelle, etc."
                   maxLength={100}
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="description">Descripción / Instrucciones</Label>
-                <Textarea
-                  id="description"
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  placeholder="Ej: Transferir a la cuenta 0123-4567-8901. Banco Ejemplo."
-                  rows={4}
-                />
-              </div>
+              {/* Pago Movil Fields */}
+              {formData.payment_type === "pago_movil" && (
+                <>
+                  <div className="space-y-2">
+                    <Label htmlFor="bank_code">Banco *</Label>
+                    <Select
+                      value={formData.payment_details.bank_code}
+                      onValueChange={(value) =>
+                        setFormData({
+                          ...formData,
+                          payment_details: { ...formData.payment_details, bank_code: value },
+                        })
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecciona el banco" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {VENEZUELAN_BANKS.map((bank) => (
+                          <SelectItem key={bank.code} value={bank.code}>
+                            {bank.code} - {bank.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="cedula">Cédula *</Label>
+                    <Input
+                      id="cedula"
+                      value={formData.payment_details.cedula || ""}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          payment_details: { ...formData.payment_details, cedula: e.target.value },
+                        })
+                      }
+                      placeholder="12345678"
+                      maxLength={20}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="phone">Teléfono *</Label>
+                    <Input
+                      id="phone"
+                      value={formData.payment_details.phone || ""}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          payment_details: { ...formData.payment_details, phone: e.target.value },
+                        })
+                      }
+                      placeholder="04121234567"
+                      maxLength={20}
+                    />
+                  </div>
+                </>
+              )}
+
+              {/* Zelle Fields */}
+              {formData.payment_type === "zelle" && (
+                <>
+                  <div className="space-y-2">
+                    <Label htmlFor="email">Email *</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      value={formData.payment_details.email || ""}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          payment_details: { ...formData.payment_details, email: e.target.value },
+                        })
+                      }
+                      placeholder="email@example.com"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="holder_name">Nombre del Titular *</Label>
+                    <Input
+                      id="holder_name"
+                      value={formData.payment_details.holder_name || ""}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          payment_details: { ...formData.payment_details, holder_name: e.target.value },
+                        })
+                      }
+                      placeholder="Juan Pérez"
+                      maxLength={100}
+                    />
+                  </div>
+                </>
+              )}
+
+              {/* Binance Fields */}
+              {formData.payment_type === "binance" && (
+                <div className="space-y-2">
+                  <Label htmlFor="key">Clave / ID *</Label>
+                  <Input
+                    id="key"
+                    value={formData.payment_details.key || ""}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        payment_details: { ...formData.payment_details, key: e.target.value },
+                      })
+                    }
+                    placeholder="Tu ID de Binance"
+                    maxLength={100}
+                  />
+                </div>
+              )}
+
+              {/* Otros Fields */}
+              {formData.payment_type === "otros" && (
+                <div className="space-y-2">
+                  <Label htmlFor="description">Descripción / Instrucciones *</Label>
+                  <Textarea
+                    id="description"
+                    value={formData.description}
+                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    placeholder="Ej: Transferir a la cuenta 0123-4567-8901. Banco Ejemplo."
+                    rows={4}
+                  />
+                </div>
+              )}
 
               <div className="flex items-center space-x-2">
                 <Switch
