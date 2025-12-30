@@ -33,9 +33,9 @@ export function CatalogViewsCard() {
   );
 
   // Don't show if catalog mode is disabled
-  // if (!isCatalogMode) {
-  //   return null;
-  // }
+  if (!isCatalogMode) {
+    return null;
+  }
 
   const handleRefresh = async () => {
     await refetch();
