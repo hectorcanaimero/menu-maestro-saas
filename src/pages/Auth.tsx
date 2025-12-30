@@ -38,10 +38,11 @@ const Auth = () => {
         if (userStore && userStore.subdomain === currentSubdomain) {
           navigate('/admin');
         } else if (userStore) {
-          // User has session but on wrong subdomain
+          // User has session but on wrong subdomain - redirect them to their store
           const currentDomain = getCurrentDomain();
-          toast.error(`Debes acceder desde tu tienda: ${userStore.subdomain}.${currentDomain}`);
-          await supabase.auth.signOut();
+          const correctStoreUrl = `${window.location.protocol}//${userStore.subdomain}.${currentDomain}/admin`;
+          toast.info('Redirigiendo a tu tienda...');
+          window.location.href = correctStoreUrl;
         }
       }
     };

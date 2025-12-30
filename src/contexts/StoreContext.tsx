@@ -204,7 +204,7 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
     const isOwner = session?.user?.id === storeData.owner_id;
     setIsStoreOwner(isOwner);
 
-    // CRITICAL: If user is authenticated but NOT the owner, sign them out
+    // CRITICAL: If user is authenticated but NOT the owner, redirect them to their own store
     // This prevents users from accessing admin panels of stores they don't own
     if (session?.user && !isOwner) {
       console.warn(
@@ -215,19 +215,26 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
       const { data: userStore } = await supabase.rpc('get_user_owned_store').single();
 
       if (userStore && userStore.subdomain !== storeData.subdomain) {
-        // User owns a different store - sign them out and show message
-        console.error('[StoreContext] User is logged into wrong store. Logging out...');
-        await supabase.auth.signOut();
+        // User owns a different store - redirect them to their store WITHOUT signing out
+        console.warn('[StoreContext] User is logged into wrong store. Redirecting to their store...');
 
-        // Show error message (will be visible for a moment before signout completes)
+        // Redirect to user's store admin
+        const currentDomain = getCurrentDomain();
+        const correctStoreUrl = `${window.location.protocol}//${userStore.subdomain}.${currentDomain}/admin`;
+
+        // Show message
         if (typeof window !== 'undefined') {
-          const currentDomain = getCurrentDomain();
           import('sonner').then(({ toast }) => {
-            toast.error(`Solo puedes acceder a tu propia tienda: ${userStore.subdomain}.${currentDomain}`, {
-              duration: 8000,
+            toast.info(`Redirigiendo a tu tienda...`, {
+              duration: 3000,
             });
           });
         }
+
+        // Redirect after a short delay to show the message
+        setTimeout(() => {
+          window.location.href = correctStoreUrl;
+        }, 500);
       }
     }
 
