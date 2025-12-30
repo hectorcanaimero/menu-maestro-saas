@@ -173,11 +173,11 @@ export const CartSheet = () => {
                             size="sm"
                           /> */}
                         </div>
-                        {item.extras && item.extras.length > 0 && (
+                        {/* {item.extras && item.extras.length > 0 && (
                           <p className="text-xs text-muted-foreground mt-1">
                             +{item.extras.length} extra{item.extras.length > 1 ? 's' : ''}
                           </p>
-                        )}
+                        )} */}
                       </div>
                     </div>
                     {item.extras && item.extras.length > 0 && (

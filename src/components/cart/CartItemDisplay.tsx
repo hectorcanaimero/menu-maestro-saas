@@ -1,9 +1,9 @@
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Plus, Minus, Trash2, ShoppingCart } from "lucide-react";
-import { useProductPromotions, getBestPromotion } from "@/hooks/usePromotions";
-import { H4, Body, Caption } from "@/components/ui/typography";
-import { useFormatPrice } from "@/lib/priceFormatter";
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Plus, Minus, Trash2, ShoppingCart } from 'lucide-react';
+import { useProductPromotions, getBestPromotion } from '@/hooks/usePromotions';
+import { H4, Body, Caption } from '@/components/ui/typography';
+import { useFormatPrice } from '@/lib/priceFormatter';
 
 interface CartItemExtra {
   id: string;
@@ -68,19 +68,15 @@ export function CartItemDisplay({
 
       <div className="flex-1 min-w-0">
         <H4 className="text-sm sm:text-base">{name}</H4>
-
-        {/* Extras display */}
         {extras && extras.length > 0 && (
           <div className="mt-1 space-y-0.5">
             {extras.map((extra) => (
               <Caption key={extra.id}>
-                + {extra.name}{" "}
-                <span className="font-medium">({formatPrice(extra.price)})</span>
+                + {extra.name} <span className="font-medium">({formatPrice(extra.price)})</span>
               </Caption>
             ))}
           </div>
         )}
-
         {/* Promotion badge */}
         {bestDeal && (
           <Badge variant="destructive" className="mt-1 text-xs">
@@ -89,7 +85,6 @@ export function CartItemDisplay({
               : `-${formatPrice(bestDeal.promotion.value)}`}
           </Badge>
         )}
-
         {/* Price display */}
         <div className="mt-1 sm:mt-2">
           {bestDeal ? (
@@ -106,9 +101,7 @@ export function CartItemDisplay({
                 )}
               </p>
               <div className="flex items-center gap-2 flex-wrap">
-                <p className="text-xs text-muted-foreground line-through">
-                  {formatPrice(basePrice * quantity)}
-                </p>
+                <p className="text-xs text-muted-foreground line-through">{formatPrice(basePrice * quantity)}</p>
                 <Badge variant="secondary" className="text-xs">
                   Ahorras {formatPrice(savings)}
                 </Badge>
@@ -121,14 +114,11 @@ export function CartItemDisplay({
             >
               {formatPrice(itemTotal)}
               {quantity > 1 && (
-                <span className="text-muted-foreground font-normal ml-1">
-                  ({formatPrice(basePrice)} c/u)
-                </span>
+                <span className="text-muted-foreground font-normal ml-1">({formatPrice(basePrice)} c/u)</span>
               )}
             </p>
           )}
         </div>
-
         {/* Quantity controls */}
         <div className="flex items-center gap-2 mt-2 sm:mt-3">
           <Button
