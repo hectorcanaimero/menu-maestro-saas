@@ -15,6 +15,7 @@ import { useFormatPrice } from "@/lib/priceFormatter";
 import { setSecureItem, getSecureItem, type SecureCustomerData } from "@/lib/secureStorage";
 import { StoreClosedDialog } from "@/components/catalog/StoreClosedDialog";
 import { DualPrice } from "@/components/catalog/DualPrice";
+import { useOrderTypeLabels } from "@/hooks/useOrderTypeLabels";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -157,6 +158,9 @@ const Checkout = () => {
 
   // Check store status
   const { status: storeStatus } = useStoreStatus(store?.id, store?.force_status || null);
+
+  // Get custom order type labels
+  const { getLabel } = useOrderTypeLabels();
 
   const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(false);
@@ -551,7 +555,7 @@ const Checkout = () => {
   const getStepTitle = () => {
     if (currentStep === 1) return "Información del Cliente";
     if (currentStep === 2) {
-      if (orderType === "delivery") return "Información de Entrega";
+      if (orderType === "delivery") return `Información de ${getLabel("delivery")}`;
       return "Confirmar Tipo de Orden";
     }
     return "Método de Pago";
@@ -613,7 +617,7 @@ const Checkout = () => {
                         className="h-auto py-3 whitespace-normal text-center leading-tight min-h-[56px]"
                         onClick={() => setOrderType("delivery")}
                       >
-                        Entrega
+                        {getLabel("delivery")}
                       </Button>
                     )}
                     {store?.operating_modes?.includes("pickup") && (
@@ -623,7 +627,7 @@ const Checkout = () => {
                         className="h-auto py-3 whitespace-normal text-center leading-tight min-h-[56px]"
                         onClick={() => setOrderType("pickup")}
                       >
-                        Pickup
+                        {getLabel("pickup")}
                       </Button>
                     )}
                   </div>
