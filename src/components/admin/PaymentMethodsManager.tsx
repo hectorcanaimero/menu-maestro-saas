@@ -175,6 +175,14 @@ export function PaymentMethodsManager({ storeId }: PaymentMethodsManagerProps) {
 
     setSaving(true);
     try {
+      // Verify session before saving
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError || !session) {
+        toast.error("Sesión expirada. Por favor, inicia sesión nuevamente.");
+        console.error("Session error:", sessionError);
+        return;
+      }
+
       if (editingMethod) {
         // Update existing method
         const { error } = await supabase
@@ -185,11 +193,14 @@ export function PaymentMethodsManager({ storeId }: PaymentMethodsManagerProps) {
             is_active: formData.is_active,
             payment_type: formData.payment_type,
             payment_details: payment_details,
-            updated_at: new Date().toISOString(),
           })
-          .eq("id", editingMethod.id);
+          .eq("id", editingMethod.id)
+          .eq("store_id", storeId); // Add explicit store_id check for RLS
 
-        if (error) throw error;
+        if (error) {
+          console.error("Update error:", error);
+          throw error;
+        }
         toast.success("Método de pago actualizado");
       } else {
         // Create new method
@@ -203,15 +214,26 @@ export function PaymentMethodsManager({ storeId }: PaymentMethodsManagerProps) {
           display_order: methods.length,
         });
 
-        if (error) throw error;
+        if (error) {
+          console.error("Insert error:", error);
+          throw error;
+        }
         toast.success("Método de pago creado");
       }
 
       setDialogOpen(false);
       loadPaymentMethods();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error saving payment method:", error);
-      toast.error("Error al guardar el método de pago");
+
+      // Provide more specific error messages
+      if (error?.message?.includes('JWT') || error?.message?.includes('auth')) {
+        toast.error("Error de autenticación. Por favor, recarga la página e intenta nuevamente.");
+      } else if (error?.message?.includes('permission') || error?.code === '42501') {
+        toast.error("No tienes permisos para realizar esta acción.");
+      } else {
+        toast.error(`Error al guardar: ${error?.message || 'Error desconocido'}`);
+      }
     } finally {
       setSaving(false);
     }
