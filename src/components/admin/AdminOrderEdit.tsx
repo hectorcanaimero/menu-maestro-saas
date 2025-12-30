@@ -603,7 +603,8 @@ export const AdminOrderEdit = ({ open, onOpenChange, orderId, onSuccess }: Admin
                     <FormLabel>Método de Pago</FormLabel>
                     <PaymentMethodSelector
                       selectedMethod={selectedPaymentMethod}
-                      onSelect={setSelectedPaymentMethod}
+                      onMethodChange={setSelectedPaymentMethod}
+                      disabled={!canEdit}
                     />
                   </div>
 

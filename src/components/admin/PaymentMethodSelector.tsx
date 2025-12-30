@@ -16,12 +16,14 @@ interface PaymentMethodSelectorProps {
   selectedMethod: string | null;
   onMethodChange: (method: string) => void;
   required?: boolean;
+  disabled?: boolean;
 }
 
 export const PaymentMethodSelector = ({
   selectedMethod,
   onMethodChange,
   required = false,
+  disabled = false,
 }: PaymentMethodSelectorProps) => {
   const { store } = useStore();
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
@@ -86,12 +88,18 @@ export const PaymentMethodSelector = ({
         {paymentMethods.map((method) => (
           <Card
             key={method.id}
-            className={`p-4 cursor-pointer transition-all ${
+            className={`p-4 transition-all ${
+              disabled
+                ? "opacity-50 cursor-not-allowed"
+                : "cursor-pointer"
+            } ${
               selectedMethod === method.name
                 ? "border-primary bg-primary/5"
-                : "hover:border-border hover:bg-accent/50"
+                : disabled
+                  ? ""
+                  : "hover:border-border hover:bg-accent/50"
             }`}
-            onClick={() => onMethodChange(method.name)}
+            onClick={() => !disabled && onMethodChange(method.name)}
           >
             <div className="flex items-start gap-3">
               <div
