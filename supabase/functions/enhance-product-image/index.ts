@@ -112,7 +112,7 @@ serve(async (req) => {
     // Build prompt
     const stylePrompt = STYLE_PROMPTS[style] || STYLE_PROMPTS.realistic;
     const aspectSpec = ASPECT_RATIO_CONFIG[aspectRatio] || ASPECT_RATIO_CONFIG['1:1'];
-    const fullPrompt = `${aspectSpec} ${stylePrompt} Product name: ${menuItemName}. Keep the food item recognizable but enhance its presentation with professional photography techniques.`;
+    const fullPrompt = `${aspectSpec} ${stylePrompt} Product name: ${menuItemName}. Keep the food item recognizable but enhance its presentation with professional photography techniques. IMPORTANT: Do not add any text, letters, words, labels, or written elements to the image. The image must be pure photography without any text overlay.`;
 
     console.log(`Prompt: ${fullPrompt.substring(0, 150)}...`);
 
