@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Menu, X, ShoppingCart, Package, User, Settings } from 'lucide-react';
+import { Menu, X, ShoppingCart, Package, User, Settings, Share2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '@/contexts/CartContext';
 import { useStore } from '@/contexts/StoreContext';
 import { supabase } from '@/integrations/supabase/client';
 import { CartSheet } from '@/components/cart/CartSheet';
 import { StoreHoursDisplay } from './StoreHoursDisplay';
+import { toast } from 'sonner';
 
 export const Header = () => {
   const navigate = useNavigate();
@@ -43,6 +44,17 @@ export const Header = () => {
     { label: 'Inicio', href: '/' },
     { label: 'Productos', href: '/#productos' },
   ];
+
+  const handleShare = async () => {
+    try {
+      const url = window.location.href;
+      await navigator.clipboard.writeText(url);
+      toast.success('¡Enlace copiado al portapapeles!');
+    } catch (error) {
+      console.error('Error al copiar enlace:', error);
+      toast.error('No se pudo copiar el enlace');
+    }
+  };
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border bg-background">
@@ -90,6 +102,18 @@ export const Header = () => {
                 <span className="hidden sm:inline">Ir al Admin</span>
               </Button>
             )}
+
+            {/* Share Button */}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleShare}
+              className="h-9 w-9"
+              aria-label="Compartir tienda"
+            >
+              <Share2 className="h-5 w-5" />
+            </Button>
+
             {!isCatalogMode && <CartSheet />}
             {/* Mobile Menu Toggle */}
           </div>
