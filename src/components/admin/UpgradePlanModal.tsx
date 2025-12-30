@@ -56,6 +56,7 @@ export function UpgradePlanModal({ open, onOpenChange, currentPlanId }: UpgradeP
       const { data, error } = await supabase
         .from('subscription_plans')
         .select('*')
+        .eq('is_active', true)
         .order('sort_order');
 
       if (error) throw error;

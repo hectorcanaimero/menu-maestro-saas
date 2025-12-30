@@ -23,6 +23,7 @@ import { NavLink } from '@/components/NavLink';
 import {
   Sidebar,
   SidebarContent,
+  SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
@@ -33,6 +34,7 @@ import {
 } from '@/components/ui/sidebar';
 import { useModuleAccess } from '@/hooks/useSubscription';
 import { useStore } from '@/contexts/StoreContext';
+import packageJson from '../../../package.json';
 
 const navItems = [
   { path: '/admin', label: 'Dashboard', icon: LayoutDashboard },
@@ -144,6 +146,13 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
+      <SidebarFooter>
+        <div className="flex items-center justify-between px-4 py-2 text-xs text-muted-foreground border-t">
+          <div className="flex items-center gap-2">
+            <Tag className="h-3 w-3" />v{packageJson.version}
+          </div>
+        </div>
+      </SidebarFooter>
     </Sidebar>
   );
 }

@@ -195,7 +195,7 @@ export function SubscriptionManager() {
                 </Button>
                 <Button onClick={() => setShowPaymentUpload(true)} variant="outline" className="gap-2">
                   <Upload className="h-4 w-4" />
-                  Subir Comprobante
+                  Pagar Suscripción
                 </Button>
               </div>
             </CardContent>
@@ -506,7 +506,7 @@ export function SubscriptionManager() {
                       className="w-full justify-start gap-2"
                     >
                       <Upload className="h-4 w-4" />
-                      Subir Comprobante de Pago
+                      Pagar Suscripción
                     </Button>
                     <Button
                       onClick={() => setShowCreditsManager(true)}

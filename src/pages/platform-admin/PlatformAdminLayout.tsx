@@ -14,6 +14,7 @@ import {
   Shield,
   BarChart3,
   Eye,
+  Wallet,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -67,6 +68,11 @@ function PlatformAdminLayout() {
       label: 'Planes',
       icon: Package,
       href: '/platform-admin/plans',
+    },
+    {
+      label: 'Métodos de Pago',
+      icon: Wallet,
+      href: '/platform-admin/payment-methods',
     },
     {
       label: 'Administradores',

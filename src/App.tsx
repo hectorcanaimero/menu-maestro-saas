@@ -58,6 +58,7 @@ const PaymentValidations = lazy(() => import("./pages/platform-admin/PaymentVali
 const SubscriptionsManager = lazy(() => import("./pages/platform-admin/SubscriptionsManager"));
 const StoresManager = lazy(() => import("./pages/platform-admin/StoresManager"));
 const PlansManager = lazy(() => import("./pages/platform-admin/PlansManager"));
+const PlatformPaymentMethodsManager = lazy(() => import("./pages/platform-admin/PlatformPaymentMethodsManager"));
 const AdminsManager = lazy(() => import("./pages/platform-admin/AdminsManager"));
 const PostHogAnalytics = lazy(() => import("./pages/platform-admin/PostHogAnalytics"));
 const CatalogViewsManager = lazy(() => import("./pages/platform-admin/CatalogViewsManager"));
@@ -446,6 +447,14 @@ const AppContent = () => {
                       element={
                         <SectionErrorBoundary>
                           <PostHogAnalytics />
+                        </SectionErrorBoundary>
+                      }
+                    />
+                    <Route
+                      path="payment-methods"
+                      element={
+                        <SectionErrorBoundary>
+                          <PlatformPaymentMethodsManager />
                         </SectionErrorBoundary>
                       }
                     />

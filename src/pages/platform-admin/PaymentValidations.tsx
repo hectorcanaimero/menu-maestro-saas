@@ -23,25 +23,31 @@ import { Label } from '@/components/ui/label';
 
 interface PaymentValidation {
   id: string;
-  store_id: string;
-  plan_id: string;
+  subscription_id: string;
   amount: number;
-  proof_url: string | null;
-  notes: string | null;
+  payment_date: string;
+  payment_method: string;
+  reference_number: string | null;
+  proof_image_url: string | null;
+  validation_notes: string | null;
   status: 'pending' | 'approved' | 'rejected';
   created_at: string;
   validated_at: string | null;
   validated_by: string | null;
   rejection_reason: string | null;
-  stores: {
-    name: string;
-    subdomain: string;
-    email: string;
-  };
-  subscription_plans: {
-    name: string;
-    display_name: string;
-    price_monthly: number;
+  subscriptions: {
+    store_id: string;
+    plan_id: string;
+    stores: {
+      name: string;
+      subdomain: string;
+      email: string;
+    };
+    subscription_plans: {
+      name: string;
+      display_name: string;
+      price_monthly: number;
+    };
   };
 }
 
@@ -59,9 +65,33 @@ function PaymentValidations() {
       const { data, error } = await supabase
         .from('payment_validations')
         .select(`
-          *,
-          stores (name, subdomain, email),
-          subscription_plans (name, display_name, price_monthly)
+          id,
+          subscription_id,
+          amount,
+          payment_date,
+          payment_method,
+          reference_number,
+          proof_image_url,
+          validation_notes,
+          status,
+          created_at,
+          validated_at,
+          validated_by,
+          rejection_reason,
+          subscriptions!inner (
+            store_id,
+            plan_id,
+            stores!inner (
+              name,
+              subdomain,
+              email
+            ),
+            subscription_plans!inner (
+              name,
+              display_name,
+              price_monthly
+            )
+          )
         `)
         .eq('status', 'pending')
         .order('created_at', { ascending: false });
@@ -78,9 +108,33 @@ function PaymentValidations() {
       const { data, error } = await supabase
         .from('payment_validations')
         .select(`
-          *,
-          stores (name, subdomain, email),
-          subscription_plans (name, display_name, price_monthly)
+          id,
+          subscription_id,
+          amount,
+          payment_date,
+          payment_method,
+          reference_number,
+          proof_image_url,
+          validation_notes,
+          status,
+          created_at,
+          validated_at,
+          validated_by,
+          rejection_reason,
+          subscriptions!inner (
+            store_id,
+            plan_id,
+            stores!inner (
+              name,
+              subdomain,
+              email
+            ),
+            subscription_plans!inner (
+              name,
+              display_name,
+              price_monthly
+            )
+          )
         `)
         .in('status', ['approved', 'rejected'])
         .order('validated_at', { ascending: false })
@@ -148,7 +202,7 @@ function PaymentValidations() {
   });
 
   const handleApprove = (payment: PaymentValidation) => {
-    if (confirm(`¿Aprobar pago de $${payment.amount} para ${payment.stores.name}?`)) {
+    if (confirm(`¿Aprobar pago de $${payment.amount} para ${payment.subscriptions.stores.name}?`)) {
       approveMutation.mutate(payment.id);
     }
   };
@@ -230,10 +284,10 @@ function PaymentValidations() {
                           <div>
                             <h3 className="font-semibold text-lg flex items-center gap-2">
                               <Store className="h-4 w-4" />
-                              {payment.stores.name}
+                              {payment.subscriptions.stores.name}
                             </h3>
                             <p className="text-sm text-muted-foreground">
-                              {formatSubdomainDisplay(payment.stores.subdomain)} • {payment.stores.email}
+                              {formatSubdomainDisplay(payment.subscriptions.stores.subdomain)} • {payment.subscriptions.stores.email}
                             </p>
                           </div>
                           {getStatusBadge(payment.status)}
@@ -242,7 +296,11 @@ function PaymentValidations() {
                         <div className="grid grid-cols-2 gap-4 text-sm">
                           <div>
                             <p className="text-muted-foreground">Plan solicitado</p>
-                            <p className="font-medium">{payment.subscription_plans.display_name}</p>
+                            <p className="font-medium">{payment.subscriptions.subscription_plans.display_name}</p>
+                          </div>
+                          <div>
+                            <p className="text-muted-foreground">Método de pago</p>
+                            <p className="font-medium">{payment.payment_method}</p>
                           </div>
                           <div>
                             <p className="text-muted-foreground">Monto</p>
@@ -252,6 +310,19 @@ function PaymentValidations() {
                             </p>
                           </div>
                           <div>
+                            <p className="text-muted-foreground">Fecha de pago</p>
+                            <p className="font-medium flex items-center gap-1">
+                              <Calendar className="h-3 w-3" />
+                              {format(new Date(payment.payment_date), 'dd MMM yyyy', { locale: es })}
+                            </p>
+                          </div>
+                          {payment.reference_number && (
+                            <div>
+                              <p className="text-muted-foreground">Referencia</p>
+                              <p className="font-medium font-mono">{payment.reference_number}</p>
+                            </div>
+                          )}
+                          <div>
                             <p className="text-muted-foreground">Fecha de solicitud</p>
                             <p className="font-medium flex items-center gap-1">
                               <Calendar className="h-3 w-3" />
@@ -260,17 +331,17 @@ function PaymentValidations() {
                           </div>
                         </div>
 
-                        {payment.notes && (
+                        {payment.validation_notes && (
                           <div>
                             <p className="text-sm text-muted-foreground mb-1">Notas del cliente</p>
-                            <p className="text-sm bg-muted p-2 rounded">{payment.notes}</p>
+                            <p className="text-sm bg-muted p-2 rounded">{payment.validation_notes}</p>
                           </div>
                         )}
 
-                        {payment.proof_url && (
+                        {payment.proof_image_url && (
                           <div>
                             <a
-                              href={payment.proof_url}
+                              href={payment.proof_image_url}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="text-sm text-blue-600 hover:underline"
@@ -327,9 +398,9 @@ function PaymentValidations() {
               {recentValidations.map((payment) => (
                 <div key={payment.id} className="flex items-center justify-between p-3 border rounded-lg">
                   <div className="flex-1">
-                    <p className="font-medium">{payment.stores.name}</p>
+                    <p className="font-medium">{payment.subscriptions.stores.name}</p>
                     <p className="text-sm text-muted-foreground">
-                      {payment.subscription_plans.display_name} • ${payment.amount}
+                      {payment.subscriptions.subscription_plans.display_name} • ${payment.amount} • {payment.payment_method}
                     </p>
                     {payment.rejection_reason && (
                       <p className="text-sm text-red-600 mt-1">
