@@ -20,6 +20,7 @@ import { DriverAssignmentDialog } from './DriverAssignmentDialog';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useModuleAccess } from '@/hooks/useSubscription';
+import { useOrderTypeLabels } from '@/hooks/useOrderTypeLabels';
 
 interface OrderItemExtra {
   id: string;
@@ -63,6 +64,7 @@ interface OrderCardProps {
 export const OrderCard = ({ order, onStatusChange, onViewDetails, onDriverAssigned }: OrderCardProps) => {
   const [showDriverDialog, setShowDriverDialog] = useState(false);
   const { data: hasDeliveryModule, isLoading: checkingModule } = useModuleAccess('delivery');
+  const { getLabel } = useOrderTypeLabels();
   // Only show driver assignment features if delivery module is explicitly enabled
   const showDriverFeatures = hasDeliveryModule === true;
 
@@ -107,12 +109,12 @@ export const OrderCard = ({ order, onStatusChange, onViewDetails, onDriverAssign
   const getOrderTypeConfig = (type: string) => {
     const typeConfig: Record<string, { label: string; icon: any; color: string }> = {
       delivery: {
-        label: 'Entrega',
+        label: getLabel('delivery'),
         icon: Truck,
         color: 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-100 border-orange-300',
       },
       pickup: {
-        label: 'Recoger',
+        label: getLabel('pickup'),
         icon: Store,
         color: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100 border-blue-300',
       },
@@ -122,7 +124,7 @@ export const OrderCard = ({ order, onStatusChange, onViewDetails, onDriverAssign
         color: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100 border-green-300',
       },
       digital_menu: {
-        label: 'En Tienda',
+        label: getLabel('digital_menu'),
         icon: Utensils,
         color: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100 border-green-300',
       },

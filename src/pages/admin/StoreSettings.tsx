@@ -375,6 +375,9 @@ const StoreSettings = () => {
                 banner_url: (store as any).banner_url,
                 primary_color: (store as any).primary_color,
                 price_color: (store as any).price_color,
+                delivery_label: (store as any).delivery_label,
+                pickup_label: (store as any).pickup_label,
+                digital_menu_label: (store as any).digital_menu_label,
               }}
             />
           </TabsContent>

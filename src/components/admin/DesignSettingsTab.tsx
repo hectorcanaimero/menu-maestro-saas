@@ -13,6 +13,9 @@ import { Loader2, Upload, X } from 'lucide-react';
 const designSettingsSchema = z.object({
   primary_color: z.string().optional(),
   price_color: z.string().optional(),
+  delivery_label: z.string().min(1, "Requerido").optional(),
+  pickup_label: z.string().min(1, "Requerido").optional(),
+  digital_menu_label: z.string().min(1, "Requerido").optional(),
 });
 
 type DesignSettingsForm = z.infer<typeof designSettingsSchema>;
@@ -24,6 +27,9 @@ interface DesignSettingsTabProps {
     banner_url?: string | null;
     primary_color?: string | null;
     price_color?: string | null;
+    delivery_label?: string | null;
+    pickup_label?: string | null;
+    digital_menu_label?: string | null;
   };
 }
 
@@ -36,6 +42,7 @@ export const DesignSettingsTab = ({ storeId, initialData }: DesignSettingsTabPro
 
   const {
     handleSubmit,
+    register,
     formState: { errors },
     watch,
     setValue,
@@ -44,6 +51,9 @@ export const DesignSettingsTab = ({ storeId, initialData }: DesignSettingsTabPro
     defaultValues: {
       primary_color: initialData.primary_color || '#000000',
       price_color: initialData.price_color || '#000000',
+      delivery_label: initialData.delivery_label || 'Delivery',
+      pickup_label: initialData.pickup_label || 'Pick-up',
+      digital_menu_label: initialData.digital_menu_label || 'Mesa',
     },
   });
 
@@ -185,6 +195,9 @@ export const DesignSettingsTab = ({ storeId, initialData }: DesignSettingsTabPro
         .update({
           primary_color: data.primary_color,
           price_color: data.price_color,
+          delivery_label: data.delivery_label || 'Delivery',
+          pickup_label: data.pickup_label || 'Pick-up',
+          digital_menu_label: data.digital_menu_label || 'Mesa',
           updated_at: new Date().toISOString(),
         })
         .eq('id', storeId);
@@ -357,6 +370,73 @@ export const DesignSettingsTab = ({ storeId, initialData }: DesignSettingsTabPro
               <p className="text-xs md:text-sm text-muted-foreground">Define el color de los precios en tu catálogo</p>
               {errors.price_color && (
                 <p className="text-xs md:text-sm text-destructive">{errors.price_color.message}</p>
+              )}
+            </div>
+          </div>
+
+          {/* Custom Labels Section */}
+          <div className="border-t pt-4 md:pt-6 space-y-4">
+            <div>
+              <h3 className="text-base md:text-lg font-medium mb-2">Etiquetas Personalizadas</h3>
+              <p className="text-xs md:text-sm text-muted-foreground mb-4">
+                Personaliza los nombres de los tipos de pedido que se mostrarán en toda la plataforma
+              </p>
+            </div>
+
+            {/* Delivery Label */}
+            <div className="space-y-2">
+              <Label htmlFor="delivery_label" className="text-sm md:text-base">
+                Etiqueta para "Delivery"
+              </Label>
+              <Input
+                id="delivery_label"
+                {...register("delivery_label")}
+                placeholder="Delivery"
+                className="h-11 md:h-10 text-base md:text-sm"
+              />
+              <p className="text-xs md:text-sm text-muted-foreground">
+                Por ejemplo: "Domicilio", "Envío a casa", etc. (Valor por defecto: "Delivery")
+              </p>
+              {errors.delivery_label && (
+                <p className="text-xs md:text-sm text-destructive">{errors.delivery_label.message}</p>
+              )}
+            </div>
+
+            {/* Pickup Label */}
+            <div className="space-y-2">
+              <Label htmlFor="pickup_label" className="text-sm md:text-base">
+                Etiqueta para "Pick-up"
+              </Label>
+              <Input
+                id="pickup_label"
+                {...register("pickup_label")}
+                placeholder="Pick-up"
+                className="h-11 md:h-10 text-base md:text-sm"
+              />
+              <p className="text-xs md:text-sm text-muted-foreground">
+                Por ejemplo: "Retirar en tienda", "Para llevar", etc. (Valor por defecto: "Pick-up")
+              </p>
+              {errors.pickup_label && (
+                <p className="text-xs md:text-sm text-destructive">{errors.pickup_label.message}</p>
+              )}
+            </div>
+
+            {/* Digital Menu Label */}
+            <div className="space-y-2">
+              <Label htmlFor="digital_menu_label" className="text-sm md:text-base">
+                Etiqueta para "Mesa" (Menú Digital)
+              </Label>
+              <Input
+                id="digital_menu_label"
+                {...register("digital_menu_label")}
+                placeholder="Mesa"
+                className="h-11 md:h-10 text-base md:text-sm"
+              />
+              <p className="text-xs md:text-sm text-muted-foreground">
+                Por ejemplo: "Consumir aquí", "En el local", etc. (Valor por defecto: "Mesa")
+              </p>
+              {errors.digital_menu_label && (
+                <p className="text-xs md:text-sm text-destructive">{errors.digital_menu_label.message}</p>
               )}
             </div>
           </div>

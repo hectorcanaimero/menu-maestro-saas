@@ -15,6 +15,7 @@ import { DualPrice } from '@/components/catalog/DualPrice';
 import { findOrCreateCustomer } from '@/services/customerService';
 import { completeOrder } from '@/services/orderService';
 import { redirectToWhatsApp } from '@/lib/whatsappMessageGenerator';
+import { useOrderTypeLabels } from '@/hooks/useOrderTypeLabels';
 import posthog from 'posthog-js';
 
 interface OrderData {
@@ -45,6 +46,7 @@ const ConfirmOrder = () => {
   const { store } = useStore();
   const { originalTotal, discountedTotal, totalSavings } = useCartTotals(items);
   const formatPrice = useFormatPrice();
+  const { getLabel } = useOrderTypeLabels();
 
   // Apply store theme colors
   useStoreTheme();
@@ -161,14 +163,7 @@ const ConfirmOrder = () => {
   }
 
   const getOrderTypeLabel = () => {
-    switch (orderData.order_type) {
-      case 'delivery':
-        return 'Entrega a Domicilio';
-      case 'pickup':
-        return 'Recoger en Tienda';
-      default:
-        return orderData.order_type;
-    }
+    return getLabel(orderData.order_type);
   };
 
   return (

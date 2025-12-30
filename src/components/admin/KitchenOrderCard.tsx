@@ -5,6 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Phone, User, Calendar, MapPin, Printer, DollarSign, CreditCard, Table as TableIcon, Receipt } from 'lucide-react';
 import { useState } from 'react';
+import { useOrderTypeLabels } from '@/hooks/useOrderTypeLabels';
 
 interface OrderItemExtra {
   id: string;
@@ -53,6 +54,7 @@ export const KitchenOrderCard = ({
   onPrintTicket,
 }: KitchenOrderCardProps) => {
   const [showPaymentProof, setShowPaymentProof] = useState(false);
+  const { getLabel } = useOrderTypeLabels();
 
   const getStatusColor = (status: string) => {
     const colors: Record<string, string> = {
@@ -76,15 +78,6 @@ export const KitchenOrderCard = ({
       cancelled: 'Cancelado',
     };
     return labels[status] || status;
-  };
-
-  const getTypeLabel = (type: string) => {
-    const labels: Record<string, string> = {
-      delivery: 'Entrega',
-      pickup: 'Recoger',
-      digital_menu: 'Mesa',
-    };
-    return labels[type] || type;
   };
 
   // Extract table number from delivery_address for digital menu orders
@@ -194,7 +187,7 @@ export const KitchenOrderCard = ({
         {/* Totals */}
         <div className="space-y-1 pt-3 border-t">
           <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">{getTypeLabel(order.order_type || 'delivery')}:</span>
+            <span className="text-muted-foreground">{getLabel(order.order_type)}:</span>
             <span>$ 0,00</span>
           </div>
           <div className="flex justify-between font-bold text-lg">
