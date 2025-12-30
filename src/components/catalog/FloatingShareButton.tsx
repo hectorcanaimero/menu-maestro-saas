@@ -2,12 +2,7 @@ import { useState } from 'react';
 import { Share2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 export const FloatingShareButton = () => {
   const [isHovered, setIsHovered] = useState(false);
@@ -31,7 +26,7 @@ export const FloatingShareButton = () => {
             onClick={handleShare}
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
-            className="fixed left-6 bottom-24 md:bottom-6 z-50 h-16 w-16 rounded-full shadow-2xl hover:shadow-3xl transition-all duration-300"
+            className="fixed right-8 bottom-24 md:right-28 md:bottom-8 z-50 h-12 w-12 rounded-full shadow-2xl hover:shadow-3xl transition-all duration-300"
             size="icon"
             aria-label="Compartir tienda"
           >
