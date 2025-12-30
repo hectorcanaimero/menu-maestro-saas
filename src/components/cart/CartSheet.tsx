@@ -183,9 +183,11 @@ export const CartSheet = () => {
                     {item.extras && item.extras.length > 0 && (
                       <div className="mt-3 pt-3 border-t text-xs text-muted-foreground space-y-1">
                         {item.extras.map((extra, idx) => (
-                          <div key={idx} className="flex justify-between">
-                            <span>+ {extra.name}</span>
-                            <DualPrice price={extra.price} size="sm" />
+                          <div key={idx} className="flex justify-between gap-2">
+                            <span className="truncate">+ {extra.name}</span>
+                            <span className="flex-shrink-0">
+                              <DualPrice price={extra.price} size="sm" />
+                            </span>
                           </div>
                         ))}
                       </div>

@@ -1062,7 +1062,7 @@ const Checkout = () => {
                         {item.extras && item.extras.length > 0 && (
                           <div className="pl-4 space-y-0.5">
                             {item.extras.map((extra) => (
-                              <p key={extra.id} className="text-xs text-muted-foreground">
+                              <p key={extra.id} className="text-xs text-muted-foreground truncate">
                                 + {extra.name}
                               </p>
                             ))}
