@@ -80,10 +80,10 @@ const createStepSchema = (
         .refine((phone) => {
           // Remove all non-numeric characters for validation
           const cleanPhone = phone.replace(/\D/g, '');
-          // Brazilian phone: +55 (XX) XXXXX-XXXX = 13 digits total (55 + 11)
           // Venezuelan phone: +58 (XXX) XXX-XXXX = 12 digits total (58 + 10)
-          return cleanPhone.length >= 10;
-        }, { message: "Formato de teléfono inválido" }),
+          // Accept 10 digits (local) or 12 digits (with country code)
+          return cleanPhone.length === 10 || cleanPhone.length === 12;
+        }, { message: "Formato de teléfono venezolano inválido. Debe ser +58 (XXX) XXX-XXXX" }),
     });
   } else if (step === 2) {
     // Step 2: Delivery/pickup/table info
@@ -164,7 +164,8 @@ const Checkout = () => {
 
   const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(false);
-  const [country, setCountry] = useState<"brazil" | "venezuela">("venezuela");
+  // Fixed to Venezuela only as per PIDEA-81
+  const country = "venezuela";
   const [paymentProofFile, setPaymentProofFile] = useState<File | null>(null);
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
   const [deliveryZones, setDeliveryZones] = useState<DeliveryZone[]>([]);
@@ -543,10 +544,9 @@ const Checkout = () => {
     toast.info("Cupón removido");
   };
 
-  // Brazilian phone masks: mobile has 9 digits in the local number, landline has 8
-  // For simplicity, we'll use the mobile format which is most common
-  const phoneMask = country === "brazil" ? "+55 (99) 99999-9999" : "+58 (999) 999-9999";
-  const phonePlaceholder = country === "brazil" ? "+55 (11) 98765-4321" : "+58 (412) 345-6789";
+  // Venezuelan phone format only (PIDEA-81)
+  const phoneMask = "+58 (999) 999-9999";
+  const phonePlaceholder = "+58 (412) 345-6789";
 
   if (items.length === 0) {
     return null;
@@ -630,37 +630,6 @@ const Checkout = () => {
                         {getLabel("pickup")}
                       </Button>
                     )}
-                  </div>
-                </div>
-
-                {/* Country Selector for Phone Format */}
-                <div className="space-y-3">
-                  <FormLabel>País (para formato de teléfono)</FormLabel>
-                  <div className="grid grid-cols-2 gap-3">
-                    <Button
-                      type="button"
-                      variant={country === "venezuela" ? "default" : "outline"}
-                      className="h-auto py-3"
-                      onClick={() => {
-                        setCountry("venezuela");
-                        // Clear phone field when switching countries
-                        form.setValue("customer_phone", "");
-                      }}
-                    >
-                      Venezuela (+58)
-                    </Button>
-                    <Button
-                      type="button"
-                      variant={country === "brazil" ? "default" : "outline"}
-                      className="h-auto py-3"
-                      onClick={() => {
-                        setCountry("brazil");
-                        // Clear phone field when switching countries
-                        form.setValue("customer_phone", "");
-                      }}
-                    >
-                      Brasil (+55)
-                    </Button>
                   </div>
                 </div>
 

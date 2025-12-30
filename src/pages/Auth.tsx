@@ -21,12 +21,16 @@ const Auth = () => {
   const [signupData, setSignupData] = useState({ email: '', password: '', fullName: '' });
 
   useEffect(() => {
-    // Check current session
+    // Check current session ONLY on initial mount
+    // Don't redirect during active login flow - that's handled in handleLogin
+    let isInitialCheck = true;
+
     const checkUser = async () => {
       const {
         data: { session },
       } = await supabase.auth.getSession();
-      if (session) {
+
+      if (session && isInitialCheck) {
         // Verify user is on their own store subdomain
         const currentSubdomain = getSubdomainFromHostname();
         const { data: userStore } = await supabase.rpc('get_user_owned_store').single();
@@ -43,16 +47,17 @@ const Auth = () => {
     };
     checkUser();
 
-    // Listen for auth changes - Don't auto-redirect here
-    // The redirect is handled explicitly in handleLogin after validation
+    // Listen for auth changes
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event) => {
-      // Don't auto-redirect on SIGNED_IN - validation happens in handleLogin
+      isInitialCheck = false; // Mark that we're past initial check
+
       if (event === 'SIGNED_OUT') {
         // Clear any stored data
         console.log('User signed out');
       }
+      // SIGNED_IN event redirect is handled in handleLogin, not here
     });
 
     return () => subscription.unsubscribe();

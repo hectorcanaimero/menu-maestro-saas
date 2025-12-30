@@ -5,7 +5,7 @@ import { Header } from '@/components/catalog/Header';
 import { Footer } from '@/components/catalog/Footer';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ShoppingCart, ArrowLeft, Tag } from 'lucide-react';
+import { ShoppingCart, ArrowLeft, Tag, MessageCircle } from 'lucide-react';
 import { useCart } from '@/contexts/CartContext';
 import { Skeleton } from '@/components/ui/skeleton';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
@@ -181,6 +181,21 @@ export default function ProductDetail() {
     setTimeout(() => {
       navigate('/');
     }, 100);
+  };
+
+  const handleWhatsAppInquiry = () => {
+    if (!product || !store?.phone) return;
+
+    // WhatsApp phone number (remove + and spaces)
+    const whatsappNumber = store.phone.replace(/\+/g, '').replace(/\s/g, '');
+
+    // Create message with product name
+    const message = encodeURIComponent(
+      `Hola ${store.name || 'Tienda'}, estoy interesado en: *${product.name}*. ¿Podrían darme más información?`
+    );
+
+    const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${message}`;
+    window.open(whatsappUrl, '_blank');
   };
 
   if (loading) {
@@ -374,21 +389,35 @@ export default function ProductDetail() {
         </div>
       </main>
 
-      {/* Floating Add to Cart Button */}
-      {!store?.catalog_mode && (
-        <div className="fixed bottom-0 left-0 right-0 z-40 bg-background/95 backdrop-blur-sm border-t border-border p-4 shadow-lg">
-          <div className="container mx-auto max-w-2xl">
+      {/* Floating Action Button - Cart or WhatsApp depending on catalog mode */}
+      <div className="fixed bottom-0 left-0 right-0 z-40 bg-background/95 backdrop-blur-sm border-t border-border p-4 shadow-lg">
+        <div className="container mx-auto max-w-2xl">
+          {store?.catalog_mode ? (
+            // WhatsApp button for catalog mode (PIDEA-79)
+            <Button
+              onClick={handleWhatsAppInquiry}
+              disabled={!store?.phone}
+              className="w-full h-14 text-lg font-semibold shadow-lg"
+              style={{
+                backgroundColor: store?.primary_color || '#25D366', // WhatsApp green default
+              }}
+            >
+              <MessageCircle className="w-6 h-6 mr-2" />
+              {store?.phone ? 'Consultar por WhatsApp' : 'WhatsApp no configurado'}
+            </Button>
+          ) : (
+            // Add to cart button for normal mode
             <Button
               onClick={handleAddToCart}
               disabled={!product.is_available}
               className="w-full h-14 text-lg font-semibold bg-primary hover:bg-primary/90 shadow-lg"
             >
-              <ShoppingCart className="w-8 h-8 mr-2" />
+              <ShoppingCart className="w-6 h-6 mr-2" />
               {product.is_available ? 'Agregar al carrito' : 'No disponible'}
             </Button>
-          </div>
+          )}
         </div>
-      )}
+      </div>
 
       <Footer />
     </div>
