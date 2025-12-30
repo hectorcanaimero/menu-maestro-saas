@@ -2,7 +2,9 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Phone, User, Calendar, MapPin, Printer, DollarSign, CreditCard, Table as TableIcon } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Phone, User, Calendar, MapPin, Printer, DollarSign, CreditCard, Table as TableIcon, Receipt } from 'lucide-react';
+import { useState } from 'react';
 
 interface OrderItemExtra {
   id: string;
@@ -50,6 +52,8 @@ export const KitchenOrderCard = ({
   onPrintOrder,
   onPrintTicket,
 }: KitchenOrderCardProps) => {
+  const [showPaymentProof, setShowPaymentProof] = useState(false);
+
   const getStatusColor = (status: string) => {
     const colors: Record<string, string> = {
       pending: 'bg-yellow-500',
@@ -210,9 +214,16 @@ export const KitchenOrderCard = ({
             <span>Método de Pago: {order.payment_method || 'N/A'}</span>
           </div>
           {order.payment_proof_url && (
-            <Badge variant="secondary" className="text-xs">
-              Comprobante adjunto
-            </Badge>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setShowPaymentProof(true)}
+              className="w-full mt-2"
+            >
+              <Receipt className="w-4 h-4 mr-2" />
+              Ver Comprobante de Pago
+            </Button>
           )}
         </div>
 
@@ -246,6 +257,39 @@ export const KitchenOrderCard = ({
           )}
         </div>
       </CardContent>
+
+      {/* Payment Proof Dialog */}
+      <Dialog open={showPaymentProof} onOpenChange={setShowPaymentProof}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>Comprobante de Pago - Orden #{orderNumber}</DialogTitle>
+          </DialogHeader>
+          <div className="mt-4">
+            {order.payment_proof_url ? (
+              <div className="space-y-4">
+                <img
+                  src={order.payment_proof_url}
+                  alt="Comprobante de pago"
+                  className="w-full h-auto rounded-lg border"
+                />
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    className="w-full"
+                    onClick={() => window.open(order.payment_proof_url!, '_blank')}
+                  >
+                    Abrir en nueva pestaña
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <p className="text-muted-foreground text-center py-8">
+                No hay comprobante de pago disponible
+              </p>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 };
