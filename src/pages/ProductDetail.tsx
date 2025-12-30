@@ -189,11 +189,22 @@ export default function ProductDetail() {
     // WhatsApp phone number (remove + and spaces)
     const whatsappNumber = store.phone.replace(/\+/g, '').replace(/\s/g, '');
 
-    // Create message with product name
-    const message = encodeURIComponent(
-      `Hola ${store.name || 'Tienda'}, estoy interesado en: *${product.name}*. ¿Podrían darme más información?`
-    );
+    // Create detailed message with product information
+    const productPrice = formatPrice(bestDeal ? bestDeal.discountedPrice : product.price);
+    let messageText = `Hola *${store.name || 'Tienda'}*, estoy interesado en:\n\n`;
+    messageText += `📦 *${product.name}*\n`;
+    messageText += `💰 Precio: ${productPrice.original}`;
 
+    // Add promotion info if available
+    if (bestDeal) {
+      const savings = formatPrice(bestDeal.savings);
+      messageText += ` ~~${formatPrice(product.price).original}~~\n`;
+      messageText += `🎉 ¡Ahorro de ${savings.original}!`;
+    }
+
+    messageText += `\n\n¿Podrían darme más información sobre este producto?`;
+
+    const message = encodeURIComponent(messageText);
     const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${message}`;
     window.open(whatsappUrl, '_blank');
   };

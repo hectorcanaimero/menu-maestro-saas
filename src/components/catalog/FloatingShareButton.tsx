@@ -3,9 +3,11 @@ import { Share2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { useStore } from '@/contexts/StoreContext';
 
 export const FloatingShareButton = () => {
   const [isHovered, setIsHovered] = useState(false);
+  const { store } = useStore();
 
   const handleShare = async () => {
     try {
@@ -18,6 +20,14 @@ export const FloatingShareButton = () => {
     }
   };
 
+  // Adjust position based on catalog mode
+  // In catalog mode: higher position (bottom-24) to avoid overlapping with WhatsApp button
+  // Not in catalog mode: lower position (bottom-6) to match WhatsApp button position
+  const isCatalogMode = store?.catalog_mode ?? false;
+  const positionClass = isCatalogMode
+    ? "right-8 bottom-24 md:right-28 md:bottom-8" // Catalog mode: higher in mobile to avoid WhatsApp button
+    : "right-8 bottom-6 md:right-28 md:bottom-8";  // Normal mode: lower in mobile, aligned with WhatsApp button
+
   return (
     <TooltipProvider>
       <Tooltip>
@@ -26,7 +36,7 @@ export const FloatingShareButton = () => {
             onClick={handleShare}
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
-            className="fixed right-8 bottom-24 md:right-28 md:bottom-8 z-50 h-12 w-12 rounded-full shadow-2xl hover:shadow-3xl transition-all duration-300"
+            className={`fixed ${positionClass} z-50 h-12 w-12 rounded-full shadow-2xl hover:shadow-3xl transition-all duration-300`}
             size="icon"
             aria-label="Compartir tienda"
           >
