@@ -288,7 +288,13 @@ export function PaymentMethodsManager({ storeId }: PaymentMethodsManagerProps) {
         </div>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
-            <Button onClick={() => handleOpenDialog()}>
+            <Button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                handleOpenDialog();
+              }}
+            >
               <Plus className="w-4 h-4 mr-2" />
               Agregar Método
             </Button>
@@ -508,7 +514,13 @@ export function PaymentMethodsManager({ storeId }: PaymentMethodsManagerProps) {
       {methods.length === 0 ? (
         <div className="text-center py-12 border rounded-lg bg-muted/30">
           <p className="text-muted-foreground mb-4">No hay métodos de pago configurados</p>
-          <Button onClick={() => handleOpenDialog()}>
+          <Button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              handleOpenDialog();
+            }}
+          >
             <Plus className="w-4 h-4 mr-2" />
             Agregar Primer Método
           </Button>
@@ -542,16 +554,26 @@ export function PaymentMethodsManager({ storeId }: PaymentMethodsManagerProps) {
                   <TableCell className="text-right">
                     <div className="flex gap-2 justify-end">
                       <Button
+                        type="button"
                         variant="ghost"
                         size="sm"
-                        onClick={() => handleOpenDialog(method)}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          handleOpenDialog(method);
+                        }}
                       >
                         <Edit className="w-4 h-4" />
                       </Button>
                       <Button
+                        type="button"
                         variant="ghost"
                         size="sm"
-                        onClick={() => handleDelete(method.id)}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          handleDelete(method.id);
+                        }}
                         className="text-destructive hover:text-destructive"
                       >
                         <Trash2 className="w-4 h-4" />
