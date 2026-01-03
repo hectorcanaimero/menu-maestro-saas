@@ -77,7 +77,7 @@ const AdminLayout = ({ children, userEmail = '' }: AdminLayoutProps) => {
             <div className="px-3 sm:px-6 py-3 sm:py-4 flex justify-between items-center gap-2">
               <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
                 <SidebarTrigger />
-                <img src={logo} alt="PideAI" className="w-10 h-10 sm:w-14 sm:h-14 flex-shrink-0" />
+                <img src={logo} alt="PideAI" className="w-9 h-9 me-2 sm:w-14 sm:h-14 flex-shrink-0" />
                 <div className="min-w-0 flex-1">
                   <h1 className="text-sm sm:text-xl font-bold truncate">Panel Admin</h1>
                   <p className="text-xs sm:text-sm text-muted-foreground truncate">{store.name}</p>

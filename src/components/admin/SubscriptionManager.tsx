@@ -64,21 +64,15 @@ export function SubscriptionManager() {
   const isPendingPayment = subscription.status === 'pending_payment';
 
   // Calculate usage percentages
-  const productUsage = usage?.products?.limit
-    ? (usage.products.current / usage.products.limit) * 100
-    : 0;
+  const productUsage = usage?.products?.limit ? (usage.products.current / usage.products.limit) * 100 : 0;
 
-  const categoryUsage = usage?.categories?.limit
-    ? (usage.categories.current / usage.categories.limit) * 100
-    : 0;
+  const categoryUsage = usage?.categories?.limit ? (usage.categories.current / usage.categories.limit) * 100 : 0;
 
   const orderUsage = usage?.orders_this_month?.limit
     ? (usage.orders_this_month.current / usage.orders_this_month.limit) * 100
     : 0;
 
-  const aiUsage = usage?.ai_credits?.limit
-    ? (usage.ai_credits.used / usage.ai_credits.limit) * 100
-    : 0;
+  const aiUsage = usage?.ai_credits?.limit ? (usage.ai_credits.used / usage.ai_credits.limit) * 100 : 0;
 
   return (
     <div className="space-y-6">
@@ -88,13 +82,9 @@ export function SubscriptionManager() {
           <Clock className="h-4 w-4 text-orange-600" />
           <AlertTitle className="text-orange-900">Trial terminando pronto</AlertTitle>
           <AlertDescription className="text-orange-800">
-            Tu período de prueba termina en {trialDaysLeft} días. Actualiza tu plan para continuar usando todas las funcionalidades.
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => setShowUpgradeModal(true)}
-              className="ml-3"
-            >
+            Tu período de prueba termina en {trialDaysLeft} días. Actualiza tu plan para continuar usando todas las
+            funcionalidades.
+            <Button size="sm" variant="outline" onClick={() => setShowUpgradeModal(true)} className="ml-3">
               Actualizar ahora
             </Button>
           </AlertDescription>
@@ -117,12 +107,7 @@ export function SubscriptionManager() {
           <AlertTitle>Suscripción vencida</AlertTitle>
           <AlertDescription>
             Tu suscripción ha vencido. Actualiza tu plan para continuar usando la plataforma.
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => setShowUpgradeModal(true)}
-              className="ml-3"
-            >
+            <Button size="sm" variant="outline" onClick={() => setShowUpgradeModal(true)} className="ml-3">
               Renovar suscripción
             </Button>
           </AlertDescription>
@@ -246,9 +231,7 @@ export function SubscriptionManager() {
                     <p className="text-sm text-muted-foreground">Créditos AI</p>
                     <p className="text-2xl font-bold">
                       {usage?.ai_credits?.available || 0}
-                      <span className="text-sm text-muted-foreground font-normal">
-                        {' disponibles'}
-                      </span>
+                      <span className="text-sm text-muted-foreground font-normal">{' disponibles'}</span>
                     </p>
                   </div>
                   <Sparkles className="h-8 w-8 text-muted-foreground" />
@@ -296,7 +279,8 @@ export function SubscriptionManager() {
                     Categorías
                   </span>
                   <span className="text-sm text-muted-foreground">
-                    {usage?.categories?.current || 0} / {usage?.categories?.unlimited ? '∞' : usage?.categories?.limit || 0}
+                    {usage?.categories?.current || 0} /{' '}
+                    {usage?.categories?.unlimited ? '∞' : usage?.categories?.limit || 0}
                   </span>
                 </div>
                 {!usage?.categories?.unlimited && (
@@ -315,14 +299,12 @@ export function SubscriptionManager() {
                     Órdenes este mes
                   </span>
                   <span className="text-sm text-muted-foreground">
-                    {usage?.orders_this_month?.current || 0} / {usage?.orders_this_month?.unlimited ? '∞' : usage?.orders_this_month?.limit || 0}
+                    {usage?.orders_this_month?.current || 0} /{' '}
+                    {usage?.orders_this_month?.unlimited ? '∞' : usage?.orders_this_month?.limit || 0}
                   </span>
                 </div>
                 {!usage?.orders_this_month?.unlimited && (
-                  <Progress
-                    value={orderUsage}
-                    className={orderUsage >= 80 ? 'bg-red-100 [&>div]:bg-red-600' : ''}
-                  />
+                  <Progress value={orderUsage} className={orderUsage >= 80 ? 'bg-red-100 [&>div]:bg-red-600' : ''} />
                 )}
               </div>
 
@@ -337,20 +319,12 @@ export function SubscriptionManager() {
                     {usage?.ai_credits?.used || 0} usados / {usage?.ai_credits?.available || 0} disponibles
                   </span>
                 </div>
-                <Progress
-                  value={aiUsage}
-                  className={aiUsage >= 80 ? 'bg-red-100 [&>div]:bg-red-600' : ''}
-                />
+                <Progress value={aiUsage} className={aiUsage >= 80 ? 'bg-red-100 [&>div]:bg-red-600' : ''} />
                 <div className="flex justify-between items-center mt-2">
                   <p className="text-xs text-muted-foreground">
                     Límite mensual: {usage?.ai_credits?.limit || 0} créditos
                   </p>
-                  <Button
-                    size="sm"
-                    variant="link"
-                    onClick={() => setShowCreditsManager(true)}
-                    className="h-auto p-0"
-                  >
+                  <Button size="sm" variant="link" onClick={() => setShowCreditsManager(true)} className="h-auto p-0">
                     Comprar más créditos
                   </Button>
                 </div>
@@ -391,18 +365,11 @@ export function SubscriptionManager() {
                     <p className="text-sm text-muted-foreground mb-3">
                       Recibe órdenes por WhatsApp y gestiona conversaciones con clientes
                     </p>
-                    {isTrial && (
-                      <div className="mb-3">
-                        <Badge variant="secondary" className="bg-green-100 text-green-800">
-                          ✓ Incluido en trial 30 días
-                        </Badge>
-                      </div>
-                    )}
                     <div className="text-sm font-medium mb-3">
                       <DollarSign className="h-4 w-4 inline" />
-                      15/mes después del trial
+                      15/mes
                     </div>
-                    {!subscription.enabled_modules?.whatsapp && !isTrial && (
+                    {!subscription.enabled_modules?.whatsapp && (
                       <Button size="sm" variant="outline" onClick={() => setShowModuleModal(true)} className="w-full">
                         Solicitar Activación
                       </Button>
@@ -441,14 +408,15 @@ export function SubscriptionManager() {
                       </div>
                     )}
                     <div className="text-sm font-medium mb-3">
-                      <DollarSign className="h-4 w-4 inline" />
-                      20/mes después del trial
+                      {/* <DollarSign className="h-4 w-4 inline" />
+                      20/mes después del trial */}
+                      Modulo en Desarrollo.
                     </div>
-                    {!subscription.enabled_modules?.delivery && !isTrial && (
+                    {/* {!subscription.enabled_modules?.delivery && !isTrial && (
                       <Button size="sm" variant="outline" onClick={() => setShowModuleModal(true)} className="w-full">
                         Solicitar Activación
                       </Button>
-                    )}
+                    )} */}
                   </CardContent>
                 </Card>
               </div>
@@ -458,8 +426,9 @@ export function SubscriptionManager() {
                   <TrendingUp className="h-4 w-4 text-green-600" />
                   <AlertTitle className="text-green-900">Módulos incluidos durante trial</AlertTitle>
                   <AlertDescription className="text-green-800">
-                    Durante tu período de prueba de 30 días, tienes acceso completo a los módulos de WhatsApp y Delivery sin cargo adicional.
-                    Después del trial, estos módulos se cobrarán mensualmente si deseas continuar usándolos.
+                    Durante tu período de prueba de 30 días, tienes acceso completo a los módulos de WhatsApp y Delivery
+                    sin cargo adicional. Después del trial, estos módulos se cobrarán mensualmente si deseas continuar
+                    usándolos.
                   </AlertDescription>
                 </Alert>
               )}
@@ -554,10 +523,7 @@ export function SubscriptionManager() {
         currentPlanId={subscription.plan_id}
       />
 
-      <RequestModuleModal
-        open={showModuleModal}
-        onOpenChange={setShowModuleModal}
-      />
+      <RequestModuleModal open={showModuleModal} onOpenChange={setShowModuleModal} />
 
       <PaymentProofUpload
         open={showPaymentUpload}
@@ -565,10 +531,7 @@ export function SubscriptionManager() {
         subscriptionId={subscription.id}
       />
 
-      <CreditsManager
-        open={showCreditsManager}
-        onOpenChange={setShowCreditsManager}
-      />
+      <CreditsManager open={showCreditsManager} onOpenChange={setShowCreditsManager} />
     </div>
   );
 }

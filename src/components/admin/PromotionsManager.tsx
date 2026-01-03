@@ -263,53 +263,55 @@ const PromotionsManager = () => {
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-3 sm:p-4 md:p-6 space-y-4 sm:space-y-6">
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-          <CardTitle className="flex items-center gap-2">
-            <Tag className="w-5 h-5" />
+        <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-3 sm:space-y-0 pb-4">
+          <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+            <Tag className="w-4 h-4 sm:w-5 sm:h-5" />
             Gestión de Promociones
           </CardTitle>
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>
-              <Button onClick={() => handleCloseDialog()}>
-                <Plus className="w-4 h-4 mr-2" />
+              <Button onClick={() => handleCloseDialog()} className="w-full sm:w-auto text-sm">
+                <Plus className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
                 Nueva Promoción
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogContent className="w-[95vw] max-w-2xl h-[95vh] max-h-[95vh] overflow-y-auto p-4 sm:p-6">
               <DialogHeader>
-                <DialogTitle>
+                <DialogTitle className="text-base sm:text-lg">
                   {editingPromotion ? 'Editar Promoción' : 'Nueva Promoción'}
                 </DialogTitle>
               </DialogHeader>
 
-              <form onSubmit={handleSubmit} className="space-y-4 mt-4">
-                <div className="grid gap-4 sm:grid-cols-2">
+              <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4 mt-4">
+                <div className="grid gap-3 sm:gap-4 sm:grid-cols-2">
                   <div className="space-y-2 sm:col-span-2">
-                    <Label htmlFor="name">Nombre de la promoción</Label>
+                    <Label htmlFor="name" className="text-xs sm:text-sm">Nombre de la promoción</Label>
                     <Input
                       id="name"
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                       placeholder="Ej: Descuento de Verano"
+                      className="text-sm"
                       required
                     />
                   </div>
 
                   <div className="space-y-2 sm:col-span-2">
-                    <Label htmlFor="description">Descripción (opcional)</Label>
+                    <Label htmlFor="description" className="text-xs sm:text-sm">Descripción (opcional)</Label>
                     <Textarea
                       id="description"
                       value={formData.description}
                       onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                       placeholder="Descripción de la promoción"
+                      className="text-sm"
                       rows={2}
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="type">Tipo de descuento</Label>
+                    <Label htmlFor="type" className="text-xs sm:text-sm">Tipo de descuento</Label>
                     <Select
                       value={formData.type}
                       onValueChange={(value: 'percentage' | 'fixed') =>
@@ -327,7 +329,7 @@ const PromotionsManager = () => {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="value">
+                    <Label htmlFor="value" className="text-xs sm:text-sm">
                       Valor {formData.type === 'percentage' ? '(%)' : '($)'}
                     </Label>
                     <Input
@@ -340,27 +342,30 @@ const PromotionsManager = () => {
                       onChange={(e) =>
                         setFormData({ ...formData, value: parseFloat(e.target.value) || 0 })
                       }
+                      className="text-sm"
                       required
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="start_date">Fecha de inicio (opcional)</Label>
+                    <Label htmlFor="start_date" className="text-xs sm:text-sm">Fecha de inicio (opcional)</Label>
                     <Input
                       id="start_date"
                       type="date"
                       value={formData.start_date}
                       onChange={(e) => setFormData({ ...formData, start_date: e.target.value })}
+                      className="text-sm"
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="end_date">Fecha de fin (opcional)</Label>
+                    <Label htmlFor="end_date" className="text-xs sm:text-sm">Fecha de fin (opcional)</Label>
                     <Input
                       id="end_date"
                       type="date"
                       value={formData.end_date}
                       onChange={(e) => setFormData({ ...formData, end_date: e.target.value })}
+                      className="text-sm"
                     />
                   </div>
 
@@ -370,23 +375,23 @@ const PromotionsManager = () => {
                       checked={formData.is_active}
                       onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked })}
                     />
-                    <Label htmlFor="is_active" className="cursor-pointer">
+                    <Label htmlFor="is_active" className="cursor-pointer text-xs sm:text-sm">
                       Promoción activa
                     </Label>
                   </div>
                 </div>
 
-                <div className="border-t pt-4">
-                  <h4 className="font-medium mb-3">Alcance de la promoción</h4>
-                  <p className="text-sm text-muted-foreground mb-4">
+                <div className="border-t pt-3 sm:pt-4">
+                  <h4 className="font-medium mb-3 text-sm sm:text-base">Alcance de la promoción</h4>
+                  <p className="text-xs sm:text-sm text-muted-foreground mb-3 sm:mb-4">
                     Si no seleccionas productos o categorías, la promoción se aplicará a toda la
                     tienda.
                   </p>
 
-                  <div className="space-y-4">
+                  <div className="space-y-3 sm:space-y-4">
                     <div className="space-y-2">
-                      <Label>Productos específicos</Label>
-                      <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto border rounded-md p-2">
+                      <Label className="text-xs sm:text-sm">Productos específicos</Label>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-40 overflow-y-auto border rounded-md p-2">
                         {menuItems.map((item) => (
                           <div key={item.id} className="flex items-center space-x-2">
                             <input
@@ -410,7 +415,7 @@ const PromotionsManager = () => {
                             />
                             <label
                               htmlFor={`product-${item.id}`}
-                              className="text-sm cursor-pointer"
+                              className="text-xs sm:text-sm cursor-pointer"
                             >
                               {item.name}
                             </label>
@@ -420,8 +425,8 @@ const PromotionsManager = () => {
                     </div>
 
                     <div className="space-y-2">
-                      <Label>Categorías</Label>
-                      <div className="grid grid-cols-2 gap-2 max-h-32 overflow-y-auto border rounded-md p-2">
+                      <Label className="text-xs sm:text-sm">Categorías</Label>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-32 overflow-y-auto border rounded-md p-2">
                         {categories.map((category) => (
                           <div key={category.id} className="flex items-center space-x-2">
                             <input
@@ -447,7 +452,7 @@ const PromotionsManager = () => {
                             />
                             <label
                               htmlFor={`category-${category.id}`}
-                              className="text-sm cursor-pointer"
+                              className="text-xs sm:text-sm cursor-pointer"
                             >
                               {category.name}
                             </label>
@@ -458,11 +463,11 @@ const PromotionsManager = () => {
                   </div>
                 </div>
 
-                <div className="flex justify-end gap-3 pt-4">
-                  <Button type="button" variant="outline" onClick={handleCloseDialog}>
+                <div className="flex flex-col sm:flex-row justify-end gap-2 sm:gap-3 pt-3 sm:pt-4">
+                  <Button type="button" variant="outline" onClick={handleCloseDialog} className="text-sm">
                     Cancelar
                   </Button>
-                  <Button type="submit">
+                  <Button type="submit" className="text-sm">
                     {editingPromotion ? 'Guardar Cambios' : 'Crear Promoción'}
                   </Button>
                 </div>
@@ -473,91 +478,162 @@ const PromotionsManager = () => {
 
         <CardContent>
           {promotions.length === 0 ? (
-            <div className="text-center py-12">
-              <Tag className="w-12 h-12 mx-auto text-muted-foreground mb-3" />
-              <p className="text-muted-foreground">No hay promociones creadas</p>
-              <p className="text-sm text-muted-foreground mt-1">
+            <div className="text-center py-8 sm:py-12">
+              <Tag className="w-10 h-10 sm:w-12 sm:h-12 mx-auto text-muted-foreground mb-3" />
+              <p className="text-sm sm:text-base text-muted-foreground">No hay promociones creadas</p>
+              <p className="text-xs sm:text-sm text-muted-foreground mt-1">
                 Crea tu primera promoción para atraer más clientes
               </p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Nombre</TableHead>
-                    <TableHead>Descuento</TableHead>
-                    <TableHead>Alcance</TableHead>
-                    <TableHead>Periodo</TableHead>
-                    <TableHead>Estado</TableHead>
-                    <TableHead className="text-right">Acciones</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {promotions.map((promotion) => (
-                    <TableRow key={promotion.id}>
-                      <TableCell>
-                        <div>
-                          <div className="font-medium">{promotion.name}</div>
-                          {promotion.description && (
-                            <div className="text-sm text-muted-foreground">
-                              {promotion.description}
+            <>
+              {/* Desktop Table */}
+              <div className="hidden md:block overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="text-xs">Nombre</TableHead>
+                      <TableHead className="text-xs">Descuento</TableHead>
+                      <TableHead className="text-xs">Alcance</TableHead>
+                      <TableHead className="text-xs">Periodo</TableHead>
+                      <TableHead className="text-xs">Estado</TableHead>
+                      <TableHead className="text-right text-xs">Acciones</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {promotions.map((promotion) => (
+                      <TableRow key={promotion.id}>
+                        <TableCell>
+                          <div>
+                            <div className="font-medium text-sm">{promotion.name}</div>
+                            {promotion.description && (
+                              <div className="text-xs text-muted-foreground line-clamp-1">
+                                {promotion.description}
+                              </div>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="secondary" className="text-xs">
+                            {promotion.type === 'percentage'
+                              ? `${promotion.value}%`
+                              : `$${promotion.value.toFixed(2)}`}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-xs">{getPromotionScope(promotion)}</TableCell>
+                        <TableCell className="text-xs">
+                          {promotion.start_date || promotion.end_date ? (
+                            <div className="flex items-center gap-1">
+                              <Calendar className="w-3 h-3" />
+                              <span>
+                                {promotion.start_date
+                                  ? format(new Date(promotion.start_date), 'dd/MM/yy')
+                                  : '∞'}
+                                {' - '}
+                                {promotion.end_date
+                                  ? format(new Date(promotion.end_date), 'dd/MM/yy')
+                                  : '∞'}
+                              </span>
                             </div>
+                          ) : (
+                            'Sin límite'
+                          )}
+                        </TableCell>
+                        <TableCell>{getPromotionBadge(promotion)}</TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-2">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleEdit(promotion)}
+                              aria-label="Editar promoción"
+                            >
+                              <Pencil className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleDelete(promotion.id)}
+                              aria-label="Eliminar promoción"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+
+              {/* Mobile Cards */}
+              <div className="md:hidden space-y-3">
+                {promotions.map((promotion) => (
+                  <Card key={promotion.id} className="p-3">
+                    <div className="space-y-2">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-medium text-sm truncate">{promotion.name}</h3>
+                          {promotion.description && (
+                            <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5">
+                              {promotion.description}
+                            </p>
                           )}
                         </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="secondary">
+                        {getPromotionBadge(promotion)}
+                      </div>
+
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <Badge variant="secondary" className="text-xs">
                           {promotion.type === 'percentage'
                             ? `${promotion.value}%`
                             : `$${promotion.value.toFixed(2)}`}
                         </Badge>
-                      </TableCell>
-                      <TableCell className="text-sm">{getPromotionScope(promotion)}</TableCell>
-                      <TableCell className="text-sm">
-                        {promotion.start_date || promotion.end_date ? (
-                          <div className="flex items-center gap-1">
-                            <Calendar className="w-3 h-3" />
-                            <span>
-                              {promotion.start_date
-                                ? format(new Date(promotion.start_date), 'dd/MM/yy')
-                                : '∞'}
-                              {' - '}
-                              {promotion.end_date
-                                ? format(new Date(promotion.end_date), 'dd/MM/yy')
-                                : '∞'}
-                            </span>
-                          </div>
-                        ) : (
-                          'Sin límite'
-                        )}
-                      </TableCell>
-                      <TableCell>{getPromotionBadge(promotion)}</TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleEdit(promotion)}
-                            aria-label="Editar promoción"
-                          >
-                            <Pencil className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleDelete(promotion.id)}
-                            aria-label="Eliminar promoción"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
+                        <span className="text-xs text-muted-foreground">
+                          {getPromotionScope(promotion)}
+                        </span>
+                      </div>
+
+                      {(promotion.start_date || promotion.end_date) && (
+                        <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                          <Calendar className="w-3 h-3" />
+                          <span>
+                            {promotion.start_date
+                              ? format(new Date(promotion.start_date), 'dd/MM/yy')
+                              : '∞'}
+                            {' - '}
+                            {promotion.end_date
+                              ? format(new Date(promotion.end_date), 'dd/MM/yy')
+                              : '∞'}
+                          </span>
                         </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
+                      )}
+
+                      <div className="flex gap-2 pt-2 border-t">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleEdit(promotion)}
+                          className="flex-1 text-xs"
+                        >
+                          <Pencil className="w-3 h-3 mr-1" />
+                          Editar
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleDelete(promotion.id)}
+                          className="flex-1 text-xs"
+                        >
+                          <Trash2 className="w-3 h-3 mr-1" />
+                          Eliminar
+                        </Button>
+                      </div>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            </>
           )}
         </CardContent>
       </Card>

@@ -12,8 +12,6 @@ import { FeaturedProducts } from '@/components/catalog/FeaturedProducts';
 import { FloatingCartButton } from '@/components/cart/FloatingCartButton';
 import { FloatingWhatsAppButton } from '@/components/catalog/FloatingWhatsAppButton';
 import { CatalogLimitBanner } from '@/components/catalog/CatalogLimitBanner';
-import { CatalogBlockedOverlay } from '@/components/catalog/CatalogBlockedOverlay';
-import { OrderLimitOverlay } from '@/components/catalog/OrderLimitOverlay';
 import { usePostHogViewLimitStatus } from '@/hooks/usePostHogViewLimitStatus';
 import { useSubscription } from '@/hooks/useSubscription';
 import { isPostHogAPIConfigured } from '@/lib/posthog-api';

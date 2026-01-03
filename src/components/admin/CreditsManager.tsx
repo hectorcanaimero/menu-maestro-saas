@@ -14,6 +14,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { Sparkles, Loader2, Check, ShoppingCart, Upload } from 'lucide-react';
 import { useStore } from '@/contexts/StoreContext';
@@ -83,7 +84,8 @@ export function CreditsManager({ open, onOpenChange }: CreditsManagerProps) {
 
       // Create payment validation request for credits purchase
       const { data, error } = await supabase.from('payment_validations').insert({
-        subscription_id: null, // null for credits purchase
+        store_id: store.id, // Usar store_id en lugar de subscription_id
+        subscription_id: null, // null para compra de créditos (no es renovación de suscripción)
         amount: price,
         payment_method: 'pending', // To be filled later
         reference_number: `CREDITS_${creditsAmount}`,

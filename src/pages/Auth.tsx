@@ -111,14 +111,29 @@ const Auth = () => {
         return;
       }
 
-      // Success - redirect to user's store admin
+      // Success - redirect to user's store admin with session token
       const currentDomain = getCurrentDomain();
-      const storeAdminUrl = `${window.location.protocol}//${userStore.subdomain}.${currentDomain}/admin`;
+
+      // Create session token for cross-subdomain transfer
+      const sessionToken = btoa(
+        JSON.stringify({
+          access_token: data.session.access_token,
+          refresh_token: data.session.refresh_token,
+          expires_at: data.session.expires_at,
+          timestamp: Date.now(),
+        })
+      );
+
+      // Build redirect URL with session token
+      const storeAdminUrl = new URL(
+        `${window.location.protocol}//${userStore.subdomain}.${currentDomain}/admin`
+      );
+      storeAdminUrl.searchParams.set('session_token', sessionToken);
 
       toast.success('¡Bienvenido! Redirigiendo a tu tienda...');
 
-      // Redirect to the user's store admin
-      window.location.href = storeAdminUrl;
+      // Redirect to the user's store admin with session token
+      window.location.href = storeAdminUrl.toString();
     } catch (error) {
       console.error('Error during login:', error);
       toast.error('Error al iniciar sesión');

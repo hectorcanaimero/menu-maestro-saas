@@ -41,6 +41,9 @@ GRANT EXECUTE ON FUNCTION public.verify_store_ownership(UUID) TO authenticated;
 -- PART 2: Get User Store (Convenience Function)
 -- ============================================================================
 
+-- Drop existing function first to avoid return type conflicts
+DROP FUNCTION IF EXISTS public.get_user_owned_store();
+
 -- Function to get the store owned by the current user
 -- Returns store data if user owns a store, NULL otherwise
 CREATE OR REPLACE FUNCTION public.get_user_owned_store()
@@ -203,6 +206,10 @@ CREATE TABLE IF NOT EXISTS public.auth_audit_log (
 
 -- Enable RLS on audit log
 ALTER TABLE public.auth_audit_log ENABLE ROW LEVEL SECURITY;
+
+-- Drop existing policies first
+DROP POLICY IF EXISTS "Store owners can view their audit logs" ON public.auth_audit_log;
+DROP POLICY IF EXISTS "System can insert audit logs" ON public.auth_audit_log;
 
 -- Only admins can view audit logs for their stores
 CREATE POLICY "Store owners can view their audit logs"

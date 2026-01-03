@@ -60,7 +60,7 @@ const AdminDashboard = () => {
 
   return (
     <AdminLayout userEmail={userEmail}>
-      <div className="space-y-4 sm:space-y-6">
+      <div className="space-y-4 sm:space-y-6 mb-20 md:mb-0">
         <div>
           <H2 className="text-xl sm:text-2xl">Dashboard</H2>
           <Body className="text-muted-foreground text-sm sm:text-base">Bienvenido al panel de administración</Body>

@@ -221,8 +221,43 @@ A unified platform that provides:
 9. Collects digital signature
 10. Completes delivery and receives next assignment
 
+#### Persona 4: Platform Administrator (Ana)
+
+**Demographics:**
+- Age: 25-40
+- Role: Platform operations manager
+- Technical proficiency: High
+- Responsibility: Manage all stores and subscriptions
+
+**Goals:**
+
+- Monitor platform health and performance
+- Review and approve payment validations efficiently
+- Manage platform-level payment methods
+- Support store owners with plan upgrades
+- Track platform-wide revenue and metrics
+
+**Pain Points:**
+
+- Manual payment verification is time-consuming
+- Need to quickly identify pending validations
+- Difficult to track which payment methods are available
+- Store owners confused about subscription payment process
+- No centralized payment method management
+
+**User Journey:**
+
+1. Logs into platform admin dashboard
+2. Reviews pending payment validations
+3. Checks payment proof images and details
+4. Approves or rejects payments
+5. Manages platform payment methods
+6. Monitors store subscription statuses
+7. Handles store owner support requests
+8. Reviews platform-wide analytics
+
 ### 4.2 Secondary Personas
-- **Platform Administrator**: Manages stores, subscriptions, and platform analytics
+
 - **Kitchen Staff**: Uses Kitchen Display System to prepare orders
 - **Support Team**: Uses Chatwoot integration to assist users
 
@@ -337,10 +372,24 @@ A unified platform that provides:
 - **US-068**: As a platform admin, I want to view subscription status for all stores so that I can track revenue.
 - **US-069**: As a platform admin, I want to manually upgrade/downgrade store plans so that I can handle special cases.
 - **US-070**: As a platform admin, I want to view payment history so that I can track transactions.
+- **US-071**: As a platform admin, I want to manage platform-level payment methods so that store owners can pay for subscriptions.
+- **US-072**: As a platform admin, I want to review pending payment validations so that I can approve or reject subscription payments.
+- **US-073**: As a platform admin, I want to view payment proof images so that I can verify bank transfer payments.
+- **US-074**: As a platform admin, I want to filter payment validations by status so that I can prioritize pending reviews.
 
 #### Epic: Platform Analytics
-- **US-071**: As a platform admin, I want to view platform-wide analytics so that I can measure success.
-- **US-072**: As a platform admin, I want to compare store performance so that I can identify best practices.
+- **US-075**: As a platform admin, I want to view platform-wide analytics so that I can measure success.
+- **US-076**: As a platform admin, I want to compare store performance so that I can identify best practices.
+
+### 5.5 Store Owner - Subscription Stories
+
+#### Epic: Subscription Payment
+- **US-077**: As a store owner, I want to pay for my subscription using platform payment methods so that I can continue using the service.
+- **US-078**: As a store owner, I want to see only active subscription plans so that I don't get confused by inactive options.
+- **US-079**: As a store owner, I want to view payment method details (bank account, payment instructions) so that I know how to pay.
+- **US-080**: As a store owner, I want to upload my payment proof directly to Supabase Storage so that I can submit payment verification.
+- **US-081**: As a store owner, I want to copy payment details to clipboard so that I can easily paste them in my banking app.
+- **US-082**: As a store owner, I want to see my payment validation status so that I know when my payment is approved.
 
 ---
 

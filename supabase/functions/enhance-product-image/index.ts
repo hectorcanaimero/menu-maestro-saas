@@ -5,13 +5,15 @@
  * Uses Gemini 2.5 Flash Image for fast, cost-effective image generation
  *
  * Image Optimization:
+ * - Uses ImageScript for lightweight image processing
  * - Automatically resizes to max 500x500px maintaining aspect ratio
- * - Converts to WebP format with 90% quality for optimal file size
- * - Reduces storage usage by ~50-70% while maintaining visual quality
+ * - Converts to JPEG format with 80% quality for optimal file size
+ * - Reduces storage usage by ~30-40% while maintaining visual quality
+ * - Graceful fallback to original format if optimization fails
  * - No text elements in generated images (AI prompt configured)
  *
- * @version 2.1.0
- * @date 2025-12-30
+ * @version 3.0.1
+ * @date 2026-01-01
  */
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
@@ -227,34 +229,53 @@ serve(async (req) => {
     // Convert base64 to Uint8Array
     const rawImageBuffer = Uint8Array.from(atob(generatedImageBase64), c => c.charCodeAt(0));
 
-    // Optimize image: resize to max 500x500 and convert to WebP
-    console.log('Optimizing image: resizing and converting to WebP...');
-    const decodedImage = await Image.decode(rawImageBuffer);
+    console.log('Optimizing image: resizing and converting to JPEG...');
 
-    // Calculate new dimensions maintaining aspect ratio (max 500x500)
+    // Use ImageScript to resize and convert to JPEG
     const maxSize = 500;
-    let newWidth = decodedImage.width;
-    let newHeight = decodedImage.height;
+    let newWidth = 0;
+    let newHeight = 0;
+    let optimizedImageBuffer: Uint8Array;
 
-    if (newWidth > maxSize || newHeight > maxSize) {
-      const ratio = Math.min(maxSize / newWidth, maxSize / newHeight);
-      newWidth = Math.round(newWidth * ratio);
-      newHeight = Math.round(newHeight * ratio);
-      console.log(`Resizing from ${decodedImage.width}x${decodedImage.height} to ${newWidth}x${newHeight}`);
+    try {
+      // Decode the image
+      const decodedImage = await Image.decode(rawImageBuffer);
+
+      // Get original dimensions
+      const originalWidth = decodedImage.width;
+      const originalHeight = decodedImage.height;
+      newWidth = originalWidth;
+      newHeight = originalHeight;
+
+      // Calculate new dimensions if resize needed
+      let resizedImage = decodedImage;
+      if (originalWidth > maxSize || originalHeight > maxSize) {
+        const ratio = Math.min(maxSize / originalWidth, maxSize / originalHeight);
+        newWidth = Math.round(originalWidth * ratio);
+        newHeight = Math.round(originalHeight * ratio);
+        console.log(`Resizing from ${originalWidth}x${originalHeight} to ${newWidth}x${newHeight}`);
+
+        // Resize maintaining aspect ratio
+        resizedImage = decodedImage.resize(newWidth, newHeight);
+      }
+
+      // Convert to JPEG with 80% quality for good balance
+      optimizedImageBuffer = await resizedImage.encodeJPEG(80);
+
+      console.log(`Image optimized: original ${rawImageBuffer.length} bytes → optimized ${optimizedImageBuffer.length} bytes (${((1 - optimizedImageBuffer.length / rawImageBuffer.length) * 100).toFixed(1)}% reduction)`);
+
+    } catch (optimizationError) {
+      console.error('Image optimization failed, using original:', optimizationError);
+
+      // Fallback: use original image without optimization
+      optimizedImageBuffer = rawImageBuffer;
+      newWidth = 0;
+      newHeight = 0;
     }
 
-    // Resize image if needed
-    const resizedImage = newWidth !== decodedImage.width || newHeight !== decodedImage.height
-      ? decodedImage.resize(newWidth, newHeight)
-      : decodedImage;
-
-    // Convert to WebP with high quality (90%)
-    const optimizedImageBuffer = await resizedImage.encodeWebP(90);
-    console.log(`Image optimized: original ${rawImageBuffer.length} bytes → optimized ${optimizedImageBuffer.length} bytes (${((1 - optimizedImageBuffer.length / rawImageBuffer.length) * 100).toFixed(1)}% reduction)`);
-
-    // Generate filename with .webp extension
+    // Generate filename with .jpg extension
     const aspectSuffix = aspectRatio ? `-${aspectRatio.replace(':', 'x')}` : '';
-    const fileName = `ai-enhanced/${storeId}/${menuItemId}-${style}${aspectSuffix}-${Date.now()}.webp`;
+    const fileName = `ai-enhanced/${storeId}/${menuItemId}-${style}${aspectSuffix}-${Date.now()}.jpg`;
 
     console.log(`Uploading to storage: ${fileName}`);
 
@@ -262,7 +283,7 @@ serve(async (req) => {
     const { data: uploadData, error: uploadError } = await supabase.storage
       .from('menu-images')
       .upload(fileName, optimizedImageBuffer, {
-        contentType: 'image/webp',
+        contentType: 'image/jpeg',
         upsert: true,
       });
 
@@ -292,7 +313,9 @@ serve(async (req) => {
       credit_type: 'monthly',
       model_used: GEMINI_MODEL,
       aspect_ratio: aspectRatio || '1:1',
-      resolution: `${newWidth}x${newHeight} (WebP optimized)`,
+      resolution: newWidth && newHeight
+        ? `${newWidth}x${newHeight} (JPEG optimized)`
+        : 'Original size',
     });
 
     return new Response(
@@ -302,8 +325,8 @@ serve(async (req) => {
         model: 'Gemini 2.5 Flash Image',
         cost: 0.039, // $0.039 per image
         optimized: true,
-        dimensions: `${newWidth}x${newHeight}`,
-        format: 'webp',
+        dimensions: newWidth && newHeight ? `${newWidth}x${newHeight}` : 'original',
+        format: 'jpeg',
         sizeSaved: `${((1 - optimizedImageBuffer.length / rawImageBuffer.length) * 100).toFixed(1)}%`,
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

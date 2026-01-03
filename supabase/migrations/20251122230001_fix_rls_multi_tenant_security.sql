@@ -101,6 +101,7 @@ WITH CHECK (public.user_owns_store(store_id));
 -- ----------------------------------------------------------------------------
 DROP POLICY IF EXISTS "Store owners can view their store orders" ON public.orders;
 DROP POLICY IF EXISTS "Store owners can update their store orders" ON public.orders;
+DROP POLICY IF EXISTS "Store owners can delete their store orders" ON public.orders;
 
 CREATE POLICY "Store owners can view their store orders"
 ON public.orders
@@ -190,7 +191,9 @@ WITH CHECK (
 -- Order Items Table (ensure store owners can manage)
 -- ----------------------------------------------------------------------------
 DROP POLICY IF EXISTS "Store owners can view all order items" ON public.order_items;
+DROP POLICY IF EXISTS "Store owners can view their order items" ON public.order_items;
 DROP POLICY IF EXISTS "Store owners can update order items" ON public.order_items;
+DROP POLICY IF EXISTS "Store owners can delete order items" ON public.order_items;
 
 -- Store owners can view their order items
 CREATE POLICY "Store owners can view their order items"
@@ -242,6 +245,7 @@ USING (
 -- Order Item Extras Table
 -- ----------------------------------------------------------------------------
 DROP POLICY IF EXISTS "Store owners can view all order item extras" ON public.order_item_extras;
+DROP POLICY IF EXISTS "Store owners can manage order item extras" ON public.order_item_extras;
 
 CREATE POLICY "Store owners can manage order item extras"
 ON public.order_item_extras

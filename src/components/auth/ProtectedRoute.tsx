@@ -6,6 +6,7 @@ import { LoadingScreen } from '@/components/ui/LoadingScreen';
 import { Button } from '@/components/ui/button';
 import { Store as StoreIcon, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
+import { useSessionRestore } from '@/hooks/useSessionRestore';
 
 interface ProtectedRouteProps {
   children: ReactNode;
@@ -30,6 +31,10 @@ interface AuthorizationResult {
 export function ProtectedRoute({ children }: ProtectedRouteProps) {
   const navigate = useNavigate();
   const { store, loading: storeLoading, isStoreOwner } = useStore();
+
+  // Restore session from URL parameter if present (cross-subdomain auth)
+  useSessionRestore();
+
   const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
   const [authError, setAuthError] = useState<string | null>(null);
   const [isVerifying, setIsVerifying] = useState(true);

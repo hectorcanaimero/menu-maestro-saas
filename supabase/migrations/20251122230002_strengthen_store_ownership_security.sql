@@ -85,6 +85,10 @@ CREATE INDEX IF NOT EXISTS idx_store_access_log_ip_address ON public.store_acces
 -- Enable RLS
 ALTER TABLE public.store_access_log ENABLE ROW LEVEL SECURITY;
 
+-- Drop existing policies first
+DROP POLICY IF EXISTS "Store owners can view their store access logs" ON public.store_access_log;
+DROP POLICY IF EXISTS "System can insert store access logs" ON public.store_access_log;
+
 -- Store owners can view their own store access logs
 CREATE POLICY "Store owners can view their store access logs"
 ON public.store_access_log FOR SELECT
@@ -124,6 +128,9 @@ CREATE INDEX IF NOT EXISTS idx_rate_limit_log_window_start ON public.rate_limit_
 
 -- Enable RLS (only functions can access)
 ALTER TABLE public.rate_limit_log ENABLE ROW LEVEL SECURITY;
+
+-- Drop existing policy first
+DROP POLICY IF EXISTS "Only system can manage rate limits" ON public.rate_limit_log;
 
 CREATE POLICY "Only system can manage rate limits"
 ON public.rate_limit_log FOR ALL
@@ -378,6 +385,9 @@ GRANT EXECUTE ON FUNCTION public.log_store_access(UUID, TEXT, TEXT, BOOLEAN, TEX
 -- 7. ENHANCED STORE LOOKUP FUNCTION WITH SECURITY
 -- =====================================================
 
+-- Drop existing function first to avoid return type conflicts
+DROP FUNCTION IF EXISTS public.get_store_by_subdomain_secure(TEXT, TEXT);
+
 CREATE OR REPLACE FUNCTION public.get_store_by_subdomain_secure(
   p_subdomain TEXT,
   p_ip_address TEXT DEFAULT NULL
@@ -576,6 +586,9 @@ GRANT EXECUTE ON FUNCTION public.get_suspicious_access_patterns(UUID, INTEGER) T
 -- =====================================================
 -- 9. UPDATE STORES TABLE CONSTRAINT
 -- =====================================================
+
+-- Drop existing constraint first
+ALTER TABLE public.stores DROP CONSTRAINT IF EXISTS stores_subdomain_format_check;
 
 -- Add check constraint for subdomain format
 ALTER TABLE public.stores

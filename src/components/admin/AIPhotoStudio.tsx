@@ -251,27 +251,27 @@ export const AIPhotoStudio = ({ open, onOpenChange, menuItem, onImageUpdated }: 
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="w-[95vw] max-w-3xl h-[95vh] max-h-[95vh] overflow-y-auto p-4 sm:p-6">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-primary" />
+          <DialogTitle className="flex items-center gap-2 text-base sm:text-lg">
+            <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
             Estudio Fotográfico con IA
           </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6">
           {/* Credits Display */}
-          <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0 p-3 bg-muted/50 rounded-lg">
             <div className="flex items-center gap-2">
               <Palette className="w-4 h-4 text-muted-foreground" />
-              <span className="text-sm text-muted-foreground">Créditos disponibles</span>
+              <span className="text-xs sm:text-sm text-muted-foreground">Créditos disponibles</span>
             </div>
-            <div className="flex items-center gap-2">
-              <Badge variant="secondary" className="font-mono">
+            <div className="flex items-center gap-2 flex-wrap">
+              <Badge variant="secondary" className="font-mono text-xs">
                 {monthlyRemaining}/{monthlyTotal} este mes
               </Badge>
               {extraCredits > 0 && (
-                <Badge variant="outline" className="font-mono">
+                <Badge variant="outline" className="font-mono text-xs">
                   +{extraCredits} extra
                 </Badge>
               )}
@@ -281,24 +281,24 @@ export const AIPhotoStudio = ({ open, onOpenChange, menuItem, onImageUpdated }: 
           {/* Aspect Ratio Selection */}
           {!previewUrl && (
             <div className="space-y-2">
-              <p className="text-sm font-medium">📐 Formato de salida (Instagram)</p>
-              <div className="flex gap-2">
+              <p className="text-xs sm:text-sm font-medium">📐 Formato de salida (Instagram)</p>
+              <div className="grid grid-cols-1 sm:flex gap-2">
                 {ASPECT_RATIO_OPTIONS.map((option) => (
                   <button
                     key={option.id}
                     onClick={() => setAspectRatio(option.id)}
-                    className={`flex-1 flex items-center justify-center gap-2 p-3 rounded-lg border-2 transition-all ${
+                    className={`flex-1 flex items-center gap-2 p-2 sm:p-3 rounded-lg border-2 transition-all ${
                       aspectRatio === option.id
                         ? 'border-primary bg-primary/5'
                         : 'border-border hover:border-primary/50'
                     }`}
                   >
                     {option.icon}
-                    <div className="text-left">
-                      <p className="text-sm font-medium">{option.name}</p>
-                      <p className="text-xs text-muted-foreground">{option.description}</p>
+                    <div className="text-left flex-1">
+                      <p className="text-xs sm:text-sm font-medium">{option.name}</p>
+                      <p className="text-[10px] sm:text-xs text-muted-foreground">{option.description}</p>
                     </div>
-                    {aspectRatio === option.id && <Check className="w-4 h-4 text-primary ml-auto" />}
+                    {aspectRatio === option.id && <Check className="w-3 h-3 sm:w-4 sm:h-4 text-primary" />}
                   </button>
                 ))}
               </div>
@@ -306,35 +306,35 @@ export const AIPhotoStudio = ({ open, onOpenChange, menuItem, onImageUpdated }: 
           )}
 
           {/* Current vs Preview */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
             {/* Current Image */}
             <Card>
-              <CardContent className="p-4">
-                <p className="text-sm font-medium mb-2 text-muted-foreground">Imagen Actual</p>
+              <CardContent className="p-3 sm:p-4">
+                <p className="text-xs sm:text-sm font-medium mb-2 text-muted-foreground">Imagen Actual</p>
                 <div className="aspect-square bg-muted rounded-lg overflow-hidden flex items-center justify-center">
                   {menuItem?.image_url ? (
                     <img src={menuItem.image_url} alt={menuItem.name} className="w-full h-full object-cover" />
                   ) : (
                     <div className="text-center text-muted-foreground">
-                      <ImageIcon className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                      <p className="text-sm">Sin imagen</p>
+                      <ImageIcon className="w-8 h-8 sm:w-12 sm:h-12 mx-auto mb-2 opacity-50" />
+                      <p className="text-xs sm:text-sm">Sin imagen</p>
                     </div>
                   )}
                 </div>
-                <p className="text-sm font-medium mt-2 text-center truncate">{menuItem?.name}</p>
+                <p className="text-xs sm:text-sm font-medium mt-2 text-center truncate">{menuItem?.name}</p>
               </CardContent>
             </Card>
 
             {/* Preview/Result */}
             <Card>
-              <CardContent className="p-4">
-                <p className="text-sm font-medium mb-2 text-muted-foreground">
+              <CardContent className="p-3 sm:p-4">
+                <p className="text-xs sm:text-sm font-medium mb-2 text-muted-foreground">
                   {previewUrl ? 'Resultado' : 'Vista Previa'} ({aspectRatio})
                 </p>
                 <div
                   className={`${getAspectRatioClass(
                     aspectRatio,
-                  )} max-h-[400px] bg-muted rounded-lg overflow-hidden flex items-center justify-center relative mx-auto`}
+                  )} max-h-[300px] sm:max-h-[400px] bg-muted rounded-lg overflow-hidden flex items-center justify-center relative mx-auto`}
                 >
                   <AnimatePresence mode="wait">
                     {isProcessing ? (
@@ -343,11 +343,11 @@ export const AIPhotoStudio = ({ open, onOpenChange, menuItem, onImageUpdated }: 
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="text-center"
+                        className="text-center p-4"
                       >
-                        <Loader2 className="w-12 h-12 mx-auto mb-3 text-primary animate-spin" />
-                        <p className="text-sm text-muted-foreground">Mejorando imagen...</p>
-                        <p className="text-xs text-muted-foreground mt-1">Esto puede tomar unos segundos</p>
+                        <Loader2 className="w-8 h-8 sm:w-12 sm:h-12 mx-auto mb-3 text-primary animate-spin" />
+                        <p className="text-xs sm:text-sm text-muted-foreground">Mejorando imagen...</p>
+                        <p className="text-[10px] sm:text-xs text-muted-foreground mt-1">Esto puede tomar unos segundos</p>
                       </motion.div>
                     ) : previewUrl ? (
                       <motion.img
@@ -366,8 +366,8 @@ export const AIPhotoStudio = ({ open, onOpenChange, menuItem, onImageUpdated }: 
                         animate={{ opacity: 1 }}
                         className="text-center text-muted-foreground p-4"
                       >
-                        <Wand2 className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                        <p className="text-sm">Selecciona un estilo y genera</p>
+                        <Wand2 className="w-8 h-8 sm:w-12 sm:h-12 mx-auto mb-2 opacity-50" />
+                        <p className="text-xs sm:text-sm">Selecciona un estilo y genera</p>
                       </motion.div>
                     )}
                   </AnimatePresence>
@@ -378,31 +378,31 @@ export const AIPhotoStudio = ({ open, onOpenChange, menuItem, onImageUpdated }: 
 
           {/* Style Selection */}
           {!previewUrl && (
-            <div className="space-y-3">
-              <p className="text-sm font-medium">🎨 Selecciona un estilo</p>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div className="space-y-2 sm:space-y-3">
+              <p className="text-xs sm:text-sm font-medium">🎨 Selecciona un estilo</p>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 sm:gap-3">
                 {STYLE_OPTIONS.map((style) => (
                   <motion.button
                     key={style.id}
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     onClick={() => setSelectedStyle(style.id)}
-                    className={`relative p-4 rounded-xl border-2 transition-all text-left ${
+                    className={`relative p-3 sm:p-4 rounded-xl border-2 transition-all text-left ${
                       selectedStyle === style.id
                         ? 'border-primary bg-primary/5'
                         : 'border-border hover:border-primary/50'
                     }`}
                   >
                     <div
-                      className={`w-10 h-10 rounded-lg bg-gradient-to-br ${style.gradient} flex items-center justify-center text-white mb-2`}
+                      className={`w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-gradient-to-br ${style.gradient} flex items-center justify-center text-white mb-2`}
                     >
                       {style.icon}
                     </div>
-                    <p className="font-medium text-sm">{style.name}</p>
-                    <p className="text-xs text-muted-foreground">{style.description}</p>
+                    <p className="font-medium text-xs sm:text-sm">{style.name}</p>
+                    <p className="text-[10px] sm:text-xs text-muted-foreground line-clamp-1">{style.description}</p>
                     {selectedStyle === style.id && (
                       <div className="absolute top-2 right-2">
-                        <Check className="w-4 h-4 text-primary" />
+                        <Check className="w-3 h-3 sm:w-4 sm:h-4 text-primary" />
                       </div>
                     )}
                   </motion.button>
@@ -412,34 +412,36 @@ export const AIPhotoStudio = ({ open, onOpenChange, menuItem, onImageUpdated }: 
           )}
 
           {/* Actions */}
-          <div className="flex gap-3">
+          <div className="flex gap-2 sm:gap-3">
             {previewUrl ? (
               <>
-                <Button variant="outline" onClick={handleDiscard} className="flex-1" disabled={isApplying}>
-                  <X className="w-4 h-4 mr-2" />
-                  Descartar
+                <Button variant="outline" onClick={handleDiscard} className="flex-1 text-xs sm:text-sm" disabled={isApplying}>
+                  <X className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                  <span className="hidden xs:inline">Descartar</span>
+                  <span className="xs:hidden">Cancelar</span>
                 </Button>
-                <Button onClick={handleApply} className="flex-1" disabled={isApplying}>
-                  {isApplying ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Check className="w-4 h-4 mr-2" />}
-                  Aplicar al Producto
+                <Button onClick={handleApply} className="flex-1 text-xs sm:text-sm" disabled={isApplying}>
+                  {isApplying ? <Loader2 className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2 animate-spin" /> : <Check className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />}
+                  Aplicar
                 </Button>
               </>
             ) : (
               <>
-                <Button variant="outline" onClick={handleClose} className="flex-1">
+                <Button variant="outline" onClick={handleClose} className="flex-1 text-xs sm:text-sm">
                   Cancelar
                 </Button>
                 <Button
                   onClick={handleGenerate}
-                  className="flex-1"
+                  className="flex-1 text-xs sm:text-sm"
                   disabled={isProcessing || !menuItem?.image_url || availableCredits <= 0}
                 >
                   {isProcessing ? (
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    <Loader2 className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2 animate-spin" />
                   ) : (
-                    <Wand2 className="w-4 h-4 mr-2" />
+                    <Wand2 className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
                   )}
-                  Mejorar Imagen
+                  <span className="hidden xs:inline">Mejorar Imagen</span>
+                  <span className="xs:hidden">Mejorar</span>
                 </Button>
               </>
             )}
@@ -447,7 +449,7 @@ export const AIPhotoStudio = ({ open, onOpenChange, menuItem, onImageUpdated }: 
 
           {/* Help text */}
           {availableCredits <= 0 && (
-            <p className="text-sm text-destructive text-center">
+            <p className="text-xs sm:text-sm text-destructive text-center">
               No tienes créditos disponibles. Los créditos se renuevan cada mes.
             </p>
           )}

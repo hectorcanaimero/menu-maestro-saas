@@ -282,12 +282,19 @@ BEGIN
 
   -- Obtener créditos AI
   SELECT
-    credits_used_this_month,
-    monthly_credits + extra_credits,
-    monthly_credits
+    COALESCE(credits_used_this_month, 0),
+    COALESCE(GREATEST(0, (monthly_credits + extra_credits) - credits_used_this_month), 0),
+    COALESCE(monthly_credits, 0)
   INTO v_ai_used, v_ai_available, v_ai_limit
   FROM store_ai_credits
   WHERE store_id = p_store_id;
+
+  -- Si no existe registro en store_ai_credits, usar valores por defecto
+  IF NOT FOUND THEN
+    v_ai_used := 0;
+    v_ai_available := 0;
+    v_ai_limit := 0;
+  END IF;
 
   -- Construir JSON de respuesta
   v_stats := jsonb_build_object(
@@ -307,9 +314,9 @@ BEGIN
       'unlimited', v_categories_limit IS NULL OR v_categories_limit = 'null'
     ),
     'ai_credits', jsonb_build_object(
-      'used', COALESCE(v_ai_used, 0),
-      'available', COALESCE(v_ai_available - v_ai_used, 0),
-      'limit', COALESCE(v_ai_limit, 0)
+      'used', v_ai_used,
+      'available', v_ai_available,
+      'limit', v_ai_limit
     )
   );
 
