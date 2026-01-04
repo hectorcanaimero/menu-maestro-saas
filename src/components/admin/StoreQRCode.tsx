@@ -89,7 +89,6 @@ export const StoreQRCode = ({ storeSubdomain }: StoreQRCodeProps) => {
         };
 
         logo.onerror = () => {
-          console.error('Error loading PideAI logo');
           URL.revokeObjectURL(qrUrl);
         };
 
@@ -97,13 +96,12 @@ export const StoreQRCode = ({ storeSubdomain }: StoreQRCodeProps) => {
       };
 
       qrImg.onerror = () => {
-        console.error('Error loading QR code');
         URL.revokeObjectURL(qrUrl);
       };
 
       qrImg.src = qrUrl;
     } catch (error) {
-      console.error('Error downloading QR code:', error);
+      throw new Error(error as string | undefined);
     }
   };
 
@@ -121,10 +119,7 @@ export const StoreQRCode = ({ storeSubdomain }: StoreQRCodeProps) => {
       <CardContent className="space-y-4">
         {/* QR Code Display */}
         <div className="flex flex-col items-center space-y-4">
-          <div
-            ref={qrRef}
-            className="p-6 bg-white rounded-lg border-2 border-border shadow-sm"
-          >
+          <div ref={qrRef} className="p-6 bg-white rounded-lg border-2 border-border shadow-sm">
             <QRCodeSVG
               value={storeUrl}
               size={256}
@@ -161,9 +156,8 @@ export const StoreQRCode = ({ storeSubdomain }: StoreQRCodeProps) => {
           {/* Info Text */}
           <div className="text-xs text-muted-foreground text-center max-w-md">
             <p>
-              El código QR incluye el logo de PideAI en el centro. Puedes imprimirlo
-              y colocarlo en tu negocio para que tus clientes escaneen y accedan
-              directamente a tu menú digital.
+              El código QR incluye el logo de PideAI en el centro. Puedes imprimirlo y colocarlo en tu negocio para que
+              tus clientes escaneen y accedan directamente a tu menú digital.
             </p>
           </div>
         </div>

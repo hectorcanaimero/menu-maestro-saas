@@ -65,7 +65,6 @@ const CategoriesManager = () => {
 
       setCategories(categoriesWithCount);
     } catch (error) {
-      console.error('Error fetching categories:', error);
       toast.error('Error al cargar categorías');
     } finally {
       setLoading(false);
@@ -111,7 +110,6 @@ const CategoriesManager = () => {
       resetForm();
       fetchCategories();
     } catch (error) {
-      console.error('Error saving category:', error);
       toast.error('Error al guardar categoría');
     }
   };
@@ -136,7 +134,6 @@ const CategoriesManager = () => {
       toast.success('Categoría eliminada');
       fetchCategories();
     } catch (error) {
-      console.error('Error deleting category:', error);
       toast.error('Error al eliminar categoría');
     }
   };

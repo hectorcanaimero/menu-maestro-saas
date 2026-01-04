@@ -1,17 +1,17 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { ArrowLeft, Mail, CheckCircle } from "lucide-react";
-import { toast } from "sonner";
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { ArrowLeft, Mail, CheckCircle } from 'lucide-react';
+import { toast } from 'sonner';
 
 const ResetPassword = () => {
   const navigate = useNavigate();
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
 
@@ -30,10 +30,9 @@ const ResetPassword = () => {
       }
 
       setEmailSent(true);
-      toast.success("Correo enviado. Revisa tu bandeja de entrada.");
+      toast.success('Correo enviado. Revisa tu bandeja de entrada.');
     } catch (error) {
-      console.error("Error resetting password:", error);
-      toast.error("Error al enviar el correo de recuperación");
+      toast.error('Error al enviar el correo de recuperación');
     } finally {
       setIsLoading(false);
     }
@@ -43,12 +42,7 @@ const ResetPassword = () => {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-primary/5 p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-4">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => navigate("/auth")}
-            className="w-fit"
-          >
+          <Button variant="ghost" size="sm" onClick={() => navigate('/auth')} className="w-fit">
             <ArrowLeft className="w-4 h-4 mr-2" />
             Volver
           </Button>
@@ -62,12 +56,12 @@ const ResetPassword = () => {
               )}
             </div>
             <CardTitle className="text-2xl font-bold">
-              {emailSent ? "Correo Enviado" : "Recuperar Contraseña"}
+              {emailSent ? 'Correo Enviado' : 'Recuperar Contraseña'}
             </CardTitle>
             <CardDescription>
               {emailSent
-                ? "Revisa tu correo para restablecer tu contraseña"
-                : "Ingresa tu correo electrónico para recibir un link de recuperación"}
+                ? 'Revisa tu correo para restablecer tu contraseña'
+                : 'Ingresa tu correo electrónico para recibir un link de recuperación'}
             </CardDescription>
           </div>
         </CardHeader>
@@ -79,8 +73,7 @@ const ResetPassword = () => {
                 <CheckCircle className="h-4 h-4 text-green-600" />
                 <AlertDescription>
                   <p className="text-sm">
-                    Enviamos un correo a <strong>{email}</strong> con instrucciones para
-                    restablecer tu contraseña.
+                    Enviamos un correo a <strong>{email}</strong> con instrucciones para restablecer tu contraseña.
                   </p>
                   <ul className="list-disc list-inside mt-2 text-sm space-y-1">
                     <li>Revisa tu bandeja de entrada</li>
@@ -90,14 +83,14 @@ const ResetPassword = () => {
                 </AlertDescription>
               </Alert>
 
-              <Button onClick={() => navigate("/auth")} variant="outline" className="w-full">
+              <Button onClick={() => navigate('/auth')} variant="outline" className="w-full">
                 Volver al Inicio de Sesión
               </Button>
 
               <Button
                 onClick={() => {
                   setEmailSent(false);
-                  setEmail("");
+                  setEmail('');
                 }}
                 variant="ghost"
                 className="w-full"
@@ -121,15 +114,10 @@ const ResetPassword = () => {
               </div>
 
               <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? "Enviando..." : "Enviar Link de Recuperación"}
+                {isLoading ? 'Enviando...' : 'Enviar Link de Recuperación'}
               </Button>
 
-              <Button
-                type="button"
-                onClick={() => navigate("/auth")}
-                variant="ghost"
-                className="w-full"
-              >
+              <Button type="button" onClick={() => navigate('/auth')} variant="ghost" className="w-full">
                 Cancelar
               </Button>
             </form>

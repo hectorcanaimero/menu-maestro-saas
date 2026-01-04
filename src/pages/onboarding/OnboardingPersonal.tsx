@@ -85,7 +85,6 @@ const OnboardingPersonal = () => {
       toast.success('Información guardada');
       navigate('/onboarding/business');
     } catch (error) {
-      console.error('Error saving personal info:', error);
       toast.error('Error al guardar la información');
     } finally {
       setLoading(false);
@@ -104,11 +103,7 @@ const OnboardingPersonal = () => {
   }
 
   return (
-    <OnboardingLayout
-      currentStep={1}
-      title="Información Personal"
-      description="Cuéntanos un poco sobre ti"
-    >
+    <OnboardingLayout currentStep={1} title="Información Personal" description="Cuéntanos un poco sobre ti">
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="space-y-2">
           <Label htmlFor="fullName">Nombre Completo *</Label>
@@ -121,9 +116,7 @@ const OnboardingPersonal = () => {
             required
             autoFocus
           />
-          <p className="text-xs text-muted-foreground">
-            Este nombre aparecerá como el propietario de la tienda
-          </p>
+          <p className="text-xs text-muted-foreground">Este nombre aparecerá como el propietario de la tienda</p>
         </div>
 
         <div className="space-y-2">
@@ -136,9 +129,7 @@ const OnboardingPersonal = () => {
             onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
             required
           />
-          <p className="text-xs text-muted-foreground">
-            Lo usaremos para notificaciones importantes sobre tu tienda
-          </p>
+          <p className="text-xs text-muted-foreground">Lo usaremos para notificaciones importantes sobre tu tienda</p>
         </div>
 
         <div className="flex justify-end pt-4">

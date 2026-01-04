@@ -24,7 +24,12 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
-import { useStoreExtraGroups, useCreateExtraGroup, useUpdateExtraGroup, useDeleteExtraGroup } from '@/hooks/useExtraGroups';
+import {
+  useStoreExtraGroups,
+  useCreateExtraGroup,
+  useUpdateExtraGroup,
+  useDeleteExtraGroup,
+} from '@/hooks/useExtraGroups';
 import { useStore } from '@/contexts/StoreContext';
 import type { ExtraGroup, SelectionType } from '@/types/extras';
 
@@ -135,7 +140,7 @@ export function ExtraGroupsManager({ categoryId, showCategoryFilter = true }: Ex
       }
       handleCloseDialog();
     } catch (error) {
-      console.error('Error saving group:', error);
+      throw new Error(error as string | undefined);
     }
   };
 
@@ -144,7 +149,7 @@ export function ExtraGroupsManager({ categoryId, showCategoryFilter = true }: Ex
       try {
         await deleteGroup.mutateAsync(groupId);
       } catch (error) {
-        console.error('Error deleting group:', error);
+        throw new Error(error as string | undefined);
       }
     }
   };
@@ -159,9 +164,7 @@ export function ExtraGroupsManager({ categoryId, showCategoryFilter = true }: Ex
       <div className="flex items-center justify-between">
         <div>
           <h3 className="text-lg font-semibold">Grupos de Extras</h3>
-          <p className="text-sm text-muted-foreground">
-            Organiza los extras en grupos con reglas de validación
-          </p>
+          <p className="text-sm text-muted-foreground">Organiza los extras en grupos con reglas de validación</p>
         </div>
         <Button onClick={() => handleOpenDialog()} size="sm">
           <Plus className="w-4 h-4 mr-2" />
@@ -172,11 +175,7 @@ export function ExtraGroupsManager({ categoryId, showCategoryFilter = true }: Ex
       {/* Filter (only if showCategoryFilter is true and no categoryId) */}
       {showCategoryFilter && !categoryId && (
         <div className="flex gap-2">
-          <Button
-            variant={filterType === 'all' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setFilterType('all')}
-          >
+          <Button variant={filterType === 'all' ? 'default' : 'outline'} size="sm" onClick={() => setFilterType('all')}>
             Todos
           </Button>
           <Button
@@ -246,9 +245,7 @@ export function ExtraGroupsManager({ categoryId, showCategoryFilter = true }: Ex
                 <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
                   <div className="flex items-center gap-1">
                     <List className="w-3 h-3" />
-                    <span>
-                      {group.selection_type === 'single' ? 'Selección única' : 'Selección múltiple'}
-                    </span>
+                    <span>{group.selection_type === 'single' ? 'Selección única' : 'Selección múltiple'}</span>
                   </div>
                   {group.min_selections > 0 && <span>Mín: {group.min_selections}</span>}
                   {group.max_selections && <span>Máx: {group.max_selections}</span>}
@@ -357,9 +354,7 @@ export function ExtraGroupsManager({ categoryId, showCategoryFilter = true }: Ex
                 onChange={(e) => setFormData({ ...formData, min_selections: parseInt(e.target.value) || 0 })}
                 disabled={formData.selection_type === 'single'}
               />
-              <p className="text-xs text-muted-foreground">
-                Número mínimo de opciones que el cliente debe seleccionar
-              </p>
+              <p className="text-xs text-muted-foreground">Número mínimo de opciones que el cliente debe seleccionar</p>
             </div>
 
             {/* Max Selections */}
@@ -376,9 +371,7 @@ export function ExtraGroupsManager({ categoryId, showCategoryFilter = true }: Ex
                 placeholder="Sin límite"
                 disabled={formData.selection_type === 'single'}
               />
-              <p className="text-xs text-muted-foreground">
-                Número máximo de opciones. Dejar vacío para sin límite
-              </p>
+              <p className="text-xs text-muted-foreground">Número máximo de opciones. Dejar vacío para sin límite</p>
             </div>
 
             {/* Display Order */}

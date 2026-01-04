@@ -16,8 +16,6 @@ export const ChatwootControl = () => {
   const handleOpen = () => {
     if (window.$chatwoot) {
       window.$chatwoot.toggle('open');
-    } else {
-      console.warn('Chatwoot not loaded yet');
     }
   };
 
@@ -34,7 +32,6 @@ export const ChatwootControl = () => {
         name: 'Demo User',
         phone_number: '+1234567890',
       });
-      console.log('User set successfully');
     }
   };
 
@@ -45,14 +42,12 @@ export const ChatwootControl = () => {
         subscription: 'premium',
         last_order: new Date().toISOString(),
       });
-      console.log('Custom attributes set');
     }
   };
 
   const handleReset = () => {
     if (window.$chatwoot) {
       window.$chatwoot.reset();
-      console.log('Chatwoot reset');
     }
   };
 

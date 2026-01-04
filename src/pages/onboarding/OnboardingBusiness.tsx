@@ -131,7 +131,6 @@ const OnboardingBusiness = () => {
       setLogoPreview(URL.createObjectURL(file));
       toast.success('Logo subido correctamente');
     } catch (error) {
-      console.error('Error uploading logo:', error);
       toast.error('Error al subir el logo');
     } finally {
       setUploadingLogo(false);
@@ -174,7 +173,6 @@ const OnboardingBusiness = () => {
       toast.success('Información guardada');
       navigate('/onboarding/subdomain');
     } catch (error) {
-      console.error('Error saving business info:', error);
       toast.error('Error al guardar la información');
     } finally {
       setLoading(false);
@@ -193,7 +191,11 @@ const OnboardingBusiness = () => {
   }
 
   return (
-    <OnboardingLayout currentStep={2} title="Información del Negocio" description="Configura los detalles de tu empresa">
+    <OnboardingLayout
+      currentStep={2}
+      title="Información del Negocio"
+      description="Configura los detalles de tu empresa"
+    >
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Logo Upload */}
         <div className="space-y-2">

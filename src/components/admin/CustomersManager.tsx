@@ -116,7 +116,6 @@ const CustomersManager = () => {
       setCustomers(customersArray);
       setFilteredCustomers(customersArray);
     } catch (error) {
-      console.error("Error fetching customers:", error);
       toast.error("Error al cargar clientes");
     } finally {
       setLoading(false);
@@ -173,7 +172,6 @@ const CustomersManager = () => {
       setEditDialogOpen(false);
       fetchCustomers();
     } catch (error: unknown) {
-      console.error("Error updating customer:", error);
       const err = error as { code?: string };
       if (err.code === "23505") {
         toast.error("Este email ya está en uso por otro cliente");
@@ -230,7 +228,6 @@ const CustomersManager = () => {
       setMergeDialogOpen(false);
       fetchCustomers();
     } catch (error) {
-      console.error("Error merging customers:", error);
       toast.error("Error al fusionar clientes");
     }
   };

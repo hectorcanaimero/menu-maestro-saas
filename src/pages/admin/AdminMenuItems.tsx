@@ -35,7 +35,6 @@ const AdminMenuItems = () => {
         .maybeSingle();
 
       if (roleError) {
-        console.error("Error checking role:", roleError);
         toast.error("Error verificando permisos");
         navigate("/");
         return;
@@ -49,7 +48,6 @@ const AdminMenuItems = () => {
 
       setIsAdmin(true);
     } catch (error) {
-      console.error("Error in checkAuth:", error);
       navigate("/auth");
     } finally {
       setLoading(false);

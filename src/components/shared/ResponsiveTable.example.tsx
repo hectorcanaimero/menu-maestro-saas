@@ -5,11 +5,11 @@
  * with different types of data.
  */
 
-import { ResponsiveTable, ColumnDef } from "./ResponsiveTable";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Pencil, Trash2, Package } from "lucide-react";
+import { ResponsiveTable, ColumnDef } from './ResponsiveTable';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Pencil, Trash2, Package } from 'lucide-react';
 
 // ============================================
 // Example 1: Categories Table
@@ -26,26 +26,24 @@ interface Category {
 // Define columns for desktop view
 const categoryColumns: ColumnDef<Category>[] = [
   {
-    id: "name",
-    header: "Nombre",
+    id: 'name',
+    header: 'Nombre',
     cell: (category) => <span className="font-medium">{category.name}</span>,
   },
   {
-    id: "description",
-    header: "Descripción",
-    cell: (category) => (
-      <span className="max-w-xs truncate">{category.description || "-"}</span>
-    ),
-    cellClassName: "max-w-xs truncate",
+    id: 'description',
+    header: 'Descripción',
+    cell: (category) => <span className="max-w-xs truncate">{category.description || '-'}</span>,
+    cellClassName: 'max-w-xs truncate',
   },
   {
-    id: "order",
-    header: "Orden",
+    id: 'order',
+    header: 'Orden',
     cell: (category) => category.display_order,
   },
   {
-    id: "products",
-    header: "Productos",
+    id: 'products',
+    header: 'Productos',
     cell: (category) => (
       <Badge variant="outline" className="flex items-center gap-1 w-fit">
         <Package className="h-3 w-3" />
@@ -54,10 +52,10 @@ const categoryColumns: ColumnDef<Category>[] = [
     ),
   },
   {
-    id: "actions",
-    header: "Acciones",
-    headerClassName: "text-right",
-    cellClassName: "text-right",
+    id: 'actions',
+    header: 'Acciones',
+    headerClassName: 'text-right',
+    cellClassName: 'text-right',
     cell: (category) => (
       <div className="flex justify-end gap-2">
         <Button variant="ghost" size="icon">
@@ -80,9 +78,7 @@ function CategoryMobileCard({ category }: { category: Category }) {
           <div className="flex-1 min-w-0">
             <h3 className="font-semibold text-base truncate">{category.name}</h3>
             {category.description && (
-              <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
-                {category.description}
-              </p>
+              <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{category.description}</p>
             )}
           </div>
           <Badge variant="outline" className="flex items-center gap-1 shrink-0">
@@ -115,16 +111,16 @@ function CategoryMobileCard({ category }: { category: Category }) {
 export function CategoriesTableExample() {
   const categories: Category[] = [
     {
-      id: "1",
-      name: "Pizzas",
-      description: "Deliciosas pizzas artesanales",
+      id: '1',
+      name: 'Pizzas',
+      description: 'Deliciosas pizzas artesanales',
       display_order: 1,
       product_count: 12,
     },
     {
-      id: "2",
-      name: "Bebidas",
-      description: "Refrescos y jugos naturales",
+      id: '2',
+      name: 'Bebidas',
+      description: 'Refrescos y jugos naturales',
       display_order: 2,
       product_count: 8,
     },
@@ -157,28 +153,24 @@ interface Order {
 
 const orderColumns: ColumnDef<Order>[] = [
   {
-    id: "order_number",
-    header: "Número",
+    id: 'order_number',
+    header: 'Número',
     cell: (order) => <span className="font-medium">#{order.order_number}</span>,
   },
   {
-    id: "customer",
-    header: "Cliente",
+    id: 'customer',
+    header: 'Cliente',
     cell: (order) => order.customer_name,
   },
   {
-    id: "total",
-    header: "Total",
+    id: 'total',
+    header: 'Total',
     cell: (order) => <span className="font-bold">$ {order.total_amount.toFixed(2)}</span>,
   },
   {
-    id: "status",
-    header: "Estado",
-    cell: (order) => (
-      <Badge variant={order.status === "delivered" ? "secondary" : "outline"}>
-        {order.status}
-      </Badge>
-    ),
+    id: 'status',
+    header: 'Estado',
+    cell: (order) => <Badge variant={order.status === 'delivered' ? 'secondary' : 'outline'}>{order.status}</Badge>,
   },
 ];
 
@@ -208,7 +200,7 @@ export function OrdersTableExample() {
       getRowKey={(order) => order.id}
       loading={false}
       emptyMessage="No hay órdenes disponibles"
-      onRowClick={(order) => console.log("Clicked order:", order.id)}
+      onRowClick={(order) => null}
     />
   );
 }

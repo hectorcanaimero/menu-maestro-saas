@@ -63,7 +63,6 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
       } = await supabase.auth.getSession();
 
       if (sessionError || !session) {
-        console.error('No session found:', sessionError);
         navigate('/auth', { replace: true });
         return;
       }
@@ -71,7 +70,6 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
       // LAYER 2: Check if store is available
       setVerificationStep('store');
       if (!store) {
-        console.warn('[ProtectedRoute] No store found after retries');
         setAuthError('no_store');
         setIsVerifying(false);
         return;
@@ -84,11 +82,8 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
       })) as { data: AuthorizationResult[] | null; error: unknown };
 
       if (error) {
-        console.error('RPC error:', error);
-
         // Fallback to client-side check if RPC fails
         if (isStoreOwner) {
-          console.warn('RPC failed, falling back to client-side check');
           setIsAuthorized(true);
           setIsVerifying(false);
           return;
@@ -104,7 +99,6 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
       }
 
       if (!authResult.can_access) {
-        console.warn('Authorization denied:', authResult.reason);
         setAuthError(authResult.reason);
         setIsAuthorized(false);
 
@@ -123,7 +117,6 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
       setIsAuthorized(true);
       setAuthError(null);
     } catch (error) {
-      console.error('Error in verifyAccess:', error);
       setAuthError('verification_error');
       setIsAuthorized(false);
       toast.error('Error verificando permisos');
@@ -143,8 +136,6 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
     // If no store and we haven't exhausted retries, wait and retry
     if (!store && reloadAttemptRef.current < maxRetries) {
       reloadAttemptRef.current += 1;
-      console.log(`[ProtectedRoute] No store yet, retry ${reloadAttemptRef.current}/${maxRetries}`);
-
       const timeout = setTimeout(() => {
         // Force re-run of this effect by updating a dependency indirectly
         // The store context should have reloaded by now

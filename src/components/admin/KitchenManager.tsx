@@ -99,7 +99,6 @@ const KitchenManager = () => {
       setOrders((data || []) as Order[]);
       setFilteredOrders((data || []) as Order[]);
     } catch (error) {
-      console.error('Error fetching orders:', error);
       toast.error('Error al cargar pedidos');
     } finally {
       setLoading(false);
@@ -137,7 +136,6 @@ const KitchenManager = () => {
       toast.success('Estado actualizado');
       fetchOrders();
     } catch (error) {
-      console.error('Error updating order:', error);
       toast.error('Error al actualizar estado');
     }
   };

@@ -60,7 +60,6 @@ export default function DriverLogin() {
       toast.success(`¡Bienvenido, ${driver.name}!`);
       navigate('/driver/dashboard');
     } catch (error: any) {
-      console.error('Login error:', error);
       toast.error('Error al iniciar sesión');
     } finally {
       setLoading(false);
@@ -97,15 +96,11 @@ export default function DriverLogin() {
           <CardContent className="space-y-4">
             <div className="p-4 bg-muted rounded-lg">
               <Body size="small" className="text-muted-foreground text-center">
-                El módulo de Delivery Avanzado con motoristas está disponible en planes Enterprise.
-                Contacta con el administrador de la plataforma para más información.
+                El módulo de Delivery Avanzado con motoristas está disponible en planes Enterprise. Contacta con el
+                administrador de la plataforma para más información.
               </Body>
             </div>
-            <Button
-              variant="outline"
-              className="w-full"
-              onClick={() => navigate('/')}
-            >
+            <Button variant="outline" className="w-full" onClick={() => navigate('/')}>
               Volver al Inicio
             </Button>
           </CardContent>

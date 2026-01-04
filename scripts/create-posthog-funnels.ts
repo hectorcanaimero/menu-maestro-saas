@@ -13,8 +13,6 @@ const POSTHOG_PROJECT_ID = '185811';
 const POSTHOG_API_KEY = process.env.VITE_POSTHOG_API_KEY || process.env.VITE_POSTHOG_PERSONAL_KEY || '';
 
 if (!POSTHOG_API_KEY) {
-  console.error('❌ Error: POSTHOG_API_KEY is not set');
-  console.error('Set VITE_POSTHOG_API_KEY or VITE_POSTHOG_PERSONAL_KEY in your environment');
   process.exit(1);
 }
 
@@ -30,33 +28,26 @@ interface PostHogInsight {
 async function createInsight(insight: PostHogInsight): Promise<any> {
   const url = `${POSTHOG_HOST}/api/projects/${POSTHOG_PROJECT_ID}/insights/`;
 
-  console.log(`\n📊 Creating insight: ${insight.name}`);
-
   try {
     const response = await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${POSTHOG_API_KEY}`,
+        Authorization: `Bearer ${POSTHOG_API_KEY}`,
       },
       body: JSON.stringify(insight),
     });
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error(`❌ Failed to create insight: ${response.status} ${response.statusText}`);
-      console.error('Error details:', errorText);
+
       return null;
     }
 
     const data = await response.json();
-    console.log(`✅ Created insight: ${insight.name}`);
-    console.log(`   ID: ${data.id}`);
-    console.log(`   Short ID: ${data.short_id}`);
-    console.log(`   URL: ${POSTHOG_HOST}/project/${POSTHOG_PROJECT_ID}/insights/${data.short_id}`);
+
     return data;
   } catch (error) {
-    console.error(`❌ Error creating insight:`, error);
     return null;
   }
 }
@@ -372,19 +363,12 @@ async function createInsight3() {
  * Main function to create all funnels and insights
  */
 async function main() {
-  console.log('🚀 PostHog Funnel & Insight Creator');
-  console.log('=====================================\n');
-  console.log(`Project ID: ${POSTHOG_PROJECT_ID}`);
-  console.log(`API Host: ${POSTHOG_HOST}`);
-
   const results = {
     funnels: [] as any[],
     insights: [] as any[],
   };
 
   // Create Funnels
-  console.log('\n\n📈 CREATING FUNNELS');
-  console.log('===================');
 
   const funnel1 = await createFunnel1();
   if (funnel1) results.funnels.push(funnel1);
@@ -399,8 +383,6 @@ async function main() {
   if (funnel3) results.funnels.push(funnel3);
 
   // Create Insights
-  console.log('\n\n📊 CREATING INSIGHTS');
-  console.log('====================');
 
   const insight1 = await createInsight1();
   if (insight1) results.insights.push(insight1);
@@ -411,35 +393,16 @@ async function main() {
   const insight3 = await createInsight3();
   if (insight3) results.insights.push(insight3);
 
-  // Summary
-  console.log('\n\n✨ SUMMARY');
-  console.log('==========');
-  console.log(`✅ Created ${results.funnels.length} funnels`);
-  console.log(`✅ Created ${results.insights.length} insights`);
-  console.log(`\n🔗 View in PostHog: ${POSTHOG_HOST}/project/${POSTHOG_PROJECT_ID}/insights`);
-
-  console.log('\n\n📋 CREATED ITEMS:');
-  console.log('=================');
-
   if (results.funnels.length > 0) {
-    console.log('\nFunnels:');
-    results.funnels.forEach((f, i) => {
-      console.log(`${i + 1}. ${f.name}`);
-      console.log(`   URL: ${POSTHOG_HOST}/project/${POSTHOG_PROJECT_ID}/insights/${f.short_id}`);
-    });
+    results.funnels.forEach((f, i) => {});
   }
 
   if (results.insights.length > 0) {
-    console.log('\nInsights:');
-    results.insights.forEach((ins, i) => {
-      console.log(`${i + 1}. ${ins.name}`);
-      console.log(`   URL: ${POSTHOG_HOST}/project/${POSTHOG_PROJECT_ID}/insights/${ins.short_id}`);
-    });
+    results.insights.forEach((ins, i) => {});
   }
 }
 
 // Run the script
-main().catch(error => {
-  console.error('\n❌ Fatal error:', error);
+main().catch((error) => {
   process.exit(1);
 });

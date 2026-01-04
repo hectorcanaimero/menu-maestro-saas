@@ -76,7 +76,6 @@ function PlansManager() {
       setEditingPlan(null);
     } catch (error) {
       // Error is already handled by the mutation's onError
-      console.error('[PlansManager] Error updating plan:', error);
     }
   };
 

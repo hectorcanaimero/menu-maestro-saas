@@ -161,7 +161,7 @@ export default function AdminExtraGroups() {
       }
       handleCloseGroupDialog();
     } catch (error) {
-      console.error('Error saving group:', error);
+      //
     }
   };
 
@@ -170,7 +170,7 @@ export default function AdminExtraGroups() {
       try {
         await deleteGroup.mutateAsync(groupId);
       } catch (error) {
-        console.error('Error deleting group:', error);
+        //
       }
     }
   };
@@ -203,9 +203,7 @@ export default function AdminExtraGroups() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold">Grupos de Extras</h1>
-            <p className="text-muted-foreground mt-1">
-              Crea grupos de extras con sus opciones y precios
-            </p>
+            <p className="text-muted-foreground mt-1">Crea grupos de extras con sus opciones y precios</p>
           </div>
           <Button onClick={() => handleOpenGroupDialog()}>
             <Plus className="w-4 h-4 mr-2" />
@@ -408,7 +406,12 @@ function GroupCard({
               <Button variant="outline" size="sm" onClick={onEdit}>
                 <Edit className="w-3 h-3" />
               </Button>
-              <Button variant="outline" size="sm" className="text-destructive hover:text-destructive" onClick={onDelete}>
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-destructive hover:text-destructive"
+                onClick={onDelete}
+              >
                 <Trash2 className="w-3 h-3" />
               </Button>
             </div>
@@ -617,7 +620,7 @@ function ExtrasDialog({
       setExtraPrice('');
       refetchExtras();
     } catch (error) {
-      console.error('Error creating extra:', error);
+      //
     }
   };
 
@@ -637,7 +640,7 @@ function ExtrasDialog({
       setExtraPrice('');
       refetchExtras();
     } catch (error) {
-      console.error('Error updating extra:', error);
+      //
     }
   };
 
@@ -648,7 +651,7 @@ function ExtrasDialog({
       await deleteExtra.mutateAsync(extraId);
       refetchExtras();
     } catch (error) {
-      console.error('Error deleting extra:', error);
+      //
     }
   };
 

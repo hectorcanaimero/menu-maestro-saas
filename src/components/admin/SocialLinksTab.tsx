@@ -50,7 +50,6 @@ export const SocialLinksTab = ({ storeId }: SocialLinksTabProps) => {
       if (error) throw error;
       setLinks(data || []);
     } catch (error) {
-      console.error('Error fetching social links:', error);
       toast.error('Error al cargar redes sociales');
     }
   };
@@ -84,7 +83,6 @@ export const SocialLinksTab = ({ storeId }: SocialLinksTabProps) => {
       setNewLink({ platform: '', url: '' });
       fetchLinks();
     } catch (error) {
-      console.error('Error adding social link:', error);
       toast.error('Error al agregar red social');
     } finally {
       setLoading(false);
@@ -101,7 +99,6 @@ export const SocialLinksTab = ({ storeId }: SocialLinksTabProps) => {
       toast.success('Red social eliminada');
       fetchLinks();
     } catch (error) {
-      console.error('Error deleting social link:', error);
       toast.error('Error al eliminar red social');
     } finally {
       setLoading(false);
@@ -117,7 +114,6 @@ export const SocialLinksTab = ({ storeId }: SocialLinksTabProps) => {
       if (error) throw error;
       toast.success('URL actualizada');
     } catch (error) {
-      console.error('Error updating social link:', error);
       toast.error('Error al actualizar URL');
     }
   };

@@ -56,7 +56,6 @@ const Auth = () => {
 
       if (event === 'SIGNED_OUT') {
         // Clear any stored data
-        console.log('User signed out');
       }
       // SIGNED_IN event redirect is handled in handleLogin, not here
     });
@@ -95,12 +94,7 @@ const Auth = () => {
 
       // Debug logging in development
       if (import.meta.env.DEV) {
-        console.log('[AUTH DEBUG]', {
-          email: loginData.email,
-          userId: data.session.user.id,
-          userStore,
-          storeError,
-        });
+        //
       }
 
       if (!userStore) {
@@ -135,7 +129,6 @@ const Auth = () => {
       // Redirect to the user's store admin with session token
       window.location.href = storeAdminUrl.toString();
     } catch (error) {
-      console.error('Error during login:', error);
       toast.error('Error al iniciar sesión');
       setIsLoading(false);
     }

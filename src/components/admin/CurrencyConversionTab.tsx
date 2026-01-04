@@ -1,17 +1,17 @@
-import { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Switch } from "@/components/ui/switch";
-import { toast } from "sonner";
-import { Loader2, RefreshCw, TrendingUp, Calendar } from "lucide-react";
-import { updateExchangeRates, getLatestExchangeRate } from "@/lib/bcv-fetcher";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useEffect, useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { supabase } from '@/integrations/supabase/client';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Switch } from '@/components/ui/switch';
+import { toast } from 'sonner';
+import { Loader2, RefreshCw, TrendingUp, Calendar } from 'lucide-react';
+import { updateExchangeRates, getLatestExchangeRate } from '@/lib/bcv-fetcher';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 const currencyConversionSchema = z.object({
   enable_currency_conversion: z.boolean(),
@@ -58,9 +58,9 @@ export function CurrencyConversionTab({ storeId, initialData }: CurrencyConversi
     },
   });
 
-  const enableConversion = watch("enable_currency_conversion");
-  const useManual = watch("use_manual_exchange_rate");
-  const activeCurrency = watch("active_currency");
+  const enableConversion = watch('enable_currency_conversion');
+  const useManual = watch('use_manual_exchange_rate');
+  const activeCurrency = watch('active_currency');
 
   // Load BCV rates on mount
   useEffect(() => {
@@ -69,17 +69,17 @@ export function CurrencyConversionTab({ storeId, initialData }: CurrencyConversi
 
   // Sync with initialData changes
   useEffect(() => {
-    setValue("enable_currency_conversion", initialData.enable_currency_conversion ?? false);
-    setValue("use_manual_exchange_rate", initialData.use_manual_exchange_rate ?? false);
-    setValue("manual_usd_ves_rate", initialData.manual_usd_ves_rate);
-    setValue("manual_eur_ves_rate", initialData.manual_eur_ves_rate);
+    setValue('enable_currency_conversion', initialData.enable_currency_conversion ?? false);
+    setValue('use_manual_exchange_rate', initialData.use_manual_exchange_rate ?? false);
+    setValue('manual_usd_ves_rate', initialData.manual_usd_ves_rate);
+    setValue('manual_eur_ves_rate', initialData.manual_eur_ves_rate);
   }, [initialData, setValue]);
 
   async function loadBCVRates() {
     try {
       const [usdData, eurData] = await Promise.all([
-        getLatestExchangeRate("USD", "VES", storeId),
-        getLatestExchangeRate("EUR", "VES", storeId),
+        getLatestExchangeRate('USD', 'VES', storeId),
+        getLatestExchangeRate('EUR', 'VES', storeId),
       ]);
 
       setBcvRates({
@@ -87,7 +87,7 @@ export function CurrencyConversionTab({ storeId, initialData }: CurrencyConversi
         eur: eurData ? { rate: eurData.rate, lastUpdate: eurData.lastUpdate } : undefined,
       });
     } catch (error) {
-      console.error("Error loading BCV rates:", error);
+      //
     }
   }
 
@@ -97,18 +97,18 @@ export function CurrencyConversionTab({ storeId, initialData }: CurrencyConversi
       const result = await updateExchangeRates(storeId);
 
       if (result.success) {
-        toast.success("Tasas actualizadas desde el BCV", {
+        toast.success('Tasas actualizadas desde el BCV', {
           description: `USD: ${result.usdRate?.toFixed(2)} | EUR: ${result.eurRate?.toFixed(2)}`,
         });
         await loadBCVRates();
       } else {
-        toast.error("Error al actualizar tasas", {
-          description: result.error || "No se pudieron obtener las tasas del BCV",
+        toast.error('Error al actualizar tasas', {
+          description: result.error || 'No se pudieron obtener las tasas del BCV',
         });
       }
     } catch (error) {
-      toast.error("Error al actualizar tasas", {
-        description: error instanceof Error ? error.message : "Error desconocido",
+      toast.error('Error al actualizar tasas', {
+        description: error instanceof Error ? error.message : 'Error desconocido',
       });
     } finally {
       setIsRefreshing(false);
@@ -118,7 +118,7 @@ export function CurrencyConversionTab({ storeId, initialData }: CurrencyConversi
   async function onSubmit(data: CurrencyConversionForm) {
     try {
       const { error } = await supabase
-        .from("stores")
+        .from('stores')
         .update({
           enable_currency_conversion: data.enable_currency_conversion,
           use_manual_exchange_rate: data.use_manual_exchange_rate,
@@ -126,29 +126,28 @@ export function CurrencyConversionTab({ storeId, initialData }: CurrencyConversi
           manual_eur_ves_rate: data.manual_eur_ves_rate,
           active_currency: data.active_currency,
         })
-        .eq("id", storeId);
+        .eq('id', storeId);
 
       if (error) throw error;
 
-      toast.success("Configuración de conversión guardada");
+      toast.success('Configuración de conversión guardada');
 
       // Reload the page to apply changes
       setTimeout(() => {
         window.location.reload();
       }, 1000);
     } catch (error) {
-      console.error("Error saving currency conversion settings:", error);
-      toast.error("Error al guardar configuración", {
-        description: error instanceof Error ? error.message : "Error desconocido",
+      toast.error('Error al guardar configuración', {
+        description: error instanceof Error ? error.message : 'Error desconocido',
       });
     }
   }
 
   function formatDate(dateString: string) {
     const date = new Date(dateString);
-    return date.toLocaleString("es-VE", {
-      dateStyle: "short",
-      timeStyle: "short",
+    return date.toLocaleString('es-VE', {
+      dateStyle: 'short',
+      timeStyle: 'short',
     });
   }
 
@@ -158,9 +157,7 @@ export function CurrencyConversionTab({ storeId, initialData }: CurrencyConversi
       <Card>
         <CardHeader>
           <CardTitle>Conversión de Moneda</CardTitle>
-          <CardDescription>
-            Activa la conversión automática de precios en USD o EUR a bolívares (VES)
-          </CardDescription>
+          <CardDescription>Activa la conversión automática de precios en USD o EUR a bolívares (VES)</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between">
@@ -175,7 +172,7 @@ export function CurrencyConversionTab({ storeId, initialData }: CurrencyConversi
             <Switch
               id="enable_currency_conversion"
               checked={enableConversion}
-              onCheckedChange={(checked) => setValue("enable_currency_conversion", checked)}
+              onCheckedChange={(checked) => setValue('enable_currency_conversion', checked)}
             />
           </div>
 
@@ -184,8 +181,8 @@ export function CurrencyConversionTab({ storeId, initialData }: CurrencyConversi
               <Alert>
                 <TrendingUp className="h-4 w-4" />
                 <AlertDescription>
-                  Los precios se mostrarán en ambas monedas: original (USD/EUR) arriba y VES abajo.
-                  Selecciona cuál usar para el checkout.
+                  Los precios se mostrarán en ambas monedas: original (USD/EUR) arriba y VES abajo. Selecciona cuál usar
+                  para el checkout.
                 </AlertDescription>
               </Alert>
 
@@ -197,11 +194,11 @@ export function CurrencyConversionTab({ storeId, initialData }: CurrencyConversi
                 <div className="grid grid-cols-2 gap-3">
                   <button
                     type="button"
-                    onClick={() => setValue("active_currency", "original")}
+                    onClick={() => setValue('active_currency', 'original')}
                     className={`p-4 border-2 rounded-lg transition-all ${
-                      activeCurrency === "original"
-                        ? "border-primary bg-primary/5"
-                        : "border-border hover:border-primary/50"
+                      activeCurrency === 'original'
+                        ? 'border-primary bg-primary/5'
+                        : 'border-border hover:border-primary/50'
                     }`}
                   >
                     <div className="font-medium">Moneda Original</div>
@@ -209,11 +206,9 @@ export function CurrencyConversionTab({ storeId, initialData }: CurrencyConversi
                   </button>
                   <button
                     type="button"
-                    onClick={() => setValue("active_currency", "VES")}
+                    onClick={() => setValue('active_currency', 'VES')}
                     className={`p-4 border-2 rounded-lg transition-all ${
-                      activeCurrency === "VES"
-                        ? "border-primary bg-primary/5"
-                        : "border-border hover:border-primary/50"
+                      activeCurrency === 'VES' ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'
                     }`}
                   >
                     <div className="font-medium">Bolívares</div>
@@ -237,13 +232,7 @@ export function CurrencyConversionTab({ storeId, initialData }: CurrencyConversi
                   Tasas oficiales del Banco Central de Venezuela • Actualización automática cada hora
                 </CardDescription>
               </div>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={handleRefreshRates}
-                disabled={isRefreshing}
-              >
+              <Button type="button" variant="outline" size="sm" onClick={handleRefreshRates} disabled={isRefreshing}>
                 {isRefreshing ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -264,9 +253,7 @@ export function CurrencyConversionTab({ storeId, initialData }: CurrencyConversi
               <div className="space-y-2 rounded-lg border p-4">
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium">USD → VES</span>
-                  {bcvRates.usd && (
-                    <span className="text-2xl font-bold">{bcvRates.usd.rate.toFixed(2)}</span>
-                  )}
+                  {bcvRates.usd && <span className="text-2xl font-bold">{bcvRates.usd.rate.toFixed(2)}</span>}
                 </div>
                 {bcvRates.usd ? (
                   <div className="flex items-center text-xs text-muted-foreground">
@@ -282,9 +269,7 @@ export function CurrencyConversionTab({ storeId, initialData }: CurrencyConversi
               <div className="space-y-2 rounded-lg border p-4">
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium">EUR → VES</span>
-                  {bcvRates.eur && (
-                    <span className="text-2xl font-bold">{bcvRates.eur.rate.toFixed(2)}</span>
-                  )}
+                  {bcvRates.eur && <span className="text-2xl font-bold">{bcvRates.eur.rate.toFixed(2)}</span>}
                 </div>
                 {bcvRates.eur ? (
                   <div className="flex items-center text-xs text-muted-foreground">
@@ -305,9 +290,7 @@ export function CurrencyConversionTab({ storeId, initialData }: CurrencyConversi
         <Card>
           <CardHeader>
             <CardTitle>Tasas Manuales</CardTitle>
-            <CardDescription>
-              Configura tus propias tasas de cambio (ignora las tasas del BCV)
-            </CardDescription>
+            <CardDescription>Configura tus propias tasas de cambio (ignora las tasas del BCV)</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between">
@@ -322,7 +305,7 @@ export function CurrencyConversionTab({ storeId, initialData }: CurrencyConversi
               <Switch
                 id="use_manual_exchange_rate"
                 checked={useManual}
-                onCheckedChange={(checked) => setValue("use_manual_exchange_rate", checked)}
+                onCheckedChange={(checked) => setValue('use_manual_exchange_rate', checked)}
               />
             </div>
 
@@ -330,45 +313,37 @@ export function CurrencyConversionTab({ storeId, initialData }: CurrencyConversi
               <div className="grid gap-4 md:grid-cols-2 pt-4">
                 {/* USD Manual Rate */}
                 <div className="space-y-2">
-                  <Label htmlFor="manual_usd_ves_rate">
-                    Tasa USD → VES
-                  </Label>
+                  <Label htmlFor="manual_usd_ves_rate">Tasa USD → VES</Label>
                   <Input
                     id="manual_usd_ves_rate"
                     type="number"
                     step="0.01"
                     placeholder="Ej: 260.00"
-                    {...register("manual_usd_ves_rate", { valueAsNumber: true })}
+                    {...register('manual_usd_ves_rate', { valueAsNumber: true })}
                   />
                   {errors.manual_usd_ves_rate && (
-                    <p className="text-sm text-destructive">
-                      {errors.manual_usd_ves_rate.message}
-                    </p>
+                    <p className="text-sm text-destructive">{errors.manual_usd_ves_rate.message}</p>
                   )}
                   <p className="text-xs text-muted-foreground">
-                    Valor actual: {bcvRates.usd ? bcvRates.usd.rate.toFixed(2) : "N/A"}
+                    Valor actual: {bcvRates.usd ? bcvRates.usd.rate.toFixed(2) : 'N/A'}
                   </p>
                 </div>
 
                 {/* EUR Manual Rate */}
                 <div className="space-y-2">
-                  <Label htmlFor="manual_eur_ves_rate">
-                    Tasa EUR → VES
-                  </Label>
+                  <Label htmlFor="manual_eur_ves_rate">Tasa EUR → VES</Label>
                   <Input
                     id="manual_eur_ves_rate"
                     type="number"
                     step="0.01"
                     placeholder="Ej: 310.00"
-                    {...register("manual_eur_ves_rate", { valueAsNumber: true })}
+                    {...register('manual_eur_ves_rate', { valueAsNumber: true })}
                   />
                   {errors.manual_eur_ves_rate && (
-                    <p className="text-sm text-destructive">
-                      {errors.manual_eur_ves_rate.message}
-                    </p>
+                    <p className="text-sm text-destructive">{errors.manual_eur_ves_rate.message}</p>
                   )}
                   <p className="text-xs text-muted-foreground">
-                    Valor actual: {bcvRates.eur ? bcvRates.eur.rate.toFixed(2) : "N/A"}
+                    Valor actual: {bcvRates.eur ? bcvRates.eur.rate.toFixed(2) : 'N/A'}
                   </p>
                 </div>
               </div>
@@ -386,7 +361,7 @@ export function CurrencyConversionTab({ storeId, initialData }: CurrencyConversi
               Guardando...
             </>
           ) : (
-            "Guardar configuración"
+            'Guardar configuración'
           )}
         </Button>
       </div>

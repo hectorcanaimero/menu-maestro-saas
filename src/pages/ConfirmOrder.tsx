@@ -127,7 +127,7 @@ const ConfirmOrder = () => {
           timestamp: Date.now(),
         });
       } catch (error) {
-        console.error('[PostHog] Error tracking order_placed:', error);
+        throw new Error(error as string | undefined);
       }
 
       // Handle WhatsApp redirect if configured
@@ -147,7 +147,6 @@ const ConfirmOrder = () => {
       clearCart();
       navigate('/');
     } catch (error) {
-      console.error('Error creating order:', error);
       toast.error('Error al crear el pedido');
     } finally {
       setLoading(false);

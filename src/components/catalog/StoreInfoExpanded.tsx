@@ -102,7 +102,6 @@ export function StoreInfoExpanded({
   const { store } = useStore();
   const { status: storeStatus } = useStoreStatus(store?.id, store?.force_status || null);
   const [socialLinks, setSocialLinks] = useState<SocialLink[]>([]);
-  console.log(store);
   useEffect(() => {
     if (!store?.id) return;
 
@@ -137,24 +136,20 @@ export function StoreInfoExpanded({
             <Clock className="w-5 h-5 text-primary" />
             <h4 className="font-semibold text-foreground">Horarios de atención</h4>
             <Badge
-              variant={storeStatus.isOpen ? "default" : "secondary"}
+              variant={storeStatus.isOpen ? 'default' : 'secondary'}
               className={cn(
-                "font-semibold",
-                storeStatus.isOpen && "bg-green-600 hover:bg-green-700",
-                !storeStatus.isOpen && "bg-red-600 hover:bg-red-700"
+                'font-semibold',
+                storeStatus.isOpen && 'bg-green-600 hover:bg-green-700',
+                !storeStatus.isOpen && 'bg-red-600 hover:bg-red-700',
               )}
             >
-              {storeStatus.isOpen ? "Abierto" : "Cerrado"}
+              {storeStatus.isOpen ? 'Abierto' : 'Cerrado'}
             </Badge>
-            {storeStatus.forceStatus === "force_open" && (
-              <span className="text-xs text-green-600 font-medium">
-                (Forzado abierto)
-              </span>
+            {storeStatus.forceStatus === 'force_open' && (
+              <span className="text-xs text-green-600 font-medium">(Forzado abierto)</span>
             )}
-            {storeStatus.forceStatus === "force_closed" && (
-              <span className="text-xs text-red-600 font-medium">
-                (Forzado cerrado)
-              </span>
+            {storeStatus.forceStatus === 'force_closed' && (
+              <span className="text-xs text-red-600 font-medium">(Forzado cerrado)</span>
             )}
           </div>
           <div className="space-y-2 ml-7">

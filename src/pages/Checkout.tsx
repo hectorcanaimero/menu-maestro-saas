@@ -1,45 +1,46 @@
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
-import { supabase } from "@/integrations/supabase/client";
-import { useCart } from "@/contexts/CartContext";
-import { useStore } from "@/contexts/StoreContext";
-import { useStoreTheme } from "@/hooks/useStoreTheme";
-import { useStoreStatus } from "@/hooks/useStoreStatus";
-import { useCartTotals } from "@/hooks/useCartTotals";
-import { useDeliveryFeeCalculation } from "@/hooks/useDeliveryFeeCalculation";
-import { validateCouponCode, applyCouponDiscount, type Coupon } from "@/hooks/useCoupons";
-import { useFormatPrice } from "@/lib/priceFormatter";
-import { setSecureItem, getSecureItem, type SecureCustomerData } from "@/lib/secureStorage";
-import { StoreClosedDialog } from "@/components/catalog/StoreClosedDialog";
-import { DualPrice } from "@/components/catalog/DualPrice";
-import { useOrderTypeLabels } from "@/hooks/useOrderTypeLabels";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { toast } from "sonner";
-import { ArrowLeft, ArrowRight, Upload, X, Check, Tag, Gift, Copy } from "lucide-react";
-import InputMask from "react-input-mask";
-import posthog from "posthog-js";
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { supabase } from '@/integrations/supabase/client';
+import { useCart } from '@/contexts/CartContext';
+import { useStore } from '@/contexts/StoreContext';
+import { useStoreTheme } from '@/hooks/useStoreTheme';
+import { useStoreStatus } from '@/hooks/useStoreStatus';
+import { useCartTotals } from '@/hooks/useCartTotals';
+import { useDeliveryFeeCalculation } from '@/hooks/useDeliveryFeeCalculation';
+import { validateCouponCode, applyCouponDiscount, type Coupon } from '@/hooks/useCoupons';
+import { useFormatPrice } from '@/lib/priceFormatter';
+import { setSecureItem, getSecureItem, type SecureCustomerData } from '@/lib/secureStorage';
+import { StoreClosedDialog } from '@/components/catalog/StoreClosedDialog';
+import { DualPrice } from '@/components/catalog/DualPrice';
+import { useOrderTypeLabels } from '@/hooks/useOrderTypeLabels';
+import { useShlink } from '@/hooks/useShlink';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { toast } from 'sonner';
+import { ArrowLeft, ArrowRight, Upload, X, Check, Tag, Gift, Copy } from 'lucide-react';
+import InputMask from 'react-input-mask';
+import posthog from 'posthog-js';
 import type {
   PaymentMethod,
   PagoMovilDetails,
   ZelleDetails,
   BinanceDetails,
   OtrosDetails,
-} from "@/types/payment-methods";
+} from '@/types/payment-methods';
 import {
   formatPagoMovilCopyText,
   formatZelleCopyText,
   formatBinanceCopyText,
   formatOtrosCopyText,
-} from "@/types/payment-methods";
+} from '@/types/payment-methods';
 
 interface DeliveryZone {
   id: string;
@@ -52,7 +53,7 @@ interface DeliveryZone {
 // Create validation schema for each step
 const createStepSchema = (
   step: number,
-  orderType: "delivery" | "pickup",
+  orderType: 'delivery' | 'pickup',
   removeZipcode: boolean,
   removeAddressNumber: boolean,
   requirePaymentMethod: boolean,
@@ -63,55 +64,58 @@ const createStepSchema = (
       customer_name: z
         .string()
         .trim()
-        .min(2, { message: "El nombre debe tener al menos 2 caracteres" })
-        .max(100, { message: "El nombre no puede exceder 100 caracteres" }),
+        .min(2, { message: 'El nombre debe tener al menos 2 caracteres' })
+        .max(100, { message: 'El nombre no puede exceder 100 caracteres' }),
       customer_email: z
         .string()
         .trim()
-        .email({ message: "Debe ser un email válido" })
-        .max(255, { message: "El email no puede exceder 255 caracteres" })
+        .email({ message: 'Debe ser un email válido' })
+        .max(255, { message: 'El email no puede exceder 255 caracteres' })
         .optional()
-        .or(z.literal("")),
+        .or(z.literal('')),
       customer_phone: z
         .string()
         .trim()
-        .min(10, { message: "El teléfono debe tener al menos 10 dígitos" })
-        .max(20, { message: "El teléfono no puede exceder 20 caracteres" })
-        .refine((phone) => {
-          // Remove all non-numeric characters for validation
-          const cleanPhone = phone.replace(/\D/g, '');
-          // Venezuelan phone: +58 (XXX) XXX-XXXX = 12 digits total (58 + 10)
-          // Accept 10 digits (local) or 12 digits (with country code)
-          return cleanPhone.length === 10 || cleanPhone.length === 12;
-        }, { message: "Formato de teléfono venezolano inválido. Debe ser +58 (XXX) XXX-XXXX" }),
+        .min(10, { message: 'El teléfono debe tener al menos 10 dígitos' })
+        .max(20, { message: 'El teléfono no puede exceder 20 caracteres' })
+        .refine(
+          (phone) => {
+            // Remove all non-numeric characters for validation
+            const cleanPhone = phone.replace(/\D/g, '');
+            // Venezuelan phone: +58 (XXX) XXX-XXXX = 12 digits total (58 + 10)
+            // Accept 10 digits (local) or 12 digits (with country code)
+            return cleanPhone.length === 10 || cleanPhone.length === 12;
+          },
+          { message: 'Formato de teléfono venezolano inválido. Debe ser +58 (XXX) XXX-XXXX' },
+        ),
     });
   } else if (step === 2) {
     // Step 2: Delivery/pickup/table info
-    if (orderType === "delivery") {
+    if (orderType === 'delivery') {
       const schema: Record<string, z.ZodTypeAny> = {
         delivery_address: z
           .string()
           .trim()
-          .min(5, { message: "La dirección debe tener al menos 5 caracteres" })
-          .max(200, { message: "La dirección no puede exceder 200 caracteres" }),
+          .min(5, { message: 'La dirección debe tener al menos 5 caracteres' })
+          .max(200, { message: 'La dirección no puede exceder 200 caracteres' }),
         address_complement: z.string().optional(),
-        address_neighborhood: z.string().min(1, { message: "Debes seleccionar un barrio" }),
+        address_neighborhood: z.string().min(1, { message: 'Debes seleccionar un barrio' }),
       };
 
       if (!removeAddressNumber) {
         schema.address_number = z
           .string()
           .trim()
-          .min(1, { message: "El número es requerido" })
-          .max(20, { message: "El número no puede exceder 20 caracteres" });
+          .min(1, { message: 'El número es requerido' })
+          .max(20, { message: 'El número no puede exceder 20 caracteres' });
       }
 
       if (!removeZipcode) {
         schema.address_zipcode = z
           .string()
           .trim()
-          .min(4, { message: "El código postal debe tener al menos 4 caracteres" })
-          .max(20, { message: "El código postal no puede exceder 20 caracteres" });
+          .min(4, { message: 'El código postal debe tener al menos 4 caracteres' })
+          .max(20, { message: 'El código postal no puede exceder 20 caracteres' });
       }
 
       return z.object(schema);
@@ -119,11 +123,11 @@ const createStepSchema = (
   } else if (step === 3) {
     // Step 3: Payment + notes
     const schema: Record<string, z.ZodTypeAny> = {
-      notes: z.string().trim().max(500, { message: "Las notas no pueden exceder 500 caracteres" }).optional(),
+      notes: z.string().trim().max(500, { message: 'Las notas no pueden exceder 500 caracteres' }).optional(),
     };
 
     if (requirePaymentMethod) {
-      schema.payment_method = z.string().min(1, { message: "Debes seleccionar un método de pago" });
+      schema.payment_method = z.string().min(1, { message: 'Debes seleccionar un método de pago' });
     }
 
     return z.object(schema);
@@ -162,31 +166,34 @@ const Checkout = () => {
   // Get custom order type labels
   const { getLabel } = useOrderTypeLabels();
 
+  // Shlink hook for URL shortening
+  const { shortenPaymentProof } = useShlink();
+
   const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(false);
   // Fixed to Venezuela only as per PIDEA-81
-  const country = "venezuela";
+  const country = 'venezuela';
   const [paymentProofFile, setPaymentProofFile] = useState<File | null>(null);
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
   const [deliveryZones, setDeliveryZones] = useState<DeliveryZone[]>([]);
-  const [orderType, setOrderType] = useState<"delivery" | "pickup">("delivery");
+  const [orderType, setOrderType] = useState<'delivery' | 'pickup'>('delivery');
   const [showClosedDialog, setShowClosedDialog] = useState(false);
 
   // Coupon state
-  const [couponCode, setCouponCode] = useState("");
+  const [couponCode, setCouponCode] = useState('');
   const [appliedCoupon, setAppliedCoupon] = useState<Coupon | null>(null);
   const [couponDiscount, setCouponDiscount] = useState(0);
   const [validatingCoupon, setValidatingCoupon] = useState(false);
-  const [couponError, setCouponError] = useState("");
+  const [couponError, setCouponError] = useState('');
 
-  const totalSteps = orderType === "pickup" ? 3 : 3; // Same steps for all types
+  const totalSteps = orderType === 'pickup' ? 3 : 3; // Same steps for all types
   const progress = (currentStep / totalSteps) * 100;
 
   // Track checkout_started event when component mounts
   useEffect(() => {
     if (items.length > 0 && store?.id) {
       try {
-        posthog.capture("checkout_started", {
+        posthog.capture('checkout_started', {
           store_id: store.id,
           items_count: items.length,
           total_items: items.reduce((sum, item) => sum + item.quantity, 0),
@@ -194,7 +201,7 @@ const Checkout = () => {
           order_type: orderType,
         });
       } catch (error) {
-        console.error("[PostHog] Error tracking checkout_started:", error);
+        throw new Error('[PostHog] Error tracking checkout_started:' + error);
       }
     }
   }, []); // Only track once on mount
@@ -211,38 +218,40 @@ const Checkout = () => {
       ),
     ),
     defaultValues: {
-      customer_name: "",
-      customer_email: "",
-      customer_phone: "",
-      delivery_address: "",
-      address_number: "",
-      address_complement: "",
-      address_neighborhood: "",
-      address_zipcode: "",
-      table_number: "",
-      notes: "",
-      payment_method: "",
+      customer_name: '',
+      customer_email: '',
+      customer_phone: '',
+      delivery_address: '',
+      address_number: '',
+      address_complement: '',
+      address_neighborhood: '',
+      address_zipcode: '',
+      table_number: '',
+      notes: '',
+      payment_method: '',
     },
-    mode: "onChange",
+    mode: 'onChange',
   });
 
   // Get selected delivery zone
-  const selectedZoneName = form.watch("address_neighborhood");
+  const selectedZoneName = form.watch('address_neighborhood');
   const selectedZone = deliveryZones.find((zone) => zone.zone_name === selectedZoneName) || null;
 
   // Calculate delivery fee with free delivery support
   const deliveryFeeCalc = useDeliveryFeeCalculation(
-    orderType === "delivery" && store ? {
-      delivery_price_mode: store.delivery_price_mode as 'fixed' | 'by_zone',
-      fixed_delivery_price: store.fixed_delivery_price || 0,
-      free_delivery_enabled: store.free_delivery_enabled === true,
-      global_free_delivery_min_amount: store.global_free_delivery_min_amount || null,
-    } : null,
+    orderType === 'delivery' && store
+      ? {
+          delivery_price_mode: store.delivery_price_mode as 'fixed' | 'by_zone',
+          fixed_delivery_price: store.fixed_delivery_price || 0,
+          free_delivery_enabled: store.free_delivery_enabled === true,
+          global_free_delivery_min_amount: store.global_free_delivery_min_amount || null,
+        }
+      : null,
     selectedZone,
-    discountedTotal
+    discountedTotal,
   );
 
-  const deliveryPrice = orderType === "delivery" ? deliveryFeeCalc.deliveryFee : 0;
+  const deliveryPrice = orderType === 'delivery' ? deliveryFeeCalc.deliveryFee : 0;
   const grandTotal = discountedTotal + deliveryPrice - couponDiscount;
 
   // Load saved customer data (encrypted) on mount
@@ -272,7 +281,7 @@ const Checkout = () => {
           }
         }
       } catch (error) {
-        console.error('[SecureStorage] Error loading customer data:', error);
+        throw new Error('[SecureStorage] Error loading customer data:' + error);
         // Fail silently - don't disrupt checkout experience
       }
     };
@@ -285,27 +294,26 @@ const Checkout = () => {
       if (!store?.id) return;
 
       const { data, error } = await supabase
-        .from("payment_methods")
-        .select("id, name, description, payment_type, payment_details")
-        .eq("store_id", store.id)
-        .eq("is_active", true)
-        .order("display_order", { ascending: true });
+        .from('payment_methods')
+        .select('id, name, description, payment_type, payment_details')
+        .eq('store_id', store.id)
+        .eq('is_active', true)
+        .order('display_order', { ascending: true });
 
       if (error) {
-        console.error("Error loading payment methods:", error);
+        throw new Error('Error loading payment methods:' + error);
       } else if (data) {
         // Filter out cash if accept_cash is false
         let filteredMethods = data;
         if (store.accept_cash === false) {
-          filteredMethods = data.filter(method =>
-            !method.name.toLowerCase().includes('efectivo') &&
-            !method.name.toLowerCase().includes('cash')
+          filteredMethods = data.filter(
+            (method) => !method.name.toLowerCase().includes('efectivo') && !method.name.toLowerCase().includes('cash'),
           );
         }
 
         setPaymentMethods(filteredMethods);
         if (filteredMethods.length === 1) {
-          form.setValue("payment_method", filteredMethods[0].name);
+          form.setValue('payment_method', filteredMethods[0].name);
         }
       }
     };
@@ -314,13 +322,13 @@ const Checkout = () => {
       if (!store?.id || store.delivery_price_mode !== 'by_zone') return;
 
       const { data, error } = await supabase
-        .from("delivery_zones")
-        .select("id, zone_name, delivery_price, free_delivery_enabled, free_delivery_min_amount")
-        .eq("store_id", store.id)
-        .order("display_order", { ascending: true });
+        .from('delivery_zones')
+        .select('id, zone_name, delivery_price, free_delivery_enabled, free_delivery_min_amount')
+        .eq('store_id', store.id)
+        .order('display_order', { ascending: true });
 
       if (error) {
-        console.error("Error loading delivery zones:", error);
+        throw new Error('Error loading delivery zones:' + error);
       } else if (data) {
         setDeliveryZones(data);
       }
@@ -330,7 +338,6 @@ const Checkout = () => {
     loadDeliveryZones();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [store?.id, store?.accept_cash, store?.delivery_price_mode]);
-
 
   const handleNext = async () => {
     const isValid = await form.trigger();
@@ -348,7 +355,6 @@ const Checkout = () => {
           };
           await setSecureItem('customer_data', customerData);
         } catch (error) {
-          console.error('[SecureStorage] Error saving customer data:', error);
           // Fail silently - don't disrupt checkout
         }
       }
@@ -369,13 +375,13 @@ const Checkout = () => {
           };
           await setSecureItem('customer_data', customerData);
         } catch (error) {
-          console.error('[SecureStorage] Error saving delivery data:', error);
+          //
         }
       }
 
       // Track checkout step completion
       try {
-        posthog.capture("checkout_step_completed", {
+        posthog.capture('checkout_step_completed', {
           store_id: store?.id,
           step: currentStep,
           order_type: orderType,
@@ -383,7 +389,7 @@ const Checkout = () => {
           cart_value: discountedTotal,
         });
       } catch (error) {
-        console.error("[PostHog] Error tracking checkout_step_completed:", error);
+        //
       }
 
       setCurrentStep(currentStep + 1);
@@ -396,13 +402,13 @@ const Checkout = () => {
     if (currentStep > 1) {
       setCurrentStep(currentStep - 1);
     } else {
-      navigate("/");
+      navigate('/');
     }
   };
 
   const handleSubmit = async () => {
     if (!store?.id) {
-      toast.error("No se pudo identificar la tienda");
+      toast.error('No se pudo identificar la tienda');
       return;
     }
 
@@ -419,8 +425,8 @@ const Checkout = () => {
     }
 
     // Validate payment proof if required (only for delivery and pickup)
-    if (store.require_payment_proof && (orderType === "delivery" || orderType === "pickup") && !paymentProofFile) {
-      toast.error("Debes subir un comprobante de pago");
+    if (store.require_payment_proof && (orderType === 'delivery' || orderType === 'pickup') && !paymentProofFile) {
+      toast.error('Debes subir un comprobante de pago');
       return;
     }
 
@@ -431,26 +437,41 @@ const Checkout = () => {
       } = await supabase.auth.getSession();
 
       let paymentProofUrl = null;
+      let paymentProofShortUrl = null;
+      let paymentProofShortCode = null;
 
       // Upload payment proof if provided
       if (paymentProofFile) {
-        const fileExt = paymentProofFile.name.split(".").pop();
-        const fileName = `${session?.user?.id || "anonymous"}/${Date.now()}.${fileExt}`;
+        const fileExt = paymentProofFile.name.split('.').pop();
+        const fileName = `${session?.user?.id || 'anonymous'}/${Date.now()}.${fileExt}`;
 
         const { data: uploadData, error: uploadError } = await supabase.storage
-          .from("payment-proofs")
+          .from('payment-proofs')
           .upload(fileName, paymentProofFile);
 
         if (uploadError) {
-          console.error("Error uploading payment proof:", uploadError);
-          toast.error("Error al subir el comprobante de pago");
+          toast.error('Error al subir el comprobante de pago');
           setLoading(false);
           return;
         }
 
-        const { data: urlData } = supabase.storage.from("payment-proofs").getPublicUrl(uploadData.path);
+        const { data: urlData } = supabase.storage.from('payment-proofs').getPublicUrl(uploadData.path);
 
         paymentProofUrl = urlData.publicUrl;
+
+        // Try to create shortened URL (non-blocking)
+        try {
+          // Generate temporary order number for title
+          const orderNumberPreview = Date.now().toString(36).toUpperCase().slice(-8);
+          const shortUrlData = await shortenPaymentProof(paymentProofUrl, orderNumberPreview, store?.name || 'Tienda');
+
+          if (shortUrlData) {
+            paymentProofShortUrl = shortUrlData.shortUrl;
+            paymentProofShortCode = shortUrlData.shortCode;
+          }
+        } catch (error) {
+          // Continue with long URL - non-blocking error
+        }
       }
 
       const formData = form.getValues();
@@ -460,18 +481,19 @@ const Checkout = () => {
         ...formData,
         order_type: orderType,
         payment_proof_url: paymentProofUrl,
+        payment_proof_short_url: paymentProofShortUrl,
+        payment_proof_short_code: paymentProofShortCode,
         country: country,
-        delivery_price: orderType === "delivery" ? deliveryPrice : 0,
+        delivery_price: orderType === 'delivery' ? deliveryPrice : 0,
         coupon_code: appliedCoupon?.code || null,
         coupon_discount: couponDiscount,
         coupon_id: appliedCoupon?.id || null,
       };
 
       // Pass order data through navigation state instead of sessionStorage (security)
-      navigate("/confirm-order", { state: { orderData } });
+      navigate('/confirm-order', { state: { orderData } });
     } catch (error) {
-      console.error("Error preparing order:", error);
-      toast.error("Error al preparar el pedido");
+      toast.error('Error al preparar el pedido');
     } finally {
       setLoading(false);
     }
@@ -481,13 +503,13 @@ const Checkout = () => {
     const file = e.target.files?.[0];
     if (file) {
       if (file.size > 5 * 1024 * 1024) {
-        toast.error("El archivo debe ser menor a 5MB");
+        toast.error('El archivo debe ser menor a 5MB');
         return;
       }
 
-      const allowedTypes = ["image/jpeg", "image/png", "image/webp", "application/pdf"];
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'];
       if (!allowedTypes.includes(file.type)) {
-        toast.error("Solo se permiten imágenes (JPG, PNG, WEBP) y PDF");
+        toast.error('Solo se permiten imágenes (JPG, PNG, WEBP) y PDF');
         return;
       }
 
@@ -498,26 +520,26 @@ const Checkout = () => {
   // Validate and apply coupon
   const handleApplyCoupon = async () => {
     if (!couponCode.trim()) {
-      toast.error("Ingresa un código de cupón");
+      toast.error('Ingresa un código de cupón');
       return;
     }
 
     if (!store?.id) {
-      toast.error("Error al validar el cupón");
+      toast.error('Error al validar el cupón');
       return;
     }
 
-    const email = form.getValues("customer_email");
+    const email = form.getValues('customer_email');
 
     setValidatingCoupon(true);
-    setCouponError("");
+    setCouponError('');
 
     try {
-      const result = await validateCouponCode(couponCode.trim(), store.id, email || "", discountedTotal);
+      const result = await validateCouponCode(couponCode.trim(), store.id, email || '', discountedTotal);
 
       if (!result.valid || !result.coupon) {
-        setCouponError(result.error || "Cupón inválido");
-        toast.error(result.error || "Cupón inválido");
+        setCouponError(result.error || 'Cupón inválido');
+        toast.error(result.error || 'Cupón inválido');
         setValidatingCoupon(false);
         return;
       }
@@ -527,9 +549,8 @@ const Checkout = () => {
       setCouponDiscount(discount);
       toast.success(`¡Cupón aplicado! Ahorraste ${formatPrice(discount).original}`);
     } catch (error) {
-      console.error("Error validating coupon:", error);
-      setCouponError("Error al validar el cupón");
-      toast.error("Error al validar el cupón");
+      setCouponError('Error al validar el cupón');
+      toast.error('Error al validar el cupón');
     } finally {
       setValidatingCoupon(false);
     }
@@ -539,26 +560,26 @@ const Checkout = () => {
   const handleRemoveCoupon = () => {
     setAppliedCoupon(null);
     setCouponDiscount(0);
-    setCouponCode("");
-    setCouponError("");
-    toast.info("Cupón removido");
+    setCouponCode('');
+    setCouponError('');
+    toast.info('Cupón removido');
   };
 
   // Venezuelan phone format only (PIDEA-81)
-  const phoneMask = "+58 (999) 999-9999";
-  const phonePlaceholder = "+58 (412) 345-6789";
+  const phoneMask = '+58 (999) 999-9999';
+  const phonePlaceholder = '+58 (412) 345-6789';
 
   if (items.length === 0) {
     return null;
   }
 
   const getStepTitle = () => {
-    if (currentStep === 1) return "Información del Cliente";
+    if (currentStep === 1) return 'Información del Cliente';
     if (currentStep === 2) {
-      if (orderType === "delivery") return `Información de ${getLabel("delivery")}`;
-      return "Confirmar Tipo de Orden";
+      if (orderType === 'delivery') return `Información de ${getLabel('delivery')}`;
+      return 'Confirmar Tipo de Orden';
     }
-    return "Método de Pago";
+    return 'Método de Pago';
   };
 
   return (
@@ -577,10 +598,10 @@ const Checkout = () => {
                   key={step}
                   className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
                     step < currentStep
-                      ? "bg-primary text-primary-foreground"
+                      ? 'bg-primary text-primary-foreground'
                       : step === currentStep
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-muted text-muted-foreground"
+                      ? 'bg-primary text-primary-foreground'
+                      : 'bg-muted text-muted-foreground'
                   }`}
                 >
                   {step < currentStep ? <Check className="w-4 h-4" /> : step}
@@ -588,7 +609,7 @@ const Checkout = () => {
               ))}
             </div>
 
-            <Button variant="ghost" size="icon" onClick={() => navigate("/")}>
+            <Button variant="ghost" size="icon" onClick={() => navigate('/')}>
               <X className="w-5 h-5" />
             </Button>
           </div>
@@ -610,24 +631,24 @@ const Checkout = () => {
                 <div className="space-y-3">
                   <FormLabel>Tipo de Orden *</FormLabel>
                   <div className="grid grid-cols-3 gap-3">
-                    {store?.operating_modes?.includes("delivery") && (
+                    {store?.operating_modes?.includes('delivery') && (
                       <Button
                         type="button"
-                        variant={orderType === "delivery" ? "default" : "outline"}
+                        variant={orderType === 'delivery' ? 'default' : 'outline'}
                         className="h-auto py-3 whitespace-normal text-center leading-tight min-h-[56px]"
-                        onClick={() => setOrderType("delivery")}
+                        onClick={() => setOrderType('delivery')}
                       >
-                        {getLabel("delivery")}
+                        {getLabel('delivery')}
                       </Button>
                     )}
-                    {store?.operating_modes?.includes("pickup") && (
+                    {store?.operating_modes?.includes('pickup') && (
                       <Button
                         type="button"
-                        variant={orderType === "pickup" ? "default" : "outline"}
+                        variant={orderType === 'pickup' ? 'default' : 'outline'}
                         className="h-auto py-3 whitespace-normal text-center leading-tight min-h-[56px]"
-                        onClick={() => setOrderType("pickup")}
+                        onClick={() => setOrderType('pickup')}
                       >
-                        {getLabel("pickup")}
+                        {getLabel('pickup')}
                       </Button>
                     )}
                   </div>
@@ -669,13 +690,10 @@ const Checkout = () => {
                       <FormLabel>Teléfono *</FormLabel>
                       <FormControl>
                         <InputMask mask={phoneMask} value={field.value} onChange={field.onChange}>
-                          {(inputProps: { value: string; onChange: (e: React.ChangeEvent<HTMLInputElement>) => void }) => (
-                            <Input
-                              {...inputProps}
-                              type="tel"
-                              placeholder={phonePlaceholder}
-                            />
-                          )}
+                          {(inputProps: {
+                            value: string;
+                            onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+                          }) => <Input {...inputProps} type="tel" placeholder={phonePlaceholder} />}
                         </InputMask>
                       </FormControl>
                       <FormMessage />
@@ -688,7 +706,7 @@ const Checkout = () => {
             {/* Step 2: Delivery/Table Info */}
             {currentStep === 2 && (
               <div className="space-y-4">
-                {orderType === "delivery" && (
+                {orderType === 'delivery' && (
                   <>
                     <FormField
                       control={form.control}
@@ -735,9 +753,12 @@ const Checkout = () => {
                             <SelectContent>
                               {deliveryZones.map((zone) => {
                                 // Calculate if this zone would have free delivery
-                                const zoneFreeDelivery = store?.free_delivery_enabled === true && zone.free_delivery_enabled === true;
-                                const freeDeliveryThreshold = zone.free_delivery_min_amount ?? store?.global_free_delivery_min_amount;
-                                const wouldBeFree = zoneFreeDelivery && freeDeliveryThreshold && discountedTotal >= freeDeliveryThreshold;
+                                const zoneFreeDelivery =
+                                  store?.free_delivery_enabled === true && zone.free_delivery_enabled === true;
+                                const freeDeliveryThreshold =
+                                  zone.free_delivery_min_amount ?? store?.global_free_delivery_min_amount;
+                                const wouldBeFree =
+                                  zoneFreeDelivery && freeDeliveryThreshold && discountedTotal >= freeDeliveryThreshold;
 
                                 return (
                                   <SelectItem key={zone.id} value={zone.zone_name}>
@@ -796,11 +817,11 @@ const Checkout = () => {
                   </>
                 )}
 
-                {orderType === "pickup" && (
+                {orderType === 'pickup' && (
                   <div className="text-center py-8">
                     <p className="text-muted-foreground">Podrás recoger tu pedido en la tienda</p>
                     <p className="text-sm text-muted-foreground mt-2">
-                      {store?.address || "Dirección disponible en la confirmación"}
+                      {store?.address || 'Dirección disponible en la confirmación'}
                     </p>
                   </div>
                 )}
@@ -819,15 +840,15 @@ const Checkout = () => {
 
                       // Helper function to copy payment details
                       const handleCopyPaymentDetails = async (method: PaymentMethod) => {
-                        let copyText = "";
+                        let copyText = '';
 
-                        if (method.payment_type === "pago_movil" && method.payment_details) {
+                        if (method.payment_type === 'pago_movil' && method.payment_details) {
                           copyText = formatPagoMovilCopyText(method.payment_details as PagoMovilDetails);
-                        } else if (method.payment_type === "zelle" && method.payment_details) {
+                        } else if (method.payment_type === 'zelle' && method.payment_details) {
                           copyText = formatZelleCopyText(method.payment_details as ZelleDetails);
-                        } else if (method.payment_type === "binance" && method.payment_details) {
+                        } else if (method.payment_type === 'binance' && method.payment_details) {
                           copyText = formatBinanceCopyText(method.payment_details as BinanceDetails);
-                        } else if (method.payment_type === "otros" && method.payment_details) {
+                        } else if (method.payment_type === 'otros' && method.payment_details) {
                           copyText = formatOtrosCopyText(method.payment_details as OtrosDetails);
                         } else if (method.description) {
                           copyText = method.description;
@@ -836,10 +857,9 @@ const Checkout = () => {
                         if (copyText) {
                           try {
                             await navigator.clipboard.writeText(copyText);
-                            toast.success("¡Datos de pago copiados!");
+                            toast.success('¡Datos de pago copiados!');
                           } catch (error) {
-                            console.error("Error copying payment details:", error);
-                            toast.error("No se pudo copiar los datos");
+                            toast.error('No se pudo copiar los datos');
                           }
                         }
                       };
@@ -852,7 +872,7 @@ const Checkout = () => {
                               <div key={method.id} className="relative">
                                 <Button
                                   type="button"
-                                  variant={field.value === method.name ? "default" : "outline"}
+                                  variant={field.value === method.name ? 'default' : 'outline'}
                                   className="w-full h-auto py-4 justify-start pr-12"
                                   onClick={() => field.onChange(method.name)}
                                 >
@@ -861,27 +881,27 @@ const Checkout = () => {
                                     {/* Show payment details based on type */}
                                     {field.value === method.name && method.payment_details && (
                                       <div className="text-xs opacity-90 mt-2 space-y-1">
-                                        {method.payment_type === "pago_movil" && (
+                                        {method.payment_type === 'pago_movil' && (
                                           <>
                                             <div className="font-mono">
-                                              {(method.payment_details as PagoMovilDetails).bank_code}{" "}
-                                              {(method.payment_details as PagoMovilDetails).cedula}{" "}
+                                              {(method.payment_details as PagoMovilDetails).bank_code}{' '}
+                                              {(method.payment_details as PagoMovilDetails).cedula}{' '}
                                               {(method.payment_details as PagoMovilDetails).phone}
                                             </div>
                                           </>
                                         )}
-                                        {method.payment_type === "zelle" && (
+                                        {method.payment_type === 'zelle' && (
                                           <>
                                             <div>Email: {(method.payment_details as ZelleDetails).email}</div>
                                             <div>Titular: {(method.payment_details as ZelleDetails).holder_name}</div>
                                           </>
                                         )}
-                                        {method.payment_type === "binance" && (
+                                        {method.payment_type === 'binance' && (
                                           <div className="font-mono">
                                             ID: {(method.payment_details as BinanceDetails).key}
                                           </div>
                                         )}
-                                        {method.payment_type === "otros" && method.description && (
+                                        {method.payment_type === 'otros' && method.description && (
                                           <div>{method.description}</div>
                                         )}
                                       </div>
@@ -914,7 +934,7 @@ const Checkout = () => {
                   />
                 )}
 
-                {store?.require_payment_proof && (orderType === "delivery" || orderType === "pickup") && (
+                {store?.require_payment_proof && (orderType === 'delivery' || orderType === 'pickup') && (
                   <div className="space-y-2">
                     <FormLabel>Comprobante de Pago *</FormLabel>
                     <Input
@@ -933,7 +953,7 @@ const Checkout = () => {
                         </Button>
                       </div>
                     )}
-                  <p className="text-xs text-muted-foreground">Formatos: JPG, PNG, WEBP, PDF. Máximo 5MB</p>
+                    <p className="text-xs text-muted-foreground">Formatos: JPG, PNG, WEBP, PDF. Máximo 5MB</p>
                   </div>
                 )}
 
@@ -950,7 +970,9 @@ const Checkout = () => {
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
                             <Check className="h-4 w-4 text-green-600 flex-shrink-0" />
-                            <code className="font-mono font-bold text-green-600 text-xs sm:text-sm truncate">{appliedCoupon.code}</code>
+                            <code className="font-mono font-bold text-green-600 text-xs sm:text-sm truncate">
+                              {appliedCoupon.code}
+                            </code>
                           </div>
                           <p className="text-xs sm:text-sm text-green-600 mt-1 flex items-center gap-1 flex-wrap">
                             <span>Ahorraste</span> <DualPrice price={couponDiscount} size="sm" />
@@ -974,7 +996,7 @@ const Checkout = () => {
                           value={couponCode}
                           onChange={(e) => {
                             setCouponCode(e.target.value.toUpperCase());
-                            setCouponError("");
+                            setCouponError('');
                           }}
                           placeholder="CÓDIGO"
                           className="flex-1 font-mono text-xs sm:text-sm"
@@ -987,15 +1009,11 @@ const Checkout = () => {
                           variant="outline"
                           className="whitespace-nowrap text-xs sm:text-sm px-3 sm:px-4"
                         >
-                          {validatingCoupon ? "Validando..." : "Aplicar"}
+                          {validatingCoupon ? 'Validando...' : 'Aplicar'}
                         </Button>
                       </div>
-                      {couponError && (
-                        <p className="text-xs sm:text-sm text-destructive">{couponError}</p>
-                      )}
-                      <p className="text-xs text-muted-foreground">
-                        Si tienes un cupón de descuento, ingrésalo aquí.
-                      </p>
+                      {couponError && <p className="text-xs sm:text-sm text-destructive">{couponError}</p>}
+                      <p className="text-xs text-muted-foreground">Si tienes un cupón de descuento, ingrésalo aquí.</p>
                     </div>
                   )}
                 </div>
@@ -1027,7 +1045,9 @@ const Checkout = () => {
                           </span>
                           <div className="text-price font-medium text-right whitespace-nowrap flex-shrink-0">
                             <DualPrice
-                              price={(item.price + (item.extras?.reduce((sum, e) => sum + e.price, 0) || 0)) * item.quantity}
+                              price={
+                                (item.price + (item.extras?.reduce((sum, e) => sum + e.price, 0) || 0)) * item.quantity
+                              }
                               size="sm"
                             />
                           </div>
@@ -1078,7 +1098,7 @@ const Checkout = () => {
                         </div>
                       </div>
                     )}
-                    {orderType === "delivery" && (
+                    {orderType === 'delivery' && (
                       <>
                         {deliveryFeeCalc.isFreeDelivery ? (
                           <div className="flex justify-between text-xs sm:text-sm items-start gap-2">
@@ -1100,17 +1120,21 @@ const Checkout = () => {
                         ) : null}
 
                         {/* Show progress to free delivery */}
-                        {deliveryFeeCalc.canHaveFreeDelivery && !deliveryFeeCalc.isFreeDelivery && deliveryFeeCalc.amountNeededForFreeDelivery && deliveryFeeCalc.amountNeededForFreeDelivery > 0 && (
-                          <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-md p-2 sm:p-3 text-xs">
-                            <p className="text-blue-900 dark:text-blue-100 font-medium flex items-center gap-1">
-                              <Gift className="w-3 h-3 flex-shrink-0" />
-                              <span>Delivery gratis</span>
-                            </p>
-                            <p className="text-blue-700 dark:text-blue-300 mt-1 break-words">
-                              Agrega <DualPrice price={deliveryFeeCalc.amountNeededForFreeDelivery} size="sm" /> más para obtener delivery gratis
-                            </p>
-                          </div>
-                        )}
+                        {deliveryFeeCalc.canHaveFreeDelivery &&
+                          !deliveryFeeCalc.isFreeDelivery &&
+                          deliveryFeeCalc.amountNeededForFreeDelivery &&
+                          deliveryFeeCalc.amountNeededForFreeDelivery > 0 && (
+                            <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-md p-2 sm:p-3 text-xs">
+                              <p className="text-blue-900 dark:text-blue-100 font-medium flex items-center gap-1">
+                                <Gift className="w-3 h-3 flex-shrink-0" />
+                                <span>Delivery gratis</span>
+                              </p>
+                              <p className="text-blue-700 dark:text-blue-300 mt-1 break-words">
+                                Agrega <DualPrice price={deliveryFeeCalc.amountNeededForFreeDelivery} size="sm" /> más
+                                para obtener delivery gratis
+                              </p>
+                            </div>
+                          )}
                       </>
                     )}
                     <div className="flex justify-between font-bold text-base sm:text-lg pt-2 border-t items-start gap-2">
@@ -1121,8 +1145,13 @@ const Checkout = () => {
                     </div>
                   </div>
                   {store?.minimum_order_price && discountedTotal < store.minimum_order_price && (
-                    <Badge variant="destructive" className="w-full justify-center mt-3 flex items-center gap-1 text-xs sm:text-sm py-2">
-                      <span className="break-words">Pedido mínimo: <DualPrice price={store.minimum_order_price} size="sm" /></span>
+                    <Badge
+                      variant="destructive"
+                      className="w-full justify-center mt-3 flex items-center gap-1 text-xs sm:text-sm py-2"
+                    >
+                      <span className="break-words">
+                        Pedido mínimo: <DualPrice price={store.minimum_order_price} size="sm" />
+                      </span>
                     </Badge>
                   )}
                 </div>
@@ -1142,9 +1171,9 @@ const Checkout = () => {
             size="lg"
           >
             {loading ? (
-              "Procesando..."
+              'Procesando...'
             ) : currentStep === totalSteps ? (
-              "Revisar Pedido"
+              'Revisar Pedido'
             ) : (
               <>
                 Siguiente
@@ -1163,7 +1192,7 @@ const Checkout = () => {
         nextOpenTime={storeStatus.nextOpenTime}
         onViewHours={() => {
           setShowClosedDialog(false);
-          navigate("/");
+          navigate('/');
         }}
       />
     </div>

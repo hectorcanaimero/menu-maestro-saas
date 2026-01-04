@@ -13,13 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { Upload, Loader2, CheckCircle, X, Copy, Check } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -75,7 +69,6 @@ export function PaymentProofUpload({ open, onOpenChange, subscriptionId }: Payme
         if (error) throw error;
         setPaymentMethods((data as PaymentMethod[]) || []);
       } catch (error: any) {
-        console.error('Error loading payment methods:', error);
         toast({
           variant: 'destructive',
           title: 'Error',
@@ -121,7 +114,6 @@ export function PaymentProofUpload({ open, onOpenChange, subscriptionId }: Payme
           .upload(fileName, paymentProofFile);
 
         if (uploadError) {
-          console.error('Error uploading payment proof:', uploadError);
           throw new Error('Error al subir el comprobante de pago');
         }
 
@@ -131,18 +123,22 @@ export function PaymentProofUpload({ open, onOpenChange, subscriptionId }: Payme
       }
 
       // Get selected payment method name
-      const selectedMethod = paymentMethods.find(m => m.id === selectedPaymentMethodId);
+      const selectedMethod = paymentMethods.find((m) => m.id === selectedPaymentMethodId);
 
-      const { data, error } = await supabase.from('payment_validations').insert({
-        subscription_id: subscriptionId,
-        amount: parseFloat(amount),
-        payment_date: paymentDate,
-        payment_method: selectedMethod?.name || 'N/A',
-        reference_number: referenceNumber || null,
-        proof_image_url: paymentProofUrl || null,
-        status: 'pending',
-        validation_notes: notes || null,
-      }).select().single();
+      const { data, error } = await supabase
+        .from('payment_validations')
+        .insert({
+          subscription_id: subscriptionId,
+          amount: parseFloat(amount),
+          payment_date: paymentDate,
+          payment_method: selectedMethod?.name || 'N/A',
+          reference_number: referenceNumber || null,
+          proof_image_url: paymentProofUrl || null,
+          status: 'pending',
+          validation_notes: notes || null,
+        })
+        .select()
+        .single();
 
       if (error) throw error;
       return data;
@@ -211,7 +207,7 @@ export function PaymentProofUpload({ open, onOpenChange, subscriptionId }: Payme
     });
   };
 
-  const selectedMethod = paymentMethods.find(m => m.id === selectedPaymentMethodId);
+  const selectedMethod = paymentMethods.find((m) => m.id === selectedPaymentMethodId);
 
   const handleSubmit = () => {
     uploadProofMutation.mutate();
@@ -234,9 +230,7 @@ export function PaymentProofUpload({ open, onOpenChange, subscriptionId }: Payme
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Pagar Suscripción</DialogTitle>
-          <DialogDescription>
-            Selecciona un método de pago y envía tu comprobante para validación
-          </DialogDescription>
+          <DialogDescription>Selecciona un método de pago y envía tu comprobante para validación</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-6">
@@ -257,9 +251,7 @@ export function PaymentProofUpload({ open, onOpenChange, subscriptionId }: Payme
                   <Card
                     key={method.id}
                     className={`cursor-pointer transition-all ${
-                      selectedPaymentMethodId === method.id
-                        ? 'border-primary bg-primary/5'
-                        : 'hover:border-primary/50'
+                      selectedPaymentMethodId === method.id ? 'border-primary bg-primary/5' : 'hover:border-primary/50'
                     }`}
                     onClick={() => setSelectedPaymentMethodId(method.id)}
                   >
@@ -496,13 +488,7 @@ export function PaymentProofUpload({ open, onOpenChange, subscriptionId }: Payme
               Comprobante de Pago <span className="text-red-500">*</span>
             </Label>
             <div className="mt-2">
-              <input
-                id="proof-upload"
-                type="file"
-                accept="image/*"
-                onChange={handleFileChange}
-                className="hidden"
-              />
+              <input id="proof-upload" type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
               <Button
                 type="button"
                 variant="outline"
@@ -516,12 +502,7 @@ export function PaymentProofUpload({ open, onOpenChange, subscriptionId }: Payme
               {paymentProofFile && (
                 <div className="mt-2 p-3 border rounded-lg flex items-center justify-between bg-muted/50">
                   <span className="text-sm flex-1 truncate">{paymentProofFile.name}</span>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setPaymentProofFile(null)}
-                  >
+                  <Button type="button" variant="ghost" size="sm" onClick={() => setPaymentProofFile(null)}>
                     <X className="h-4 w-4" />
                   </Button>
                 </div>

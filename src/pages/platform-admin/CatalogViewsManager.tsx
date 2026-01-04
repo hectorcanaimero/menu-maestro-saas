@@ -4,23 +4,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import {
-  Eye,
-  RefreshCw,
-  TrendingUp,
-  AlertTriangle,
-  Store as StoreIcon,
-  Infinity,
-  ExternalLink,
-} from 'lucide-react';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Eye, RefreshCw, TrendingUp, AlertTriangle, Store as StoreIcon, Infinity, ExternalLink } from 'lucide-react';
 import { H1, Body } from '@/components/ui/typography';
 import posthog from 'posthog-js';
 
@@ -65,7 +50,7 @@ export default function CatalogViewsManager() {
           users!stores_owner_id_fkey (
             email
           )
-        `
+        `,
         )
         .eq('catalog_mode', true);
 
@@ -74,15 +59,11 @@ export default function CatalogViewsManager() {
       // For each store, get view limit status
       const storesWithViews = await Promise.all(
         (catalogStores || []).map(async (store) => {
-          const { data: limitStatus, error: limitError } = await supabase.rpc(
-            'check_catalog_view_limit',
-            {
-              p_store_id: store.id,
-            }
-          );
+          const { data: limitStatus, error: limitError } = await supabase.rpc('check_catalog_view_limit', {
+            p_store_id: store.id,
+          });
 
           if (limitError) {
-            console.error(`Error fetching limit for store ${store.id}:`, limitError);
             return null;
           }
 
@@ -101,7 +82,7 @@ export default function CatalogViewsManager() {
             is_unlimited: status.is_unlimited || false,
             catalog_mode: store.catalog_mode || false,
           } as StoreWithViews;
-        })
+        }),
       );
 
       return storesWithViews.filter((s) => s !== null) as StoreWithViews[];
@@ -250,9 +231,7 @@ export default function CatalogViewsManager() {
                           <div className="text-sm text-muted-foreground">{store.subdomain}</div>
                         </div>
                       </TableCell>
-                      <TableCell className="text-sm text-muted-foreground">
-                        {store.owner_email}
-                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground">{store.owner_email}</TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
                           <Eye className="h-4 w-4 text-muted-foreground" />
@@ -272,10 +251,7 @@ export default function CatalogViewsManager() {
                       <TableCell>
                         <div className="flex items-center gap-2">
                           <div className="flex-1">
-                            <div
-                              className="h-2 bg-gray-200 rounded-full overflow-hidden"
-                              style={{ minWidth: '80px' }}
-                            >
+                            <div className="h-2 bg-gray-200 rounded-full overflow-hidden" style={{ minWidth: '80px' }}>
                               <div
                                 className={`h-full transition-all ${
                                   store.exceeded
@@ -288,9 +264,7 @@ export default function CatalogViewsManager() {
                               />
                             </div>
                           </div>
-                          <span className="text-sm font-medium whitespace-nowrap">
-                            {store.percentage.toFixed(1)}%
-                          </span>
+                          <span className="text-sm font-medium whitespace-nowrap">{store.percentage.toFixed(1)}%</span>
                         </div>
                       </TableCell>
                       <TableCell>{getStatusBadge(store)}</TableCell>

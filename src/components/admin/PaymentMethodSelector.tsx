@@ -1,10 +1,10 @@
-import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { useStore } from "@/contexts/StoreContext";
-import { Card } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
-import { CreditCard, Loader2 } from "lucide-react";
+import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useStore } from '@/contexts/StoreContext';
+import { Card } from '@/components/ui/card';
+import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
+import { CreditCard, Loader2 } from 'lucide-react';
 
 interface PaymentMethod {
   id: string;
@@ -39,11 +39,11 @@ export const PaymentMethodSelector = ({
     setLoading(true);
     try {
       const { data, error } = await supabase
-        .from("payment_methods")
-        .select("id, name, description")
-        .eq("store_id", store.id)
-        .eq("is_active", true)
-        .order("display_order", { ascending: true });
+        .from('payment_methods')
+        .select('id, name, description')
+        .eq('store_id', store.id)
+        .eq('is_active', true)
+        .order('display_order', { ascending: true });
 
       if (error) throw error;
 
@@ -54,7 +54,7 @@ export const PaymentMethodSelector = ({
         onMethodChange(data[0].name);
       }
     } catch (error) {
-      console.error("Error loading payment methods:", error);
+      throw new Error(error as string | undefined);
     } finally {
       setLoading(false);
     }
@@ -81,45 +81,38 @@ export const PaymentMethodSelector = ({
     <div className="space-y-3">
       <Label className="flex items-center gap-2">
         <CreditCard className="w-4 h-4" />
-        Método de Pago {required && <Badge variant="destructive" className="text-xs">Requerido</Badge>}
+        Método de Pago{' '}
+        {required && (
+          <Badge variant="destructive" className="text-xs">
+            Requerido
+          </Badge>
+        )}
       </Label>
 
       <div className="space-y-2">
         {paymentMethods.map((method) => (
           <Card
             key={method.id}
-            className={`p-4 transition-all ${
-              disabled
-                ? "opacity-50 cursor-not-allowed"
-                : "cursor-pointer"
-            } ${
+            className={`p-4 transition-all ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'} ${
               selectedMethod === method.name
-                ? "border-primary bg-primary/5"
+                ? 'border-primary bg-primary/5'
                 : disabled
-                  ? ""
-                  : "hover:border-border hover:bg-accent/50"
+                ? ''
+                : 'hover:border-border hover:bg-accent/50'
             }`}
             onClick={() => !disabled && onMethodChange(method.name)}
           >
             <div className="flex items-start gap-3">
               <div
                 className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 mt-0.5 ${
-                  selectedMethod === method.name
-                    ? "border-primary bg-primary"
-                    : "border-muted-foreground"
+                  selectedMethod === method.name ? 'border-primary bg-primary' : 'border-muted-foreground'
                 }`}
               >
-                {selectedMethod === method.name && (
-                  <div className="w-2.5 h-2.5 rounded-full bg-white" />
-                )}
+                {selectedMethod === method.name && <div className="w-2.5 h-2.5 rounded-full bg-white" />}
               </div>
               <div className="flex-1">
                 <div className="font-semibold text-sm">{method.name}</div>
-                {method.description && (
-                  <div className="text-xs text-muted-foreground mt-1">
-                    {method.description}
-                  </div>
-                )}
+                {method.description && <div className="text-xs text-muted-foreground mt-1">{method.description}</div>}
               </div>
             </div>
           </Card>

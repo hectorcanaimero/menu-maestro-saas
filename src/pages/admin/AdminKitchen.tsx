@@ -26,7 +26,6 @@ const AdminKitchen = () => {
       setUserEmail(session.user.email || "");
       setLoading(false);
     } catch (error) {
-      console.error("Error in checkAuth:", error);
       navigate("/auth");
     }
   };

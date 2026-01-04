@@ -31,6 +31,7 @@ interface OrderData {
   tableNumber?: string;
   exchangeRate?: number; // Tasa de cambio USD a BSF
   paymentProofUrl?: string; // URL del comprobante de pago
+  paymentProofShortUrl?: string; // NEW: URL acortada del comprobante (desde Shlink)
 }
 
 interface StoreTemplates {
@@ -67,6 +68,7 @@ export const generateWhatsAppMessage = (
     tableNumber = '',
     exchangeRate = 0,
     paymentProofUrl = '',
+    paymentProofShortUrl = '',
   } = orderData;
 
   // Format price function
@@ -124,6 +126,15 @@ export const generateWhatsAppMessage = (
     timeStyle: 'short',
   });
 
+  // Format order type for display
+  const orderTypeMap: Record<OrderType, string> = {
+    delivery: 'Entrega a domicilio',
+    pickup: 'Recoger en tienda',
+    dine_in: 'Para comer en el lugar',
+    digital_menu: 'Menú digital',
+  };
+  const orderTypeFormatted = orderTypeMap[orderType] || orderType;
+
   // Select template based on order type
   let templateMessage = templates.orderMessageTemplateDelivery;
   if (orderType === 'pickup') {
@@ -140,6 +151,7 @@ export const generateWhatsAppMessage = (
 
   finalMessage = finalMessage.replace(/{order-number}/g, orderNumber);
   finalMessage = finalMessage.replace(/{order-date-time}/g, orderDateTime);
+  finalMessage = finalMessage.replace(/{order-type}/g, orderTypeFormatted);
   finalMessage = finalMessage.replace(/{order-products}/g, productsList);
   finalMessage = finalMessage.replace(/{order-total}/g, formatPrice(totalAmount));
   finalMessage = finalMessage.replace(/{customer-name}/g, customerName);
@@ -159,8 +171,9 @@ export const generateWhatsAppMessage = (
   finalMessage = finalMessage.replace(/{order-track-page}/g, trackingLink);
 
   // Format payment proof URL with descriptive text to avoid preview thumbnail
-  const paymentProofLink = paymentProofUrl
-    ? `📎 Descargar comprobante de pago:\n${paymentProofUrl}`
+  // Prefer short URL if available, fallback to long URL
+  const paymentProofLink = (paymentProofShortUrl || paymentProofUrl)
+    ? `📎 Descargar comprobante de pago:\n${paymentProofShortUrl || paymentProofUrl}`
     : '';
   finalMessage = finalMessage.replace(/{payment-receipt-link}/g, paymentProofLink);
 

@@ -1,11 +1,11 @@
-import { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Mail, RefreshCw, CheckCircle, Info, ArrowRight } from "lucide-react";
-import { toast } from "sonner";
+import { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Mail, RefreshCw, CheckCircle, Info, ArrowRight } from 'lucide-react';
+import { toast } from 'sonner';
 
 const VerifyEmail = () => {
   const navigate = useNavigate();
@@ -14,15 +14,17 @@ const VerifyEmail = () => {
   const [resending, setResending] = useState(false);
 
   // Get email and next step from navigation state
-  const email = location.state?.email || "";
-  const nextStep = location.state?.nextStep || "/create-store";
+  const email = location.state?.email || '';
+  const nextStep = location.state?.nextStep || '/create-store';
 
   useEffect(() => {
     // Check if user is already verified
     const checkVerification = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       if (session?.user?.email_confirmed_at) {
-        toast.success("¡Email verificado! Continuando...");
+        toast.success('¡Email verificado! Continuando...');
         navigate(nextStep);
       }
     };
@@ -30,9 +32,11 @@ const VerifyEmail = () => {
     checkVerification();
 
     // Listen for auth state changes (when user clicks email link)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'SIGNED_IN' && session?.user?.email_confirmed_at) {
-        toast.success("¡Email verificado exitosamente!");
+        toast.success('¡Email verificado exitosamente!');
         navigate(nextStep);
       }
     });
@@ -43,19 +47,21 @@ const VerifyEmail = () => {
   const handleCheckVerification = async () => {
     setChecking(true);
     try {
-      const { data: { session }, error } = await supabase.auth.getSession();
+      const {
+        data: { session },
+        error,
+      } = await supabase.auth.getSession();
 
       if (error) throw error;
 
       if (session?.user?.email_confirmed_at) {
-        toast.success("¡Email verificado! Redirigiendo...");
+        toast.success('¡Email verificado! Redirigiendo...');
         navigate(nextStep);
       } else {
-        toast.info("Aún no hemos detectado la verificación. Por favor revisa tu correo.");
+        toast.info('Aún no hemos detectado la verificación. Por favor revisa tu correo.');
       }
     } catch (error) {
-      console.error("Error checking verification:", error);
-      toast.error("Error al verificar el estado");
+      toast.error('Error al verificar el estado');
     } finally {
       setChecking(false);
     }
@@ -63,7 +69,7 @@ const VerifyEmail = () => {
 
   const handleResendEmail = async () => {
     if (!email) {
-      toast.error("No se pudo determinar el email");
+      toast.error('No se pudo determinar el email');
       return;
     }
 
@@ -76,15 +82,13 @@ const VerifyEmail = () => {
 
       if (error) throw error;
 
-      toast.success("Correo de verificación reenviado. Revisa tu bandeja de entrada.");
+      toast.success('Correo de verificación reenviado. Revisa tu bandeja de entrada.');
     } catch (error: any) {
-      console.error("Error resending email:", error);
-
-      if (error.message?.includes("already confirmed")) {
-        toast.success("Tu email ya está verificado. Continuando...");
+      if (error.message?.includes('already confirmed')) {
+        toast.success('Tu email ya está verificado. Continuando...');
         navigate(nextStep);
       } else {
-        toast.error("Error al reenviar el correo. Intenta nuevamente.");
+        toast.error('Error al reenviar el correo. Intenta nuevamente.');
       }
     } finally {
       setResending(false);
@@ -100,8 +104,7 @@ const VerifyEmail = () => {
           </div>
           <CardTitle className="text-2xl font-bold">Verifica Tu Correo</CardTitle>
           <CardDescription>
-            Enviamos un link de verificación a{" "}
-            <strong className="text-foreground">{email || "tu correo"}</strong>
+            Enviamos un link de verificación a <strong className="text-foreground">{email || 'tu correo'}</strong>
           </CardDescription>
         </CardHeader>
 
@@ -151,12 +154,7 @@ const VerifyEmail = () => {
               )}
             </Button>
 
-            <Button
-              onClick={handleResendEmail}
-              disabled={resending}
-              variant="outline"
-              className="w-full"
-            >
+            <Button onClick={handleResendEmail} disabled={resending} variant="outline" className="w-full">
               {resending ? (
                 <>
                   <RefreshCw className="w-4 h-4 mr-2 animate-spin" aria-hidden="true" />
@@ -170,11 +168,7 @@ const VerifyEmail = () => {
               )}
             </Button>
 
-            <Button
-              onClick={() => navigate(nextStep)}
-              variant="ghost"
-              className="w-full"
-            >
+            <Button onClick={() => navigate(nextStep)} variant="ghost" className="w-full">
               Continuar sin verificar
               <ArrowRight className="w-4 h-4 ml-2" aria-hidden="true" />
             </Button>

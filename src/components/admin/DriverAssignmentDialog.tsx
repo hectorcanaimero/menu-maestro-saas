@@ -70,9 +70,8 @@ export function DriverAssignmentDialog({
   const { assignDriver } = useAssignDriver();
 
   // Filter available drivers
-  const availableDrivers = drivers?.filter(
-    (d) => d.is_active && (d.status === 'available' || d.id === currentDriverId)
-  ) || [];
+  const availableDrivers =
+    drivers?.filter((d) => d.is_active && (d.status === 'available' || d.id === currentDriverId)) || [];
 
   const handleAssign = async () => {
     if (!selectedDriverId) {
@@ -90,7 +89,7 @@ export function DriverAssignmentDialog({
         orderId,
         selectedDriverId,
         undefined, // distance_km - would be calculated
-        undefined  // estimated_minutes - would be calculated
+        undefined, // estimated_minutes - would be calculated
       );
 
       toast.success('Motorista asignado correctamente');
@@ -99,7 +98,6 @@ export function DriverAssignmentDialog({
         onSuccess();
       }
     } catch (error: any) {
-      console.error('Error assigning driver:', error);
       toast.error(error.message || 'Error al asignar motorista');
     } finally {
       setIsAssigning(false);
@@ -110,13 +108,9 @@ export function DriverAssignmentDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>
-            {currentDriverId ? 'Reasignar Motorista' : 'Asignar Motorista'}
-          </DialogTitle>
+          <DialogTitle>{currentDriverId ? 'Reasignar Motorista' : 'Asignar Motorista'}</DialogTitle>
           <DialogDescription>
-            {orderAddress && (
-              <span className="text-sm">Dirección: {orderAddress}</span>
-            )}
+            {orderAddress && <span className="text-sm">Dirección: {orderAddress}</span>}
           </DialogDescription>
         </DialogHeader>
 
@@ -128,9 +122,7 @@ export function DriverAssignmentDialog({
           ) : availableDrivers.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               <p className="text-sm">No hay motoristas disponibles</p>
-              <p className="text-xs mt-1">
-                Los motoristas deben estar activos y en línea
-              </p>
+              <p className="text-xs mt-1">Los motoristas deben estar activos y en línea</p>
             </div>
           ) : (
             <>
@@ -205,8 +197,8 @@ export function DriverAssignmentDialog({
 
               <div className="p-3 bg-blue-50 dark:bg-blue-950 rounded-lg border border-blue-200 dark:border-blue-800">
                 <p className="text-xs text-blue-700 dark:text-blue-400">
-                  💡 El motorista recibirá la asignación en su app móvil y
-                  comenzará a compartir su ubicación en tiempo real.
+                  💡 El motorista recibirá la asignación en su app móvil y comenzará a compartir su ubicación en tiempo
+                  real.
                 </p>
               </div>
             </>
@@ -214,17 +206,10 @@ export function DriverAssignmentDialog({
         </div>
 
         <DialogFooter>
-          <Button
-            variant="outline"
-            onClick={() => onOpenChange(false)}
-            disabled={isAssigning}
-          >
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isAssigning}>
             Cancelar
           </Button>
-          <Button
-            onClick={handleAssign}
-            disabled={isAssigning || !selectedDriverId || availableDrivers.length === 0}
-          >
+          <Button onClick={handleAssign} disabled={isAssigning || !selectedDriverId || availableDrivers.length === 0}>
             {isAssigning ? (
               <>
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />

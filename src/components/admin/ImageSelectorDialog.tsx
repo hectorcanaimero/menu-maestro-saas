@@ -1,5 +1,12 @@
 import { useState, useRef } from 'react';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -56,9 +63,7 @@ export const ImageSelectorDialog = ({
       const fileName = `${Math.random()}.${fileExt}`;
       const filePath = `${fileName}`;
 
-      const { error: uploadError } = await supabase.storage
-        .from('menu-images')
-        .upload(filePath, selectedFile);
+      const { error: uploadError } = await supabase.storage.from('menu-images').upload(filePath, selectedFile);
 
       if (uploadError) throw uploadError;
 
@@ -78,7 +83,6 @@ export const ImageSelectorDialog = ({
       onSuccess();
       onOpenChange(false);
     } catch (error) {
-      console.error('Error uploading image:', error);
       toast.error('Error al subir imagen');
     } finally {
       setUploading(false);
@@ -88,10 +92,7 @@ export const ImageSelectorDialog = ({
   const handleRemoveImage = async () => {
     setUploading(true);
     try {
-      const { error } = await supabase
-        .from('menu_items')
-        .update({ image_url: null })
-        .eq('id', itemId);
+      const { error } = await supabase.from('menu_items').update({ image_url: null }).eq('id', itemId);
 
       if (error) throw error;
 
@@ -99,7 +100,6 @@ export const ImageSelectorDialog = ({
       onSuccess();
       onOpenChange(false);
     } catch (error) {
-      console.error('Error removing image:', error);
       toast.error('Error al eliminar imagen');
     } finally {
       setUploading(false);
@@ -121,11 +121,7 @@ export const ImageSelectorDialog = ({
           <div className="flex justify-center">
             {previewUrl ? (
               <div className="relative">
-                <img
-                  src={previewUrl}
-                  alt="Preview"
-                  className="w-full max-w-xs h-48 object-cover rounded-lg border"
-                />
+                <img src={previewUrl} alt="Preview" className="w-full max-w-xs h-48 object-cover rounded-lg border" />
                 <Button
                   variant="destructive"
                   size="icon"
@@ -175,12 +171,7 @@ export const ImageSelectorDialog = ({
 
         <DialogFooter className="flex-col sm:flex-row gap-2">
           {currentImageUrl && (
-            <Button
-              variant="destructive"
-              onClick={handleRemoveImage}
-              disabled={uploading}
-              className="sm:mr-auto"
-            >
+            <Button variant="destructive" onClick={handleRemoveImage} disabled={uploading} className="sm:mr-auto">
               Eliminar imagen actual
             </Button>
           )}

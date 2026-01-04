@@ -69,7 +69,6 @@ export function AppSidebar() {
   // Check if the store is a food business
   const isFoodBusiness = store?.is_food_business ?? true;
   const isCatalogMode = store?.catalog_mode ?? false;
-  console.log('Store settings:', { isFoodBusiness, isCatalogMode });
   // Filter navigation items based on food business type
   const filteredNavItems = navItems.filter((item) => {
     if (isCatalogMode) {

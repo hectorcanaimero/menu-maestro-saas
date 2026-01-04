@@ -94,7 +94,6 @@ const MenuItemsManager = () => {
       setItems(itemsResponse.data || []);
       setCategories(categoriesResponse.data || []);
     } catch (error) {
-      console.error('Error fetching data:', error);
       toast.error('Error al cargar datos');
     } finally {
       setLoading(false);
@@ -129,7 +128,6 @@ const MenuItemsManager = () => {
       setFormData({ ...formData, image_url: publicUrl });
       toast.success('Imagen subida correctamente');
     } catch (error) {
-      console.error('Error uploading image:', error);
       toast.error('Error al subir imagen');
     } finally {
       setUploading(false);
@@ -175,7 +173,6 @@ const MenuItemsManager = () => {
       resetForm();
       fetchData();
     } catch (error) {
-      console.error('Error saving item:', error);
       toast.error('Error al guardar producto');
     }
   };
@@ -205,7 +202,6 @@ const MenuItemsManager = () => {
       toast.success('Producto eliminado');
       fetchData();
     } catch (error) {
-      console.error('Error deleting item:', error);
       toast.error('Error al eliminar producto');
     }
   };
@@ -276,7 +272,6 @@ const MenuItemsManager = () => {
       setSelectedItems(new Set());
       fetchData();
     } catch (error) {
-      console.error('Error updating items:', error);
       toast.error('Error al actualizar productos');
     }
   };

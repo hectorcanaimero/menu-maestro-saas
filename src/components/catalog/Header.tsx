@@ -51,7 +51,6 @@ export const Header = () => {
       await navigator.clipboard.writeText(url);
       toast.success('¡Enlace copiado al portapapeles!');
     } catch (error) {
-      console.error('Error al copiar enlace:', error);
       toast.error('No se pudo copiar el enlace');
     }
   };
@@ -92,25 +91,14 @@ export const Header = () => {
           <div className="flex items-center gap-2">
             {/* Admin Button - Only visible for store owners */}
             {isStoreOwner && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => navigate('/admin')}
-                className="gap-2"
-              >
+              <Button variant="outline" size="sm" onClick={() => navigate('/admin')} className="gap-2">
                 <Settings className="h-4 w-4" />
                 <span className="hidden sm:inline">Ir al Admin</span>
               </Button>
             )}
 
             {/* Share Button */}
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handleShare}
-              className="h-9 w-9"
-              aria-label="Compartir tienda"
-            >
+            <Button variant="ghost" size="icon" onClick={handleShare} className="h-9 w-9" aria-label="Compartir tienda">
               <Share2 className="h-5 w-5" />
             </Button>
 

@@ -1,5 +1,12 @@
 import { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -60,10 +67,7 @@ export const ZoneFreeDeliveryDialog = ({
         updateData.free_delivery_min_amount = parseFloat(customAmount);
       }
 
-      const { error } = await supabase
-        .from('delivery_zones')
-        .update(updateData)
-        .eq('id', zone.id);
+      const { error } = await supabase.from('delivery_zones').update(updateData).eq('id', zone.id);
 
       if (error) throw error;
 
@@ -71,7 +75,6 @@ export const ZoneFreeDeliveryDialog = ({
       onSaved();
       onOpenChange(false);
     } catch (error) {
-      console.error('Error updating zone:', error);
       toast.error('Error al actualizar zona');
     } finally {
       setLoading(false);
@@ -80,9 +83,7 @@ export const ZoneFreeDeliveryDialog = ({
 
   if (!zone) return null;
 
-  const effectiveAmount = useCustomAmount && customAmount
-    ? parseFloat(customAmount)
-    : globalMinAmount;
+  const effectiveAmount = useCustomAmount && customAmount ? parseFloat(customAmount) : globalMinAmount;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -105,10 +106,7 @@ export const ZoneFreeDeliveryDialog = ({
                   : 'Esta zona NO tiene delivery gratis'}
               </p>
             </div>
-            <Switch
-              checked={freeDeliveryEnabled}
-              onCheckedChange={setFreeDeliveryEnabled}
-            />
+            <Switch checked={freeDeliveryEnabled} onCheckedChange={setFreeDeliveryEnabled} />
           </div>
 
           {freeDeliveryEnabled && (
@@ -123,10 +121,7 @@ export const ZoneFreeDeliveryDialog = ({
                       : `Usar monto global (${globalMinAmount ? `$${globalMinAmount.toFixed(2)}` : 'no configurado'})`}
                   </p>
                 </div>
-                <Switch
-                  checked={useCustomAmount}
-                  onCheckedChange={setUseCustomAmount}
-                />
+                <Switch checked={useCustomAmount} onCheckedChange={setUseCustomAmount} />
               </div>
 
               {/* Custom Amount Input */}
@@ -150,9 +145,7 @@ export const ZoneFreeDeliveryDialog = ({
 
               {/* Summary */}
               <div className="rounded-md bg-blue-50 dark:bg-blue-950 p-3 border border-blue-200 dark:border-blue-800">
-                <p className="text-sm font-medium text-blue-900 dark:text-blue-100">
-                  Resumen
-                </p>
+                <p className="text-sm font-medium text-blue-900 dark:text-blue-100">Resumen</p>
                 <p className="text-xs text-blue-700 dark:text-blue-300 mt-1">
                   {effectiveAmount
                     ? `Delivery gratis en ${zone.zone_name} con pedidos desde $${effectiveAmount.toFixed(2)}`
@@ -164,9 +157,7 @@ export const ZoneFreeDeliveryDialog = ({
 
           {!freeDeliveryEnabled && (
             <div className="rounded-md bg-orange-50 dark:bg-orange-950 p-3 border border-orange-200 dark:border-orange-800">
-              <p className="text-sm font-medium text-orange-900 dark:text-orange-100">
-                Zona excluida
-              </p>
+              <p className="text-sm font-medium text-orange-900 dark:text-orange-100">Zona excluida</p>
               <p className="text-xs text-orange-700 dark:text-orange-300 mt-1">
                 Los pedidos a {zone.zone_name} siempre pagarán ${zone.delivery_price.toFixed(2)} de delivery
               </p>

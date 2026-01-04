@@ -123,7 +123,6 @@ export function OrderSettingsTab({ storeId, initialData }: OrderSettingsTabProps
 
       toast.success('Configuración de pedidos guardada correctamente');
     } catch (error: unknown) {
-      console.error('Error saving order settings:', error);
       toast.error('Error al guardar la configuración');
     } finally {
       setSaving(false);

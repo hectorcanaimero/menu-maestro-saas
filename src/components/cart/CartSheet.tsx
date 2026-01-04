@@ -34,7 +34,7 @@ export const CartSheet = () => {
           has_items: items.length > 0,
         });
       } catch (error) {
-        console.error('[PostHog] Error tracking cart_viewed:', error);
+        throw new Error(error as string | undefined);
       }
     }
   };

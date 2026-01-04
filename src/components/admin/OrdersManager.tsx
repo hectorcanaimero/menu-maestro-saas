@@ -1,23 +1,46 @@
-import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { useStore } from "@/contexts/StoreContext";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { toast } from "sonner";
-import { Package, RefreshCw, Eye, Filter, Download, ExternalLink, FileImage, X, Plus, Edit, Truck, Store, Utensils, UserPlus } from "lucide-react";
-import { OrderCard } from "./OrderCard";
-import { AdminOrderCreate } from "./AdminOrderCreate";
-import { AdminOrderEdit } from "./AdminOrderEdit";
-import { DriverAssignmentDialog } from "./DriverAssignmentDialog";
-import { useModuleAccess } from "@/hooks/useSubscription";
+import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useStore } from '@/contexts/StoreContext';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from '@/components/ui/pagination';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { toast } from 'sonner';
+import {
+  Package,
+  RefreshCw,
+  Eye,
+  Filter,
+  Download,
+  ExternalLink,
+  FileImage,
+  X,
+  Plus,
+  Edit,
+  Truck,
+  Store,
+  Utensils,
+  UserPlus,
+} from 'lucide-react';
+import { OrderCard } from './OrderCard';
+import { AdminOrderCreate } from './AdminOrderCreate';
+import { AdminOrderEdit } from './AdminOrderEdit';
+import { DriverAssignmentDialog } from './DriverAssignmentDialog';
+import { ShortUrlDisplay } from './ShortUrlDisplay';
+import { useModuleAccess } from '@/hooks/useSubscription';
 
 interface OrderItemExtra {
   id: string;
@@ -72,9 +95,9 @@ const OrdersManager = () => {
   const showDriverFeatures = hasDeliveryModule === true;
 
   // Filter states
-  const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [typeFilter, setTypeFilter] = useState<string>("all");
-  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [typeFilter, setTypeFilter] = useState<string>('all');
+  const [searchQuery, setSearchQuery] = useState<string>('');
   const [filtersOpen, setFiltersOpen] = useState(false);
 
   // Pagination
@@ -89,26 +112,27 @@ const OrdersManager = () => {
 
   const fetchOrders = async () => {
     if (!store?.id) return;
-    
+
     try {
       const { data, error } = await supabase
-        .from("orders")
-        .select(`
+        .from('orders')
+        .select(
+          `
           *,
           order_items (
             *,
             order_item_extras (*)
           )
-        `)
-        .eq("store_id", store.id)
-        .order("created_at", { ascending: false });
+        `,
+        )
+        .eq('store_id', store.id)
+        .order('created_at', { ascending: false });
 
       if (error) throw error;
       setOrders((data || []) as Order[]);
       setFilteredOrders((data || []) as Order[]);
     } catch (error) {
-      console.error("Error fetching orders:", error);
-      toast.error("Error al cargar pedidos");
+      toast.error('Error al cargar pedidos');
     } finally {
       setLoading(false);
     }
@@ -119,24 +143,25 @@ const OrdersManager = () => {
     let filtered = [...orders];
 
     // Status filter
-    if (statusFilter !== "all") {
-      filtered = filtered.filter(order => order.status === statusFilter);
+    if (statusFilter !== 'all') {
+      filtered = filtered.filter((order) => order.status === statusFilter);
     }
 
     // Type filter
-    if (typeFilter !== "all") {
-      filtered = filtered.filter(order => order.order_type === typeFilter);
+    if (typeFilter !== 'all') {
+      filtered = filtered.filter((order) => order.order_type === typeFilter);
     }
 
     // Search filter
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(order => 
-        order.customer_name.toLowerCase().includes(query) ||
-        order.customer_email.toLowerCase().includes(query) ||
-        order.customer_phone?.toLowerCase().includes(query) ||
-        order.id.toLowerCase().includes(query) ||
-        order.delivery_address?.toLowerCase().includes(query)
+      filtered = filtered.filter(
+        (order) =>
+          order.customer_name.toLowerCase().includes(query) ||
+          order.customer_email.toLowerCase().includes(query) ||
+          order.customer_phone?.toLowerCase().includes(query) ||
+          order.id.toLowerCase().includes(query) ||
+          order.delivery_address?.toLowerCase().includes(query),
       );
     }
 
@@ -146,28 +171,24 @@ const OrdersManager = () => {
 
   const updateOrderStatus = async (orderId: string, newStatus: string) => {
     try {
-      const { error } = await supabase
-        .from("orders")
-        .update({ status: newStatus })
-        .eq("id", orderId);
+      const { error } = await supabase.from('orders').update({ status: newStatus }).eq('id', orderId);
 
       if (error) throw error;
-      toast.success("Estado actualizado");
+      toast.success('Estado actualizado');
       fetchOrders();
     } catch (error) {
-      console.error("Error updating order:", error);
-      toast.error("Error al actualizar estado");
+      toast.error('Error al actualizar estado');
     }
   };
 
   const getStatusBadge = (status: string) => {
-    const statusConfig: Record<string, { label: string; variant: "default" | "secondary" | "destructive" }> = {
-      pending: { label: "Pendiente", variant: "secondary" },
-      confirmed: { label: "Confirmado", variant: "default" },
-      preparing: { label: "Preparando", variant: "default" },
-      ready: { label: "Listo", variant: "default" },
-      delivered: { label: "Entregado", variant: "default" },
-      cancelled: { label: "Cancelado", variant: "destructive" },
+    const statusConfig: Record<string, { label: string; variant: 'default' | 'secondary' | 'destructive' }> = {
+      pending: { label: 'Pendiente', variant: 'secondary' },
+      confirmed: { label: 'Confirmado', variant: 'default' },
+      preparing: { label: 'Preparando', variant: 'default' },
+      ready: { label: 'Listo', variant: 'default' },
+      delivered: { label: 'Entregado', variant: 'default' },
+      cancelled: { label: 'Cancelado', variant: 'destructive' },
     };
 
     const config = statusConfig[status] || statusConfig.pending;
@@ -177,25 +198,25 @@ const OrdersManager = () => {
   const getOrderTypeConfig = (type: string) => {
     const typeConfig: Record<string, { label: string; icon: any; color: string }> = {
       delivery: {
-        label: "Entrega",
+        label: 'Entrega',
         icon: Truck,
-        color: "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-100 border-orange-300"
+        color: 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-100 border-orange-300',
       },
       pickup: {
-        label: "Recoger",
+        label: 'Recoger',
         icon: Store,
-        color: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100 border-blue-300"
+        color: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100 border-blue-300',
       },
       dine_in: {
-        label: "Servicio en Mesa",
+        label: 'Servicio en Mesa',
         icon: Utensils,
-        color: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100 border-green-300"
+        color: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100 border-green-300',
       },
       digital_menu: {
-        label: "En Tienda",
+        label: 'En Tienda',
         icon: Utensils,
-        color: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100 border-green-300"
-      }
+        color: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100 border-green-300',
+      },
     };
     return typeConfig[type] || typeConfig.pickup;
   };
@@ -230,16 +251,13 @@ const OrdersManager = () => {
   };
 
   // Count active filters
-  const activeFiltersCount = [
-    statusFilter !== "all",
-    typeFilter !== "all",
-  ].filter(Boolean).length;
+  const activeFiltersCount = [statusFilter !== 'all', typeFilter !== 'all'].filter(Boolean).length;
 
   // Clear all filters
   const clearFilters = () => {
-    setStatusFilter("all");
-    setTypeFilter("all");
-    setSearchQuery("");
+    setStatusFilter('all');
+    setTypeFilter('all');
+    setSearchQuery('');
   };
 
   if (loading) {
@@ -295,11 +313,7 @@ const OrdersManager = () => {
               <div className="flex gap-2">
                 <Collapsible open={filtersOpen} onOpenChange={setFiltersOpen}>
                   <CollapsibleTrigger asChild>
-                    <Button
-                      variant="outline"
-                      size="default"
-                      className="h-11 md:h-10 whitespace-nowrap"
-                    >
+                    <Button variant="outline" size="default" className="h-11 md:h-10 whitespace-nowrap">
                       <Filter className="h-4 w-4 mr-2" />
                       Filtros
                       {activeFiltersCount > 0 && (
@@ -316,12 +330,7 @@ const OrdersManager = () => {
                         <div className="flex items-center justify-between">
                           <CardTitle className="text-base">Filtrar Pedidos</CardTitle>
                           {activeFiltersCount > 0 && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={clearFilters}
-                              className="h-8 text-xs"
-                            >
+                            <Button variant="ghost" size="sm" onClick={clearFilters} className="h-8 text-xs">
                               <X className="h-3 w-3 mr-1" />
                               Limpiar
                             </Button>
@@ -393,7 +402,7 @@ const OrdersManager = () => {
             <div className="text-center py-12">
               <Package className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
               <p className="text-muted-foreground">
-                {orders.length === 0 ? "No hay pedidos aún" : "No se encontraron pedidos con los filtros aplicados"}
+                {orders.length === 0 ? 'No hay pedidos aún' : 'No se encontraron pedidos con los filtros aplicados'}
               </p>
             </div>
           ) : (
@@ -432,9 +441,7 @@ const OrdersManager = () => {
 
                       return (
                         <TableRow key={order.id}>
-                          <TableCell className="font-medium">
-                            #{order.id.slice(0, 8)}
-                          </TableCell>
+                          <TableCell className="font-medium">#{order.id.slice(0, 8)}</TableCell>
                           <TableCell>
                             <div>
                               <p className="font-medium">{order.customer_name}</p>
@@ -442,92 +449,80 @@ const OrdersManager = () => {
                             </div>
                           </TableCell>
                           <TableCell>
-                            <Badge variant="outline" className={`flex items-center gap-1 w-fit ${orderTypeConfig.color}`}>
+                            <Badge
+                              variant="outline"
+                              className={`flex items-center gap-1 w-fit ${orderTypeConfig.color}`}
+                            >
                               <OrderTypeIcon className="w-3 h-3" />
                               {orderTypeConfig.label}
                             </Badge>
                           </TableCell>
-                        <TableCell className="font-medium">
-                          ${order.total_amount.toFixed(2)}
-                        </TableCell>
-                        <TableCell>
-                          {order.payment_proof_url ? (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => order.payment_proof_url && window.open(order.payment_proof_url, '_blank')}
-                              className="h-8 px-2"
-                            >
-                              <FileImage className="w-4 h-4 text-primary" />
-                            </Button>
-                          ) : (
-                            <span className="text-xs text-muted-foreground">-</span>
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          <Select
-                            value={order.status}
-                            onValueChange={(value) => updateOrderStatus(order.id, value)}
-                          >
-                            <SelectTrigger className="w-[140px]">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="pending">Pendiente</SelectItem>
-                              <SelectItem value="confirmed">Confirmado</SelectItem>
-                              <SelectItem value="preparing">Preparando</SelectItem>
-                              <SelectItem value="ready">Listo</SelectItem>
-                              <SelectItem value="delivered">Entregado</SelectItem>
-                              <SelectItem value="cancelled">Cancelado</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </TableCell>
-                        <TableCell>
-                          <div className="text-sm">
-                            {new Date(order.created_at).toLocaleDateString("es-ES", {
-                              day: "2-digit",
-                              month: "short",
-                              year: "numeric",
-                            })}
-                            <br />
-                            <span className="text-muted-foreground">
-                              {new Date(order.created_at).toLocaleTimeString("es-ES", {
-                                hour: "2-digit",
-                                minute: "2-digit",
-                              })}
-                            </span>
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex items-center justify-end gap-2">
-                            {order.order_type === 'delivery' && showDriverFeatures && (
+                          <TableCell className="font-medium">${order.total_amount.toFixed(2)}</TableCell>
+                          <TableCell>
+                            {order.payment_proof_url ? (
                               <Button
-                                variant="outline"
+                                variant="ghost"
                                 size="sm"
-                                onClick={() => handleAssignDriver(order)}
+                                onClick={() =>
+                                  order.payment_proof_url && window.open(order.payment_proof_url, '_blank')
+                                }
+                                className="h-8 px-2"
                               >
-                                <UserPlus className="w-4 h-4 mr-2" />
-                                Motorista
+                                <FileImage className="w-4 h-4 text-primary" />
                               </Button>
+                            ) : (
+                              <span className="text-xs text-muted-foreground">-</span>
                             )}
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleEditOrder(order.id)}
-                            >
-                              <Edit className="w-4 h-4 mr-2" />
-                              Editar
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleViewDetails(order)}
-                            >
-                              <Eye className="w-4 h-4 mr-2" />
-                              Ver
-                            </Button>
-                          </div>
-                        </TableCell>
+                          </TableCell>
+                          <TableCell>
+                            <Select value={order.status} onValueChange={(value) => updateOrderStatus(order.id, value)}>
+                              <SelectTrigger className="w-[140px]">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="pending">Pendiente</SelectItem>
+                                <SelectItem value="confirmed">Confirmado</SelectItem>
+                                <SelectItem value="preparing">Preparando</SelectItem>
+                                <SelectItem value="ready">Listo</SelectItem>
+                                <SelectItem value="delivered">Entregado</SelectItem>
+                                <SelectItem value="cancelled">Cancelado</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </TableCell>
+                          <TableCell>
+                            <div className="text-sm">
+                              {new Date(order.created_at).toLocaleDateString('es-ES', {
+                                day: '2-digit',
+                                month: 'short',
+                                year: 'numeric',
+                              })}
+                              <br />
+                              <span className="text-muted-foreground">
+                                {new Date(order.created_at).toLocaleTimeString('es-ES', {
+                                  hour: '2-digit',
+                                  minute: '2-digit',
+                                })}
+                              </span>
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex items-center justify-end gap-2">
+                              {order.order_type === 'delivery' && showDriverFeatures && (
+                                <Button variant="outline" size="sm" onClick={() => handleAssignDriver(order)}>
+                                  <UserPlus className="w-4 h-4 mr-2" />
+                                  Motorista
+                                </Button>
+                              )}
+                              <Button variant="ghost" size="sm" onClick={() => handleEditOrder(order.id)}>
+                                <Edit className="w-4 h-4 mr-2" />
+                                Editar
+                              </Button>
+                              <Button variant="ghost" size="sm" onClick={() => handleViewDetails(order)}>
+                                <Eye className="w-4 h-4 mr-2" />
+                                Ver
+                              </Button>
+                            </div>
+                          </TableCell>
                         </TableRow>
                       );
                     })}
@@ -541,9 +536,9 @@ const OrdersManager = () => {
                   <Pagination>
                     <PaginationContent>
                       <PaginationItem>
-                        <PaginationPrevious 
+                        <PaginationPrevious
                           onClick={() => goToPage(currentPage - 1)}
-                          className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                          className={currentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
                         />
                       </PaginationItem>
                       {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
@@ -558,9 +553,9 @@ const OrdersManager = () => {
                         </PaginationItem>
                       ))}
                       <PaginationItem>
-                        <PaginationNext 
+                        <PaginationNext
                           onClick={() => goToPage(currentPage + 1)}
-                          className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                          className={currentPage === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
                         />
                       </PaginationItem>
                     </PaginationContent>
@@ -578,7 +573,7 @@ const OrdersManager = () => {
           <DialogHeader>
             <DialogTitle>Detalles del Pedido #{selectedOrder?.id.slice(0, 8)}</DialogTitle>
           </DialogHeader>
-          
+
           {selectedOrder && (
             <div className="space-y-6">
               {/* Order Info */}
@@ -605,24 +600,24 @@ const OrdersManager = () => {
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Fecha de Creación</p>
                   <p className="mt-1">
-                    {new Date(selectedOrder.created_at).toLocaleDateString("es-ES", {
-                      year: "numeric",
-                      month: "long",
-                      day: "numeric",
-                      hour: "2-digit",
-                      minute: "2-digit",
+                    {new Date(selectedOrder.created_at).toLocaleDateString('es-ES', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit',
                     })}
                   </p>
                 </div>
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Última Actualización</p>
                   <p className="mt-1">
-                    {new Date(selectedOrder.updated_at).toLocaleDateString("es-ES", {
-                      year: "numeric",
-                      month: "long",
-                      day: "numeric",
-                      hour: "2-digit",
-                      minute: "2-digit",
+                    {new Date(selectedOrder.updated_at).toLocaleDateString('es-ES', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit',
                     })}
                   </p>
                 </div>
@@ -650,7 +645,9 @@ const OrdersManager = () => {
                     <div className="bg-orange-50 dark:bg-orange-950/20 p-3 rounded-lg border border-orange-200 dark:border-orange-800">
                       <div className="flex items-center gap-2 mb-1">
                         <Truck className="w-4 h-4 text-orange-600 dark:text-orange-400" />
-                        <p className="text-sm font-semibold text-orange-900 dark:text-orange-100">Dirección de Entrega</p>
+                        <p className="text-sm font-semibold text-orange-900 dark:text-orange-100">
+                          Dirección de Entrega
+                        </p>
                       </div>
                       <p className="text-orange-800 dark:text-orange-200">{selectedOrder.delivery_address}</p>
                     </div>
@@ -669,13 +666,9 @@ const OrdersManager = () => {
                           <p className="font-medium">
                             {item.quantity}x {item.item_name}
                           </p>
-                          <p className="text-sm text-muted-foreground">
-                            ${item.price_at_time.toFixed(2)} c/u
-                          </p>
+                          <p className="text-sm text-muted-foreground">${item.price_at_time.toFixed(2)} c/u</p>
                         </div>
-                        <p className="font-semibold">
-                          ${(item.price_at_time * item.quantity).toFixed(2)}
-                        </p>
+                        <p className="font-semibold">${(item.price_at_time * item.quantity).toFixed(2)}</p>
                       </div>
                       {item.order_item_extras && item.order_item_extras.length > 0 && (
                         <div className="mt-2 pl-4 border-l-2 border-primary/20">
@@ -707,59 +700,69 @@ const OrdersManager = () => {
                     <div>
                       <p className="text-sm font-medium text-muted-foreground mb-2">Comprobante de Pago</p>
                       <div className="space-y-3">
-                        {/* Preview if it's an image */}
-                        {(selectedOrder.payment_proof_url.includes('.jpg') || 
-                          selectedOrder.payment_proof_url.includes('.jpeg') || 
-                          selectedOrder.payment_proof_url.includes('.png') || 
-                          selectedOrder.payment_proof_url.includes('.webp')) && (
-                          <div className="relative border rounded-lg overflow-hidden bg-muted">
-                            <img 
-                              src={selectedOrder.payment_proof_url} 
-                              alt="Comprobante de pago"
-                              className="w-full h-48 object-contain"
-                            />
-                          </div>
+                        {/* Show ShortUrlDisplay if short URL exists, otherwise show traditional view */}
+                        {selectedOrder.payment_proof_short_url && selectedOrder.payment_proof_short_code ? (
+                          <ShortUrlDisplay
+                            shortUrl={selectedOrder.payment_proof_short_url}
+                            shortCode={selectedOrder.payment_proof_short_code}
+                            longUrl={selectedOrder.payment_proof_url}
+                          />
+                        ) : (
+                          <>
+                            {/* Traditional view for old orders without short URLs */}
+                            {/* Preview if it's an image */}
+                            {(selectedOrder.payment_proof_url.includes('.jpg') ||
+                              selectedOrder.payment_proof_url.includes('.jpeg') ||
+                              selectedOrder.payment_proof_url.includes('.png') ||
+                              selectedOrder.payment_proof_url.includes('.webp')) && (
+                              <div className="relative border rounded-lg overflow-hidden bg-muted">
+                                <img
+                                  src={selectedOrder.payment_proof_url}
+                                  alt="Comprobante de pago"
+                                  className="w-full h-48 object-contain"
+                                />
+                              </div>
+                            )}
+
+                            {/* Action buttons */}
+                            <div className="flex gap-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => window.open(selectedOrder.payment_proof_url, '_blank')}
+                                className="flex-1"
+                              >
+                                <ExternalLink className="w-4 h-4 mr-2" />
+                                Ver completo
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  const link = document.createElement('a');
+                                  link.href = selectedOrder.payment_proof_url!;
+                                  link.download = `comprobante-${selectedOrder.id.slice(0, 8)}.jpg`;
+                                  link.target = '_blank';
+                                  document.body.appendChild(link);
+                                  link.click();
+                                  document.body.removeChild(link);
+                                  toast.success('Descargando comprobante...');
+                                }}
+                                className="flex-1"
+                              >
+                                <Download className="w-4 h-4 mr-2" />
+                                Descargar
+                              </Button>
+                            </div>
+                          </>
                         )}
-                        
-                        {/* Action buttons */}
-                        <div className="flex gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => window.open(selectedOrder.payment_proof_url, '_blank')}
-                            className="flex-1"
-                          >
-                            <ExternalLink className="w-4 h-4 mr-2" />
-                            Ver completo
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => {
-                              const link = document.createElement('a');
-                              link.href = selectedOrder.payment_proof_url!;
-                              link.download = `comprobante-${selectedOrder.id.slice(0, 8)}.jpg`;
-                              link.target = '_blank';
-                              document.body.appendChild(link);
-                              link.click();
-                              document.body.removeChild(link);
-                              toast.success("Descargando comprobante...");
-                            }}
-                            className="flex-1"
-                          >
-                            <Download className="w-4 h-4 mr-2" />
-                            Descargar
-                          </Button>
-                        </div>
                       </div>
                     </div>
                   )}
                   <div className="pt-2 border-t">
                     <div className="flex justify-between items-center">
                       <span className="font-bold text-lg">Total</span>
-                      <span className="font-bold text-lg text-primary">
-                        ${selectedOrder.total_amount.toFixed(2)}
-                      </span>
+                      <span className="font-bold text-lg text-primary">${selectedOrder.total_amount.toFixed(2)}</span>
                     </div>
                   </div>
                 </div>

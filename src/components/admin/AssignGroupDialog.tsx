@@ -213,7 +213,6 @@ export function AssignGroupDialog({ open, onClose, groupId, groupName, storeId }
         onClose();
       }
     } catch (error) {
-      console.error('Error assigning group:', error);
       toast.error('Error al asignar el grupo');
     }
   };

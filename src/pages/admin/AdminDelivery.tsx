@@ -1,26 +1,26 @@
-import { useState } from "react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Skeleton } from "@/components/ui/skeleton";
-import { toast } from "sonner";
-import { Package, Users, Settings, DollarSign, MapPin, Truck, Save, Loader2 } from "lucide-react";
-import AdminLayout from "@/components/admin/AdminLayout";
-import { DriversManager } from "@/components/admin/DriversManager";
-import { AdminDeliveryDashboard } from "@/components/delivery/AdminDeliveryDashboard";
-import { useStore } from "@/contexts/StoreContext";
-import { supabase } from "@/integrations/supabase/client";
-import { H2, H3, Body, Caption } from "@/components/ui/typography";
-import { useModuleAccess } from "@/hooks/useSubscription";
-import { ModuleNotAvailable } from "@/components/admin/ModuleNotAvailable";
+import { useState } from 'react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Skeleton } from '@/components/ui/skeleton';
+import { toast } from 'sonner';
+import { Package, Users, Settings, DollarSign, MapPin, Truck, Save, Loader2 } from 'lucide-react';
+import AdminLayout from '@/components/admin/AdminLayout';
+import { DriversManager } from '@/components/admin/DriversManager';
+import { AdminDeliveryDashboard } from '@/components/delivery/AdminDeliveryDashboard';
+import { useStore } from '@/contexts/StoreContext';
+import { supabase } from '@/integrations/supabase/client';
+import { H2, H3, Body, Caption } from '@/components/ui/typography';
+import { useModuleAccess } from '@/hooks/useSubscription';
+import { ModuleNotAvailable } from '@/components/admin/ModuleNotAvailable';
 
 export default function AdminDelivery() {
   const { store, reloadStore } = useStore();
   const { data: hasDeliveryModule, isLoading: checkingModule } = useModuleAccess('delivery');
-  const [activeTab, setActiveTab] = useState("drivers");
+  const [activeTab, setActiveTab] = useState('drivers');
   const [saving, setSaving] = useState(false);
 
   // Delivery settings form
@@ -28,10 +28,10 @@ export default function AdminDelivery() {
     base_delivery_price: store?.base_delivery_price ?? 2.0,
     price_per_km: store?.price_per_km ?? 0.5,
     max_delivery_distance_km: store?.max_delivery_distance_km ?? 15,
-    delivery_price_mode_v2: store?.delivery_price_mode_v2 ?? "fixed",
+    delivery_price_mode_v2: store?.delivery_price_mode_v2 ?? 'fixed',
     store_lat: store?.store_lat ?? null,
     store_lng: store?.store_lng ?? null,
-    store_address_full: store?.store_address_full ?? "",
+    store_address_full: store?.store_address_full ?? '',
   });
 
   const handleSaveSettings = async () => {
@@ -40,7 +40,7 @@ export default function AdminDelivery() {
     setSaving(true);
     try {
       const { error } = await supabase
-        .from("stores")
+        .from('stores')
         .update({
           base_delivery_price: deliverySettings.base_delivery_price,
           price_per_km: deliverySettings.price_per_km,
@@ -50,15 +50,14 @@ export default function AdminDelivery() {
           store_lng: deliverySettings.store_lng,
           store_address_full: deliverySettings.store_address_full,
         })
-        .eq("id", store.id);
+        .eq('id', store.id);
 
       if (error) throw error;
 
-      toast.success("Configuración guardada");
+      toast.success('Configuración guardada');
       await reloadStore();
     } catch (error) {
-      console.error("Error saving settings:", error);
-      toast.error("Error al guardar configuración");
+      toast.error('Error al guardar configuración');
     } finally {
       setSaving(false);
     }
@@ -67,7 +66,7 @@ export default function AdminDelivery() {
   // Geocode address using Google Maps
   const handleGeocodeAddress = async () => {
     if (!deliverySettings.store_address_full) {
-      toast.error("Ingresa una dirección");
+      toast.error('Ingresa una dirección');
       return;
     }
 
@@ -93,8 +92,7 @@ export default function AdminDelivery() {
 
       toast.success(`Coordenadas obtenidas: ${data.lat.toFixed(6)}, ${data.lng.toFixed(6)}`);
     } catch (error: any) {
-      console.error("Error geocoding address:", error);
-      toast.error(error.message || "Error al obtener coordenadas. Verifica que la dirección sea correcta.");
+      toast.error(error.message || 'Error al obtener coordenadas. Verifica que la dirección sea correcta.');
     } finally {
       setSaving(false);
     }
@@ -190,15 +188,15 @@ export default function AdminDelivery() {
                       </SelectContent>
                     </Select>
                     <Caption className="text-muted-foreground">
-                      {deliverySettings.delivery_price_mode_v2 === "per_km"
-                        ? "El precio se calcula automáticamente según la distancia"
-                        : deliverySettings.delivery_price_mode_v2 === "zones"
-                          ? "Usa las zonas de delivery configuradas"
-                          : "Usa el precio fijo de delivery"}
+                      {deliverySettings.delivery_price_mode_v2 === 'per_km'
+                        ? 'El precio se calcula automáticamente según la distancia'
+                        : deliverySettings.delivery_price_mode_v2 === 'zones'
+                        ? 'Usa las zonas de delivery configuradas'
+                        : 'Usa el precio fijo de delivery'}
                     </Caption>
                   </div>
 
-                  {deliverySettings.delivery_price_mode_v2 === "per_km" && (
+                  {deliverySettings.delivery_price_mode_v2 === 'per_km' && (
                     <>
                       <div className="space-y-2">
                         <Label>Precio Base ($)</Label>
@@ -255,7 +253,7 @@ export default function AdminDelivery() {
                       Ejemplo de cálculo:
                     </Body>
                     <Caption className="text-muted-foreground">
-                      Para una entrega de 5 km:{" "}
+                      Para una entrega de 5 km:{' '}
                       <span className="font-medium text-foreground">
                         ${deliverySettings.base_delivery_price} + (5 × ${deliverySettings.price_per_km}) = $
                         {(deliverySettings.base_delivery_price + 5 * deliverySettings.price_per_km).toFixed(2)}
@@ -295,7 +293,7 @@ export default function AdminDelivery() {
                       <Input
                         type="number"
                         step="any"
-                        value={deliverySettings.store_lat || ""}
+                        value={deliverySettings.store_lat || ''}
                         onChange={(e) =>
                           setDeliverySettings({
                             ...deliverySettings,
@@ -310,7 +308,7 @@ export default function AdminDelivery() {
                       <Input
                         type="number"
                         step="any"
-                        value={deliverySettings.store_lng || ""}
+                        value={deliverySettings.store_lng || ''}
                         onChange={(e) =>
                           setDeliverySettings({
                             ...deliverySettings,

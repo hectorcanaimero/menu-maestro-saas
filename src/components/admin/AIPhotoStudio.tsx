@@ -205,13 +205,12 @@ export const AIPhotoStudio = ({ open, onOpenChange, menuItem, onImageUpdated }: 
 
       const creditResult = await useCredit();
       if (!creditResult.success) {
-        console.warn('Could not deduct credit');
+        throw new Error('Error al usar crédito');
       }
 
       refetch();
       toast.success('¡Imagen mejorada con éxito!');
     } catch (error) {
-      console.error('Error enhancing image:', error);
       toast.error(error instanceof Error ? error.message : 'Error al mejorar imagen');
     } finally {
       setIsProcessing(false);
@@ -231,7 +230,6 @@ export const AIPhotoStudio = ({ open, onOpenChange, menuItem, onImageUpdated }: 
       onImageUpdated();
       handleClose();
     } catch (error) {
-      console.error('Error applying image:', error);
       toast.error('Error al aplicar imagen');
     } finally {
       setIsApplying(false);
@@ -347,7 +345,9 @@ export const AIPhotoStudio = ({ open, onOpenChange, menuItem, onImageUpdated }: 
                       >
                         <Loader2 className="w-8 h-8 sm:w-12 sm:h-12 mx-auto mb-3 text-primary animate-spin" />
                         <p className="text-xs sm:text-sm text-muted-foreground">Mejorando imagen...</p>
-                        <p className="text-[10px] sm:text-xs text-muted-foreground mt-1">Esto puede tomar unos segundos</p>
+                        <p className="text-[10px] sm:text-xs text-muted-foreground mt-1">
+                          Esto puede tomar unos segundos
+                        </p>
                       </motion.div>
                     ) : previewUrl ? (
                       <motion.img
@@ -415,13 +415,22 @@ export const AIPhotoStudio = ({ open, onOpenChange, menuItem, onImageUpdated }: 
           <div className="flex gap-2 sm:gap-3">
             {previewUrl ? (
               <>
-                <Button variant="outline" onClick={handleDiscard} className="flex-1 text-xs sm:text-sm" disabled={isApplying}>
+                <Button
+                  variant="outline"
+                  onClick={handleDiscard}
+                  className="flex-1 text-xs sm:text-sm"
+                  disabled={isApplying}
+                >
                   <X className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
                   <span className="hidden xs:inline">Descartar</span>
                   <span className="xs:hidden">Cancelar</span>
                 </Button>
                 <Button onClick={handleApply} className="flex-1 text-xs sm:text-sm" disabled={isApplying}>
-                  {isApplying ? <Loader2 className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2 animate-spin" /> : <Check className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />}
+                  {isApplying ? (
+                    <Loader2 className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2 animate-spin" />
+                  ) : (
+                    <Check className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                  )}
                   Aplicar
                 </Button>
               </>

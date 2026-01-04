@@ -1,13 +1,13 @@
-import { useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
-import { Slider } from "@/components/ui/slider";
-import { toast } from "sonner";
-import { Loader2, Volume2 } from "lucide-react";
-import { playNotificationSound } from "@/lib/notificationSound";
+import { useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
+import { Slider } from '@/components/ui/slider';
+import { toast } from 'sonner';
+import { Loader2, Volume2 } from 'lucide-react';
+import { playNotificationSound } from '@/lib/notificationSound';
 
 interface AdvancedSettingsTabProps {
   storeId: string;
@@ -25,23 +25,21 @@ export const AdvancedSettingsTab = ({ storeId, initialData }: AdvancedSettingsTa
   const [removeZipcode, setRemoveZipcode] = useState(initialData.remove_zipcode ?? false);
   const [removeAddressNumber, setRemoveAddressNumber] = useState(initialData.remove_address_number ?? false);
   const [enableAudioNotifications, setEnableAudioNotifications] = useState(
-    initialData.enable_audio_notifications ?? true
+    initialData.enable_audio_notifications ?? true,
   );
   const [notificationVolume, setNotificationVolume] = useState(initialData.notification_volume ?? 80);
-  const [notificationRepeatCount, setNotificationRepeatCount] = useState(
-    initialData.notification_repeat_count ?? 3
-  );
+  const [notificationRepeatCount, setNotificationRepeatCount] = useState(initialData.notification_repeat_count ?? 3);
 
   const handleTestSound = () => {
     playNotificationSound(notificationVolume, notificationRepeatCount);
-    toast.info("Reproduciendo sonido de prueba...");
+    toast.info('Reproduciendo sonido de prueba...');
   };
 
   const handleSave = async () => {
     setSaving(true);
     try {
       const { error } = await supabase
-        .from("stores")
+        .from('stores')
         .update({
           remove_zipcode: removeZipcode,
           remove_address_number: removeAddressNumber,
@@ -50,14 +48,13 @@ export const AdvancedSettingsTab = ({ storeId, initialData }: AdvancedSettingsTa
           notification_repeat_count: notificationRepeatCount,
           updated_at: new Date().toISOString(),
         })
-        .eq("id", storeId);
+        .eq('id', storeId);
 
       if (error) throw error;
 
-      toast.success("Configuración avanzada guardada correctamente");
+      toast.success('Configuración avanzada guardada correctamente');
     } catch (error: unknown) {
-      console.error("Error saving advanced settings:", error);
-      toast.error("Error al guardar la configuración avanzada");
+      toast.error('Error al guardar la configuración avanzada');
     } finally {
       setSaving(false);
     }
@@ -68,7 +65,9 @@ export const AdvancedSettingsTab = ({ storeId, initialData }: AdvancedSettingsTa
       <Card className="border-0 shadow-none md:border md:shadow-sm">
         <CardHeader className="px-4 md:px-6">
           <CardTitle className="text-xl md:text-2xl">Ajustes avanzados</CardTitle>
-          <CardDescription className="text-sm">En esta sección puede configurar algunos ajustes avanzados.</CardDescription>
+          <CardDescription className="text-sm">
+            En esta sección puede configurar algunos ajustes avanzados.
+          </CardDescription>
         </CardHeader>
         <CardContent className="px-4 md:px-6 space-y-4 md:space-y-6">
           <div className="space-y-4">
@@ -125,8 +124,8 @@ export const AdvancedSettingsTab = ({ storeId, initialData }: AdvancedSettingsTa
                 Audio Notifications
               </Label>
               <p className="text-xs md:text-sm text-muted-foreground mt-1">
-                Enable audio notifications for new orders. Play a sound alert when new orders are received in the
-                admin panel.
+                Enable audio notifications for new orders. Play a sound alert when new orders are received in the admin
+                panel.
               </p>
             </div>
             <Switch
@@ -165,7 +164,7 @@ export const AdvancedSettingsTab = ({ storeId, initialData }: AdvancedSettingsTa
                 Repeat Count
               </Label>
               <span className="text-xs md:text-sm text-muted-foreground">
-                {notificationRepeatCount} {notificationRepeatCount === 1 ? "time" : "times"}
+                {notificationRepeatCount} {notificationRepeatCount === 1 ? 'time' : 'times'}
               </span>
             </div>
             <p className="text-xs md:text-sm text-muted-foreground">How many times to repeat the notification sound.</p>

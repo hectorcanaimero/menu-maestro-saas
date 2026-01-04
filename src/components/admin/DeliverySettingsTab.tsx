@@ -25,7 +25,8 @@ import {
 import { ZoneFreeDeliveryDialog } from './ZoneFreeDeliveryDialog';
 
 const deliverySchema = z.object({
-  estimated_delivery_time: z.string()
+  estimated_delivery_time: z
+    .string()
     .optional()
     .refine(
       (val) => {
@@ -36,7 +37,7 @@ const deliverySchema = z.object({
       },
       {
         message: 'Formato válido: "30-45 min", "1-2 horas", "30 minutos"',
-      }
+      },
     ),
   skip_payment_digital_menu: z.boolean().default(false),
   delivery_price_mode: z.enum(['fixed', 'by_zone']).default('fixed'),
@@ -61,12 +62,7 @@ interface DeliverySettingsTabProps {
   initialData?: Partial<DeliveryFormData>;
 }
 
-const COMMON_DELIVERY_TIMES = [
-  '15-30 min',
-  '30-45 min',
-  '45-60 min',
-  '1-2 horas',
-];
+const COMMON_DELIVERY_TIMES = ['15-30 min', '30-45 min', '45-60 min', '1-2 horas'];
 
 export const DeliverySettingsTab = ({ storeId, initialData }: DeliverySettingsTabProps) => {
   // All hooks must be called unconditionally at the top level
@@ -118,7 +114,6 @@ export const DeliverySettingsTab = ({ storeId, initialData }: DeliverySettingsTa
       if (error) throw error;
       setZones(data || []);
     } catch (error) {
-      console.error('Error fetching zones:', error);
       toast.error('Error al cargar zonas de entrega');
     }
   };
@@ -141,7 +136,6 @@ export const DeliverySettingsTab = ({ storeId, initialData }: DeliverySettingsTa
       if (error) throw error;
       toast.success('Configuración de entrega actualizada');
     } catch (error) {
-      console.error('Error updating delivery settings:', error);
       toast.error('Error al actualizar configuración');
     } finally {
       setLoading(false);
@@ -157,9 +151,7 @@ export const DeliverySettingsTab = ({ storeId, initialData }: DeliverySettingsTa
     }
 
     // Check for duplicate zone names (case-insensitive)
-    const isDuplicate = zones.some(
-      (zone) => zone.zone_name.toLowerCase() === trimmedZoneName.toLowerCase()
-    );
+    const isDuplicate = zones.some((zone) => zone.zone_name.toLowerCase() === trimmedZoneName.toLowerCase());
 
     if (isDuplicate) {
       toast.error(`La zona "${trimmedZoneName}" ya existe. Por favor usa un nombre diferente.`);
@@ -181,7 +173,6 @@ export const DeliverySettingsTab = ({ storeId, initialData }: DeliverySettingsTa
       setNewZone({ zone_name: '', delivery_price: '' });
       fetchZones();
     } catch (error) {
-      console.error('Error adding zone:', error);
       toast.error('Error al agregar zona');
     }
   };
@@ -200,7 +191,6 @@ export const DeliverySettingsTab = ({ storeId, initialData }: DeliverySettingsTa
       if (error) throw error;
       return data?.length || 0;
     } catch (error) {
-      console.error('Error checking active orders:', error);
       return 0;
     }
   };
@@ -229,7 +219,6 @@ export const DeliverySettingsTab = ({ storeId, initialData }: DeliverySettingsTa
 
       fetchZones();
     } catch (error) {
-      console.error('Error deleting zone:', error);
       toast.error('Error al eliminar zona');
     } finally {
       setDeleteDialogOpen(false);
@@ -257,7 +246,9 @@ export const DeliverySettingsTab = ({ storeId, initialData }: DeliverySettingsTa
                 id="estimated_delivery_time"
                 {...register('estimated_delivery_time')}
                 placeholder="Ej: 30-45 min"
-                className={`h-11 md:h-10 text-base md:text-sm ${errors.estimated_delivery_time ? 'border-red-500' : ''}`}
+                className={`h-11 md:h-10 text-base md:text-sm ${
+                  errors.estimated_delivery_time ? 'border-red-500' : ''
+                }`}
                 onFocus={() => setShowTimeSuggestions(true)}
                 onBlur={() => setTimeout(() => setShowTimeSuggestions(false), 200)}
               />
@@ -265,9 +256,7 @@ export const DeliverySettingsTab = ({ storeId, initialData }: DeliverySettingsTa
               {/* Suggestions dropdown */}
               {showTimeSuggestions && (
                 <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-800 border rounded-md shadow-lg">
-                  <div className="p-2 text-xs font-medium text-muted-foreground border-b">
-                    Tiempos sugeridos:
-                  </div>
+                  <div className="p-2 text-xs font-medium text-muted-foreground border-b">Tiempos sugeridos:</div>
                   {COMMON_DELIVERY_TIMES.map((time) => (
                     <button
                       key={time}
@@ -527,18 +516,15 @@ export const DeliverySettingsTab = ({ storeId, initialData }: DeliverySettingsTa
                   <p className="font-medium text-orange-600 dark:text-orange-400">
                     Se encontraron {activeOrdersCount} orden(es) activa(s) que incluyen la zona "{zoneToDelete?.name}".
                   </p>
-                  <p>
-                    Estas órdenes están en estado pendiente, confirmado, preparando o listo para entrega.
-                  </p>
+                  <p>Estas órdenes están en estado pendiente, confirmado, preparando o listo para entrega.</p>
                   <p className="font-medium">
-                    ¿Estás seguro de que deseas eliminar esta zona? Las órdenes existentes no se verán afectadas,
-                    pero no podrás usar esta zona para nuevas órdenes.
+                    ¿Estás seguro de que deseas eliminar esta zona? Las órdenes existentes no se verán afectadas, pero
+                    no podrás usar esta zona para nuevas órdenes.
                   </p>
                 </>
               ) : (
                 <p>
-                  ¿Estás seguro de que deseas eliminar la zona "{zoneToDelete?.name}"?
-                  Esta acción no se puede deshacer.
+                  ¿Estás seguro de que deseas eliminar la zona "{zoneToDelete?.name}"? Esta acción no se puede deshacer.
                 </p>
               )}
             </AlertDialogDescription>

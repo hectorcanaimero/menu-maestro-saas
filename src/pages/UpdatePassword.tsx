@@ -1,18 +1,18 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Eye, EyeOff, Lock } from "lucide-react";
-import { toast } from "sonner";
-import { PasswordStrengthMeter } from "@/components/ui/password-strength-meter";
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Eye, EyeOff, Lock } from 'lucide-react';
+import { toast } from 'sonner';
+import { PasswordStrengthMeter } from '@/components/ui/password-strength-meter';
 
 const UpdatePassword = () => {
   const navigate = useNavigate();
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -20,12 +20,12 @@ const UpdatePassword = () => {
     e.preventDefault();
 
     if (password !== confirmPassword) {
-      toast.error("Las contraseñas no coinciden");
+      toast.error('Las contraseñas no coinciden');
       return;
     }
 
     if (password.length < 8) {
-      toast.error("La contraseña debe tener al menos 8 caracteres");
+      toast.error('La contraseña debe tener al menos 8 caracteres');
       return;
     }
 
@@ -41,11 +41,10 @@ const UpdatePassword = () => {
         return;
       }
 
-      toast.success("Contraseña actualizada exitosamente");
-      navigate("/auth");
+      toast.success('Contraseña actualizada exitosamente');
+      navigate('/auth');
     } catch (error) {
-      console.error("Error updating password:", error);
-      toast.error("Error al actualizar la contraseña");
+      toast.error('Error al actualizar la contraseña');
     } finally {
       setIsLoading(false);
     }
@@ -59,9 +58,7 @@ const UpdatePassword = () => {
             <Lock className="w-6 h-6 text-primary" />
           </div>
           <CardTitle className="text-2xl font-bold">Nueva Contraseña</CardTitle>
-          <CardDescription>
-            Ingresa tu nueva contraseña para tu cuenta
-          </CardDescription>
+          <CardDescription>Ingresa tu nueva contraseña para tu cuenta</CardDescription>
         </CardHeader>
 
         <CardContent>
@@ -71,7 +68,7 @@ const UpdatePassword = () => {
               <div className="relative">
                 <Input
                   id="password"
-                  type={showPassword ? "text" : "password"}
+                  type={showPassword ? 'text' : 'password'}
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -83,7 +80,7 @@ const UpdatePassword = () => {
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                  aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                  aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
                 >
                   {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
@@ -95,7 +92,7 @@ const UpdatePassword = () => {
               <Label htmlFor="confirmPassword">Confirmar Contraseña</Label>
               <Input
                 id="confirmPassword"
-                type={showPassword ? "text" : "password"}
+                type={showPassword ? 'text' : 'password'}
                 placeholder="••••••••"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
@@ -115,7 +112,7 @@ const UpdatePassword = () => {
               className="w-full"
               disabled={isLoading || password !== confirmPassword || password.length < 8}
             >
-              {isLoading ? "Actualizando..." : "Actualizar Contraseña"}
+              {isLoading ? 'Actualizando...' : 'Actualizar Contraseña'}
             </Button>
           </form>
         </CardContent>

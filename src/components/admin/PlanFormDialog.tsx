@@ -178,10 +178,6 @@ export function PlanFormDialog({ open, onOpenChange, plan, onSubmit, isSubmittin
 
   // Handle form submission
   const handleSubmit = async (values: PlanFormValues) => {
-    console.log('[PlanFormDialog] handleSubmit called with values:', values);
-    console.log('[PlanFormDialog] isEditMode:', isEditMode);
-    console.log('[PlanFormDialog] plan:', plan);
-
     try {
       if (isEditMode && plan) {
         // Edit mode - send updates
@@ -234,11 +230,9 @@ export function PlanFormDialog({ open, onOpenChange, plan, onSubmit, isSubmittin
       }
     } catch (error) {
       // Error is handled by the mutation
-      console.error('[PlanFormDialog] Error submitting form:', error);
+      throw new Error(error as string | undefined);
     }
   };
-  console.log('[PlanFormDialog] Rendering dialog, open:', open, 'isEditMode:', isEditMode);
-  console.log('[PlanFormDialog] Form state:', form.formState.errors);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -255,7 +249,6 @@ export function PlanFormDialog({ open, onOpenChange, plan, onSubmit, isSubmittin
         <Form {...form}>
           <form
             onSubmit={(e) => {
-              console.log('[PlanFormDialog] Form onSubmit event triggered!', e);
               form.handleSubmit(handleSubmit)(e);
             }}
             className="space-y-6"
@@ -652,16 +645,7 @@ export function PlanFormDialog({ open, onOpenChange, plan, onSubmit, isSubmittin
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isSubmitting}>
                 Cancelar
               </Button>
-              <Button
-                type="submit"
-                disabled={isSubmitting}
-                onClick={() => {
-                  console.log('[PlanFormDialog] Submit button clicked!');
-                  console.log('[PlanFormDialog] Form errors:', form.formState.errors);
-                  console.log('[PlanFormDialog] Form isValid:', form.formState.isValid);
-                  console.log('[PlanFormDialog] Full error details:', JSON.stringify(form.formState.errors, null, 2));
-                }}
-              >
+              <Button type="submit" disabled={isSubmitting} onClick={() => {}}>
                 {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 {isEditMode ? 'Guardar Cambios' : 'Crear Plan'}
               </Button>

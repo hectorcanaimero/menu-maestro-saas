@@ -1,9 +1,9 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from "react";
-import { toast } from "sonner";
-import posthog from "posthog-js";
-import { useStore } from "./StoreContext";
-import { setSecureItem, getSecureItem, removeSecureItem } from "@/lib/secureStorage";
-import { trackCartOperation, captureException } from "@/lib/sentry-utils";
+import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { toast } from 'sonner';
+import posthog from 'posthog-js';
+import { useStore } from './StoreContext';
+import { setSecureItem, getSecureItem, removeSecureItem } from '@/lib/secureStorage';
+import { trackCartOperation, captureException } from '@/lib/sentry-utils';
 
 export interface CartItemExtra {
   id: string;
@@ -24,7 +24,7 @@ export interface CartItem {
 
 interface CartContextType {
   items: CartItem[];
-  addItem: (item: Omit<CartItem, "quantity">) => void;
+  addItem: (item: Omit<CartItem, 'quantity'>) => void;
   removeItem: (id: string) => void;
   updateQuantity: (id: string, quantity: number) => void;
   clearCart: () => void;
@@ -42,23 +42,13 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   // Load encrypted cart on mount
   useEffect(() => {
     const loadCart = async () => {
-      console.log('📦 [CartContext] ========== LOAD CART START ==========');
       try {
         const savedCart = await getSecureItem<CartItem[]>('cart');
-        console.log('[CartContext] Retrieved from storage:', savedCart ? 'YES' : 'NO');
 
         if (savedCart && Array.isArray(savedCart)) {
-          console.log('[CartContext] Loaded cart items:', savedCart.length);
-          console.log('[CartContext] Cart data:', JSON.stringify(savedCart, null, 2));
           setItems(savedCart);
-          console.log('[CartContext] ✅ Cart loaded successfully');
-        } else {
-          console.log('[CartContext] No saved cart found or invalid format');
         }
       } catch (error) {
-        console.error('❌ [CartContext] Error loading cart:', error);
-        console.error('[CartContext] Error details:', (error as Error).stack);
-
         // Track cart loading error in Sentry
         captureException(error as Error, {
           tags: { context: 'cart_load' },
@@ -66,10 +56,8 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
           level: 'warning',
         });
         // Fail silently - start with empty cart
-        console.log('[CartContext] Starting with empty cart due to error');
       } finally {
         setIsLoadingCart(false);
-        console.log('📦 [CartContext] ========== LOAD CART END ==========');
       }
     };
 
@@ -80,35 +68,24 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     // Don't save until initial load is complete
     if (isLoadingCart) {
-      console.log('💾 [CartContext] Skipping save - cart still loading');
       return;
     }
 
     const saveCart = async () => {
       try {
-        console.log('💾 [CartContext] ========== SAVE CART START ==========');
-        console.log('[CartContext] Items to save:', items.length);
-        console.log('[CartContext] Cart data:', JSON.stringify(items, null, 2));
-
         if (items.length > 0) {
           await setSecureItem('cart', items);
-          console.log('[CartContext] ✅ Cart saved to secure storage');
         } else {
           // Remove cart if empty
           removeSecureItem('cart');
-          console.log('[CartContext] ✅ Empty cart removed from storage');
         }
-        console.log('💾 [CartContext] ========== SAVE CART END ==========');
       } catch (error) {
-        console.error('❌ [CartContext] Error saving cart:', error);
-        console.error('[CartContext] Error details:', (error as Error).stack);
-
         // Capture exception in Sentry
         captureException(error as Error, {
           tags: { context: 'cart_save' },
           extra: {
             items_count: items.length,
-            error_message: (error as Error).message
+            error_message: (error as Error).message,
           },
           level: 'warning',
         });
@@ -125,39 +102,26 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     }
     // Sort extras by ID to ensure deterministic order
     const sortedExtrasIds = extras
-      .map(e => e.id)
+      .map((e) => e.id)
       .sort()
       .join(',');
     return `${productId}::${sortedExtrasIds}`;
   };
 
-  const addItem = (item: Omit<CartItem, "quantity">) => {
-    console.log('🛒 [CartContext] ========== ADD TO CART START ==========');
-    console.log('[CartContext] Item to add:', JSON.stringify(item, null, 2));
-    console.log('[CartContext] Current items count:', items.length);
-
+  const addItem = (item: Omit<CartItem, 'quantity'>) => {
     try {
       setItems((current) => {
-        console.log('[CartContext] Current cart state:', JSON.stringify(current, null, 2));
-
         // Create unique cart item ID based on product and sorted extras IDs
         const cartItemId = item.cartItemId || generateCartItemId(item.id, item.extras);
-        console.log('[CartContext] Generated cartItemId:', cartItemId);
 
         const itemWithId = { ...item, cartItemId };
-        console.log('[CartContext] Item with ID:', JSON.stringify(itemWithId, null, 2));
 
         const existing = current.find((i) => i.cartItemId === cartItemId);
-        console.log('[CartContext] Existing item found:', existing ? 'YES' : 'NO');
-        if (existing) {
-          console.log('[CartContext] Existing item details:', JSON.stringify(existing, null, 2));
-        }
 
         // Track event in PostHog
         try {
           const extrasPrice = item.extras?.reduce((sum, extra) => sum + extra.price, 0) || 0;
           const totalPrice = item.price + extrasPrice;
-          console.log('[CartContext] Price calculation - Base:', item.price, 'Extras:', extrasPrice, 'Total:', totalPrice);
 
           // Calculate total cart value (including current cart + new item)
           const currentCartValue = current.reduce((sum, cartItem) => {
@@ -170,8 +134,6 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
           const updatedCartValue = existing
             ? currentCartValue + totalPrice // Add one more unit of existing item
             : currentCartValue + newItemValue; // Add new item
-
-          console.log('[CartContext] Cart value - Current:', currentCartValue, 'Updated:', updatedCartValue);
 
           posthog.capture('product_added_to_cart', {
             store_id: store?.id,
@@ -187,9 +149,8 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
             cart_value: updatedCartValue,
             items_in_cart: existing ? current.length : current.length + 1,
           });
-          console.log('[CartContext] ✅ PostHog event captured successfully');
         } catch (error) {
-          console.error('[CartContext] ❌ PostHog error:', error);
+          return error;
         }
 
         // Track in Sentry with breadcrumb
@@ -200,35 +161,23 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
             has_extras: (item.extras?.length || 0) > 0,
             extras_count: item.extras?.length || 0,
           });
-          console.log('[CartContext] ✅ Sentry tracking successful');
         } catch (error) {
-          console.error('[CartContext] ❌ Sentry tracking error:', error);
+          return error;
         }
 
         let newCart: CartItem[];
         if (existing) {
-          console.log('[CartContext] Updating existing item quantity from', existing.quantity, 'to', existing.quantity + 1);
-          newCart = current.map((i) =>
-            i.cartItemId === cartItemId ? { ...i, quantity: i.quantity + 1 } : i
-          );
-          toast.success("Producto agregado al carrito");
+          newCart = current.map((i) => (i.cartItemId === cartItemId ? { ...i, quantity: i.quantity + 1 } : i));
+          toast.success('Producto agregado al carrito');
         } else {
-          console.log('[CartContext] Adding new item to cart');
           newCart = [...current, { ...itemWithId, quantity: 1 }];
-          toast.success("Producto agregado al carrito");
+          toast.success('Producto agregado al carrito');
         }
-
-        console.log('[CartContext] New cart state:', JSON.stringify(newCart, null, 2));
-        console.log('[CartContext] New cart length:', newCart.length);
-        console.log('🛒 [CartContext] ========== ADD TO CART END ==========');
 
         return newCart;
       });
     } catch (error) {
-      console.error('❌ [CartContext] CRITICAL ERROR in addItem:', error);
-      console.error('[CartContext] Error stack:', (error as Error).stack);
       toast.error('Error al agregar producto al carrito');
-      console.log('🛒 [CartContext] ========== ADD TO CART FAILED ==========');
 
       // Capture exception in Sentry
       captureException(error as Error, {
@@ -236,7 +185,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         extra: {
           item,
           current_items_count: items.length,
-          error_message: (error as Error).message
+          error_message: (error as Error).message,
         },
         level: 'error',
       });
@@ -244,17 +193,11 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const removeItem = (cartItemId: string) => {
-    console.log('🗑️ [CartContext] ========== REMOVE FROM CART START ==========');
-    console.log('[CartContext] CartItemId to remove:', cartItemId);
-
     try {
       setItems((current) => {
         const itemToRemove = current.find((item) => item.cartItemId === cartItemId);
-        console.log('[CartContext] Item to remove found:', itemToRemove ? 'YES' : 'NO');
 
         if (itemToRemove) {
-          console.log('[CartContext] Item to remove details:', JSON.stringify(itemToRemove, null, 2));
-
           // Track event in PostHog
           try {
             const extrasPrice = itemToRemove.extras?.reduce((sum, extra) => sum + extra.price, 0) || 0;
@@ -271,9 +214,8 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
               total_price: totalPrice,
               category_id: itemToRemove.categoryId,
             });
-            console.log('[CartContext] ✅ PostHog remove event captured');
           } catch (error) {
-            console.error('[CartContext] ❌ PostHog error:', error);
+            return error;
           }
 
           // Track in Sentry with breadcrumb
@@ -282,22 +224,17 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
               product_name: itemToRemove.name,
               quantity: itemToRemove.quantity,
             });
-            console.log('[CartContext] ✅ Sentry tracking successful');
           } catch (error) {
-            console.error('[CartContext] ❌ Sentry tracking error:', error);
+            return error;
           }
         }
 
         const newCart = current.filter((item) => item.cartItemId !== cartItemId);
-        console.log('[CartContext] Cart before removal:', current.length, 'items');
-        console.log('[CartContext] Cart after removal:', newCart.length, 'items');
-        console.log('🗑️ [CartContext] ========== REMOVE FROM CART END ==========');
 
         return newCart;
       });
-      toast.success("Producto eliminado del carrito");
+      toast.success('Producto eliminado del carrito');
     } catch (error) {
-      console.error('❌ [CartContext] CRITICAL ERROR in removeItem:', error);
       toast.error('Error al eliminar producto del carrito');
 
       // Capture exception in Sentry
@@ -305,7 +242,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         tags: { context: 'cart_remove_item' },
         extra: {
           cartItemId,
-          error_message: (error as Error).message
+          error_message: (error as Error).message,
         },
         level: 'error',
       });
@@ -313,11 +250,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const updateQuantity = (cartItemId: string, quantity: number) => {
-    console.log('🔄 [CartContext] ========== UPDATE QUANTITY START ==========');
-    console.log('[CartContext] CartItemId:', cartItemId, 'New quantity:', quantity);
-
     if (quantity <= 0) {
-      console.log('[CartContext] Quantity <= 0, delegating to removeItem');
       removeItem(cartItemId);
       return;
     }
@@ -325,11 +258,8 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     try {
       setItems((current) => {
         const item = current.find((i) => i.cartItemId === cartItemId);
-        console.log('[CartContext] Item to update found:', item ? 'YES' : 'NO');
 
         if (item) {
-          console.log('[CartContext] Current quantity:', item.quantity, '→ New quantity:', quantity);
-
           // Track in Sentry with breadcrumb
           try {
             trackCartOperation('update', item.id, {
@@ -337,20 +267,16 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
               old_quantity: item.quantity,
               new_quantity: quantity,
             });
-            console.log('[CartContext] ✅ Sentry tracking successful');
           } catch (error) {
-            console.error('[CartContext] ❌ Sentry tracking error:', error);
+            return error;
           }
         }
 
         const updatedItems = current.map((item) => (item.cartItemId === cartItemId ? { ...item, quantity } : item));
-        console.log('[CartContext] Cart updated with new quantities');
-        console.log('🔄 [CartContext] ========== UPDATE QUANTITY END ==========');
 
         return updatedItems;
       });
     } catch (error) {
-      console.error('❌ [CartContext] CRITICAL ERROR in updateQuantity:', error);
       toast.error('Error al actualizar cantidad');
 
       // Capture exception in Sentry
@@ -359,7 +285,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         extra: {
           cartItemId,
           quantity,
-          error_message: (error as Error).message
+          error_message: (error as Error).message,
         },
         level: 'error',
       });
@@ -367,31 +293,22 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const clearCart = () => {
-    console.log('🧹 [CartContext] ========== CLEAR CART START ==========');
-    console.log('[CartContext] Items before clear:', items.length);
-    console.log('[CartContext] Cart value before clear:', totalPrice);
-
     try {
       // Track cart clear in Sentry
       trackCartOperation('clear', undefined, {
         items_count: items.length,
         cart_value: totalPrice,
       });
-      console.log('[CartContext] ✅ Sentry tracking successful');
 
       setItems([]);
-      removeSecureItem("cart");
-      console.log('[CartContext] ✅ Cart cleared and storage removed');
-      console.log('🧹 [CartContext] ========== CLEAR CART END ==========');
+      removeSecureItem('cart');
     } catch (error) {
-      console.error('❌ [CartContext] CRITICAL ERROR in clearCart:', error);
-
       // Capture exception in Sentry
       captureException(error as Error, {
         tags: { context: 'cart_clear' },
         extra: {
           items_count: items.length,
-          error_message: (error as Error).message
+          error_message: (error as Error).message,
         },
         level: 'error',
       });
@@ -424,7 +341,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
 export const useCart = () => {
   const context = useContext(CartContext);
   if (!context) {
-    throw new Error("useCart must be used within CartProvider");
+    throw new Error('useCart must be used within CartProvider');
   }
   return context;
 };

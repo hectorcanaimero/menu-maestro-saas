@@ -1,12 +1,12 @@
-import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { toast } from "sonner";
-import { Plus, Pencil, Trash2, GripVertical } from "lucide-react";
+import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { toast } from 'sonner';
+import { Plus, Pencil, Trash2, GripVertical } from 'lucide-react';
 
 interface ProductExtra {
   id: string;
@@ -23,19 +23,14 @@ interface ProductExtrasManagerProps {
   menuItemName: string;
 }
 
-export const ProductExtrasManager = ({
-  open,
-  onOpenChange,
-  menuItemId,
-  menuItemName,
-}: ProductExtrasManagerProps) => {
+export const ProductExtrasManager = ({ open, onOpenChange, menuItemId, menuItemName }: ProductExtrasManagerProps) => {
   const [extras, setExtras] = useState<ProductExtra[]>([]);
   const [loading, setLoading] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editingExtra, setEditingExtra] = useState<ProductExtra | null>(null);
   const [formData, setFormData] = useState({
-    name: "",
-    price: "",
+    name: '',
+    price: '',
     is_available: true,
   });
 
@@ -49,16 +44,15 @@ export const ProductExtrasManager = ({
     setLoading(true);
     try {
       const { data, error } = await supabase
-        .from("product_extras")
-        .select("*")
-        .eq("menu_item_id", menuItemId)
-        .order("display_order", { ascending: true });
+        .from('product_extras')
+        .select('*')
+        .eq('menu_item_id', menuItemId)
+        .order('display_order', { ascending: true });
 
       if (error) throw error;
       setExtras(data || []);
     } catch (error) {
-      console.error("Error fetching extras:", error);
-      toast.error("Error al cargar extras");
+      toast.error('Error al cargar extras');
     } finally {
       setLoading(false);
     }
@@ -77,28 +71,22 @@ export const ProductExtrasManager = ({
       };
 
       if (editingExtra) {
-        const { error } = await supabase
-          .from("product_extras")
-          .update(extraData)
-          .eq("id", editingExtra.id);
+        const { error } = await supabase.from('product_extras').update(extraData).eq('id', editingExtra.id);
 
         if (error) throw error;
-        toast.success("Extra actualizado");
+        toast.success('Extra actualizado');
       } else {
-        const { error } = await supabase
-          .from("product_extras")
-          .insert([extraData]);
+        const { error } = await supabase.from('product_extras').insert([extraData]);
 
         if (error) throw error;
-        toast.success("Extra creado");
+        toast.success('Extra creado');
       }
 
       setEditDialogOpen(false);
       resetForm();
       fetchExtras();
     } catch (error) {
-      console.error("Error saving extra:", error);
-      toast.error("Error al guardar extra");
+      toast.error('Error al guardar extra');
     }
   };
 
@@ -113,40 +101,30 @@ export const ProductExtrasManager = ({
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("¿Estás seguro de eliminar este extra?")) return;
+    if (!confirm('¿Estás seguro de eliminar este extra?')) return;
 
     try {
-      const { error } = await supabase
-        .from("product_extras")
-        .delete()
-        .eq("id", id);
+      const { error } = await supabase.from('product_extras').delete().eq('id', id);
 
       if (error) throw error;
-      toast.success("Extra eliminado");
+      toast.success('Extra eliminado');
       fetchExtras();
     } catch (error) {
-      console.error("Error deleting extra:", error);
-      toast.error("Error al eliminar extra");
+      toast.error('Error al eliminar extra');
     }
   };
 
-  const handleReorder = async (extraId: string, direction: "up" | "down") => {
+  const handleReorder = async (extraId: string, direction: 'up' | 'down') => {
     const currentIndex = extras.findIndex((e) => e.id === extraId);
-    if (
-      (direction === "up" && currentIndex === 0) ||
-      (direction === "down" && currentIndex === extras.length - 1)
-    ) {
+    if ((direction === 'up' && currentIndex === 0) || (direction === 'down' && currentIndex === extras.length - 1)) {
       return;
     }
 
     const newExtras = [...extras];
-    const targetIndex = direction === "up" ? currentIndex - 1 : currentIndex + 1;
-    
+    const targetIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
+
     // Swap
-    [newExtras[currentIndex], newExtras[targetIndex]] = [
-      newExtras[targetIndex],
-      newExtras[currentIndex],
-    ];
+    [newExtras[currentIndex], newExtras[targetIndex]] = [newExtras[targetIndex], newExtras[currentIndex]];
 
     // Update display_order for both
     const updates = newExtras.map((extra, index) => ({
@@ -157,25 +135,21 @@ export const ProductExtrasManager = ({
     try {
       // Update all display orders
       for (const update of updates) {
-        await supabase
-          .from("product_extras")
-          .update({ display_order: update.display_order })
-          .eq("id", update.id);
+        await supabase.from('product_extras').update({ display_order: update.display_order }).eq('id', update.id);
       }
 
       setExtras(newExtras);
-      toast.success("Orden actualizado");
+      toast.success('Orden actualizado');
     } catch (error) {
-      console.error("Error reordering:", error);
-      toast.error("Error al reordenar");
+      toast.error('Error al reordenar');
       fetchExtras(); // Reload on error
     }
   };
 
   const resetForm = () => {
     setFormData({
-      name: "",
-      price: "",
+      name: '',
+      price: '',
       is_available: true,
     });
     setEditingExtra(null);
@@ -186,9 +160,7 @@ export const ProductExtrasManager = ({
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>
-              Gestionar Extras - {menuItemName}
-            </DialogTitle>
+            <DialogTitle>Gestionar Extras - {menuItemName}</DialogTitle>
           </DialogHeader>
 
           <div className="space-y-4">
@@ -206,9 +178,7 @@ export const ProductExtrasManager = ({
             {loading ? (
               <div className="text-center py-8">Cargando extras...</div>
             ) : extras.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                No hay extras. Crea uno para empezar.
-              </div>
+              <div className="text-center py-8 text-muted-foreground">No hay extras. Crea uno para empezar.</div>
             ) : (
               <Table>
                 <TableHeader>
@@ -229,7 +199,7 @@ export const ProductExtrasManager = ({
                             variant="ghost"
                             size="icon"
                             className="h-6 w-6"
-                            onClick={() => handleReorder(extra.id, "up")}
+                            onClick={() => handleReorder(extra.id, 'up')}
                             disabled={index === 0}
                           >
                             <GripVertical className="w-3 h-3 rotate-90" />
@@ -238,7 +208,7 @@ export const ProductExtrasManager = ({
                             variant="ghost"
                             size="icon"
                             className="h-6 w-6"
-                            onClick={() => handleReorder(extra.id, "down")}
+                            onClick={() => handleReorder(extra.id, 'down')}
                             disabled={index === extras.length - 1}
                           >
                             <GripVertical className="w-3 h-3 -rotate-90" />
@@ -251,27 +221,19 @@ export const ProductExtrasManager = ({
                         <span
                           className={`px-2 py-1 rounded text-xs ${
                             extra.is_available
-                              ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100"
-                              : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100"
+                              ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100'
+                              : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100'
                           }`}
                         >
-                          {extra.is_available ? "Disponible" : "No disponible"}
+                          {extra.is_available ? 'Disponible' : 'No disponible'}
                         </span>
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleEdit(extra)}
-                          >
+                          <Button variant="ghost" size="icon" onClick={() => handleEdit(extra)}>
                             <Pencil className="w-4 h-4" />
                           </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleDelete(extra.id)}
-                          >
+                          <Button variant="ghost" size="icon" onClick={() => handleDelete(extra.id)}>
                             <Trash2 className="w-4 h-4" />
                           </Button>
                         </div>
@@ -288,9 +250,7 @@ export const ProductExtrasManager = ({
       <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>
-              {editingExtra ? "Editar Extra" : "Nuevo Extra"}
-            </DialogTitle>
+            <DialogTitle>{editingExtra ? 'Editar Extra' : 'Nuevo Extra'}</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
@@ -321,9 +281,7 @@ export const ProductExtrasManager = ({
               <select
                 id="extra-available"
                 value={formData.is_available.toString()}
-                onChange={(e) =>
-                  setFormData({ ...formData, is_available: e.target.value === "true" })
-                }
+                onChange={(e) => setFormData({ ...formData, is_available: e.target.value === 'true' })}
                 className="w-full h-10 px-3 rounded-md border border-input bg-background"
               >
                 <option value="true">Disponible</option>
@@ -331,7 +289,7 @@ export const ProductExtrasManager = ({
               </select>
             </div>
             <Button type="submit" className="w-full">
-              {editingExtra ? "Actualizar" : "Crear"}
+              {editingExtra ? 'Actualizar' : 'Crear'}
             </Button>
           </form>
         </DialogContent>

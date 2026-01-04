@@ -7,16 +7,7 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
-import {
-  Bike,
-  LogOut,
-  MapPin,
-  Clock,
-  Package,
-  Navigation,
-  Activity,
-  ActivitySquare,
-} from 'lucide-react';
+import { Bike, LogOut, MapPin, Clock, Package, Navigation, Activity, ActivitySquare } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { H1, H2, H3, Body, Caption } from '@/components/ui/typography';
@@ -70,11 +61,7 @@ export default function DriverDashboard() {
     queryFn: async () => {
       if (!driverId) return null;
 
-      const { data, error } = await supabase
-        .from('drivers')
-        .select('*')
-        .eq('id', driverId)
-        .single();
+      const { data, error } = await supabase.from('drivers').select('*').eq('id', driverId).single();
 
       if (error) throw error;
       return data;
@@ -90,7 +77,8 @@ export default function DriverDashboard() {
 
       const { data, error } = await supabase
         .from('delivery_assignments')
-        .select(`
+        .select(
+          `
           *,
           orders (
             id,
@@ -99,16 +87,15 @@ export default function DriverDashboard() {
             delivery_address,
             total_amount
           )
-        `)
+        `,
+        )
         .eq('driver_id', driverId)
         .in('status', ['assigned', 'picked_up', 'in_transit'])
         .order('assigned_at', { ascending: true });
 
       if (error) {
-        console.error('Error fetching driver deliveries:', error);
         throw error;
       }
-      console.log('Driver deliveries fetched:', { driverId, deliveries: data });
       return data as DeliveryAssignment[];
     },
     enabled: !!driverId,
@@ -120,10 +107,7 @@ export default function DriverDashboard() {
     mutationFn: async (status: 'available' | 'busy' | 'offline') => {
       if (!driverId) throw new Error('No driver ID');
 
-      const { error } = await supabase
-        .from('drivers')
-        .update({ status })
-        .eq('id', driverId);
+      const { error } = await supabase.from('drivers').update({ status }).eq('id', driverId);
 
       if (error) throw error;
     },
@@ -170,7 +154,7 @@ export default function DriverDashboard() {
       try {
         await updateStatusMutation.mutateAsync('offline');
       } catch (error) {
-        console.error('Error setting driver offline:', error);
+        toast.error('Error al cerrar sesión');
       }
     }
 
@@ -212,11 +196,7 @@ export default function DriverDashboard() {
             <div>
               <H2 className="text-xl text-primary-foreground">{driverName}</H2>
               <Caption className="text-primary-foreground/80">
-                {driver?.vehicle_type ? (
-                  <span className="capitalize">{driver.vehicle_type}</span>
-                ) : (
-                  'Motorista'
-                )}
+                {driver?.vehicle_type ? <span className="capitalize">{driver.vehicle_type}</span> : 'Motorista'}
               </Caption>
             </div>
           </div>
@@ -239,9 +219,7 @@ export default function DriverDashboard() {
             {/* Online/Offline Toggle */}
             <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
               <div className="flex items-center gap-3">
-                <ActivitySquare
-                  className={`h-5 w-5 ${isOnline ? 'text-green-600' : 'text-muted-foreground'}`}
-                />
+                <ActivitySquare className={`h-5 w-5 ${isOnline ? 'text-green-600' : 'text-muted-foreground'}`} />
                 <div>
                   <Label htmlFor="online-toggle" className="font-semibold">
                     {isOnline ? 'En Línea' : 'Desconectado'}
@@ -251,11 +229,7 @@ export default function DriverDashboard() {
                   </Caption>
                 </div>
               </div>
-              <Switch
-                id="online-toggle"
-                checked={isOnline}
-                onCheckedChange={handleOnlineToggle}
-              />
+              <Switch id="online-toggle" checked={isOnline} onCheckedChange={handleOnlineToggle} />
             </div>
 
             {/* GPS Status */}
@@ -312,11 +286,7 @@ export default function DriverDashboard() {
                             })}
                           </Caption>
                         </div>
-                        <Badge
-                          variant={
-                            delivery.status === 'in_transit' ? 'default' : 'secondary'
-                          }
-                        >
+                        <Badge variant={delivery.status === 'in_transit' ? 'default' : 'secondary'}>
                           {delivery.status === 'assigned' && 'Asignado'}
                           {delivery.status === 'picked_up' && 'Recogido'}
                           {delivery.status === 'in_transit' && 'En camino'}
@@ -326,9 +296,7 @@ export default function DriverDashboard() {
                       <div className="space-y-2 mb-4">
                         <div className="flex items-start gap-2">
                           <MapPin className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
-                          <Caption className="flex-1">
-                            {delivery.orders.delivery_address}
-                          </Caption>
+                          <Caption className="flex-1">{delivery.orders.delivery_address}</Caption>
                         </div>
 
                         {delivery.estimated_minutes && (
@@ -339,10 +307,7 @@ export default function DriverDashboard() {
                         )}
                       </div>
 
-                      <Button
-                        className="w-full"
-                        onClick={() => handleStartDelivery(delivery.id)}
-                      >
+                      <Button className="w-full" onClick={() => handleStartDelivery(delivery.id)}>
                         {delivery.status === 'assigned' && 'Iniciar Entrega'}
                         {delivery.status === 'picked_up' && 'Continuar'}
                         {delivery.status === 'in_transit' && 'Ver Detalles'}
@@ -355,11 +320,7 @@ export default function DriverDashboard() {
               <div className="py-12 text-center text-muted-foreground">
                 <Package className="w-12 h-12 mx-auto mb-4 opacity-50" />
                 <Body>No tienes entregas asignadas</Body>
-                <Caption>
-                  {isOnline
-                    ? 'Espera a que te asignen un pedido'
-                    : 'Actívate para recibir entregas'}
-                </Caption>
+                <Caption>{isOnline ? 'Espera a que te asignen un pedido' : 'Actívate para recibir entregas'}</Caption>
               </div>
             )}
           </CardContent>

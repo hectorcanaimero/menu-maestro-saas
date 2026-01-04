@@ -102,7 +102,6 @@ const OnboardingSubdomain = () => {
       });
 
       if (error) {
-        console.error('Error validating subdomain:', error);
         setSubdomainValidation({
           isValid: false,
           message: 'Error al validar el subdominio',
@@ -116,7 +115,6 @@ const OnboardingSubdomain = () => {
         message: result?.error_message || (result?.is_valid ? '✓ Disponible' : 'No disponible'),
       });
     } catch (error) {
-      console.error('Error validating subdomain:', error);
       setSubdomainValidation({
         isValid: false,
         message: 'Error al validar el subdominio',
@@ -227,7 +225,6 @@ const OnboardingSubdomain = () => {
       const storeAdminUrl = `${window.location.protocol}//${subdomain}.${currentDomain}/admin`;
       window.location.href = storeAdminUrl;
     } catch (error) {
-      console.error('Error creating store:', error);
       toast.error('Error al crear la tienda');
     } finally {
       setLoading(false);

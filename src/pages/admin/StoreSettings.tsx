@@ -128,7 +128,6 @@ const StoreSettings = () => {
       toast.success('Configuración guardada correctamente');
       window.location.reload();
     } catch (error) {
-      console.error('Error saving settings:', error);
       toast.error('Error al guardar la configuración');
     } finally {
       setSaving(false);
@@ -320,7 +319,8 @@ const StoreSettings = () => {
                       <div className="flex-1">
                         <p className="text-sm font-medium">Negocio de Comida</p>
                         <p className="text-xs text-muted-foreground">
-                          Activa esta opción si tu negocio es de comida. Esto mostrará características específicas como el menú de cocina.
+                          Activa esta opción si tu negocio es de comida. Esto mostrará características específicas como
+                          el menú de cocina.
                         </p>
                       </div>
                       <Switch
@@ -339,7 +339,8 @@ const StoreSettings = () => {
                       <div className="flex-1">
                         <p className="text-sm font-medium">Solo Visualización de Productos</p>
                         <p className="text-xs text-muted-foreground">
-                          Muestra tus productos como catálogo sin funcionalidad de compra. Incluye botón de WhatsApp para consultas. Gratuito con límite de visitas mensuales.
+                          Muestra tus productos como catálogo sin funcionalidad de compra. Incluye botón de WhatsApp
+                          para consultas. Gratuito con límite de visitas mensuales.
                         </p>
                       </div>
                       <Switch

@@ -71,13 +71,8 @@ const Index = () => {
           page_url: window.location.href,
           timestamp: new Date().toISOString(),
         });
-
-        console.log('[PostHog] Catalog page view tracked:', {
-          store_id: store.id,
-          store_name: store.name,
-        });
       } catch (error) {
-        console.error('[PostHog] Error tracking catalog page view:', error);
+        throw new Error(error as string | undefined);
       }
     }
   }, [store?.id, store?.name, isCatalogMode]);

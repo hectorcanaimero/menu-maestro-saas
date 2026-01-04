@@ -1,25 +1,25 @@
-import { useState, useEffect } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import { toast } from "sonner";
-import { Loader2, Save, Plus, Minus, X } from "lucide-react";
-import posthog from "posthog-js";
+import { useState, useEffect } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
+import { toast } from 'sonner';
+import { Loader2, Save, Plus, Minus, X } from 'lucide-react';
+import posthog from 'posthog-js';
 
-import { supabase } from "@/integrations/supabase/client";
-import { useStore } from "@/contexts/StoreContext";
-import { useFormatPrice } from "@/lib/priceFormatter";
-import { PaymentMethodSelector } from "./PaymentMethodSelector";
-import { ProductExtrasDialog } from "@/components/catalog/ProductExtrasDialog";
+import { supabase } from '@/integrations/supabase/client';
+import { useStore } from '@/contexts/StoreContext';
+import { useFormatPrice } from '@/lib/priceFormatter';
+import { PaymentMethodSelector } from './PaymentMethodSelector';
+import { ProductExtrasDialog } from '@/components/catalog/ProductExtrasDialog';
 
 interface AdminOrderEditProps {
   open: boolean;
@@ -73,9 +73,9 @@ interface CartItem {
 }
 
 const formSchema = z.object({
-  customer_name: z.string().min(2, "Nombre requerido"),
-  customer_email: z.string().email("Email inválido").optional().or(z.literal("")),
-  customer_phone: z.string().min(10, "Teléfono inválido"),
+  customer_name: z.string().min(2, 'Nombre requerido'),
+  customer_email: z.string().email('Email inválido').optional().or(z.literal('')),
+  customer_phone: z.string().min(10, 'Teléfono inválido'),
   delivery_address: z.string().optional(),
   notes: z.string().optional(),
   status: z.string(),
@@ -91,7 +91,7 @@ export const AdminOrderEdit = ({ open, onOpenChange, orderId, onSuccess }: Admin
   const [saving, setSaving] = useState(false);
   const [order, setOrder] = useState<Order | null>(null);
   const [canEdit, setCanEdit] = useState(true);
-  const [editReason, setEditReason] = useState("");
+  const [editReason, setEditReason] = useState('');
 
   const [items, setItems] = useState<CartItem[]>([]);
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
@@ -103,12 +103,12 @@ export const AdminOrderEdit = ({ open, onOpenChange, orderId, onSuccess }: Admin
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      customer_name: "",
-      customer_email: "",
-      customer_phone: "",
-      delivery_address: "",
-      notes: "",
-      status: "pending",
+      customer_name: '',
+      customer_email: '',
+      customer_phone: '',
+      delivery_address: '',
+      notes: '',
+      status: 'pending',
     },
   });
 
@@ -125,14 +125,14 @@ export const AdminOrderEdit = ({ open, onOpenChange, orderId, onSuccess }: Admin
     setLoading(true);
     try {
       // Check if can edit using type assertion for custom RPC
-      const { data: canEditData } = await (supabase.rpc as any)("admin_can_edit_order", {
+      const { data: canEditData } = await (supabase.rpc as any)('admin_can_edit_order', {
         p_order_id: orderId,
       });
 
       if (canEditData && Array.isArray(canEditData) && canEditData.length > 0) {
         const result = canEditData[0];
         setCanEdit(result.can_edit);
-        setEditReason(result.reason || "");
+        setEditReason(result.reason || '');
 
         if (!result.can_edit) {
           toast.error(result.reason);
@@ -141,8 +141,9 @@ export const AdminOrderEdit = ({ open, onOpenChange, orderId, onSuccess }: Admin
 
       // Load order
       const { data, error } = await supabase
-        .from("orders")
-        .select(`
+        .from('orders')
+        .select(
+          `
           *,
           order_items (
             id,
@@ -156,8 +157,9 @@ export const AdminOrderEdit = ({ open, onOpenChange, orderId, onSuccess }: Admin
               extra_price
             )
           )
-        `)
-        .eq("id", orderId)
+        `,
+        )
+        .eq('id', orderId)
         .single();
 
       if (error) throw error;
@@ -169,9 +171,9 @@ export const AdminOrderEdit = ({ open, onOpenChange, orderId, onSuccess }: Admin
       form.reset({
         customer_name: data.customer_name,
         customer_email: data.customer_email,
-        customer_phone: data.customer_phone || "",
-        delivery_address: data.delivery_address || "",
-        notes: data.notes || "",
+        customer_phone: data.customer_phone || '',
+        delivery_address: data.delivery_address || '',
+        notes: data.notes || '',
         status: data.status,
       });
 
@@ -181,7 +183,7 @@ export const AdminOrderEdit = ({ open, onOpenChange, orderId, onSuccess }: Admin
         item_name: item.item_name,
         quantity: item.quantity,
         price_at_time: item.price_at_time,
-        extras: item.order_item_extras.map(extra => ({
+        extras: item.order_item_extras.map((extra) => ({
           name: extra.extra_name,
           price: extra.extra_price,
         })),
@@ -190,8 +192,7 @@ export const AdminOrderEdit = ({ open, onOpenChange, orderId, onSuccess }: Admin
 
       setItems(cartItems);
     } catch (error) {
-      console.error("Error loading order:", error);
-      toast.error("Error al cargar pedido");
+      toast.error('Error al cargar pedido');
     } finally {
       setLoading(false);
     }
@@ -201,11 +202,11 @@ export const AdminOrderEdit = ({ open, onOpenChange, orderId, onSuccess }: Admin
     if (!store?.id) return;
 
     const { data } = await supabase
-      .from("menu_items")
-      .select("id, name, price, image_url")
-      .eq("store_id", store.id)
-      .eq("is_available", true)
-      .order("name");
+      .from('menu_items')
+      .select('id, name, price, image_url')
+      .eq('store_id', store.id)
+      .eq('is_available', true)
+      .order('name');
 
     if (data) {
       setMenuItems(data);
@@ -226,7 +227,7 @@ export const AdminOrderEdit = ({ open, onOpenChange, orderId, onSuccess }: Admin
       item_name: selectedProduct.name,
       quantity: 1,
       price_at_time: selectedProduct.price,
-      extras: extras.map(e => ({ name: e.name, price: e.price })),
+      extras: extras.map((e) => ({ name: e.name, price: e.price })),
       cartItemId: `${selectedProduct.id}_${Date.now()}`,
     };
 
@@ -237,16 +238,14 @@ export const AdminOrderEdit = ({ open, onOpenChange, orderId, onSuccess }: Admin
 
   const updateQuantity = (cartItemId: string, quantity: number) => {
     if (quantity <= 0) {
-      setItems(items.filter(item => item.cartItemId !== cartItemId));
+      setItems(items.filter((item) => item.cartItemId !== cartItemId));
     } else {
-      setItems(items.map(item =>
-        item.cartItemId === cartItemId ? { ...item, quantity } : item
-      ));
+      setItems(items.map((item) => (item.cartItemId === cartItemId ? { ...item, quantity } : item)));
     }
   };
 
   const removeItem = (cartItemId: string) => {
-    setItems(items.filter(item => item.cartItemId !== cartItemId));
+    setItems(items.filter((item) => item.cartItemId !== cartItemId));
   };
 
   const calculateTotal = () => {
@@ -263,7 +262,7 @@ export const AdminOrderEdit = ({ open, onOpenChange, orderId, onSuccess }: Admin
     if (!orderId || !store?.id) return;
 
     if (!canEdit) {
-      toast.error(editReason || "Este pedido no puede ser editado");
+      toast.error(editReason || 'Este pedido no puede ser editado');
       return;
     }
 
@@ -271,7 +270,7 @@ export const AdminOrderEdit = ({ open, onOpenChange, orderId, onSuccess }: Admin
 
     try {
       // Prepare items for RPC
-      const orderItems = items.map(item => ({
+      const orderItems = items.map((item) => ({
         menu_item_id: item.menu_item_id,
         quantity: item.quantity,
         price_at_time: item.price_at_time,
@@ -280,7 +279,7 @@ export const AdminOrderEdit = ({ open, onOpenChange, orderId, onSuccess }: Admin
       }));
 
       // Call RPC to update order using type assertion
-      const { data: result, error } = await (supabase.rpc as any)("admin_update_order", {
+      const { data: result, error } = await (supabase.rpc as any)('admin_update_order', {
         p_order_id: orderId,
         p_customer_name: data.customer_name,
         p_customer_email: data.customer_email,
@@ -298,30 +297,29 @@ export const AdminOrderEdit = ({ open, onOpenChange, orderId, onSuccess }: Admin
       const updateResult = Array.isArray(result) ? result[0] : result;
 
       if (!updateResult?.success) {
-        throw new Error(updateResult?.error_message || "Error al actualizar pedido");
+        throw new Error(updateResult?.error_message || 'Error al actualizar pedido');
       }
 
       // Track in PostHog
       try {
-        posthog.capture("admin_order_edited", {
+        posthog.capture('admin_order_edited', {
           store_id: store.id,
           order_id: orderId,
-          fields_changed: ["items", "customer", "payment"],
+          fields_changed: ['items', 'customer', 'payment'],
           new_total: updateResult.new_total,
         });
       } catch (e) {
-        console.error("[PostHog] Error tracking admin_order_edited:", e);
+        return error;
       }
 
-      toast.success("Pedido actualizado exitosamente");
+      toast.success('Pedido actualizado exitosamente');
       onOpenChange(false);
 
       if (onSuccess) {
         onSuccess();
       }
     } catch (error) {
-      console.error("Error updating order:", error);
-      toast.error(error instanceof Error ? error.message : "Error al actualizar pedido");
+      toast.error(error instanceof Error ? error.message : 'Error al actualizar pedido');
     } finally {
       setSaving(false);
     }
@@ -339,8 +337,8 @@ export const AdminOrderEdit = ({ open, onOpenChange, orderId, onSuccess }: Admin
       <ProductExtrasDialog
         open={showExtrasDialog}
         onOpenChange={setShowExtrasDialog}
-        productId={selectedProduct?.id || ""}
-        productName={selectedProduct?.name || ""}
+        productId={selectedProduct?.id || ''}
+        productName={selectedProduct?.name || ''}
         productPrice={selectedProduct?.price || 0}
         onConfirm={handleConfirmWithExtras}
       />
@@ -350,9 +348,7 @@ export const AdminOrderEdit = ({ open, onOpenChange, orderId, onSuccess }: Admin
           <DialogHeader>
             <DialogTitle className="flex items-center justify-between">
               <span>Editar Pedido #{order?.id.slice(0, 8).toUpperCase()}</span>
-              {!canEdit && (
-                <Badge variant="destructive">No editable</Badge>
-              )}
+              {!canEdit && <Badge variant="destructive">No editable</Badge>}
             </DialogTitle>
           </DialogHeader>
 
@@ -409,7 +405,7 @@ export const AdminOrderEdit = ({ open, onOpenChange, orderId, onSuccess }: Admin
                     )}
                   />
 
-                  {order?.order_type === "delivery" && (
+                  {order?.order_type === 'delivery' && (
                     <FormField
                       control={form.control}
                       name="delivery_address"
@@ -451,12 +447,7 @@ export const AdminOrderEdit = ({ open, onOpenChange, orderId, onSuccess }: Admin
                       <CardContent className="p-4">
                         <div className="flex items-center justify-between mb-3">
                           <h4 className="font-medium">Seleccionar Producto</h4>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => setShowProductSelector(false)}
-                          >
+                          <Button type="button" variant="ghost" size="sm" onClick={() => setShowProductSelector(false)}>
                             <X className="w-4 h-4" />
                           </Button>
                         </div>
@@ -481,9 +472,7 @@ export const AdminOrderEdit = ({ open, onOpenChange, orderId, onSuccess }: Admin
                                   )}
                                   <div className="text-left">
                                     <p className="font-medium">{item.name}</p>
-                                    <p className="text-sm text-muted-foreground">
-                                      {priceDisplay.original}
-                                    </p>
+                                    <p className="text-sm text-muted-foreground">{priceDisplay.original}</p>
                                   </div>
                                 </div>
                                 <Plus className="w-4 h-4" />
@@ -502,8 +491,7 @@ export const AdminOrderEdit = ({ open, onOpenChange, orderId, onSuccess }: Admin
                       {items.map((item) => {
                         const unitPrice = formatPrice(item.price_at_time);
                         const totalItemPrice = formatPrice(
-                          (item.price_at_time + item.extras.reduce((s, e) => s + e.price, 0)) *
-                            item.quantity
+                          (item.price_at_time + item.extras.reduce((s, e) => s + e.price, 0)) * item.quantity,
                         );
                         return (
                           <Card key={item.cartItemId}>
@@ -512,12 +500,10 @@ export const AdminOrderEdit = ({ open, onOpenChange, orderId, onSuccess }: Admin
                                 <p className="font-medium text-sm truncate">{item.item_name}</p>
                                 {item.extras.length > 0 && (
                                   <p className="text-xs text-muted-foreground">
-                                    + {item.extras.map(e => e.name).join(", ")}
+                                    + {item.extras.map((e) => e.name).join(', ')}
                                   </p>
                                 )}
-                                <p className="text-xs text-muted-foreground">
-                                  {unitPrice.original} c/u
-                                </p>
+                                <p className="text-xs text-muted-foreground">{unitPrice.original} c/u</p>
                               </div>
 
                               <div className="flex items-center gap-2">
@@ -544,9 +530,7 @@ export const AdminOrderEdit = ({ open, onOpenChange, orderId, onSuccess }: Admin
                                 </Button>
                               </div>
 
-                              <p className="font-semibold text-sm w-20 text-right">
-                                {totalItemPrice.original}
-                              </p>
+                              <p className="font-semibold text-sm w-20 text-right">{totalItemPrice.original}</p>
 
                               <Button
                                 type="button"

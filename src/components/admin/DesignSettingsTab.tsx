@@ -13,9 +13,9 @@ import { Loader2, Upload, X } from 'lucide-react';
 const designSettingsSchema = z.object({
   primary_color: z.string().optional(),
   price_color: z.string().optional(),
-  delivery_label: z.string().min(1, "Requerido").optional(),
-  pickup_label: z.string().min(1, "Requerido").optional(),
-  digital_menu_label: z.string().min(1, "Requerido").optional(),
+  delivery_label: z.string().min(1, 'Requerido').optional(),
+  pickup_label: z.string().min(1, 'Requerido').optional(),
+  digital_menu_label: z.string().min(1, 'Requerido').optional(),
 });
 
 type DesignSettingsForm = z.infer<typeof designSettingsSchema>;
@@ -103,7 +103,6 @@ export const DesignSettingsTab = ({ storeId, initialData }: DesignSettingsTabPro
       setLogoUrl(publicUrl);
       toast.success('Logo subido correctamente');
     } catch (error: unknown) {
-      console.error('Error uploading logo:', error);
       toast.error('Error al subir el logo');
     } finally {
       setUploading(false);
@@ -119,7 +118,6 @@ export const DesignSettingsTab = ({ storeId, initialData }: DesignSettingsTabPro
       setLogoUrl('');
       toast.success('Logo eliminado correctamente');
     } catch (error: unknown) {
-      console.error('Error removing logo:', error);
       toast.error('Error al eliminar el logo');
     }
   };
@@ -166,7 +164,6 @@ export const DesignSettingsTab = ({ storeId, initialData }: DesignSettingsTabPro
       setBannerUrl(publicUrl);
       toast.success('Banner subido correctamente');
     } catch (error: unknown) {
-      console.error('Error uploading banner:', error);
       toast.error('Error al subir el banner');
     } finally {
       setUploadingBanner(false);
@@ -182,7 +179,6 @@ export const DesignSettingsTab = ({ storeId, initialData }: DesignSettingsTabPro
       setBannerUrl('');
       toast.success('Banner eliminado correctamente');
     } catch (error: unknown) {
-      console.error('Error removing banner:', error);
       toast.error('Error al eliminar el banner');
     }
   };
@@ -207,7 +203,6 @@ export const DesignSettingsTab = ({ storeId, initialData }: DesignSettingsTabPro
       toast.success('Configuración de diseño guardada correctamente');
       window.location.reload();
     } catch (error: unknown) {
-      console.error('Error saving design settings:', error);
       toast.error('Error al guardar la configuración de diseño');
     } finally {
       setSaving(false);
@@ -390,7 +385,7 @@ export const DesignSettingsTab = ({ storeId, initialData }: DesignSettingsTabPro
               </Label>
               <Input
                 id="delivery_label"
-                {...register("delivery_label")}
+                {...register('delivery_label')}
                 placeholder="Delivery"
                 className="h-11 md:h-10 text-base md:text-sm"
               />
@@ -409,7 +404,7 @@ export const DesignSettingsTab = ({ storeId, initialData }: DesignSettingsTabPro
               </Label>
               <Input
                 id="pickup_label"
-                {...register("pickup_label")}
+                {...register('pickup_label')}
                 placeholder="Pick-up"
                 className="h-11 md:h-10 text-base md:text-sm"
               />
@@ -428,7 +423,7 @@ export const DesignSettingsTab = ({ storeId, initialData }: DesignSettingsTabPro
               </Label>
               <Input
                 id="digital_menu_label"
-                {...register("digital_menu_label")}
+                {...register('digital_menu_label')}
                 placeholder="Mesa"
                 className="h-11 md:h-10 text-base md:text-sm"
               />

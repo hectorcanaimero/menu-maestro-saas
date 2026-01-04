@@ -17,13 +17,11 @@ export default function DebugAuth() {
   const handleGetSession = async () => {
     const { data } = await supabase.auth.getSession();
     setSession(data);
-    console.log('Session:', data);
   };
 
   const handleGetUserStore = async () => {
     const { data, error } = await supabase.rpc('get_user_owned_store').single();
     setUserStore({ data, error });
-    console.log('get_user_owned_store RPC:', { data, error });
   };
 
   const handleDirectStoreQuery = async () => {
@@ -34,13 +32,11 @@ export default function DebugAuth() {
       .eq('subdomain', subdomain)
       .single();
     setDirectStoreQuery({ data, error });
-    console.log('Direct store query:', { data, error });
   };
 
   const handleGetUserRoles = async () => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) {
-      console.log('No session');
       return;
     }
 
@@ -49,7 +45,6 @@ export default function DebugAuth() {
       .select('*')
       .eq('user_id', session.user.id);
     setUserRoles(data || []);
-    console.log('User roles:', { data, error });
   };
 
   const handleGetPlatformAdminRole = async () => {
@@ -62,12 +57,6 @@ export default function DebugAuth() {
       isPlatformAdmin,
       adminRole,
       errors: { isPlatformAdminError, adminRoleError }
-    });
-    console.log('Platform admin status:', {
-      isPlatformAdmin,
-      adminRole,
-      isPlatformAdminError,
-      adminRoleError
     });
   };
 

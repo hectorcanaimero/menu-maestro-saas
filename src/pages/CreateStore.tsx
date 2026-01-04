@@ -89,11 +89,6 @@ const CreateStore = () => {
       });
 
       if (error) {
-        console.error('Error validating subdomain:', error);
-        setSubdomainValidation({
-          isValid: false,
-          message: 'Error al validar el subdominio',
-        });
         return;
       }
 
@@ -109,7 +104,6 @@ const CreateStore = () => {
         setSuggestions(newSuggestions);
       }
     } catch (error) {
-      console.error('Error validating subdomain:', error);
       setSubdomainValidation({
         isValid: false,
         message: 'Error al validar el subdominio',
@@ -204,7 +198,6 @@ const CreateStore = () => {
       navigate('/admin/dashboard');
       window.location.reload(); // Reload to apply new store context
     } catch (error) {
-      console.error('Error creating store:', error);
       toast.error('Error al crear la tienda');
     } finally {
       setLoading(false);

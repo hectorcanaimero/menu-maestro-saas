@@ -1,27 +1,22 @@
-import { createRoot } from "react-dom/client";
-import * as Sentry from "@sentry/react";
-import {
-  createRoutesFromChildren,
-  matchRoutes,
-  useLocation,
-  useNavigationType,
-} from "react-router-dom";
-import { useEffect } from "react";
-import App from "./App.tsx";
-import "./index.css";
-import "leaflet/dist/leaflet.css";
-import posthog from "posthog-js";
-import { ErrorBoundary } from "./components/ErrorBoundary";
+import { createRoot } from 'react-dom/client';
+import * as Sentry from '@sentry/react';
+import { createRoutesFromChildren, matchRoutes, useLocation, useNavigationType } from 'react-router-dom';
+import { useEffect } from 'react';
+import App from './App.tsx';
+import './index.css';
+import 'leaflet/dist/leaflet.css';
+import posthog from 'posthog-js';
+import { ErrorBoundary } from './components/ErrorBoundary';
 
 // Initialize Sentry with professional configuration
 Sentry.init({
-  dsn: "https://63afd0c5a58daa15228eba85ac8356eb@o172702.ingest.us.sentry.io/4510482187878400",
+  dsn: 'https://63afd0c5a58daa15228eba85ac8356eb@o172702.ingest.us.sentry.io/4510482187878400',
 
   // Environment detection
   environment: import.meta.env.MODE,
 
   // Release tracking with git commit hash
-  release: import.meta.env.VITE_APP_VERSION || "development",
+  release: import.meta.env.VITE_APP_VERSION || 'development',
 
   // Performance Monitoring
   integrations: [
@@ -45,8 +40,8 @@ Sentry.init({
       // Network details recording
       networkDetailAllowUrls: [window.location.origin],
       networkCaptureBodies: true,
-      networkRequestHeaders: ["X-Custom-Header"],
-      networkResponseHeaders: ["X-Custom-Header"],
+      networkRequestHeaders: ['X-Custom-Header'],
+      networkResponseHeaders: ['X-Custom-Header'],
     }),
 
     // Note: Sentry User Feedback widget removed - using Chatwoot for support instead
@@ -82,20 +77,15 @@ Sentry.init({
     // Add custom context
     const error = hint.originalException;
 
-    // Log errors in development
-    if (import.meta.env.DEV) {
-      console.error("[Sentry]", error);
-    }
-
     // Filter out specific errors we don't want to track
     if (error && typeof error === 'object' && 'message' in error) {
       const errorMessage = String(error.message);
       // Ignore ResizeObserver errors (common browser quirk)
-      if (errorMessage.includes("ResizeObserver")) {
+      if (errorMessage.includes('ResizeObserver')) {
         return null;
       }
       // Ignore certain network errors
-      if (errorMessage.includes("Failed to fetch") || errorMessage.includes("NetworkError")) {
+      if (errorMessage.includes('Failed to fetch') || errorMessage.includes('NetworkError')) {
         // Still send but tag them
         event.tags = { ...event.tags, network_error: true };
       }
@@ -116,8 +106,8 @@ Sentry.init({
   // Custom tags for all events
   initialScope: {
     tags: {
-      app_type: "restaurant_ordering",
-      platform: "web",
+      app_type: 'restaurant_ordering',
+      platform: 'web',
     },
   },
 });
@@ -144,7 +134,7 @@ if (import.meta.env.VITE_POSTHOG_KEY && import.meta.env.VITE_POSTHOG_HOST) {
         const sanitized = { ...properties };
         // Remove email addresses, phone numbers, and other PII
         const sensitiveKeys = ['email', 'customer_email', 'phone', 'customer_phone', 'address', 'delivery_address'];
-        sensitiveKeys.forEach(key => {
+        sensitiveKeys.forEach((key) => {
           if (sanitized[key]) {
             delete sanitized[key];
           }
@@ -155,17 +145,15 @@ if (import.meta.env.VITE_POSTHOG_KEY && import.meta.env.VITE_POSTHOG_HOST) {
       property_blacklist: ['$email', 'email', 'customer_email', 'customer_phone', 'phone'],
       // Disable in development to avoid polluting analytics
       loaded: (posthog) => {
-        if (import.meta.env.DEV) console.log('[PostHog] Initialized successfully with privacy settings');
+        // PostHog initialized successfully
       },
     });
   } catch (error) {
-    console.error('[PostHog] Failed to initialize:', error);
+    //
   }
-} else {
-  console.warn('[PostHog] Not initialized - missing environment variables');
 }
 
-createRoot(document.getElementById("root")!).render(
+createRoot(document.getElementById('root')!).render(
   <Sentry.ErrorBoundary
     fallback={({ error, resetError }) => (
       <ErrorBoundary showDetails={import.meta.env.DEV}>
@@ -182,5 +170,5 @@ createRoot(document.getElementById("root")!).render(
     showDialog
   >
     <App />
-  </Sentry.ErrorBoundary>
+  </Sentry.ErrorBoundary>,
 );

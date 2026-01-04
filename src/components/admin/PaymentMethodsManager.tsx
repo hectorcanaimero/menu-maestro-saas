@@ -1,25 +1,12 @@
-import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Switch } from "@/components/ui/switch";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import {
   Dialog,
   DialogContent,
@@ -27,9 +14,9 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog";
-import { toast } from "sonner";
-import { Plus, Edit, Trash2, Loader2 } from "lucide-react";
+} from '@/components/ui/dialog';
+import { toast } from 'sonner';
+import { Plus, Edit, Trash2, Loader2 } from 'lucide-react';
 import type {
   PaymentMethod,
   PaymentMethodType,
@@ -37,8 +24,8 @@ import type {
   ZelleDetails,
   BinanceDetails,
   OtrosDetails,
-} from "@/types/payment-methods";
-import { VENEZUELAN_BANKS } from "@/types/payment-methods";
+} from '@/types/payment-methods';
+import { VENEZUELAN_BANKS } from '@/types/payment-methods';
 
 interface PaymentMethodsManagerProps {
   storeId: string;
@@ -67,10 +54,10 @@ export function PaymentMethodsManager({ storeId }: PaymentMethodsManagerProps) {
       // Otros (uses name + description)
     };
   }>({
-    name: "",
-    description: "",
+    name: '',
+    description: '',
     is_active: true,
-    payment_type: "otros",
+    payment_type: 'otros',
     payment_details: {},
   });
   const [saving, setSaving] = useState(false);
@@ -82,16 +69,15 @@ export function PaymentMethodsManager({ storeId }: PaymentMethodsManagerProps) {
   const loadPaymentMethods = async () => {
     try {
       const { data, error } = await supabase
-        .from("payment_methods")
-        .select("*")
-        .eq("store_id", storeId)
-        .order("display_order", { ascending: true });
+        .from('payment_methods')
+        .select('*')
+        .eq('store_id', storeId)
+        .order('display_order', { ascending: true });
 
       if (error) throw error;
       setMethods(data || []);
     } catch (error) {
-      console.error("Error loading payment methods:", error);
-      toast.error("Error al cargar los métodos de pago");
+      toast.error('Error al cargar los métodos de pago');
     } finally {
       setLoading(false);
     }
@@ -102,7 +88,7 @@ export function PaymentMethodsManager({ storeId }: PaymentMethodsManagerProps) {
       setEditingMethod(method);
       setFormData({
         name: method.name,
-        description: method.description || "",
+        description: method.description || '',
         is_active: method.is_active ?? true,
         payment_type: method.payment_type,
         payment_details: method.payment_details || {},
@@ -110,10 +96,10 @@ export function PaymentMethodsManager({ storeId }: PaymentMethodsManagerProps) {
     } else {
       setEditingMethod(null);
       setFormData({
-        name: "",
-        description: "",
+        name: '',
+        description: '',
         is_active: true,
-        payment_type: "otros",
+        payment_type: 'otros',
         payment_details: {},
       });
     }
@@ -122,51 +108,51 @@ export function PaymentMethodsManager({ storeId }: PaymentMethodsManagerProps) {
 
   const handleSave = async () => {
     if (!formData.name.trim()) {
-      toast.error("El nombre es requerido");
+      toast.error('El nombre es requerido');
       return;
     }
 
     // Validate required fields based on payment type
-    if (formData.payment_type === "pago_movil") {
+    if (formData.payment_type === 'pago_movil') {
       if (!formData.payment_details.bank_code || !formData.payment_details.cedula || !formData.payment_details.phone) {
-        toast.error("Pago Móvil requiere código de banco, cédula y teléfono");
+        toast.error('Pago Móvil requiere código de banco, cédula y teléfono');
         return;
       }
-    } else if (formData.payment_type === "zelle") {
+    } else if (formData.payment_type === 'zelle') {
       if (!formData.payment_details.email || !formData.payment_details.holder_name) {
-        toast.error("Zelle requiere email y nombre del titular");
+        toast.error('Zelle requiere email y nombre del titular');
         return;
       }
-    } else if (formData.payment_type === "binance") {
+    } else if (formData.payment_type === 'binance') {
       if (!formData.payment_details.key) {
-        toast.error("Binance requiere la clave");
+        toast.error('Binance requiere la clave');
         return;
       }
-    } else if (formData.payment_type === "otros") {
+    } else if (formData.payment_type === 'otros') {
       if (!formData.description.trim()) {
-        toast.error("Otros requiere una descripción");
+        toast.error('Otros requiere una descripción');
         return;
       }
     }
 
     // Build payment details based on type
     let payment_details = null;
-    if (formData.payment_type === "pago_movil") {
+    if (formData.payment_type === 'pago_movil') {
       payment_details = {
         bank_code: formData.payment_details.bank_code,
         cedula: formData.payment_details.cedula,
         phone: formData.payment_details.phone,
       };
-    } else if (formData.payment_type === "zelle") {
+    } else if (formData.payment_type === 'zelle') {
       payment_details = {
         email: formData.payment_details.email,
         holder_name: formData.payment_details.holder_name,
       };
-    } else if (formData.payment_type === "binance") {
+    } else if (formData.payment_type === 'binance') {
       payment_details = {
         key: formData.payment_details.key,
       };
-    } else if (formData.payment_type === "otros") {
+    } else if (formData.payment_type === 'otros') {
       payment_details = {
         name: formData.name,
         description: formData.description,
@@ -176,17 +162,19 @@ export function PaymentMethodsManager({ storeId }: PaymentMethodsManagerProps) {
     setSaving(true);
     try {
       // Verify session before saving
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      const {
+        data: { session },
+        error: sessionError,
+      } = await supabase.auth.getSession();
       if (sessionError || !session) {
-        toast.error("Sesión expirada. Por favor, inicia sesión nuevamente.");
-        console.error("Session error:", sessionError);
+        toast.error('Sesión expirada. Por favor, inicia sesión nuevamente.');
         return;
       }
 
       if (editingMethod) {
         // Update existing method
         const { error } = await supabase
-          .from("payment_methods")
+          .from('payment_methods')
           .update({
             name: formData.name,
             description: formData.description || null,
@@ -194,17 +182,16 @@ export function PaymentMethodsManager({ storeId }: PaymentMethodsManagerProps) {
             payment_type: formData.payment_type,
             payment_details: payment_details,
           })
-          .eq("id", editingMethod.id)
-          .eq("store_id", storeId); // Add explicit store_id check for RLS
+          .eq('id', editingMethod.id)
+          .eq('store_id', storeId); // Add explicit store_id check for RLS
 
         if (error) {
-          console.error("Update error:", error);
           throw error;
         }
-        toast.success("Método de pago actualizado");
+        toast.success('Método de pago actualizado');
       } else {
         // Create new method
-        const { error } = await supabase.from("payment_methods").insert({
+        const { error } = await supabase.from('payment_methods').insert({
           store_id: storeId,
           name: formData.name,
           description: formData.description || null,
@@ -215,22 +202,19 @@ export function PaymentMethodsManager({ storeId }: PaymentMethodsManagerProps) {
         });
 
         if (error) {
-          console.error("Insert error:", error);
           throw error;
         }
-        toast.success("Método de pago creado");
+        toast.success('Método de pago creado');
       }
 
       setDialogOpen(false);
       loadPaymentMethods();
     } catch (error: any) {
-      console.error("Error saving payment method:", error);
-
       // Provide more specific error messages
       if (error?.message?.includes('JWT') || error?.message?.includes('auth')) {
-        toast.error("Error de autenticación. Por favor, recarga la página e intenta nuevamente.");
+        toast.error('Error de autenticación. Por favor, recarga la página e intenta nuevamente.');
       } else if (error?.message?.includes('permission') || error?.code === '42501') {
-        toast.error("No tienes permisos para realizar esta acción.");
+        toast.error('No tienes permisos para realizar esta acción.');
       } else {
         toast.error(`Error al guardar: ${error?.message || 'Error desconocido'}`);
       }
@@ -240,32 +224,30 @@ export function PaymentMethodsManager({ storeId }: PaymentMethodsManagerProps) {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("¿Estás seguro de eliminar este método de pago?")) return;
+    if (!confirm('¿Estás seguro de eliminar este método de pago?')) return;
 
     try {
-      const { error } = await supabase.from("payment_methods").delete().eq("id", id);
+      const { error } = await supabase.from('payment_methods').delete().eq('id', id);
 
       if (error) throw error;
-      toast.success("Método de pago eliminado");
+      toast.success('Método de pago eliminado');
       loadPaymentMethods();
     } catch (error) {
-      console.error("Error deleting payment method:", error);
-      toast.error("Error al eliminar el método de pago");
+      toast.error('Error al eliminar el método de pago');
     }
   };
 
   const handleToggleActive = async (method: PaymentMethod) => {
     try {
       const { error } = await supabase
-        .from("payment_methods")
+        .from('payment_methods')
         .update({ is_active: !method.is_active })
-        .eq("id", method.id);
+        .eq('id', method.id);
 
       if (error) throw error;
       loadPaymentMethods();
     } catch (error) {
-      console.error("Error toggling payment method:", error);
-      toast.error("Error al actualizar el método de pago");
+      toast.error('Error al actualizar el método de pago');
     }
   };
 
@@ -282,9 +264,7 @@ export function PaymentMethodsManager({ storeId }: PaymentMethodsManagerProps) {
       <div className="flex items-center justify-between">
         <div>
           <h3 className="text-lg font-semibold">Métodos de Pago</h3>
-          <p className="text-sm text-muted-foreground">
-            Administra los métodos de pago disponibles para tus clientes
-          </p>
+          <p className="text-sm text-muted-foreground">Administra los métodos de pago disponibles para tus clientes</p>
         </div>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
@@ -301,12 +281,8 @@ export function PaymentMethodsManager({ storeId }: PaymentMethodsManagerProps) {
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>
-                {editingMethod ? "Editar Método de Pago" : "Nuevo Método de Pago"}
-              </DialogTitle>
-              <DialogDescription>
-                Configura la información del método de pago
-              </DialogDescription>
+              <DialogTitle>{editingMethod ? 'Editar Método de Pago' : 'Nuevo Método de Pago'}</DialogTitle>
+              <DialogDescription>Configura la información del método de pago</DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-4 max-h-[70vh] overflow-y-auto">
               {/* Payment Type Selection */}
@@ -315,33 +291,33 @@ export function PaymentMethodsManager({ storeId }: PaymentMethodsManagerProps) {
                 <div className="grid grid-cols-2 gap-2">
                   <Button
                     type="button"
-                    variant={formData.payment_type === "pago_movil" ? "default" : "outline"}
+                    variant={formData.payment_type === 'pago_movil' ? 'default' : 'outline'}
                     className="h-auto py-3"
-                    onClick={() => setFormData({ ...formData, payment_type: "pago_movil", payment_details: {} })}
+                    onClick={() => setFormData({ ...formData, payment_type: 'pago_movil', payment_details: {} })}
                   >
                     Pago Móvil
                   </Button>
                   <Button
                     type="button"
-                    variant={formData.payment_type === "zelle" ? "default" : "outline"}
+                    variant={formData.payment_type === 'zelle' ? 'default' : 'outline'}
                     className="h-auto py-3"
-                    onClick={() => setFormData({ ...formData, payment_type: "zelle", payment_details: {} })}
+                    onClick={() => setFormData({ ...formData, payment_type: 'zelle', payment_details: {} })}
                   >
                     Zelle
                   </Button>
                   <Button
                     type="button"
-                    variant={formData.payment_type === "binance" ? "default" : "outline"}
+                    variant={formData.payment_type === 'binance' ? 'default' : 'outline'}
                     className="h-auto py-3"
-                    onClick={() => setFormData({ ...formData, payment_type: "binance", payment_details: {} })}
+                    onClick={() => setFormData({ ...formData, payment_type: 'binance', payment_details: {} })}
                   >
                     Binance
                   </Button>
                   <Button
                     type="button"
-                    variant={formData.payment_type === "otros" ? "default" : "outline"}
+                    variant={formData.payment_type === 'otros' ? 'default' : 'outline'}
                     className="h-auto py-3"
-                    onClick={() => setFormData({ ...formData, payment_type: "otros", payment_details: {} })}
+                    onClick={() => setFormData({ ...formData, payment_type: 'otros', payment_details: {} })}
                   >
                     Otros
                   </Button>
@@ -361,7 +337,7 @@ export function PaymentMethodsManager({ storeId }: PaymentMethodsManagerProps) {
               </div>
 
               {/* Pago Movil Fields */}
-              {formData.payment_type === "pago_movil" && (
+              {formData.payment_type === 'pago_movil' && (
                 <>
                   <div className="space-y-2">
                     <Label htmlFor="bank_code">Banco *</Label>
@@ -390,7 +366,7 @@ export function PaymentMethodsManager({ storeId }: PaymentMethodsManagerProps) {
                     <Label htmlFor="cedula">Cédula *</Label>
                     <Input
                       id="cedula"
-                      value={formData.payment_details.cedula || ""}
+                      value={formData.payment_details.cedula || ''}
                       onChange={(e) =>
                         setFormData({
                           ...formData,
@@ -405,7 +381,7 @@ export function PaymentMethodsManager({ storeId }: PaymentMethodsManagerProps) {
                     <Label htmlFor="phone">Teléfono *</Label>
                     <Input
                       id="phone"
-                      value={formData.payment_details.phone || ""}
+                      value={formData.payment_details.phone || ''}
                       onChange={(e) =>
                         setFormData({
                           ...formData,
@@ -420,14 +396,14 @@ export function PaymentMethodsManager({ storeId }: PaymentMethodsManagerProps) {
               )}
 
               {/* Zelle Fields */}
-              {formData.payment_type === "zelle" && (
+              {formData.payment_type === 'zelle' && (
                 <>
                   <div className="space-y-2">
                     <Label htmlFor="email">Email *</Label>
                     <Input
                       id="email"
                       type="email"
-                      value={formData.payment_details.email || ""}
+                      value={formData.payment_details.email || ''}
                       onChange={(e) =>
                         setFormData({
                           ...formData,
@@ -441,7 +417,7 @@ export function PaymentMethodsManager({ storeId }: PaymentMethodsManagerProps) {
                     <Label htmlFor="holder_name">Nombre del Titular *</Label>
                     <Input
                       id="holder_name"
-                      value={formData.payment_details.holder_name || ""}
+                      value={formData.payment_details.holder_name || ''}
                       onChange={(e) =>
                         setFormData({
                           ...formData,
@@ -456,12 +432,12 @@ export function PaymentMethodsManager({ storeId }: PaymentMethodsManagerProps) {
               )}
 
               {/* Binance Fields */}
-              {formData.payment_type === "binance" && (
+              {formData.payment_type === 'binance' && (
                 <div className="space-y-2">
                   <Label htmlFor="key">Clave / ID *</Label>
                   <Input
                     id="key"
-                    value={formData.payment_details.key || ""}
+                    value={formData.payment_details.key || ''}
                     onChange={(e) =>
                       setFormData({
                         ...formData,
@@ -475,7 +451,7 @@ export function PaymentMethodsManager({ storeId }: PaymentMethodsManagerProps) {
               )}
 
               {/* Otros Fields */}
-              {formData.payment_type === "otros" && (
+              {formData.payment_type === 'otros' && (
                 <div className="space-y-2">
                   <Label htmlFor="description">Descripción / Instrucciones *</Label>
                   <Textarea
@@ -503,7 +479,7 @@ export function PaymentMethodsManager({ storeId }: PaymentMethodsManagerProps) {
                 </Button>
                 <Button onClick={handleSave} disabled={saving}>
                   {saving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                  {editingMethod ? "Guardar Cambios" : "Crear Método"}
+                  {editingMethod ? 'Guardar Cambios' : 'Crear Método'}
                 </Button>
               </div>
             </div>
@@ -541,15 +517,10 @@ export function PaymentMethodsManager({ storeId }: PaymentMethodsManagerProps) {
                 <TableRow key={method.id}>
                   <TableCell className="font-medium">{method.name}</TableCell>
                   <TableCell className="max-w-md">
-                    <p className="text-sm text-muted-foreground truncate">
-                      {method.description || "-"}
-                    </p>
+                    <p className="text-sm text-muted-foreground truncate">{method.description || '-'}</p>
                   </TableCell>
                   <TableCell className="text-center">
-                    <Switch
-                      checked={method.is_active ?? false}
-                      onCheckedChange={() => handleToggleActive(method)}
-                    />
+                    <Switch checked={method.is_active ?? false} onCheckedChange={() => handleToggleActive(method)} />
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex gap-2 justify-end">

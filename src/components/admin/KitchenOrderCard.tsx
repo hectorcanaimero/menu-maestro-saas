@@ -200,7 +200,7 @@ export const KitchenOrderCard = ({
         <div className="space-y-1 text-sm">
           <div className="flex items-center gap-2 text-muted-foreground">
             <CreditCard className="w-4 h-4" />
-            <span>Tipo de Entrega: {order.order_type || 'N/A'}</span>
+            <span>Tipo de Entrega: {getLabel(order.order_type)}</span>
           </div>
           <div className="flex items-center gap-2 text-muted-foreground">
             <CreditCard className="w-4 h-4" />

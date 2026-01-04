@@ -68,15 +68,6 @@ export const OrderCard = ({ order, onStatusChange, onViewDetails, onDriverAssign
   // Only show driver assignment features if delivery module is explicitly enabled
   const showDriverFeatures = hasDeliveryModule === true;
 
-  // Debug log (can be removed later)
-  console.log('OrderCard - Delivery Module Check:', {
-    orderId: order.id.slice(0, 8),
-    hasDeliveryModule,
-    checkingModule,
-    showDriverFeatures,
-    isDelivery: order.order_type === 'delivery',
-  });
-
   // Get delivery assignment info
   const { data: deliveryAssignment } = useQuery({
     queryKey: ['delivery-assignment-by-order', order.id],

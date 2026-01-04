@@ -80,7 +80,6 @@ const PromotionsManager = () => {
       if (error) throw error;
       setPromotions((data || []) as Promotion[]);
     } catch (error) {
-      console.error('Error fetching promotions:', error);
       toast.error('Error al cargar promociones');
     } finally {
       setLoading(false);
@@ -100,7 +99,7 @@ const PromotionsManager = () => {
       if (error) throw error;
       setCategories(data || []);
     } catch (error) {
-      console.error('Error fetching categories:', error);
+      throw new Error(error as string | undefined);
     }
   };
 
@@ -117,7 +116,7 @@ const PromotionsManager = () => {
       if (error) throw error;
       setMenuItems(data || []);
     } catch (error) {
-      console.error('Error fetching menu items:', error);
+      throw new Error(error as string | undefined);
     }
   };
 
@@ -154,10 +153,7 @@ const PromotionsManager = () => {
       };
 
       if (editingPromotion) {
-        const { error } = await supabase
-          .from('promotions')
-          .update(promotionData)
-          .eq('id', editingPromotion.id);
+        const { error } = await supabase.from('promotions').update(promotionData).eq('id', editingPromotion.id);
 
         if (error) throw error;
         toast.success('Promoción actualizada');
@@ -176,7 +172,6 @@ const PromotionsManager = () => {
       fetchPromotions();
       handleCloseDialog();
     } catch (error) {
-      console.error('Error saving promotion:', error);
       toast.error('Error al guardar la promoción');
     }
   };
@@ -191,7 +186,6 @@ const PromotionsManager = () => {
       toast.success('Promoción eliminada');
       fetchPromotions();
     } catch (error) {
-      console.error('Error deleting promotion:', error);
       toast.error('Error al eliminar la promoción');
     }
   };
@@ -287,7 +281,9 @@ const PromotionsManager = () => {
               <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4 mt-4">
                 <div className="grid gap-3 sm:gap-4 sm:grid-cols-2">
                   <div className="space-y-2 sm:col-span-2">
-                    <Label htmlFor="name" className="text-xs sm:text-sm">Nombre de la promoción</Label>
+                    <Label htmlFor="name" className="text-xs sm:text-sm">
+                      Nombre de la promoción
+                    </Label>
                     <Input
                       id="name"
                       value={formData.name}
@@ -299,7 +295,9 @@ const PromotionsManager = () => {
                   </div>
 
                   <div className="space-y-2 sm:col-span-2">
-                    <Label htmlFor="description" className="text-xs sm:text-sm">Descripción (opcional)</Label>
+                    <Label htmlFor="description" className="text-xs sm:text-sm">
+                      Descripción (opcional)
+                    </Label>
                     <Textarea
                       id="description"
                       value={formData.description}
@@ -311,12 +309,12 @@ const PromotionsManager = () => {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="type" className="text-xs sm:text-sm">Tipo de descuento</Label>
+                    <Label htmlFor="type" className="text-xs sm:text-sm">
+                      Tipo de descuento
+                    </Label>
                     <Select
                       value={formData.type}
-                      onValueChange={(value: 'percentage' | 'fixed') =>
-                        setFormData({ ...formData, type: value })
-                      }
+                      onValueChange={(value: 'percentage' | 'fixed') => setFormData({ ...formData, type: value })}
                     >
                       <SelectTrigger>
                         <SelectValue />
@@ -339,16 +337,16 @@ const PromotionsManager = () => {
                       min="0"
                       max={formData.type === 'percentage' ? '100' : undefined}
                       value={formData.value}
-                      onChange={(e) =>
-                        setFormData({ ...formData, value: parseFloat(e.target.value) || 0 })
-                      }
+                      onChange={(e) => setFormData({ ...formData, value: parseFloat(e.target.value) || 0 })}
                       className="text-sm"
                       required
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="start_date" className="text-xs sm:text-sm">Fecha de inicio (opcional)</Label>
+                    <Label htmlFor="start_date" className="text-xs sm:text-sm">
+                      Fecha de inicio (opcional)
+                    </Label>
                     <Input
                       id="start_date"
                       type="date"
@@ -359,7 +357,9 @@ const PromotionsManager = () => {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="end_date" className="text-xs sm:text-sm">Fecha de fin (opcional)</Label>
+                    <Label htmlFor="end_date" className="text-xs sm:text-sm">
+                      Fecha de fin (opcional)
+                    </Label>
                     <Input
                       id="end_date"
                       type="date"
@@ -384,8 +384,7 @@ const PromotionsManager = () => {
                 <div className="border-t pt-3 sm:pt-4">
                   <h4 className="font-medium mb-3 text-sm sm:text-base">Alcance de la promoción</h4>
                   <p className="text-xs sm:text-sm text-muted-foreground mb-3 sm:mb-4">
-                    Si no seleccionas productos o categorías, la promoción se aplicará a toda la
-                    tienda.
+                    Si no seleccionas productos o categorías, la promoción se aplicará a toda la tienda.
                   </p>
 
                   <div className="space-y-3 sm:space-y-4">
@@ -413,10 +412,7 @@ const PromotionsManager = () => {
                               }}
                               className="rounded"
                             />
-                            <label
-                              htmlFor={`product-${item.id}`}
-                              className="text-xs sm:text-sm cursor-pointer"
-                            >
+                            <label htmlFor={`product-${item.id}`} className="text-xs sm:text-sm cursor-pointer">
                               {item.name}
                             </label>
                           </div>
@@ -442,18 +438,13 @@ const PromotionsManager = () => {
                                 } else {
                                   setFormData({
                                     ...formData,
-                                    category_ids: formData.category_ids.filter(
-                                      (id) => id !== category.id
-                                    ),
+                                    category_ids: formData.category_ids.filter((id) => id !== category.id),
                                   });
                                 }
                               }}
                               className="rounded"
                             />
-                            <label
-                              htmlFor={`category-${category.id}`}
-                              className="text-xs sm:text-sm cursor-pointer"
-                            >
+                            <label htmlFor={`category-${category.id}`} className="text-xs sm:text-sm cursor-pointer">
                               {category.name}
                             </label>
                           </div>
@@ -507,17 +498,13 @@ const PromotionsManager = () => {
                           <div>
                             <div className="font-medium text-sm">{promotion.name}</div>
                             {promotion.description && (
-                              <div className="text-xs text-muted-foreground line-clamp-1">
-                                {promotion.description}
-                              </div>
+                              <div className="text-xs text-muted-foreground line-clamp-1">{promotion.description}</div>
                             )}
                           </div>
                         </TableCell>
                         <TableCell>
                           <Badge variant="secondary" className="text-xs">
-                            {promotion.type === 'percentage'
-                              ? `${promotion.value}%`
-                              : `$${promotion.value.toFixed(2)}`}
+                            {promotion.type === 'percentage' ? `${promotion.value}%` : `$${promotion.value.toFixed(2)}`}
                           </Badge>
                         </TableCell>
                         <TableCell className="text-xs">{getPromotionScope(promotion)}</TableCell>
@@ -526,13 +513,9 @@ const PromotionsManager = () => {
                             <div className="flex items-center gap-1">
                               <Calendar className="w-3 h-3" />
                               <span>
-                                {promotion.start_date
-                                  ? format(new Date(promotion.start_date), 'dd/MM/yy')
-                                  : '∞'}
+                                {promotion.start_date ? format(new Date(promotion.start_date), 'dd/MM/yy') : '∞'}
                                 {' - '}
-                                {promotion.end_date
-                                  ? format(new Date(promotion.end_date), 'dd/MM/yy')
-                                  : '∞'}
+                                {promotion.end_date ? format(new Date(promotion.end_date), 'dd/MM/yy') : '∞'}
                               </span>
                             </div>
                           ) : (
@@ -575,9 +558,7 @@ const PromotionsManager = () => {
                         <div className="flex-1 min-w-0">
                           <h3 className="font-medium text-sm truncate">{promotion.name}</h3>
                           {promotion.description && (
-                            <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5">
-                              {promotion.description}
-                            </p>
+                            <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5">{promotion.description}</p>
                           )}
                         </div>
                         {getPromotionBadge(promotion)}
@@ -585,26 +566,18 @@ const PromotionsManager = () => {
 
                       <div className="flex items-center gap-2 flex-wrap">
                         <Badge variant="secondary" className="text-xs">
-                          {promotion.type === 'percentage'
-                            ? `${promotion.value}%`
-                            : `$${promotion.value.toFixed(2)}`}
+                          {promotion.type === 'percentage' ? `${promotion.value}%` : `$${promotion.value.toFixed(2)}`}
                         </Badge>
-                        <span className="text-xs text-muted-foreground">
-                          {getPromotionScope(promotion)}
-                        </span>
+                        <span className="text-xs text-muted-foreground">{getPromotionScope(promotion)}</span>
                       </div>
 
                       {(promotion.start_date || promotion.end_date) && (
                         <div className="flex items-center gap-1 text-xs text-muted-foreground">
                           <Calendar className="w-3 h-3" />
                           <span>
-                            {promotion.start_date
-                              ? format(new Date(promotion.start_date), 'dd/MM/yy')
-                              : '∞'}
+                            {promotion.start_date ? format(new Date(promotion.start_date), 'dd/MM/yy') : '∞'}
                             {' - '}
-                            {promotion.end_date
-                              ? format(new Date(promotion.end_date), 'dd/MM/yy')
-                              : '∞'}
+                            {promotion.end_date ? format(new Date(promotion.end_date), 'dd/MM/yy') : '∞'}
                           </span>
                         </div>
                       )}

@@ -31,6 +31,8 @@ export interface OrderData {
   payment_method?: string;
   order_type: 'delivery' | 'pickup' | 'dine_in' | 'digital_menu';
   payment_proof_url?: string;
+  payment_proof_short_url?: string;  // NEW: Shortened URL from Shlink
+  payment_proof_short_code?: string; // NEW: Short code for stats lookup
   country?: string;
   delivery_price?: number;
   coupon_code?: string;
@@ -134,6 +136,8 @@ export async function createOrder(params: CreateOrderParams): Promise<CreateOrde
         delivery_address: fullAddress,
         notes: notes,
         payment_proof_url: orderData.payment_proof_url || null,
+        payment_proof_short_url: orderData.payment_proof_short_url || null,
+        payment_proof_short_code: orderData.payment_proof_short_code || null,
         payment_method: orderData.payment_method || null,
         order_type: orderData.order_type,
       },
@@ -327,6 +331,7 @@ export async function prepareWhatsAppRedirect(
     tableNumber: fullOrder.table_number || undefined,
     exchangeRate,
     paymentProofUrl: fullOrder.payment_proof_url || '',
+    paymentProofShortUrl: fullOrder.payment_proof_short_url || '',
   };
 
   // Generate WhatsApp message

@@ -1,5 +1,12 @@
 import { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -68,10 +75,7 @@ export const QuickEditDialog = ({
           break;
       }
 
-      const { error } = await supabase
-        .from('menu_items')
-        .update(updateData)
-        .eq('id', itemId);
+      const { error } = await supabase.from('menu_items').update(updateData).eq('id', itemId);
 
       if (error) throw error;
 
@@ -79,7 +83,6 @@ export const QuickEditDialog = ({
       onSuccess();
       onOpenChange(false);
     } catch (error) {
-      console.error('Error updating item:', error);
       toast.error('Error al actualizar producto');
     } finally {
       setLoading(false);

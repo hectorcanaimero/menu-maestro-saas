@@ -79,7 +79,7 @@ export const FloatingCartButton = () => {
           cart_value: discountedTotal,
         });
       } catch (error) {
-        console.error('[PostHog] Error tracking floating cart click:', error);
+        throw new Error(error as string | undefined);
       }
     }
 

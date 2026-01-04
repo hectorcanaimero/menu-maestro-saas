@@ -41,22 +41,23 @@ export function AdminDeliveryDashboard() {
   const { drivers, isLoading: isLoadingDrivers } = useDrivers();
 
   // Debug: Log store info
-  console.log('[AdminDeliveryDashboard] Store:', store?.id, store?.name);
 
   // Get active deliveries
-  const { data: activeDeliveries, isLoading: isLoadingDeliveries, error: deliveriesError } = useQuery({
+  const {
+    data: activeDeliveries,
+    isLoading: isLoadingDeliveries,
+    error: deliveriesError,
+  } = useQuery({
     queryKey: ['active-deliveries', store?.id],
     queryFn: async () => {
-      console.log('[AdminDeliveryDashboard] Fetching active deliveries for store:', store?.id);
-
       if (!store?.id) {
-        console.log('[AdminDeliveryDashboard] No store ID, returning empty array');
         return [];
       }
 
       const { data, error } = await supabase
         .from('delivery_assignments')
-        .select(`
+        .select(
+          `
           id,
           order_id,
           status,
@@ -78,17 +79,15 @@ export function AdminDeliveryDashboard() {
             delivery_lat,
             delivery_lng
           )
-        `)
+        `,
+        )
         .eq('store_id', store.id)
         .in('status', ['assigned', 'picked_up', 'in_transit'])
         .order('assigned_at', { ascending: false });
 
       if (error) {
-        console.error('[AdminDeliveryDashboard] Error fetching active deliveries:', error);
         throw error;
       }
-      console.log('[AdminDeliveryDashboard] Active deliveries fetched:', data);
-      console.log('[AdminDeliveryDashboard] Number of active deliveries:', data?.length || 0);
       return data as DeliveryWithOrder[];
     },
     enabled: !!store?.id,
@@ -140,26 +139,18 @@ export function AdminDeliveryDashboard() {
   const driversWithLocation = activeDrivers.filter((d) => d.current_lat && d.current_lng);
 
   // Calculate map center (average of all driver locations or store location)
-  const mapCenter = driversWithLocation.length > 0
-    ? {
-        lat: driversWithLocation.reduce((sum, d) => sum + (d.current_lat || 0), 0) / driversWithLocation.length,
-        lng: driversWithLocation.reduce((sum, d) => sum + (d.current_lng || 0), 0) / driversWithLocation.length,
-      }
-    : store?.store_lat && store?.store_lng
-    ? { lat: store.store_lat, lng: store.store_lng }
-    : { lat: 10.4806, lng: -66.9036 }; // Default to Caracas
+  const mapCenter =
+    driversWithLocation.length > 0
+      ? {
+          lat: driversWithLocation.reduce((sum, d) => sum + (d.current_lat || 0), 0) / driversWithLocation.length,
+          lng: driversWithLocation.reduce((sum, d) => sum + (d.current_lng || 0), 0) / driversWithLocation.length,
+        }
+      : store?.store_lat && store?.store_lng
+      ? { lat: store.store_lat, lng: store.store_lng }
+      : { lat: 10.4806, lng: -66.9036 }; // Default to Caracas
 
   // Debug: Log loading and error states
-  console.log('[AdminDeliveryDashboard] Loading states:', {
-    isLoadingDrivers,
-    isLoadingDeliveries,
-    hasError: !!deliveriesError,
-    driversCount: drivers?.length,
-    deliveriesCount: activeDeliveries?.length
-  });
-
   if (isLoadingDrivers || isLoadingDeliveries) {
-    console.log('[AdminDeliveryDashboard] Still loading...');
     return (
       <div className="space-y-6">
         <div className="grid gap-4 md:grid-cols-4">
@@ -170,10 +161,6 @@ export function AdminDeliveryDashboard() {
         <Skeleton className="h-[500px]" />
       </div>
     );
-  }
-
-  if (deliveriesError) {
-    console.error('[AdminDeliveryDashboard] Error in query:', deliveriesError);
   }
 
   const getStatusBadge = (status: string) => {
@@ -310,9 +297,7 @@ export function AdminDeliveryDashboard() {
                         })}
                       </span>
                       {delivery.estimated_minutes && (
-                        <span className="font-medium text-primary">
-                          ETA: {delivery.estimated_minutes} min
-                        </span>
+                        <span className="font-medium text-primary">ETA: {delivery.estimated_minutes} min</span>
                       )}
                     </div>
                   </div>

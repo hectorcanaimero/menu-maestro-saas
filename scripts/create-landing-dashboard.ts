@@ -11,8 +11,6 @@ const POSTHOG_PROJECT_ID = '185811';
 const POSTHOG_API_KEY = process.env.VITE_POSTHOG_API_KEY || process.env.VITE_POSTHOG_PERSONAL_KEY || '';
 
 if (!POSTHOG_API_KEY) {
-  console.error('❌ Error: POSTHOG_API_KEY is not set');
-  console.error('Set VITE_POSTHOG_API_KEY or VITE_POSTHOG_PERSONAL_KEY in your environment');
   process.exit(1);
 }
 
@@ -33,36 +31,29 @@ const INSIGHT_SHORT_IDS = {
 async function createDashboard() {
   const url = `${POSTHOG_HOST}/api/projects/${POSTHOG_PROJECT_ID}/dashboards/`;
 
-  console.log('\n📊 Creating Landing Page Analytics Dashboard');
-
   try {
     const response = await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${POSTHOG_API_KEY}`,
+        Authorization: `Bearer ${POSTHOG_API_KEY}`,
       },
       body: JSON.stringify({
         name: 'Landing Page Analytics',
-        description: 'Comprehensive analytics for the PideAI landing page, including conversion funnels and engagement metrics',
+        description:
+          'Comprehensive analytics for the PideAI landing page, including conversion funnels and engagement metrics',
         pinned: true,
       }),
     });
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error(`❌ Failed to create dashboard: ${response.status} ${response.statusText}`);
-      console.error('Error details:', errorText);
       return null;
     }
 
     const data = await response.json();
-    console.log(`✅ Created dashboard: ${data.name}`);
-    console.log(`   ID: ${data.id}`);
-    console.log(`   URL: ${POSTHOG_HOST}/project/${POSTHOG_PROJECT_ID}/dashboard/${data.id}`);
     return data;
   } catch (error) {
-    console.error(`❌ Error creating dashboard:`, error);
     return null;
   }
 }
@@ -78,7 +69,7 @@ async function addInsightToDashboard(dashboardId: number, insightShortId: string
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${POSTHOG_API_KEY}`,
+        Authorization: `Bearer ${POSTHOG_API_KEY}`,
       },
       body: JSON.stringify({
         insight: insightShortId,
@@ -88,16 +79,12 @@ async function addInsightToDashboard(dashboardId: number, insightShortId: string
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error(`❌ Failed to add insight ${insightShortId}: ${response.status}`);
-      console.error('Error details:', errorText);
       return null;
     }
 
     const data = await response.json();
-    console.log(`✅ Added insight ${insightShortId} to dashboard`);
     return data;
   } catch (error) {
-    console.error(`❌ Error adding insight ${insightShortId}:`, error);
     return null;
   }
 }
@@ -106,17 +93,11 @@ async function addInsightToDashboard(dashboardId: number, insightShortId: string
  * Main function
  */
 async function main() {
-  console.log('🚀 PostHog Landing Page Dashboard Creator');
-  console.log('==========================================\n');
-
   // Create dashboard
   const dashboard = await createDashboard();
   if (!dashboard) {
-    console.error('Failed to create dashboard. Exiting.');
     return;
   }
-
-  console.log('\n📌 Adding insights to dashboard...\n');
 
   // Add funnels (full width)
   await addInsightToDashboard(dashboard.id, INSIGHT_SHORT_IDS.funnel1, {
@@ -147,18 +128,9 @@ async function main() {
   await addInsightToDashboard(dashboard.id, INSIGHT_SHORT_IDS.insight3, {
     sm: { x: 6, y: 20, w: 6, h: 5 },
   });
-
-  console.log('\n\n✨ DASHBOARD CREATED SUCCESSFULLY!');
-  console.log('=================================');
-  console.log(`\n🔗 View Dashboard: ${POSTHOG_HOST}/project/${POSTHOG_PROJECT_ID}/dashboard/${dashboard.id}`);
-  console.log('\n📊 Dashboard includes:');
-  console.log('   - 4 Conversion Funnels');
-  console.log('   - 3 Engagement Insights');
-  console.log('\n✅ All insights have been added to the dashboard');
 }
 
 // Run the script
-main().catch(error => {
-  console.error('\n❌ Fatal error:', error);
+main().catch((error) => {
   process.exit(1);
 });

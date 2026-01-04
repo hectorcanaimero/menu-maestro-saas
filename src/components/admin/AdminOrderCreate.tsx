@@ -1,27 +1,27 @@
-import { useState, useEffect, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
-import { useForm } from "react-hook-form";
-import * as z from "zod";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import { Separator } from "@/components/ui/separator";
-import { toast } from "sonner";
-import { ArrowLeft, ArrowRight, Check, Loader2, Plus, Minus, X, ShoppingCart, User, MapPin } from "lucide-react";
-import posthog from "posthog-js";
+import { useState, useEffect, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useForm } from 'react-hook-form';
+import * as z from 'zod';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
+import { Separator } from '@/components/ui/separator';
+import { toast } from 'sonner';
+import { ArrowLeft, ArrowRight, Check, Loader2, Plus, Minus, X, ShoppingCart, User, MapPin } from 'lucide-react';
+import posthog from 'posthog-js';
 
-import { supabase } from "@/integrations/supabase/client";
-import { useStore } from "@/contexts/StoreContext";
-import { useAdminCart } from "@/hooks/useAdminCart";
-import { useFormatPrice } from "@/lib/priceFormatter";
-import { findOrCreateCustomer } from "@/services/customerService";
-import { ProductExtrasDialog } from "@/components/catalog/ProductExtrasDialog";
+import { supabase } from '@/integrations/supabase/client';
+import { useStore } from '@/contexts/StoreContext';
+import { useAdminCart } from '@/hooks/useAdminCart';
+import { useFormatPrice } from '@/lib/priceFormatter';
+import { findOrCreateCustomer } from '@/services/customerService';
+import { ProductExtrasDialog } from '@/components/catalog/ProductExtrasDialog';
 
 interface AdminOrderCreateProps {
   open: boolean;
@@ -52,15 +52,15 @@ interface DeliveryZone {
 
 // Form schema
 const step1Schema = z.object({
-  customer_email: z.string().email("Email inválido").optional().or(z.literal("")),
-  customer_name: z.string().min(2, "Nombre requerido"),
-  customer_phone: z.string().min(10, "Teléfono inválido"),
-  order_type: z.enum(["delivery", "pickup", "dine_in"]),
+  customer_email: z.string().email('Email inválido').optional().or(z.literal('')),
+  customer_name: z.string().min(2, 'Nombre requerido'),
+  customer_phone: z.string().min(10, 'Teléfono inválido'),
+  order_type: z.enum(['delivery', 'pickup', 'dine_in']),
 });
 
 const step2DeliverySchema = z.object({
-  delivery_address: z.string().min(5, "Dirección requerida"),
-  delivery_zone: z.string().min(1, "Selecciona una zona"),
+  delivery_address: z.string().min(5, 'Dirección requerida'),
+  delivery_zone: z.string().min(1, 'Selecciona una zona'),
 });
 
 type FormData = z.infer<typeof step1Schema> & {
@@ -87,7 +87,7 @@ export const AdminOrderCreate = ({ open, onOpenChange, onSuccess }: AdminOrderCr
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [deliveryZones, setDeliveryZones] = useState<DeliveryZone[]>([]);
   const [deliveryPrice, setDeliveryPrice] = useState(0);
-  const [notes, setNotes] = useState("");
+  const [notes, setNotes] = useState('');
 
   // Product extras dialog
   const [showExtrasDialog, setShowExtrasDialog] = useState(false);
@@ -98,19 +98,19 @@ export const AdminOrderCreate = ({ open, onOpenChange, onSuccess }: AdminOrderCr
 
   // Form setup without automatic validation
   const form = useForm<FormData>({
-    mode: "onChange",
+    mode: 'onChange',
     defaultValues: {
-      customer_email: "",
-      customer_name: "",
-      customer_phone: "",
-      order_type: "delivery",
-      delivery_address: "",
-      delivery_zone: "",
+      customer_email: '',
+      customer_name: '',
+      customer_phone: '',
+      order_type: 'delivery',
+      delivery_address: '',
+      delivery_zone: '',
     },
   });
 
-  const orderType = form.watch("order_type");
-  const selectedZone = form.watch("delivery_zone");
+  const orderType = form.watch('order_type');
+  const selectedZone = form.watch('delivery_zone');
 
   // Load menu items
   useEffect(() => {
@@ -123,8 +123,8 @@ export const AdminOrderCreate = ({ open, onOpenChange, onSuccess }: AdminOrderCr
 
   // Update delivery price
   useEffect(() => {
-    if (orderType === "delivery" && selectedZone) {
-      const zone = deliveryZones.find(z => z.zone_name === selectedZone);
+    if (orderType === 'delivery' && selectedZone) {
+      const zone = deliveryZones.find((z) => z.zone_name === selectedZone);
       setDeliveryPrice(zone?.delivery_price || 0);
     } else {
       setDeliveryPrice(0);
@@ -135,11 +135,11 @@ export const AdminOrderCreate = ({ open, onOpenChange, onSuccess }: AdminOrderCr
     if (!store?.id) return;
 
     const { data, error } = await supabase
-      .from("menu_items")
-      .select("id, name, price, image_url, category_id")
-      .eq("store_id", store.id)
-      .eq("is_available", true)
-      .order("name");
+      .from('menu_items')
+      .select('id, name, price, image_url, category_id')
+      .eq('store_id', store.id)
+      .eq('is_available', true)
+      .order('name');
 
     if (!error && data) {
       setMenuItems(data);
@@ -147,11 +147,7 @@ export const AdminOrderCreate = ({ open, onOpenChange, onSuccess }: AdminOrderCr
   };
 
   const loadCustomers = async () => {
-    const { data } = await supabase
-      .from("customers")
-      .select("id, name, email, phone")
-      .order("name")
-      .limit(50);
+    const { data } = await supabase.from('customers').select('id, name, email, phone').order('name').limit(50);
 
     if (data) {
       setCustomers(data);
@@ -162,10 +158,10 @@ export const AdminOrderCreate = ({ open, onOpenChange, onSuccess }: AdminOrderCr
     if (!store?.id) return;
 
     const { data } = await supabase
-      .from("delivery_zones")
-      .select("id, zone_name, delivery_price")
-      .eq("store_id", store.id)
-      .order("display_order");
+      .from('delivery_zones')
+      .select('id, zone_name, delivery_price')
+      .eq('store_id', store.id)
+      .order('display_order');
 
     if (data) {
       setDeliveryZones(data);
@@ -212,7 +208,7 @@ export const AdminOrderCreate = ({ open, onOpenChange, onSuccess }: AdminOrderCr
     }
     // Step 2: Validate delivery info (only for delivery orders)
     else if (currentStep === 2) {
-      if (orderType === "delivery") {
+      if (orderType === 'delivery') {
         try {
           step2DeliverySchema.parse({
             delivery_address: formData.delivery_address,
@@ -235,7 +231,7 @@ export const AdminOrderCreate = ({ open, onOpenChange, onSuccess }: AdminOrderCr
     // Step 3: Validate products and submit
     else if (currentStep === 3) {
       if (items.length === 0) {
-        toast.error("Agrega al menos un producto");
+        toast.error('Agrega al menos un producto');
         return;
       }
       handleSubmit();
@@ -250,12 +246,12 @@ export const AdminOrderCreate = ({ open, onOpenChange, onSuccess }: AdminOrderCr
 
   const handleSubmit = async () => {
     if (!store?.id) {
-      toast.error("Error: tienda no identificada");
+      toast.error('Error: tienda no identificada');
       return;
     }
 
     if (items.length === 0) {
-      toast.error("Agrega al menos un producto");
+      toast.error('Agrega al menos un producto');
       return;
     }
 
@@ -269,28 +265,28 @@ export const AdminOrderCreate = ({ open, onOpenChange, onSuccess }: AdminOrderCr
         name: formData.customer_name,
         email: formData.customer_email,
         phone: formData.customer_phone,
-        country: "venezuela",
+        country: 'venezuela',
       });
 
       if (!customerResult) {
-        toast.error("Error al crear/encontrar cliente");
+        toast.error('Error al crear/encontrar cliente');
         setCreating(false);
         return;
       }
 
       // Prepare items for RPC - convert to JSON-compatible format
-      const orderItems = items.map(item => ({
+      const orderItems = items.map((item) => ({
         menu_item_id: item.id,
         quantity: item.quantity,
         price_at_time: item.price,
         item_name: item.name,
-        extras: (item.extras || []).map(e => ({ name: e.name, price: e.price })),
+        extras: (item.extras || []).map((e) => ({ name: e.name, price: e.price })),
       }));
 
       const grandTotal = totalPrice + deliveryPrice;
 
       // Call RPC to create order using type assertion for custom RPC
-      const { data, error } = await (supabase.rpc as any)("admin_create_order", {
+      const { data, error } = await (supabase.rpc as any)('admin_create_order', {
         p_store_id: store.id,
         p_customer_id: customerResult.customerId,
         p_customer_name: formData.customer_name,
@@ -299,7 +295,7 @@ export const AdminOrderCreate = ({ open, onOpenChange, onSuccess }: AdminOrderCr
         p_order_type: formData.order_type,
         p_total_amount: grandTotal,
         p_items: orderItems,
-        p_delivery_address: formData.order_type === "delivery" ? formData.delivery_address : undefined,
+        p_delivery_address: formData.order_type === 'delivery' ? formData.delivery_address : undefined,
         p_notes: notes || undefined,
         p_payment_method: null,
         p_delivery_price: deliveryPrice,
@@ -310,12 +306,12 @@ export const AdminOrderCreate = ({ open, onOpenChange, onSuccess }: AdminOrderCr
       const result = Array.isArray(data) ? data[0] : data;
 
       if (!result?.success) {
-        throw new Error(result?.error_message || "Error al crear pedido");
+        throw new Error(result?.error_message || 'Error al crear pedido');
       }
 
       // Track in PostHog
       try {
-        posthog.capture("admin_order_created", {
+        posthog.capture('admin_order_created', {
           store_id: store.id,
           order_id: result.order_id,
           order_total: grandTotal,
@@ -323,7 +319,7 @@ export const AdminOrderCreate = ({ open, onOpenChange, onSuccess }: AdminOrderCr
           order_type: formData.order_type,
         });
       } catch (e) {
-        console.error("[PostHog] Error tracking admin_order_created:", e);
+        return error;
       }
 
       toast.success(`Pedido #${result.order_number} creado exitosamente`);
@@ -332,7 +328,7 @@ export const AdminOrderCreate = ({ open, onOpenChange, onSuccess }: AdminOrderCr
       clearCart();
       form.reset();
       setCurrentStep(1);
-      setNotes("");
+      setNotes('');
       onOpenChange(false);
 
       // Call success callback
@@ -340,8 +336,7 @@ export const AdminOrderCreate = ({ open, onOpenChange, onSuccess }: AdminOrderCr
         onSuccess(result.order_id);
       }
     } catch (error) {
-      console.error("Error creating order:", error);
-      toast.error(error instanceof Error ? error.message : "Error al crear pedido");
+      toast.error(error instanceof Error ? error.message : 'Error al crear pedido');
     } finally {
       setCreating(false);
     }
@@ -350,13 +345,17 @@ export const AdminOrderCreate = ({ open, onOpenChange, onSuccess }: AdminOrderCr
   const getStepTitle = () => {
     switch (currentStep) {
       case 1:
-        return "Información del Cliente";
+        return 'Información del Cliente';
       case 2:
-        return orderType === "delivery" ? "Información de Entrega" : orderType === "pickup" ? "Recoger en Tienda" : "Servicio en Mesa";
+        return orderType === 'delivery'
+          ? 'Información de Entrega'
+          : orderType === 'pickup'
+          ? 'Recoger en Tienda'
+          : 'Servicio en Mesa';
       case 3:
-        return "Agregar Productos";
+        return 'Agregar Productos';
       default:
-        return "";
+        return '';
     }
   };
 
@@ -367,8 +366,8 @@ export const AdminOrderCreate = ({ open, onOpenChange, onSuccess }: AdminOrderCr
       <ProductExtrasDialog
         open={showExtrasDialog}
         onOpenChange={setShowExtrasDialog}
-        productId={selectedProduct?.id || ""}
-        productName={selectedProduct?.name || ""}
+        productId={selectedProduct?.id || ''}
+        productName={selectedProduct?.name || ''}
         productPrice={selectedProduct?.price || 0}
         onConfirm={handleConfirmWithExtras}
       />
@@ -384,10 +383,10 @@ export const AdminOrderCreate = ({ open, onOpenChange, onSuccess }: AdminOrderCr
                     key={step}
                     className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
                       step < currentStep
-                        ? "bg-primary text-primary-foreground"
+                        ? 'bg-primary text-primary-foreground'
                         : step === currentStep
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-muted text-muted-foreground"
+                        ? 'bg-primary text-primary-foreground'
+                        : 'bg-muted text-muted-foreground'
                     }`}
                   >
                     {step < currentStep ? <Check className="w-4 h-4" /> : step}
@@ -420,24 +419,24 @@ export const AdminOrderCreate = ({ open, onOpenChange, onSuccess }: AdminOrderCr
                           <div className="grid grid-cols-3 gap-3">
                             <Button
                               type="button"
-                              variant={field.value === "delivery" ? "default" : "outline"}
-                              onClick={() => field.onChange("delivery")}
+                              variant={field.value === 'delivery' ? 'default' : 'outline'}
+                              onClick={() => field.onChange('delivery')}
                               className="h-12"
                             >
                               Entrega a Domicilio
                             </Button>
                             <Button
                               type="button"
-                              variant={field.value === "pickup" ? "default" : "outline"}
-                              onClick={() => field.onChange("pickup")}
+                              variant={field.value === 'pickup' ? 'default' : 'outline'}
+                              onClick={() => field.onChange('pickup')}
                               className="h-12"
                             >
                               Recoger en Tienda
                             </Button>
                             <Button
                               type="button"
-                              variant={field.value === "dine_in" ? "default" : "outline"}
-                              onClick={() => field.onChange("dine_in")}
+                              variant={field.value === 'dine_in' ? 'default' : 'outline'}
+                              onClick={() => field.onChange('dine_in')}
                               className="h-12"
                             >
                               Servicio en Mesa
@@ -494,7 +493,7 @@ export const AdminOrderCreate = ({ open, onOpenChange, onSuccess }: AdminOrderCr
                 {/* Step 2: Delivery/Pickup Info */}
                 {currentStep === 2 && (
                   <div className="space-y-4">
-                    {orderType === "delivery" ? (
+                    {orderType === 'delivery' ? (
                       <>
                         <FormField
                           control={form.control}
@@ -538,12 +537,13 @@ export const AdminOrderCreate = ({ open, onOpenChange, onSuccess }: AdminOrderCr
                         {deliveryPrice > 0 && (
                           <div className="p-3 bg-muted rounded-lg">
                             <p className="text-sm">
-                              Costo de envío: <span className="font-semibold">{formatPrice(deliveryPrice).original}</span>
+                              Costo de envío:{' '}
+                              <span className="font-semibold">{formatPrice(deliveryPrice).original}</span>
                             </p>
                           </div>
                         )}
                       </>
-                    ) : orderType === "pickup" ? (
+                    ) : orderType === 'pickup' ? (
                       <div className="p-6 bg-muted rounded-lg text-center">
                         <MapPin className="w-12 h-12 mx-auto mb-3 text-primary" />
                         <h4 className="font-semibold mb-2">Recoger en Tienda</h4>
@@ -555,9 +555,7 @@ export const AdminOrderCreate = ({ open, onOpenChange, onSuccess }: AdminOrderCr
                       <div className="p-6 bg-muted rounded-lg text-center">
                         <UtensilsCrossed className="w-12 h-12 mx-auto mb-3 text-primary" />
                         <h4 className="font-semibold mb-2">Servicio en Mesa</h4>
-                        <p className="text-sm text-muted-foreground">
-                          Pedido para consumir en el establecimiento
-                        </p>
+                        <p className="text-sm text-muted-foreground">Pedido para consumir en el establecimiento</p>
                       </div>
                     )}
                   </div>
@@ -595,9 +593,7 @@ export const AdminOrderCreate = ({ open, onOpenChange, onSuccess }: AdminOrderCr
                     <div className="space-y-2">
                       <h4 className="font-medium">Productos en el pedido ({items.length})</h4>
                       {items.length === 0 ? (
-                        <p className="text-sm text-muted-foreground py-4 text-center">
-                          No hay productos agregados
-                        </p>
+                        <p className="text-sm text-muted-foreground py-4 text-center">No hay productos agregados</p>
                       ) : (
                         <div className="space-y-2 max-h-[200px] overflow-y-auto">
                           {items.map((item) => (
@@ -609,7 +605,7 @@ export const AdminOrderCreate = ({ open, onOpenChange, onSuccess }: AdminOrderCr
                                 <p className="text-sm font-medium truncate">{item.name}</p>
                                 {item.extras && item.extras.length > 0 && (
                                   <p className="text-xs text-muted-foreground">
-                                    + {item.extras.map(e => e.name).join(", ")}
+                                    + {item.extras.map((e) => e.name).join(', ')}
                                   </p>
                                 )}
                                 <p className="text-xs text-primary">{formatPrice(item.price).original}</p>
@@ -690,24 +686,14 @@ export const AdminOrderCreate = ({ open, onOpenChange, onSuccess }: AdminOrderCr
                   </div>
                 )}
 
-
                 {/* Navigation Buttons */}
                 <div className="flex justify-between pt-4">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={handleBack}
-                    disabled={currentStep === 1 || creating}
-                  >
+                  <Button type="button" variant="outline" onClick={handleBack} disabled={currentStep === 1 || creating}>
                     <ArrowLeft className="w-4 h-4 mr-2" />
                     Anterior
                   </Button>
 
-                  <Button
-                    type="button"
-                    onClick={handleNext}
-                    disabled={creating}
-                  >
+                  <Button type="button" onClick={handleNext} disabled={creating}>
                     {creating ? (
                       <>
                         <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -736,4 +722,4 @@ export const AdminOrderCreate = ({ open, onOpenChange, onSuccess }: AdminOrderCr
 };
 
 // Import for icon used in step 2
-import { UtensilsCrossed } from "lucide-react";
+import { UtensilsCrossed } from 'lucide-react';

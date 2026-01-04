@@ -69,7 +69,6 @@ const MyOrders = () => {
       if (error) throw error;
       setOrders(data || []);
     } catch (error) {
-      console.error('Error fetching orders:', error);
       toast.error('Error al cargar pedidos');
     } finally {
       setLoading(false);

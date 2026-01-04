@@ -12,13 +12,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   Dialog,
   DialogContent,
@@ -87,7 +81,6 @@ export default function PlatformPaymentMethodsManager() {
       if (error) throw error;
       setMethods((data as PaymentMethod[]) || []);
     } catch (error: any) {
-      console.error('Error loading payment methods:', error);
       toast.error('Error al cargar métodos de pago');
     } finally {
       setLoading(false);
@@ -223,7 +216,6 @@ export default function PlatformPaymentMethodsManager() {
       resetForm();
       loadMethods();
     } catch (error: any) {
-      console.error('Error saving payment method:', error);
       toast.error('Error al guardar método de pago');
     } finally {
       setSubmitting(false);
@@ -240,7 +232,6 @@ export default function PlatformPaymentMethodsManager() {
       toast.success('Método de pago eliminado');
       loadMethods();
     } catch (error: any) {
-      console.error('Error deleting payment method:', error);
       toast.error('Error al eliminar método de pago');
     }
   };
@@ -256,7 +247,6 @@ export default function PlatformPaymentMethodsManager() {
       toast.success(method.is_active ? 'Método desactivado' : 'Método activado');
       loadMethods();
     } catch (error: any) {
-      console.error('Error toggling active status:', error);
       toast.error('Error al cambiar estado');
     }
   };
@@ -274,9 +264,7 @@ export default function PlatformPaymentMethodsManager() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold">Métodos de Pago de la Plataforma</h2>
-          <p className="text-muted-foreground">
-            Configura los métodos de pago para suscripciones de PideAI
-          </p>
+          <p className="text-muted-foreground">Configura los métodos de pago para suscripciones de PideAI</p>
         </div>
         <Button
           onClick={() => {
@@ -302,30 +290,16 @@ export default function PlatformPaymentMethodsManager() {
                     </Badge>
                     <Badge variant="outline">{method.payment_type}</Badge>
                   </div>
-                  {method.description && (
-                    <CardDescription className="mt-1">{method.description}</CardDescription>
-                  )}
+                  {method.description && <CardDescription className="mt-1">{method.description}</CardDescription>}
                 </div>
                 <div className="flex gap-2">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleToggleActive(method)}
-                  >
-                    {method.is_active ? (
-                      <EyeOff className="h-4 w-4" />
-                    ) : (
-                      <Eye className="h-4 w-4" />
-                    )}
+                  <Button variant="ghost" size="sm" onClick={() => handleToggleActive(method)}>
+                    {method.is_active ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </Button>
                   <Button variant="ghost" size="sm" onClick={() => handleEdit(method)}>
                     <Edit2 className="h-4 w-4" />
                   </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleDelete(method.id)}
-                  >
+                  <Button variant="ghost" size="sm" onClick={() => handleDelete(method.id)}>
                     <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>
@@ -403,12 +377,8 @@ export default function PlatformPaymentMethodsManager() {
       <Dialog open={showDialog} onOpenChange={setShowDialog}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>
-              {editingMethod ? 'Editar Método de Pago' : 'Nuevo Método de Pago'}
-            </DialogTitle>
-            <DialogDescription>
-              Configura un método de pago para suscripciones de PideAI
-            </DialogDescription>
+            <DialogTitle>{editingMethod ? 'Editar Método de Pago' : 'Nuevo Método de Pago'}</DialogTitle>
+            <DialogDescription>Configura un método de pago para suscripciones de PideAI</DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4">
@@ -440,9 +410,7 @@ export default function PlatformPaymentMethodsManager() {
               <Label htmlFor="payment_type">Tipo de Pago *</Label>
               <Select
                 value={formData.payment_type}
-                onValueChange={(value) =>
-                  setFormData({ ...formData, payment_type: value as PaymentMethodType })
-                }
+                onValueChange={(value) => setFormData({ ...formData, payment_type: value as PaymentMethodType })}
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -506,9 +474,7 @@ export default function PlatformPaymentMethodsManager() {
                   <Input
                     id="holder_name"
                     value={formData.holder_name || ''}
-                    onChange={(e) =>
-                      setFormData({ ...formData, holder_name: e.target.value })
-                    }
+                    onChange={(e) => setFormData({ ...formData, holder_name: e.target.value })}
                     placeholder="Ej: PideAI LLC"
                   />
                 </div>
@@ -543,9 +509,7 @@ export default function PlatformPaymentMethodsManager() {
                   <Textarea
                     id="otros_description"
                     value={formData.otros_description || ''}
-                    onChange={(e) =>
-                      setFormData({ ...formData, otros_description: e.target.value })
-                    }
+                    onChange={(e) => setFormData({ ...formData, otros_description: e.target.value })}
                     placeholder="Instrucciones de pago..."
                     rows={3}
                   />
@@ -560,9 +524,7 @@ export default function PlatformPaymentMethodsManager() {
                 id="display_order"
                 type="number"
                 value={formData.display_order}
-                onChange={(e) =>
-                  setFormData({ ...formData, display_order: parseInt(e.target.value) || 0 })
-                }
+                onChange={(e) => setFormData({ ...formData, display_order: parseInt(e.target.value) || 0 })}
               />
             </div>
 

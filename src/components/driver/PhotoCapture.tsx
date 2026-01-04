@@ -32,7 +32,7 @@ export function PhotoCapture({ onSave, onCancel }: PhotoCaptureProps) {
         video: {
           facingMode: 'environment', // Use back camera on mobile
           width: { ideal: 1920 },
-          height: { ideal: 1080 }
+          height: { ideal: 1080 },
         },
         audio: false,
       });
@@ -44,7 +44,10 @@ export function PhotoCapture({ onSave, onCancel }: PhotoCaptureProps) {
         await new Promise<void>((resolve) => {
           if (videoRef.current) {
             videoRef.current.onloadedmetadata = () => {
-              videoRef.current?.play().then(() => resolve()).catch(() => resolve());
+              videoRef.current
+                ?.play()
+                .then(() => resolve())
+                .catch(() => resolve());
             };
           } else {
             resolve();
@@ -56,13 +59,13 @@ export function PhotoCapture({ onSave, onCancel }: PhotoCaptureProps) {
         setIsLoading(false);
       }
     } catch (err: any) {
-      console.error('Error accessing camera:', err);
       setIsLoading(false);
 
       let errorMessage = 'No se pudo acceder a la cámara.';
 
       if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
-        errorMessage = 'Permiso de cámara denegado. Por favor, habilita el acceso a la cámara en la configuración de tu navegador.';
+        errorMessage =
+          'Permiso de cámara denegado. Por favor, habilita el acceso a la cámara en la configuración de tu navegador.';
       } else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
         errorMessage = 'No se encontró ninguna cámara en tu dispositivo.';
       } else if (err.name === 'NotReadableError' || err.name === 'TrackStartError') {
@@ -144,9 +147,7 @@ export function PhotoCapture({ onSave, onCancel }: PhotoCaptureProps) {
         {isLoading && (
           <div className="flex flex-col items-center justify-center py-12 border-2 border-dashed border-muted rounded-lg">
             <Loader2 className="h-12 w-12 text-muted-foreground mb-4 animate-spin" />
-            <p className="text-sm text-muted-foreground">
-              Iniciando cámara...
-            </p>
+            <p className="text-sm text-muted-foreground">Iniciando cámara...</p>
           </div>
         )}
 
@@ -154,9 +155,7 @@ export function PhotoCapture({ onSave, onCancel }: PhotoCaptureProps) {
         {!cameraActive && !photo && !isLoading && (
           <div className="flex flex-col items-center justify-center py-12 border-2 border-dashed border-muted rounded-lg">
             <Camera className="h-12 w-12 text-muted-foreground mb-4" />
-            <p className="text-sm text-muted-foreground mb-4">
-              Toma una foto del pedido entregado
-            </p>
+            <p className="text-sm text-muted-foreground mb-4">Toma una foto del pedido entregado</p>
             <Button onClick={startCamera} disabled={isLoading}>
               {isLoading ? (
                 <>

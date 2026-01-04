@@ -1,12 +1,12 @@
-import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
-import { toast } from "sonner";
-import { Plus, Trash2, Loader2 } from "lucide-react";
+import { useEffect, useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
+import { toast } from 'sonner';
+import { Plus, Trash2, Loader2 } from 'lucide-react';
 
 interface StoreHour {
   id?: string;
@@ -17,22 +17,22 @@ interface StoreHour {
 
 interface BusinessHoursTabProps {
   storeId: string;
-  forceStatus: "normal" | "force_open" | "force_closed" | null;
+  forceStatus: 'normal' | 'force_open' | 'force_closed' | null;
 }
 
 const DAYS = [
-  { value: 1, label: "Lunes" },
-  { value: 2, label: "Martes" },
-  { value: 3, label: "Miércoles" },
-  { value: 4, label: "Jueves" },
-  { value: 5, label: "Viernes" },
-  { value: 6, label: "Sábado" },
-  { value: 0, label: "Domingo" },
+  { value: 1, label: 'Lunes' },
+  { value: 2, label: 'Martes' },
+  { value: 3, label: 'Miércoles' },
+  { value: 4, label: 'Jueves' },
+  { value: 5, label: 'Viernes' },
+  { value: 6, label: 'Sábado' },
+  { value: 0, label: 'Domingo' },
 ];
 
 export function BusinessHoursTab({ storeId, forceStatus }: BusinessHoursTabProps) {
   const [hours, setHours] = useState<StoreHour[]>([]);
-  const [currentForceStatus, setCurrentForceStatus] = useState<string>(forceStatus || "normal");
+  const [currentForceStatus, setCurrentForceStatus] = useState<string>(forceStatus || 'normal');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -43,42 +43,40 @@ export function BusinessHoursTab({ storeId, forceStatus }: BusinessHoursTabProps
   const loadHours = async () => {
     try {
       const { data, error } = await supabase
-        .from("store_hours")
-        .select("*")
-        .eq("store_id", storeId)
-        .order("day_of_week", { ascending: true })
-        .order("open_time", { ascending: true });
+        .from('store_hours')
+        .select('*')
+        .eq('store_id', storeId)
+        .order('day_of_week', { ascending: true })
+        .order('open_time', { ascending: true });
 
       if (error) throw error;
       setHours(data || []);
     } catch (error) {
-      console.error("Error loading hours:", error);
-      toast.error("Error al cargar los horarios");
+      toast.error('Error al cargar los horarios');
     } finally {
       setLoading(false);
     }
   };
 
   const handleAddHour = (dayOfWeek: number) => {
-    setHours([...hours, { day_of_week: dayOfWeek, open_time: "09:00", close_time: "18:00" }]);
+    setHours([...hours, { day_of_week: dayOfWeek, open_time: '09:00', close_time: '18:00' }]);
   };
 
   const handleRemoveHour = async (index: number) => {
     const hour = hours[index];
     if (hour.id) {
       try {
-        const { error } = await supabase.from("store_hours").delete().eq("id", hour.id);
+        const { error } = await supabase.from('store_hours').delete().eq('id', hour.id);
         if (error) throw error;
       } catch (error) {
-        console.error("Error deleting hour:", error);
-        toast.error("Error al eliminar el horario");
+        toast.error('Error al eliminar el horario');
         return;
       }
     }
     setHours(hours.filter((_, i) => i !== index));
   };
 
-  const handleUpdateHour = (index: number, field: "open_time" | "close_time", value: string) => {
+  const handleUpdateHour = (index: number, field: 'open_time' | 'close_time', value: string) => {
     const newHours = [...hours];
     newHours[index][field] = value;
     setHours(newHours);
@@ -89,17 +87,14 @@ export function BusinessHoursTab({ storeId, forceStatus }: BusinessHoursTabProps
     try {
       // Update force status
       const { error: forceError } = await supabase
-        .from("stores")
+        .from('stores')
         .update({ force_status: currentForceStatus as any })
-        .eq("id", storeId);
+        .eq('id', storeId);
 
       if (forceError) throw forceError;
 
       // Delete all existing hours
-      const { error: deleteError } = await supabase
-        .from("store_hours")
-        .delete()
-        .eq("store_id", storeId);
+      const { error: deleteError } = await supabase.from('store_hours').delete().eq('store_id', storeId);
 
       if (deleteError) throw deleteError;
 
@@ -112,16 +107,15 @@ export function BusinessHoursTab({ storeId, forceStatus }: BusinessHoursTabProps
           close_time: h.close_time,
         }));
 
-        const { error: insertError } = await supabase.from("store_hours").insert(hoursToInsert);
+        const { error: insertError } = await supabase.from('store_hours').insert(hoursToInsert);
 
         if (insertError) throw insertError;
       }
 
-      toast.success("Horarios guardados correctamente");
+      toast.success('Horarios guardados correctamente');
       loadHours();
     } catch (error: unknown) {
-      console.error("Error saving hours:", error);
-      toast.error("Error al guardar los horarios");
+      toast.error('Error al guardar los horarios');
     } finally {
       setSaving(false);
     }
@@ -172,7 +166,7 @@ export function BusinessHoursTab({ storeId, forceStatus }: BusinessHoursTabProps
                 ) : (
                   dayHours.map((hour, idx) => {
                     const globalIndex = hours.findIndex(
-                      (h) => h.day_of_week === day.value && h.open_time === hour.open_time
+                      (h) => h.day_of_week === day.value && h.open_time === hour.open_time,
                     );
                     return (
                       <div key={idx} className="flex flex-col md:flex-row md:items-center gap-2 md:gap-3">
@@ -180,14 +174,14 @@ export function BusinessHoursTab({ storeId, forceStatus }: BusinessHoursTabProps
                         <Input
                           type="time"
                           value={hour.open_time}
-                          onChange={(e) => handleUpdateHour(globalIndex, "open_time", e.target.value)}
+                          onChange={(e) => handleUpdateHour(globalIndex, 'open_time', e.target.value)}
                           className="h-11 md:h-10 text-base md:text-sm w-full md:w-32"
                         />
                         <span className="text-xs md:text-sm">Fin</span>
                         <Input
                           type="time"
                           value={hour.close_time}
-                          onChange={(e) => handleUpdateHour(globalIndex, "close_time", e.target.value)}
+                          onChange={(e) => handleUpdateHour(globalIndex, 'close_time', e.target.value)}
                           className="h-11 md:h-10 text-base md:text-sm w-full md:w-32"
                         />
                         <Button
