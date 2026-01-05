@@ -1,5 +1,5 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -7,7 +7,7 @@ const corsHeaders = {
 };
 
 interface RequestBody {
-  action: 'create_instance' | 'get_qr_code' | 'check_connection' | 'delete_instance';
+  action: 'create_instance' | 'get_qr_code' | 'check_connection' | 'delete_instance' | 'logout_instance';
   instance_name: string;
   store_id?: string;
 }
@@ -26,13 +26,13 @@ serve(async (req) => {
       throw new Error('Evolution API credentials not configured');
     }
 
-    const { action, instance_name, store_id } = await req.json() as RequestBody;
+    const { action, instance_name, store_id } = (await req.json()) as RequestBody;
 
     if (!instance_name) {
-      return new Response(
-        JSON.stringify({ error: 'instance_name is required' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return new Response(JSON.stringify({ error: 'instance_name is required' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
     console.log(`[manage-whatsapp-instance] Action: ${action}, Instance: ${instance_name}`);
@@ -52,28 +52,31 @@ serve(async (req) => {
         result = await checkConnection(evolutionApiUrl, evolutionApiKey, instance_name, store_id);
         break;
 
+      case 'logout_instance':
+        result = await logoutInstance(evolutionApiUrl, evolutionApiKey, instance_name, store_id);
+        break;
+
       case 'delete_instance':
         result = await deleteInstance(evolutionApiUrl, evolutionApiKey, instance_name, store_id);
         break;
 
       default:
-        return new Response(
-          JSON.stringify({ error: 'Invalid action' }),
-          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
+        return new Response(JSON.stringify({ error: 'Invalid action' }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
     }
 
-    return new Response(
-      JSON.stringify(result),
-      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
-
+    return new Response(JSON.stringify(result), {
+      status: 200,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
   } catch (error) {
     console.error('[manage-whatsapp-instance] Error:', error);
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    return new Response(JSON.stringify({ error: error.message }), {
+      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
   }
 });
 
@@ -88,7 +91,7 @@ async function createInstance(apiUrl: string, apiKey: string, instanceName: stri
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'apikey': apiKey,
+        apikey: apiKey,
       },
       body: JSON.stringify({
         instanceName: instanceName,
@@ -108,7 +111,7 @@ async function createInstance(apiUrl: string, apiKey: string, instanceName: stri
         return {
           success: true,
           already_exists: true,
-          message: 'Instance already exists'
+          message: 'Instance already exists',
         };
       }
 
@@ -123,7 +126,6 @@ async function createInstance(apiUrl: string, apiKey: string, instanceName: stri
       instance_name: instanceName,
       data: data,
     };
-
   } catch (error) {
     console.error(`[createInstance] Error:`, error);
     throw error;
@@ -137,7 +139,7 @@ async function checkConnectionStatus(apiUrl: string, apiKey: string, instanceNam
   const response = await fetch(`${apiUrl}/instance/connectionState/${instanceName}`, {
     method: 'GET',
     headers: {
-      'apikey': apiKey,
+      apikey: apiKey,
     },
   });
 
@@ -169,7 +171,7 @@ async function getQRCode(apiUrl: string, apiKey: string, instanceName: string) {
     const response = await fetch(`${apiUrl}/instance/connect/${instanceName}`, {
       method: 'GET',
       headers: {
-        'apikey': apiKey,
+        apikey: apiKey,
       },
     });
 
@@ -188,7 +190,6 @@ async function getQRCode(apiUrl: string, apiKey: string, instanceName: string) {
       qr_code: data.base64 || data.qrcode?.base64 || data.code,
       instance_name: instanceName,
     };
-
   } catch (error) {
     console.error(`[getQRCode] Error:`, error);
     throw error;
@@ -205,7 +206,7 @@ async function checkConnection(apiUrl: string, apiKey: string, instanceName: str
     const response = await fetch(`${apiUrl}/instance/connectionState/${instanceName}`, {
       method: 'GET',
       headers: {
-        'apikey': apiKey,
+        apikey: apiKey,
       },
     });
 
@@ -236,7 +237,7 @@ async function checkConnection(apiUrl: string, apiKey: string, instanceName: str
       try {
         const supabase = createClient(
           Deno.env.get('SUPABASE_URL') ?? '',
-          Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+          Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
         );
 
         await supabase
@@ -260,9 +261,71 @@ async function checkConnection(apiUrl: string, apiKey: string, instanceName: str
       phone: phoneNumber,
       instance_name: instanceName,
     };
-
   } catch (error) {
     console.error(`[checkConnection] Error:`, error);
+    throw error;
+  }
+}
+
+/**
+ * Logout from WhatsApp instance (disconnect without deleting)
+ */
+async function logoutInstance(apiUrl: string, apiKey: string, instanceName: string, storeId?: string) {
+  console.log(`[logoutInstance] Logging out instance: ${instanceName}`);
+
+  try {
+    const response = await fetch(`${apiUrl}/instance/logout/${instanceName}`, {
+      method: 'DELETE',
+      headers: {
+        apikey: apiKey,
+      },
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`[logoutInstance] Error response:`, errorText);
+
+      // Instance not found or already logged out
+      if (response.status === 404) {
+        console.log(`[logoutInstance] Instance not found or already logged out`);
+        return { success: true, message: 'Instance already disconnected' };
+      }
+
+      throw new Error(`Failed to logout instance: ${errorText}`);
+    }
+
+    console.log(`[logoutInstance] Instance logged out successfully`);
+
+    // Update database if store_id is provided
+    if (storeId) {
+      try {
+        const supabase = createClient(
+          Deno.env.get('SUPABASE_URL') ?? '',
+          Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+        );
+
+        await supabase
+          .from('whatsapp_settings')
+          .update({
+            is_connected: false,
+            connected_phone: null,
+          })
+          .eq('store_id', storeId);
+
+        console.log(`[logoutInstance] Database updated for store: ${storeId}`);
+      } catch (dbError) {
+        console.error(`[logoutInstance] Database update error:`, dbError);
+        // Don't throw, just log the error
+      }
+    }
+
+    return {
+      success: true,
+      message: 'Instance logged out successfully',
+      instance_name: instanceName,
+    };
+  } catch (error) {
+    console.error(`[logoutInstance] Error:`, error);
     throw error;
   }
 }
@@ -277,7 +340,7 @@ async function deleteInstance(apiUrl: string, apiKey: string, instanceName: stri
     const response = await fetch(`${apiUrl}/instance/delete/${instanceName}`, {
       method: 'DELETE',
       headers: {
-        'apikey': apiKey,
+        apikey: apiKey,
       },
     });
 
@@ -301,7 +364,7 @@ async function deleteInstance(apiUrl: string, apiKey: string, instanceName: stri
       try {
         const supabase = createClient(
           Deno.env.get('SUPABASE_URL') ?? '',
-          Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+          Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
         );
 
         await supabase
@@ -324,7 +387,6 @@ async function deleteInstance(apiUrl: string, apiKey: string, instanceName: stri
       message: 'Instance deleted successfully',
       instance_name: instanceName,
     };
-
   } catch (error) {
     console.error(`[deleteInstance] Error:`, error);
     throw error;

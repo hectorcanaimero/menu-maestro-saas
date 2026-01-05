@@ -26,6 +26,7 @@ import { ModuleNotAvailable } from "@/components/admin/ModuleNotAvailable";
 const WhatsAppConfig = () => {
   const { settings, loading, testing, instanceName, updateSettings, testConnection, disconnect, refetch } = useWhatsAppSettings();
   const [connectionModalOpen, setConnectionModalOpen] = useState(false);
+  const [disconnecting, setDisconnecting] = useState(false);
 
   // Verificar acceso al módulo de WhatsApp
   const { data: hasWhatsAppAccess, isLoading: checkingAccess } = useModuleAccess('whatsapp');
@@ -163,10 +164,22 @@ const WhatsAppConfig = () => {
                 </Button>
                 <Button
                   variant="destructive"
-                  onClick={disconnect}
+                  onClick={async () => {
+                    setDisconnecting(true);
+                    await disconnect();
+                    setDisconnecting(false);
+                  }}
+                  disabled={disconnecting}
                   className="flex-1 sm:flex-none"
                 >
-                  Desconectar
+                  {disconnecting ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Desconectando...
+                    </>
+                  ) : (
+                    "Desconectar"
+                  )}
                 </Button>
               </>
             )}
@@ -265,8 +278,8 @@ const WhatsAppConfig = () => {
         open={connectionModalOpen}
         onOpenChange={setConnectionModalOpen}
         onConnected={() => {
-          // Refresh settings after connection
-          refetch();
+          // Realtime subscription will update settings automatically
+          // No need to refetch manually
         }}
       />
     </div>

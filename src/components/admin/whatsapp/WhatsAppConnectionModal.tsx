@@ -34,6 +34,7 @@ export function WhatsAppConnectionModal({
   const [pollingAttempts, setPollingAttempts] = useState(0);
 
   const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const isClosingRef = useRef(false); // Prevent reopening during close
   const maxPollingAttempts = 60; // 60 attempts * 3 seconds = 3 minutes
 
   // Check if user is on mobile
@@ -50,8 +51,21 @@ export function WhatsAppConnectionModal({
 
   // Start connection flow when modal opens
   useEffect(() => {
-    if (open && state === 'idle') {
+    if (open && state === 'idle' && !isClosingRef.current) {
+      isClosingRef.current = false;
       handleStartConnection();
+    }
+
+    // Reset state when modal closes
+    if (!open) {
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current);
+      }
+      setState('idle');
+      setError(null);
+      setQrCode(null);
+      setPollingAttempts(0);
+      isClosingRef.current = false;
     }
   }, [open]);
 
@@ -72,16 +86,16 @@ export function WhatsAppConnectionModal({
       if (checkResult.connected) {
         setState('connected');
         setConnectedPhone(checkResult.phone || null);
+        isClosingRef.current = true; // Prevent reopening
 
-        // Call onConnected callback
-        if (onConnected) {
-          onConnected();
-        }
-
-        // Auto-close after 2 seconds
+        // Auto-close after 1.5 seconds (reduced time to avoid glitch)
         setTimeout(() => {
           onOpenChange(false);
-        }, 2000);
+          // Call onConnected callback AFTER closing to avoid state conflicts
+          if (onConnected) {
+            setTimeout(onConnected, 100);
+          }
+        }, 1500);
         return;
       }
 
@@ -172,16 +186,16 @@ export function WhatsAppConnectionModal({
 
       setState('connected');
       setConnectedPhone(result.phone || null);
+      isClosingRef.current = true; // Prevent reopening
 
-      // Call onConnected callback
-      if (onConnected) {
-        onConnected();
-      }
-
-      // Auto-close after 2 seconds
+      // Auto-close after 1.5 seconds (reduced time to avoid glitch)
       setTimeout(() => {
         onOpenChange(false);
-      }, 2000);
+        // Call onConnected callback AFTER closing to avoid state conflicts
+        if (onConnected) {
+          setTimeout(onConnected, 100);
+        }
+      }, 1500);
 
     } else if (pollingAttempts >= maxPollingAttempts) {
       // Timeout: stop polling

@@ -71,9 +71,37 @@ export function useWhatsAppSettings() {
 
   useEffect(() => {
     fetchSettings();
-  }, [fetchSettings]);
 
-  const updateSettings = async (updates: Partial<WhatsAppSettings>) => {
+    // Subscribe to realtime updates
+    if (!store?.id) return;
+
+    const channel = supabase
+      .channel('whatsapp_settings_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'whatsapp_settings',
+          filter: `store_id=eq.${store.id}`,
+        },
+        (payload) => {
+          console.log('[useWhatsAppSettings] Realtime update received:', payload);
+          console.log('[useWhatsAppSettings] Previous state:', settings);
+          console.log('[useWhatsAppSettings] New state:', payload.new);
+          setSettings(payload.new as WhatsAppSettings);
+        }
+      )
+      .subscribe((status) => {
+        console.log('[useWhatsAppSettings] Subscription status:', status);
+      });
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [fetchSettings, store?.id]);
+
+  const updateSettings = async (updates: Partial<WhatsAppSettings>, skipToast = false) => {
     if (!store?.id || !settings?.id) return false;
 
     try {
@@ -84,16 +112,16 @@ export function useWhatsAppSettings() {
 
       if (error) {
         console.error('Error updating WhatsApp settings:', error);
-        toast.error('Error al guardar la configuración');
+        if (!skipToast) toast.error('Error al guardar la configuración');
         return false;
       }
 
       setSettings(prev => prev ? { ...prev, ...updates } : null);
-      toast.success('Configuración guardada');
+      if (!skipToast) toast.success('Configuración guardada');
       return true;
     } catch (error) {
       console.error('Error:', error);
-      toast.error('Error al guardar la configuración');
+      if (!skipToast) toast.error('Error al guardar la configuración');
       return false;
     }
   };
@@ -116,7 +144,7 @@ export function useWhatsAppSettings() {
 
       if (error) {
         console.error('Connection test error:', error);
-        await updateSettings({ is_connected: false, connected_phone: null });
+        await updateSettings({ is_connected: false, connected_phone: null }, true);
         toast.error('Error al probar la conexión');
         return false;
       }
@@ -125,17 +153,17 @@ export function useWhatsAppSettings() {
         await updateSettings({
           is_connected: true,
           connected_phone: data.phone || null,
-        });
+        }, true);
         toast.success('Conexión exitosa');
         return true;
       } else {
-        await updateSettings({ is_connected: false, connected_phone: null });
+        await updateSettings({ is_connected: false, connected_phone: null }, true);
         toast.error(data?.error || 'No se pudo conectar');
         return false;
       }
     } catch (error) {
       console.error('Connection test error:', error);
-      await updateSettings({ is_connected: false, connected_phone: null });
+      await updateSettings({ is_connected: false, connected_phone: null }, true);
       toast.error('Error al probar la conexión');
       return false;
     } finally {
@@ -144,11 +172,57 @@ export function useWhatsAppSettings() {
   };
 
   const disconnect = async () => {
-    await updateSettings({
-      is_connected: false,
-      connected_phone: null,
-    });
-    toast.success('Desconectado');
+    if (!instanceName || !store?.id) {
+      toast.error('No se encontró el subdomain de la tienda');
+      return false;
+    }
+
+    console.log('[disconnect] Starting disconnect for instance:', instanceName);
+    console.log('[disconnect] Current settings:', settings);
+
+    try {
+      // Call Edge Function to logout from Evolution API
+      const { data, error } = await supabase.functions.invoke('manage-whatsapp-instance', {
+        body: {
+          action: 'logout_instance',
+          instance_name: instanceName,
+          store_id: store.id,
+        },
+      });
+
+      console.log('[disconnect] Edge Function response:', { data, error });
+
+      if (error) {
+        console.error('Disconnect error:', error);
+        toast.error('Error al desconectar');
+        return false;
+      }
+
+      if (data?.success) {
+        console.log('[disconnect] Logout successful, updating local state...');
+        // The Edge Function already updated the database
+        // Update local state immediately for instant UI feedback
+        // The realtime subscription will also update it (no conflict)
+        setSettings(prev => {
+          const newSettings = prev ? {
+            ...prev,
+            is_connected: false,
+            connected_phone: null,
+          } : null;
+          console.log('[disconnect] New local settings:', newSettings);
+          return newSettings;
+        });
+        toast.success('Desconectado correctamente');
+        return true;
+      }
+
+      toast.error(data?.error || 'No se pudo desconectar');
+      return false;
+    } catch (error) {
+      console.error('Disconnect error:', error);
+      toast.error('Error al desconectar');
+      return false;
+    }
   };
 
   /**
@@ -182,7 +256,7 @@ export function useWhatsAppSettings() {
           await updateSettings({
             is_connected: true,
             connected_phone: data.phone || null,
-          });
+          }, true);
           toast.success('Instancia ya está conectada');
         } else {
           toast.success(data.already_exists ? 'Instancia ya existe' : 'Instancia creada correctamente');
@@ -315,10 +389,13 @@ export function useWhatsAppSettings() {
       }
 
       if (data?.success) {
-        await updateSettings({
+        // The Edge Function already updated the database
+        // Update local state immediately for instant UI feedback
+        setSettings(prev => prev ? {
+          ...prev,
           is_connected: false,
           connected_phone: null,
-        });
+        } : null);
         toast.success('Instancia eliminada correctamente');
         return { success: true };
       }

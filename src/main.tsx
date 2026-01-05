@@ -18,6 +18,9 @@ Sentry.init({
   // Release tracking with git commit hash
   release: import.meta.env.VITE_APP_VERSION || 'development',
 
+  // Enable debug mode in development to see what's happening
+  debug: import.meta.env.DEV,
+
   // Performance Monitoring
   integrations: [
     // React Router integration for automatic navigation tracking
@@ -77,8 +80,14 @@ Sentry.init({
     // Add custom context
     const error = hint.originalException;
 
-    // Filter out specific errors we don't want to track
-    if (error && typeof error === 'object' && 'message' in error) {
+    // In development, log all events to console for debugging
+    if (import.meta.env.DEV) {
+      console.log('🚀 Sentry Event:', event);
+      console.log('💡 Hint:', hint);
+    }
+
+    // Filter out specific errors we don't want to track (ONLY in production)
+    if (!import.meta.env.DEV && error && typeof error === 'object' && 'message' in error) {
       const errorMessage = String(error.message);
       // Ignore ResizeObserver errors (common browser quirk)
       if (errorMessage.includes('ResizeObserver')) {
