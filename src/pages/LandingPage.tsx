@@ -12,6 +12,9 @@ import { SEO } from '@/components/SEO';
 const HowItWorks = lazy(() => import('@/components/landing/HowItWorks').then((m) => ({ default: m.HowItWorks })));
 const Features = lazy(() => import('@/components/Features').then((m) => ({ default: m.Features })));
 const UseCases = lazy(() => import('@/components/landing/UseCases').then((m) => ({ default: m.UseCases })));
+const PhotoStudioSection = lazy(() =>
+  import('@/components/landing/PhotoStudioSection').then((m) => ({ default: m.PhotoStudioSection })),
+);
 const PricingSection = lazy(() =>
   import('@/components/landing/PricingSection').then((m) => ({ default: m.PricingSection })),
 );
@@ -100,6 +103,10 @@ const LandingPage = () => {
 
         <HowItWorks />
         <UseCases />
+
+        {/* Photo Studio Section */}
+        <PhotoStudioSection />
+
         <PricingSection />
         <TestimonialsSection />
         <TrustBadges />
