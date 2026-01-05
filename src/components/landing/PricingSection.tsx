@@ -1,15 +1,16 @@
 import { Button } from '@/components/ui/button';
-import { Check } from 'lucide-react';
+import { Check, ChevronDown, ChevronUp } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { usePlans } from '@/hooks/usePlans';
 import { usePostHog } from '@/hooks/usePostHog';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 export const PricingSection = () => {
   const navigate = useNavigate();
   const { plans: dbPlans, isLoading } = usePlans();
   const { track } = usePostHog();
+  const [expandedPlans, setExpandedPlans] = useState<Record<string, boolean>>({});
 
   // Track pricing section view
   useEffect(() => {
@@ -46,29 +47,25 @@ export const PricingSection = () => {
         // Build features array from plan data
         const features = [
           ...(plan.features || []),
-          plan.limits.max_products === -1 ? 'Productos ilimitados' : `Hasta ${plan.limits.max_products} productos`,
-          plan.limits.max_orders_per_month === -1
-            ? 'Pedidos ilimitados'
-            : `Hasta ${plan.limits.max_orders_per_month} pedidos/mes`,
-          ...(plan.modules?.whatsapp_monthly ? ['Integración WhatsApp'] : []),
+          ...(plan.modules?.whatsapp_monthly ? ['WhatsApp Transaccionales'] : []),
           ...(plan.modules?.delivery_monthly ? ['Gestión de delivery'] : []),
-          `${plan.limits.max_ai_credits_per_month} créditos IA/mes`,
-          'Panel de administración',
-          'Códigos QR personalizados',
-          '0% de comisión en ventas',
         ];
+
+        // Determine CTA text based on plan price (freemium model)
+        const isFree = plan.price_monthly === 0;
+        const ctaText = isFree ? 'Crear Tienda Gratis' : 'Comenzar Ahora';
 
         return {
           name: plan.display_name,
-          price: `$${plan.price_monthly}`,
-          period: '/mes',
+          price: isFree ? 'Gratis' : `$${plan.price_monthly}`,
+          period: isFree ? '' : '/mes',
           description: plan.description,
-          features: features.slice(0, 8), // Limit to 8 features for better UX
-          cta: plan.trial_duration_days > 0 ? `Probar ${plan.trial_duration_days} Días Gratis` : 'Comenzar Ahora',
+          features: features,
+          cta: ctaText,
           popular: isPopular,
           badge: isPopular ? null : index === 0 ? null : 'Más Completo',
           planId: plan.id,
-          trialDays: plan.trial_duration_days,
+          isFree: isFree,
         };
       }) || [];
 
@@ -153,14 +150,43 @@ export const PricingSection = () => {
                 </div>
               </div>
 
-              <ul className="space-y-3 mb-8">
-                {plan.features.map((feature, featureIndex) => (
-                  <li key={featureIndex} className="flex items-start gap-2">
-                    <Check size={20} className="text-primary flex-shrink-0 mt-0.5" />
-                    <span className="text-sm">{feature}</span>
-                  </li>
-                ))}
+              <ul className="space-y-3 mb-4">
+                {(expandedPlans[plan.planId] ? plan.features : plan.features.slice(0, 8)).map(
+                  (feature, featureIndex) => (
+                    <li key={featureIndex} className="flex items-start gap-2">
+                      <Check size={20} className="text-primary flex-shrink-0 mt-0.5" />
+                      <span className="text-sm">{feature}</span>
+                    </li>
+                  ),
+                )}
               </ul>
+
+              {plan.features.length > 8 && (
+                <button
+                  onClick={() => {
+                    setExpandedPlans((prev) => ({
+                      ...prev,
+                      [plan.planId]: !prev[plan.planId],
+                    }));
+                    track('pricing_features_toggled', {
+                      plan_id: plan.planId,
+                      plan_name: plan.name,
+                      expanded: !expandedPlans[plan.planId],
+                    });
+                  }}
+                  className="flex items-center gap-1 text-sm text-primary hover:underline mb-4 transition-colors"
+                >
+                  {expandedPlans[plan.planId] ? (
+                    <>
+                      Ver menos <ChevronUp size={16} />
+                    </>
+                  ) : (
+                    <>
+                      Ver más características ({plan.features.length - 8}) <ChevronDown size={16} />
+                    </>
+                  )}
+                </button>
+              )}
 
               <Button
                 className="w-full"
@@ -171,7 +197,7 @@ export const PricingSection = () => {
                     plan_price: plan.price,
                     plan_id: plan.planId,
                     is_popular: plan.popular,
-                    trial_days: plan.trialDays,
+                    is_free: plan.isFree,
                   });
                   navigate('/create-store', { state: { selectedPlanId: plan.planId } });
                 }}
