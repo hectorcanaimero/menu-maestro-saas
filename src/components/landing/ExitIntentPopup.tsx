@@ -18,7 +18,6 @@ export const ExitIntentPopup = () => {
       setHasShown(true);
       return;
     }
-
     const handleMouseLeave = (e: MouseEvent) => {
       // Only trigger if mouse is leaving from the top of the page
       if (e.clientY <= 10 && !hasShown) {
@@ -114,7 +113,7 @@ export const ExitIntentPopup = () => {
                   </h3>
                   <p className="text-muted-foreground">
                     Crea tu tienda ahora y comienza a recibir
-                    <span className="font-bold text-primary">pedidos sin costo inicial</span>. No pedimos tarjeta, no
+                    <span className="font-bold text-primary"> pedidos sin costo inicial</span>. No pedimos tarjeta, no
                     cobramos automáticamente y tú decides si continuar.
                   </p>
                 </div>

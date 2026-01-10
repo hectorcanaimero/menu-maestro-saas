@@ -124,10 +124,11 @@ export function StoreInfoExpanded({
 
   return (
     <div className="space-y-6 py-4">
+      <hr />
       {/* Store Name */}
-      <div>
+      {/* <div>
         <h3 className="text-lg font-semibold text-foreground">{storeName}</h3>
-      </div>
+      </div> */}
 
       {/* Business Hours Section */}
       {businessHours.length > 0 && (
@@ -145,12 +146,12 @@ export function StoreInfoExpanded({
             >
               {storeStatus.isOpen ? 'Abierto' : 'Cerrado'}
             </Badge>
-            {storeStatus.forceStatus === 'force_open' && (
+            {/* {storeStatus.forceStatus === 'force_open' && (
               <span className="text-xs text-green-600 font-medium">(Forzado abierto)</span>
             )}
             {storeStatus.forceStatus === 'force_closed' && (
               <span className="text-xs text-red-600 font-medium">(Forzado cerrado)</span>
-            )}
+            )} */}
           </div>
           <div className="space-y-2 ml-7">
             {DAYS_ORDER.map((day) => {
@@ -194,7 +195,7 @@ export function StoreInfoExpanded({
           </div>
         </div>
       )}
-
+      <hr />
       {socialLinks.length > 0 && (
         <div className="mt-6 md:mt-12">
           <div className="flex justify-center gap-3 flex-wrap">
@@ -216,57 +217,6 @@ export function StoreInfoExpanded({
           </div>
         </div>
       )}
-
-      {/* {address && (
-        <div className="space-y-2">
-          <div className="flex items-center gap-2">
-            <MapPin className="w-5 h-5 text-primary" />
-            <h4 className="font-semibold text-foreground">Dirección</h4>
-          </div>
-          <p className="text-sm text-muted-foreground ml-7">{address}</p>
-        </div>
-      )} */}
-
-      {/* Contact Section */}
-      {/* {(phone || email) && (
-        <div className="space-y-3">
-          <div className="flex items-center gap-2">
-            <Phone className="w-5 h-5 text-primary" />
-            <h4 className="font-semibold text-foreground">Contacto</h4>
-          </div>
-          <div className="space-y-2 ml-7">
-            {phone && (
-              <a
-                href={`tel:${phone}`}
-                className="flex items-center gap-2 text-sm text-primary hover:underline min-h-[44px] md:min-h-0"
-              >
-                <Phone className="w-4 h-4" />
-                <span>{phone}</span>
-              </a>
-            )}
-            {email && (
-              <a
-                href={`mailto:${email}`}
-                className="flex items-center gap-2 text-sm text-primary hover:underline min-h-[44px] md:min-h-0"
-              >
-                <Mail className="w-4 h-4" />
-                <span>{email}</span>
-              </a>
-            )}
-          </div>
-        </div>
-      )} */}
-
-      {/* Description Section */}
-      {/* {description && (
-        <div className="space-y-2">
-          <div className="flex items-center gap-2">
-            <FileText className="w-5 h-5 text-primary" />
-            <h4 className="font-semibold text-foreground">Acerca de</h4>
-          </div>
-          <p className="text-sm text-muted-foreground ml-7 whitespace-pre-line">{description}</p>
-        </div>
-      )} */}
     </div>
   );
 }

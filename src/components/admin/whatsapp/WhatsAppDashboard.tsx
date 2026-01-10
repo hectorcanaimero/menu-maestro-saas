@@ -1,23 +1,14 @@
-import { useEffect, useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { 
-  MessageSquare, 
-  CheckCircle2, 
-  Eye, 
-  XCircle, 
-  CreditCard,
-  Clock,
-  User,
-  Phone
-} from "lucide-react";
-import { useWhatsAppCredits } from "@/hooks/useWhatsAppCredits";
-import { useWhatsAppMessages, MessageStats } from "@/hooks/useWhatsAppMessages";
-import { formatDistanceToNow } from "date-fns";
-import { es } from "date-fns/locale";
+import { useEffect, useState } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Progress } from '@/components/ui/progress';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { MessageSquare, CheckCircle2, Eye, XCircle, CreditCard, Clock, User, Phone } from 'lucide-react';
+import { useWhatsAppCredits } from '@/hooks/useWhatsAppCredits';
+import { useWhatsAppMessages, MessageStats } from '@/hooks/useWhatsAppMessages';
+import { formatDistanceToNow } from 'date-fns';
+import { es } from 'date-fns/locale';
 
 const WhatsAppDashboard = () => {
   const { credits, loading: creditsLoading, getUsagePercentage } = useWhatsAppCredits();
@@ -49,24 +40,37 @@ const WhatsAppDashboard = () => {
 
   const getStatusLabel = (status: string) => {
     switch (status) {
-      case 'pending': return 'Pendiente';
-      case 'sent': return 'Enviado';
-      case 'delivered': return 'Entregado';
-      case 'read': return 'Leído';
-      case 'failed': return 'Fallido';
-      default: return status;
+      case 'pending':
+        return 'Pendiente';
+      case 'sent':
+        return 'Enviado';
+      case 'delivered':
+        return 'Entregado';
+      case 'read':
+        return 'Leído';
+      case 'failed':
+        return 'Fallido';
+      default:
+        return status;
     }
   };
 
   const getMessageTypeLabel = (type: string) => {
     switch (type) {
-      case 'order_confirmation': return 'Confirmación';
-      case 'order_ready': return 'Pedido Listo';
-      case 'abandoned_cart': return 'Carrito';
-      case 'promotion': return 'Promoción';
-      case 'campaign': return 'Campaña';
-      case 'manual': return 'Manual';
-      default: return type;
+      case 'order_confirmation':
+        return 'Confirmación';
+      case 'order_ready':
+        return 'Pedido Listo';
+      case 'abandoned_cart':
+        return 'Carrito';
+      case 'promotion':
+        return 'Promoción';
+      case 'campaign':
+        return 'Campaña';
+      case 'manual':
+        return 'Manual';
+      default:
+        return type;
     }
   };
 
@@ -93,7 +97,8 @@ const WhatsAppDashboard = () => {
           <CardContent>
             <div className="text-2xl font-bold">{monthlyStats?.delivered || 0}</div>
             <p className="text-xs text-muted-foreground">
-              {monthlyStats?.total ? Math.round((monthlyStats.delivered / monthlyStats.total) * 100) : 0}% tasa de entrega
+              {monthlyStats?.total ? Math.round((monthlyStats.delivered / monthlyStats.total) * 100) : 0}% tasa de
+              entrega
             </p>
           </CardContent>
         </Card>
@@ -106,7 +111,8 @@ const WhatsAppDashboard = () => {
           <CardContent>
             <div className="text-2xl font-bold">{monthlyStats?.read || 0}</div>
             <p className="text-xs text-muted-foreground">
-              {monthlyStats?.delivered ? Math.round((monthlyStats.read / monthlyStats.delivered) * 100) : 0}% tasa de lectura
+              {monthlyStats?.delivered ? Math.round((monthlyStats.read / monthlyStats.delivered) * 100) : 0}% tasa de
+              lectura
             </p>
           </CardContent>
         </Card>
@@ -126,7 +132,7 @@ const WhatsAppDashboard = () => {
       </div>
 
       {/* Credits Card */}
-      <Card>
+      {/* <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
@@ -168,7 +174,7 @@ const WhatsAppDashboard = () => {
             </span>
           </div>
         </CardContent>
-      </Card>
+      </Card> */}
 
       {/* Recent Messages */}
       <Card>
@@ -178,24 +184,15 @@ const WhatsAppDashboard = () => {
         </CardHeader>
         <CardContent>
           {messagesLoading ? (
-            <div className="text-center py-8 text-muted-foreground">
-              Cargando mensajes...
-            </div>
+            <div className="text-center py-8 text-muted-foreground">Cargando mensajes...</div>
           ) : messages.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              No hay mensajes enviados aún
-            </div>
+            <div className="text-center py-8 text-muted-foreground">No hay mensajes enviados aún</div>
           ) : (
             <ScrollArea className="h-[400px]">
               <div className="space-y-4">
                 {messages.slice(0, 20).map((message) => (
-                  <div
-                    key={message.id}
-                    className="flex items-start gap-4 p-4 rounded-lg border bg-card"
-                  >
-                    <div className="flex-shrink-0">
-                      {getStatusIcon(message.status)}
-                    </div>
+                  <div key={message.id} className="flex items-start gap-4 p-4 rounded-lg border bg-card">
+                    <div className="flex-shrink-0">{getStatusIcon(message.status)}</div>
                     <div className="flex-1 min-w-0 space-y-1">
                       <div className="flex items-center gap-2">
                         <span className="font-medium flex items-center gap-1">
@@ -207,16 +204,12 @@ const WhatsAppDashboard = () => {
                           {message.customer_phone}
                         </span>
                       </div>
-                      <p className="text-sm text-muted-foreground line-clamp-2">
-                        {message.message_content}
-                      </p>
+                      <p className="text-sm text-muted-foreground line-clamp-2">{message.message_content}</p>
                       <div className="flex items-center gap-2 text-xs">
                         <Badge variant="outline" className="text-xs">
                           {getMessageTypeLabel(message.message_type)}
                         </Badge>
-                        <span className="text-muted-foreground">
-                          {getStatusLabel(message.status)}
-                        </span>
+                        <span className="text-muted-foreground">{getStatusLabel(message.status)}</span>
                         <span className="text-muted-foreground">•</span>
                         <span className="text-muted-foreground">
                           {formatDistanceToNow(new Date(message.created_at), {

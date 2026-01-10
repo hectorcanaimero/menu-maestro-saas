@@ -52,7 +52,7 @@ const navItems = [
 ];
 
 const navIntegration = [
-  { path: '/admin/whatsapp', label: 'Whatsapp', icon: Send },
+  { path: '/admin/whatsapp', label: 'Whatsapp', icon: Send, requiresModule: 'whatsapp' as const },
   // { path: '/admin/chatbot', label: 'Lis Bot', icon: Bot },
   { path: '/admin/ai', label: 'Estudio Imagen IA', icon: Image },
   { path: '/admin/delivery', label: 'Delivery', icon: Package, requiresModule: 'delivery' as const },
@@ -65,6 +65,7 @@ export function AppSidebar() {
   const { open } = useSidebar();
   const { store } = useStore();
   const { data: hasDeliveryModule } = useModuleAccess('delivery');
+  const { data: hasWhatsappModule } = useModuleAccess('whatsapp');
 
   // Check if the store is a food business
   const isFoodBusiness = store?.is_food_business ?? true;
@@ -89,6 +90,9 @@ export function AppSidebar() {
   const filteredNavIntegration = navIntegration.filter((item) => {
     if (item.requiresModule === 'delivery') {
       return hasDeliveryModule === true;
+    }
+    if (item.requiresModule === 'whatsapp') {
+      return hasWhatsappModule === true;
     }
     return true;
   });

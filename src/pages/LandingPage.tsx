@@ -146,11 +146,10 @@ const LandingPage = () => {
 
       <Suspense fallback={null}>
         {/* WhatsApp Widget Flotante */}
-        <WhatsAppWidget phoneNumber="573123456789" message={whatsappMessage} position="bottom-right" />
+        {/* <WhatsAppWidget phoneNumber="573123456789" message={whatsappMessage} position="bottom-right" /> */}
 
         {/* Exit Intent Popup */}
         <ExitIntentPopup />
-
         {/* Sticky CTA Bar */}
         <StickyCTA />
       </Suspense>
