@@ -45,9 +45,14 @@ export const QuickEditDialog = ({
 
   useEffect(() => {
     if (open) {
-      setValue(currentValue?.toString() || '');
+      // For category field, explicitly handle null as "__none__" special value
+      if (field === 'category' && (currentValue === null || currentValue === '')) {
+        setValue('__none__');
+      } else {
+        setValue(currentValue?.toString() || '');
+      }
     }
-  }, [open, currentValue]);
+  }, [open, currentValue, field]);
 
   const handleSave = async () => {
     setLoading(true);
@@ -71,7 +76,8 @@ export const QuickEditDialog = ({
           updateData = { price };
           break;
         case 'category':
-          updateData = { category_id: value || null };
+          // Handle special "__none__" value for "Sin categoría"
+          updateData = { category_id: value === '__none__' || !value ? null : value };
           break;
       }
 
@@ -143,12 +149,12 @@ export const QuickEditDialog = ({
           {field === 'category' && (
             <div className="space-y-2">
               <Label htmlFor="category">Categoría</Label>
-              <Select value={value} onValueChange={setValue}>
+              <Select value={value || undefined} onValueChange={(val) => setValue(val || '')}>
                 <SelectTrigger id="category">
                   <SelectValue placeholder="Selecciona una categoría" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Sin categoría</SelectItem>
+                  <SelectItem value="__none__">Sin categoría</SelectItem>
                   {categories.map((cat) => (
                     <SelectItem key={cat.id} value={cat.id}>
                       {cat.name}

@@ -32,6 +32,9 @@ interface OrderData {
   exchangeRate?: number; // Tasa de cambio USD a BSF
   paymentProofUrl?: string; // URL del comprobante de pago
   paymentProofShortUrl?: string; // NEW: URL acortada del comprobante (desde Shlink)
+  deliveryLabel?: string; // Custom label for delivery
+  pickupLabel?: string; // Custom label for pickup
+  digitalMenuLabel?: string; // Custom label for digital menu/dine-in
 }
 
 interface StoreTemplates {
@@ -69,6 +72,9 @@ export const generateWhatsAppMessage = (
     exchangeRate = 0,
     paymentProofUrl = '',
     paymentProofShortUrl = '',
+    deliveryLabel = 'Entrega a domicilio',
+    pickupLabel = 'Recoger en tienda',
+    digitalMenuLabel = 'Para comer en el lugar',
   } = orderData;
 
   // Format price function
@@ -126,12 +132,12 @@ export const generateWhatsAppMessage = (
     timeStyle: 'short',
   });
 
-  // Format order type for display
+  // Format order type for display using custom labels
   const orderTypeMap: Record<OrderType, string> = {
-    delivery: 'Entrega a domicilio',
-    pickup: 'Recoger en tienda',
-    dine_in: 'Para comer en el lugar',
-    digital_menu: 'Menú digital',
+    delivery: deliveryLabel,
+    pickup: pickupLabel,
+    dine_in: digitalMenuLabel,
+    digital_menu: digitalMenuLabel,
   };
   const orderTypeFormatted = orderTypeMap[orderType] || orderType;
 
@@ -170,10 +176,9 @@ export const generateWhatsAppMessage = (
     : '';
   finalMessage = finalMessage.replace(/{order-track-page}/g, trackingLink);
 
-  // Format payment proof URL with descriptive text to avoid preview thumbnail
-  // Prefer short URL if available, fallback to long URL
+  // Format payment proof URL - prefer short URL, show direct link without emoji
   const paymentProofLink = (paymentProofShortUrl || paymentProofUrl)
-    ? `📎 Descargar comprobante de pago:\n${paymentProofShortUrl || paymentProofUrl}`
+    ? `Comprobante de pago:\n${paymentProofShortUrl || paymentProofUrl}`
     : '';
   finalMessage = finalMessage.replace(/{payment-receipt-link}/g, paymentProofLink);
 

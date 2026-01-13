@@ -800,19 +800,20 @@ const Checkout = () => {
                     />
 
                     {!store?.remove_zipcode && (
-                      <FormField
-                        control={form.control}
-                        name="address_zipcode"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Código Postal *</FormLabel>
-                            <FormControl>
-                              <Input {...field} placeholder="12345-678" />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+                      <></>
+                      // <FormField
+                      //   control={form.control}
+                      //   name="address_zipcode"
+                      //   render={({ field }) => (
+                      //     <FormItem>
+                      //       <FormLabel>Código Postal *</FormLabel>
+                      //       <FormControl>
+                      //         <Input {...field} placeholder="12345-678" />
+                      //       </FormControl>
+                      //       <FormMessage />
+                      //     </FormItem>
+                      //   )}
+                      // />
                     )}
                   </>
                 )}

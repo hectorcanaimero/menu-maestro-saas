@@ -42,6 +42,7 @@ const storeSettingsSchema = z.object({
     .trim()
     .regex(/^\+(?:58|55)\d{10,11}$/, 'Formato: +58 (Venezuela) o +55 (Brasil) seguido de 10-11 dígitos'),
   email: z.string().trim().email('Email inválido').max(255),
+  address: z.string().trim().max(500, 'Máximo 500 caracteres').optional().or(z.literal('')),
   currency: z.enum(['USD', 'VES', 'BRL', 'EUR', 'COP', 'ARS', 'MXN']).optional(),
   operating_modes: z
     .array(z.enum(['delivery', 'pickup', 'digital_menu']))
@@ -97,6 +98,7 @@ const StoreSettings = () => {
       setValue('name', store.name);
       setValue('phone', store.phone || '');
       setValue('email', store.email || '');
+      setValue('address', (store as any).address || '');
       setValue('currency', (store as any).currency || 'USD');
       setValue('operating_modes', store.operating_modes || ['delivery']);
       setValue('is_food_business', (store as any).is_food_business ?? true);
@@ -115,6 +117,7 @@ const StoreSettings = () => {
           name: data.name,
           phone: data.phone,
           email: data.email,
+          address: data.address || null,
           currency: data.currency,
           operating_modes: data.operating_modes,
           is_food_business: data.is_food_business,
@@ -243,6 +246,22 @@ const StoreSettings = () => {
                       Este correo electrónico se puede utilizar en mensajes personalizados u otras partes del sitio.
                     </p>
                     {errors.email && <p className="text-xs md:text-sm text-destructive">{errors.email.message}</p>}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="address" className="text-sm md:text-base">
+                      Dirección del Negocio
+                    </Label>
+                    <Input
+                      id="address"
+                      {...register('address')}
+                      placeholder="Av. Principal, Local 123, Zona Industrial"
+                      className="h-11 md:h-10 text-base md:text-sm"
+                    />
+                    <p className="text-xs md:text-sm text-muted-foreground">
+                      Dirección física de tu negocio. Se mostrará a los clientes que seleccionen "Retiro en tienda".
+                    </p>
+                    {errors.address && <p className="text-xs md:text-sm text-destructive">{errors.address.message}</p>}
                   </div>
 
                   <div className="space-y-2">
@@ -436,6 +455,8 @@ const StoreSettings = () => {
                 skip_payment_digital_menu: store.skip_payment_digital_menu,
                 delivery_price_mode: (store.delivery_price_mode as 'fixed' | 'by_zone') || 'fixed',
                 fixed_delivery_price: store.fixed_delivery_price,
+                free_delivery_enabled: (store as any).free_delivery_enabled,
+                global_free_delivery_min_amount: (store as any).global_free_delivery_min_amount,
               }}
             />
           </TabsContent>

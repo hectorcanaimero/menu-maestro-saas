@@ -85,13 +85,13 @@ export const ExitIntentPopup = () => {
           >
             <div className="bg-card border border-border rounded-2xl shadow-2xl p-8 relative overflow-hidden">
               {/* Close button */}
-              <button
+              {/* <button
                 onClick={handleClose}
                 className="absolute top-4 right-4 text-muted-foreground hover:text-foreground transition-colors p-2 rounded-full hover:bg-muted"
                 aria-label="Cerrar"
               >
                 <X size={20} />
-              </button>
+              </button> */}
 
               {/* Decorative gradient */}
               <div

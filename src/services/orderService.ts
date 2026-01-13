@@ -332,6 +332,9 @@ export async function prepareWhatsAppRedirect(
     exchangeRate,
     paymentProofUrl: fullOrder.payment_proof_url || '',
     paymentProofShortUrl: fullOrder.payment_proof_short_url || '',
+    deliveryLabel: (store as any).delivery_label || 'Entrega a domicilio',
+    pickupLabel: (store as any).pickup_label || 'Recoger en tienda',
+    digitalMenuLabel: (store as any).digital_menu_label || 'Para comer en el lugar',
   };
 
   // Generate WhatsApp message

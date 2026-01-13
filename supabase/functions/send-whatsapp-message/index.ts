@@ -11,7 +11,7 @@ interface SendMessageRequest {
   storeId: string;
   customerPhone: string;
   customerName?: string;
-  messageType: 'order_confirmation' | 'order_ready' | 'abandoned_cart' | 'promotion' | 'campaign' | 'manual';
+  messageType: 'order_confirmation' | 'order_ready' | 'order_preparing' | 'order_out_for_delivery' | 'order_delivered' | 'order_cancelled' | 'abandoned_cart' | 'promotion' | 'campaign' | 'manual';
   orderId?: string;
   campaignId?: string;
   imageUrl?: string;
@@ -22,6 +22,8 @@ interface SendMessageRequest {
     estimated_time?: string;
     store_name?: string;
     delivery_message?: string;
+    delivery_address?: string;
+    order_type?: string;
     cart_total?: string;
     recovery_link?: string;
     promotion_message?: string;

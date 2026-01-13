@@ -191,6 +191,53 @@ const CreateStore = () => {
         return;
       }
 
+      // Get the free plan ID
+      const { data: freePlan, error: planError } = await supabase
+        .from('subscription_plans')
+        .select('id')
+        .eq('name', 'free')
+        .single();
+
+      if (planError || !freePlan) {
+        console.error('Error getting free plan:', planError);
+        toast.error('Error al asignar plan gratuito');
+        return;
+      }
+
+      // Create subscription for the new store
+      const { error: subscriptionError } = await supabase
+        .from('subscriptions')
+        .insert({
+          store_id: data.id,
+          plan_id: freePlan.id,
+          status: 'active',
+          current_period_start: new Date().toISOString(),
+          current_period_end: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(), // 1 year
+          enabled_modules: { whatsapp: false, delivery: false },
+        });
+
+      if (subscriptionError) {
+        console.error('Error creating subscription:', subscriptionError);
+        toast.error('Error al crear suscripción');
+        return;
+      }
+
+      // Create AI credits record for the store
+      const { error: creditsError } = await supabase
+        .from('store_ai_credits')
+        .insert({
+          store_id: data.id,
+          monthly_credits: 10,
+          extra_credits: 0,
+          credits_used_this_month: 0,
+          last_reset_date: new Date().toISOString().split('T')[0], // YYYY-MM-DD format
+        });
+
+      if (creditsError) {
+        console.error('Error creating AI credits:', creditsError);
+        // Don't fail the whole process if credits creation fails
+      }
+
       // For development, save subdomain to localStorage
       localStorage.setItem('dev_subdomain', formData.subdomain);
 

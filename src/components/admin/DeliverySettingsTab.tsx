@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { supabase } from '@/integrations/supabase/client';
+import { useStore } from '@/contexts/StoreContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -24,27 +25,41 @@ import {
 } from '@/components/ui/alert-dialog';
 import { ZoneFreeDeliveryDialog } from './ZoneFreeDeliveryDialog';
 
-const deliverySchema = z.object({
-  estimated_delivery_time: z
-    .string()
-    .optional()
-    .refine(
-      (val) => {
-        if (!val || val.trim() === '') return true; // Optional field
-        // Accept formats like: "30-45 min", "1-2 horas", "30 minutos", etc.
-        const validPattern = /^\d+(-\d+)?\s*(min|minutos|hora|horas|minutes|hours)?$/i;
-        return validPattern.test(val.trim());
-      },
-      {
-        message: 'Formato válido: "30-45 min", "1-2 horas", "30 minutos"',
-      },
-    ),
-  skip_payment_digital_menu: z.boolean().default(false),
-  delivery_price_mode: z.enum(['fixed', 'by_zone']).default('fixed'),
-  fixed_delivery_price: z.number().min(0).default(0),
-  free_delivery_enabled: z.boolean().default(false),
-  global_free_delivery_min_amount: z.number().min(0).nullable().optional(),
-});
+const deliverySchema = z
+  .object({
+    estimated_delivery_time: z
+      .string()
+      .optional()
+      .refine(
+        (val) => {
+          if (!val || val.trim() === '') return true; // Optional field
+          // Accept formats like: "30-45 min", "1-2 horas", "30 minutos", etc.
+          const validPattern = /^\d+(-\d+)?\s*(min|minutos|hora|horas|minutes|hours)?$/i;
+          return validPattern.test(val.trim());
+        },
+        {
+          message: 'Formato válido: "30-45 min", "1-2 horas", "30 minutos"',
+        },
+      ),
+    skip_payment_digital_menu: z.boolean().default(false),
+    delivery_price_mode: z.enum(['fixed', 'by_zone']).default('fixed'),
+    fixed_delivery_price: z.number().min(0).default(0),
+    free_delivery_enabled: z.boolean().default(false),
+    global_free_delivery_min_amount: z.union([z.number().min(0.01), z.null()]).optional(),
+  })
+  .refine(
+    (data) => {
+      // If free delivery is enabled, require a minimum amount greater than 0
+      if (data.free_delivery_enabled && (data.global_free_delivery_min_amount === null || data.global_free_delivery_min_amount === undefined || data.global_free_delivery_min_amount <= 0)) {
+        return false;
+      }
+      return true;
+    },
+    {
+      message: 'Debes especificar el monto mínimo para delivery gratis',
+      path: ['global_free_delivery_min_amount'],
+    },
+  );
 
 type DeliveryFormData = z.infer<typeof deliverySchema>;
 
@@ -66,6 +81,7 @@ const COMMON_DELIVERY_TIMES = ['15-30 min', '30-45 min', '45-60 min', '1-2 horas
 
 export const DeliverySettingsTab = ({ storeId, initialData }: DeliverySettingsTabProps) => {
   // All hooks must be called unconditionally at the top level
+  const { reloadStore } = useStore();
   const [loading, setLoading] = useState(false);
   const [zones, setZones] = useState<DeliveryZone[]>([]);
   const [newZone, setNewZone] = useState({ zone_name: '', delivery_price: '' });
@@ -90,12 +106,24 @@ export const DeliverySettingsTab = ({ storeId, initialData }: DeliverySettingsTa
       delivery_price_mode: (initialData?.delivery_price_mode as 'fixed' | 'by_zone') || 'fixed',
       fixed_delivery_price: initialData?.fixed_delivery_price || 0,
       free_delivery_enabled: initialData?.free_delivery_enabled || false,
-      global_free_delivery_min_amount: initialData?.global_free_delivery_min_amount || null,
+      global_free_delivery_min_amount: initialData?.global_free_delivery_min_amount ?? null,
     },
   });
 
   const deliveryPriceMode = watch('delivery_price_mode');
   const freeDeliveryEnabled = watch('free_delivery_enabled');
+
+  // Update form values when initialData changes (when store data loads)
+  useEffect(() => {
+    if (initialData) {
+      setValue('estimated_delivery_time', initialData.estimated_delivery_time || '');
+      setValue('skip_payment_digital_menu', initialData.skip_payment_digital_menu || false);
+      setValue('delivery_price_mode', (initialData.delivery_price_mode as 'fixed' | 'by_zone') || 'fixed');
+      setValue('fixed_delivery_price', initialData.fixed_delivery_price || 0);
+      setValue('free_delivery_enabled', initialData.free_delivery_enabled ?? false);
+      setValue('global_free_delivery_min_amount', initialData.global_free_delivery_min_amount ?? null);
+    }
+  }, [initialData, setValue]);
 
   useEffect(() => {
     if (deliveryPriceMode === 'by_zone') {
@@ -121,21 +149,28 @@ export const DeliverySettingsTab = ({ storeId, initialData }: DeliverySettingsTa
   const onSubmit = async (data: DeliveryFormData) => {
     setLoading(true);
     try {
+      const updateData = {
+        estimated_delivery_time: data.estimated_delivery_time || null,
+        skip_payment_digital_menu: data.skip_payment_digital_menu,
+        delivery_price_mode: data.delivery_price_mode,
+        fixed_delivery_price: data.fixed_delivery_price,
+        free_delivery_enabled: data.free_delivery_enabled,
+        global_free_delivery_min_amount: data.global_free_delivery_min_amount,
+      };
+
       const { error } = await supabase
         .from('stores')
-        .update({
-          estimated_delivery_time: data.estimated_delivery_time || null,
-          skip_payment_digital_menu: data.skip_payment_digital_menu,
-          delivery_price_mode: data.delivery_price_mode,
-          fixed_delivery_price: data.fixed_delivery_price,
-          free_delivery_enabled: data.free_delivery_enabled,
-          global_free_delivery_min_amount: data.global_free_delivery_min_amount,
-        })
+        .update(updateData)
         .eq('id', storeId);
 
       if (error) throw error;
+
+      // Reload store context to get fresh data
+      await reloadStore();
+
       toast.success('Configuración de entrega actualizada');
     } catch (error) {
+      console.error('Error saving delivery settings:', error);
       toast.error('Error al actualizar configuración');
     } finally {
       setLoading(false);
@@ -480,10 +515,20 @@ export const DeliverySettingsTab = ({ storeId, initialData }: DeliverySettingsTa
                   type="number"
                   step="0.01"
                   min="0"
-                  {...register('global_free_delivery_min_amount', { valueAsNumber: true })}
+                  {...register('global_free_delivery_min_amount', {
+                    setValueAs: (v) => {
+                      // Handle empty or invalid values
+                      if (v === '' || v === null || v === undefined) return null;
+                      const num = Number(v);
+                      return isNaN(num) ? null : num;
+                    }
+                  })}
                   placeholder="Ej: 20.00"
                   className="h-11 md:h-10 text-base md:text-sm"
                 />
+                {errors.global_free_delivery_min_amount && (
+                  <p className="text-xs text-destructive">{errors.global_free_delivery_min_amount.message}</p>
+                )}
                 <p className="text-xs text-muted-foreground">
                   Los clientes obtendrán delivery gratis cuando su pedido supere este monto
                 </p>
@@ -498,7 +543,11 @@ export const DeliverySettingsTab = ({ storeId, initialData }: DeliverySettingsTa
         </CardContent>
       </Card>
 
-      <Button type="submit" disabled={loading} className="w-full md:w-auto h-11 md:h-10 text-base md:text-sm">
+      <Button
+        type="submit"
+        disabled={loading}
+        className="w-full md:w-auto h-11 md:h-10 text-base md:text-sm"
+      >
         {loading ? 'Guardando...' : 'Guardar Cambios'}
       </Button>
 
