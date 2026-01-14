@@ -21,6 +21,9 @@ import {
   RectangleVertical,
   Smartphone,
   ScanEye,
+  Download,
+  Share2,
+  ArrowUpFromLine,
 } from 'lucide-react';
 import { useAICredits } from '@/hooks/useAICredits';
 import { useStore } from '@/contexts/StoreContext';
@@ -247,6 +250,58 @@ export const AIPhotoStudio = ({ open, onOpenChange, menuItem, onImageUpdated }: 
     setPreviewUrl(null);
   };
 
+  const handleDownload = async () => {
+    if (!previewUrl) return;
+
+    try {
+      const response = await fetch(previewUrl);
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${menuItem?.name || 'imagen'}-mejorada-${Date.now()}.jpg`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      toast.success('Imagen descargada');
+    } catch (error) {
+      toast.error('Error al descargar imagen');
+    }
+  };
+
+  const handleShare = async () => {
+    if (!previewUrl) return;
+
+    if (navigator.share) {
+      try {
+        const response = await fetch(previewUrl);
+        const blob = await response.blob();
+        const file = new File([blob], `${menuItem?.name || 'imagen'}-mejorada.jpg`, { type: 'image/jpeg' });
+
+        await navigator.share({
+          title: `Imagen mejorada - ${menuItem?.name}`,
+          text: 'Imagen generada con IA en PideAI',
+          files: [file],
+        });
+        toast.success('Compartido exitosamente');
+      } catch (error) {
+        if ((error as Error).name !== 'AbortError') {
+          handleFallbackShare();
+        }
+      }
+    } else {
+      handleFallbackShare();
+    }
+  };
+
+  const handleFallbackShare = () => {
+    if (previewUrl) {
+      navigator.clipboard.writeText(previewUrl);
+      toast.success('Link copiado al portapapeles');
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="w-[95vw] max-w-3xl h-[95vh] max-h-[95vh] overflow-y-auto p-4 sm:p-6">
@@ -332,7 +387,7 @@ export const AIPhotoStudio = ({ open, onOpenChange, menuItem, onImageUpdated }: 
                 <div
                   className={`${getAspectRatioClass(
                     aspectRatio,
-                  )} max-h-[300px] sm:max-h-[400px] bg-muted rounded-lg overflow-hidden flex items-center justify-center relative mx-auto`}
+                  )} max-h-[300px] sm:max-h-[400px] bg-muted rounded-lg overflow-hidden flex items-center justify-center relative mx-auto group`}
                 >
                   <AnimatePresence mode="wait">
                     {isProcessing ? (
@@ -350,15 +405,55 @@ export const AIPhotoStudio = ({ open, onOpenChange, menuItem, onImageUpdated }: 
                         </p>
                       </motion.div>
                     ) : previewUrl ? (
-                      <motion.img
-                        key="preview"
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0 }}
-                        src={previewUrl}
-                        alt="Preview mejorada"
-                        className="w-full h-full object-cover"
-                      />
+                      <>
+                        <motion.img
+                          key="preview"
+                          initial={{ opacity: 0, scale: 0.95 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          exit={{ opacity: 0 }}
+                          src={previewUrl}
+                          alt="Preview mejorada"
+                          className="w-full h-full object-cover"
+                        />
+                        {/* Action Buttons Overlay */}
+                        <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center gap-2 p-4">
+                          <Button
+                            size="sm"
+                            variant="secondary"
+                            onClick={handleDownload}
+                            className="flex flex-col gap-1 h-auto py-2 px-3 bg-white/90 hover:bg-white"
+                            title="Descargar"
+                          >
+                            <Download className="w-5 h-5" />
+                            <span className="text-xs">Descargar</span>
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="secondary"
+                            onClick={handleShare}
+                            className="flex flex-col gap-1 h-auto py-2 px-3 bg-white/90 hover:bg-white"
+                            title="Compartir"
+                          >
+                            <Share2 className="w-5 h-5" />
+                            <span className="text-xs">Compartir</span>
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="secondary"
+                            onClick={handleApply}
+                            disabled={isApplying}
+                            className="flex flex-col gap-1 h-auto py-2 px-3 bg-primary/90 hover:bg-primary text-white"
+                            title="Usar en producto"
+                          >
+                            {isApplying ? (
+                              <Loader2 className="w-5 h-5 animate-spin" />
+                            ) : (
+                              <ArrowUpFromLine className="w-5 h-5" />
+                            )}
+                            <span className="text-xs">Usar</span>
+                          </Button>
+                        </div>
+                      </>
                     ) : (
                       <motion.div
                         key="empty"
@@ -422,16 +517,11 @@ export const AIPhotoStudio = ({ open, onOpenChange, menuItem, onImageUpdated }: 
                   disabled={isApplying}
                 >
                   <X className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-                  <span className="hidden xs:inline">Descartar</span>
-                  <span className="xs:hidden">Cancelar</span>
+                  <span className="hidden xs:inline">Generar Otra</span>
+                  <span className="xs:hidden">Nueva</span>
                 </Button>
-                <Button onClick={handleApply} className="flex-1 text-xs sm:text-sm" disabled={isApplying}>
-                  {isApplying ? (
-                    <Loader2 className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2 animate-spin" />
-                  ) : (
-                    <Check className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-                  )}
-                  Aplicar
+                <Button variant="outline" onClick={handleClose} className="text-xs sm:text-sm" disabled={isApplying}>
+                  Cerrar
                 </Button>
               </>
             ) : (
@@ -455,6 +545,16 @@ export const AIPhotoStudio = ({ open, onOpenChange, menuItem, onImageUpdated }: 
               </>
             )}
           </div>
+
+          {/* Help Text - Action Buttons */}
+          {previewUrl && (
+            <div className="bg-muted/50 p-3 rounded-lg">
+              <p className="text-xs text-center text-muted-foreground">
+                💡 <strong>Tip:</strong> Pasa el cursor sobre la imagen para ver las opciones de descarga, compartir y
+                usar en producto
+              </p>
+            </div>
+          )}
 
           {/* Help text */}
           {availableCredits <= 0 && (
