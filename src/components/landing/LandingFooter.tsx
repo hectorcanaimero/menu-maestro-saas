@@ -1,5 +1,6 @@
-import { Facebook, Instagram, Twitter, Mail } from 'lucide-react';
+import { Youtube, Instagram, Mail } from 'lucide-react';
 import logo from '@/assets/logo.svg';
+import { FaTiktok } from 'react-icons/fa6';
 
 export const LandingFooter = () => {
   return (
@@ -41,7 +42,7 @@ export const LandingFooter = () => {
                 </a>
               </li>
               <li>
-                <a href="#" className="hover:text-primary transition-colors">
+                <a href="https://blog.pideai.com" target="_blank" className="hover:text-primary transition-colors">
                   Blog
                 </a>
               </li>
@@ -84,17 +85,32 @@ export const LandingFooter = () => {
 
           {/* Social Links */}
           <div className="flex gap-4">
-            <a href="#" className="text-muted-foreground hover:text-primary transition-colors" aria-label="Facebook">
-              <Facebook size={20} />
-            </a>
-            <a href="#" className="text-muted-foreground hover:text-primary transition-colors" aria-label="Instagram">
-              <Instagram size={20} />
-            </a>
-            <a href="#" className="text-muted-foreground hover:text-primary transition-colors" aria-label="Twitter">
-              <Twitter size={20} />
+            <a
+              href="https://www.youtube.com/@PideAi"
+              className="text-muted-foreground hover:text-primary transition-colors"
+              aria-label="youtube"
+              target="_blank"
+            >
+              <Youtube size={24} />
             </a>
             <a
-              href="mailto:contact@pideai.com"
+              href="https://www.instagram.com/pideai"
+              className="text-muted-foreground hover:text-primary transition-colors"
+              aria-label="Instagram"
+              target="_blank"
+            >
+              <Instagram size={20} />
+            </a>
+            <a
+              href="https://www.tiktok.com/@tiendapideai"
+              className="text-muted-foreground hover:text-primary transition-colors"
+              aria-label="Tik Tok"
+              target="_blank"
+            >
+              <FaTiktok size={20} />
+            </a>
+            <a
+              href="mailto:soporte@pideai.com"
               className="text-muted-foreground hover:text-primary transition-colors"
               aria-label="Email"
             >
