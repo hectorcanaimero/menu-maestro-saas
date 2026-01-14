@@ -2,7 +2,17 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Sparkles, ImageIcon, History, TrendingUp, Zap, Download, Share2, ArrowUpFromLine, Loader2 } from 'lucide-react';
+import {
+  Sparkles,
+  ImageIcon,
+  History,
+  TrendingUp,
+  Zap,
+  Download,
+  Share2,
+  ArrowUpFromLine,
+  Loader2,
+} from 'lucide-react';
 import AdminLayout from '@/components/admin/AdminLayout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -297,9 +307,7 @@ const AdminAI = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               <div className="p-4 bg-muted/50 rounded-lg">
                 <h3 className="font-medium mb-2">Créditos según tu plan</h3>
-                <p className="text-sm text-muted-foreground">
-                  Free: 5 · Starter: 10 · Pro: 20 créditos mensuales
-                </p>
+                <p className="text-sm text-muted-foreground">Free: 5 · Starter: 10 · Pro: 20 créditos mensuales</p>
               </div>
               <div className="p-4 bg-muted/50 rounded-lg">
                 <h3 className="font-medium mb-2">6 Estilos</h3>
@@ -363,50 +371,33 @@ const AdminAI = () => {
                       </Badge>
 
                       {/* Action Buttons Overlay */}
-                      <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center gap-2 p-4">
+                      <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center gap-4 p-4">
                         <Button
                           size="sm"
                           variant="secondary"
                           onClick={() => handleDownload(item.enhanced_image_url, item.menu_items?.name || 'imagen')}
-                          className="flex flex-col gap-1 h-auto py-2 px-3 bg-white/90 hover:bg-white"
+                          className="flex flex-col gap-1 h-auto py-2 px-4 bg-white/90 hover:bg-white"
                           title="Descargar"
                         >
-                          <Download className="w-4 h-4" />
-                          <span className="text-xs">Descargar</span>
+                          <Download className="w-4 h-4 text-primary" />
+                          <span className="text-xs text-primary">Descargar</span>
                         </Button>
                         <Button
                           size="sm"
                           variant="secondary"
                           onClick={() => handleShare(item.enhanced_image_url, item.menu_items?.name || 'imagen')}
-                          className="flex flex-col gap-1 h-auto py-2 px-3 bg-white/90 hover:bg-white"
+                          className="flex flex-col gap-1 h-auto py-2 px-4 bg-white/90 hover:bg-white"
                           title="Compartir"
                         >
-                          <Share2 className="w-4 h-4" />
-                          <span className="text-xs">Compartir</span>
+                          <Share2 className="w-4 h-4 text-primary" />
+                          <span className="text-xs text-primary">Compartir</span>
                         </Button>
-                        {item.menu_item_id && (
-                          <Button
-                            size="sm"
-                            variant="secondary"
-                            onClick={() => handleApplyToProduct(item)}
-                            disabled={applyingImage === item.id}
-                            className="flex flex-col gap-1 h-auto py-2 px-3 bg-primary/90 hover:bg-primary text-white"
-                            title="Usar en producto"
-                          >
-                            {applyingImage === item.id ? (
-                              <Loader2 className="w-4 h-4 animate-spin" />
-                            ) : (
-                              <ArrowUpFromLine className="w-4 h-4" />
-                            )}
-                            <span className="text-xs">Usar</span>
-                          </Button>
-                        )}
                       </div>
                     </div>
                     <div className="p-3">
                       <p className="font-medium text-sm truncate">{item.menu_items?.name || 'Producto eliminado'}</p>
                       <p className="text-xs text-muted-foreground">
-                        {new Date(item.created_at).toLocaleDateString('es', {
+                        {new Date(item?.created_at).toLocaleDateString('es', {
                           day: 'numeric',
                           month: 'short',
                           year: 'numeric',
