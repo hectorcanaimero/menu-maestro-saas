@@ -11,6 +11,12 @@ interface AICredits {
   last_reset_date: string;
 }
 
+interface SubscriptionPlan {
+  limits: {
+    max_ai_credits_per_month?: number;
+  };
+}
+
 export const useAICredits = () => {
   const { store } = useStore();
   const [credits, setCredits] = useState<AICredits | null>(null);
@@ -27,6 +33,18 @@ export const useAICredits = () => {
       setLoading(true);
       setError(null);
 
+      // Get subscription plan to know the monthly credits limit
+      const { data: subscriptionData, error: subError } = await supabase
+        .from("subscriptions")
+        .select("subscription_plans(limits)")
+        .eq("store_id", store.id)
+        .single();
+
+      if (subError) throw subError;
+
+      const planLimits = (subscriptionData?.subscription_plans as SubscriptionPlan)?.limits;
+      const planMonthlyCredits = planLimits?.max_ai_credits_per_month ?? 5;
+
       // Try to get existing credits
       const { data, error: fetchError } = await supabase
         .from("store_ai_credits")
@@ -40,8 +58,8 @@ export const useAICredits = () => {
         // Check if we need to reset monthly credits (new month)
         const lastReset = new Date(data.last_reset_date);
         const now = new Date();
-        const isNewMonth = 
-          lastReset.getMonth() !== now.getMonth() || 
+        const isNewMonth =
+          lastReset.getMonth() !== now.getMonth() ||
           lastReset.getFullYear() !== now.getFullYear();
 
         if (isNewMonth) {
@@ -62,12 +80,12 @@ export const useAICredits = () => {
           setCredits(data);
         }
       } else {
-        // Create new credits record for the store
+        // Create new credits record for the store with plan limit
         const { data: newCredits, error: insertError } = await supabase
           .from("store_ai_credits")
           .insert({
             store_id: store.id,
-            monthly_credits: 40,
+            monthly_credits: planMonthlyCredits,
             extra_credits: 0,
             credits_used_this_month: 0,
             last_reset_date: new Date().toISOString().split('T')[0],
@@ -154,7 +172,7 @@ export const useAICredits = () => {
     availableCredits: getAvailableCredits(),
     monthlyRemaining: getMonthlyRemaining(),
     extraCredits: credits?.extra_credits || 0,
-    monthlyTotal: credits?.monthly_credits || 40,
+    monthlyTotal: credits?.monthly_credits || 0,
     useCredit,
     refetch,
   };
