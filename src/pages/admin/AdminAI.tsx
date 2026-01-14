@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Sparkles, ImageIcon, History, TrendingUp, Zap } from 'lucide-react';
+import { Sparkles, ImageIcon, History, TrendingUp, Zap, Download, Share2, ArrowUpFromLine, Loader2 } from 'lucide-react';
 import AdminLayout from '@/components/admin/AdminLayout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -18,6 +18,7 @@ interface EnhancementHistory {
   style: string;
   credit_type: string;
   created_at: string | null;
+  menu_item_id?: string | null;
   menu_items?: {
     name: string;
   } | null;
@@ -42,6 +43,7 @@ const AdminAI = () => {
   const [userEmail, setUserEmail] = useState('');
   const [history, setHistory] = useState<EnhancementHistory[]>([]);
   const [historyLoading, setHistoryLoading] = useState(true);
+  const [applyingImage, setApplyingImage] = useState<string | null>(null);
 
   useEffect(() => {
     checkAuth();
@@ -108,6 +110,7 @@ const AdminAI = () => {
           style,
           credit_type,
           created_at,
+          menu_item_id,
           menu_items (name)
         `,
         )
@@ -121,6 +124,75 @@ const AdminAI = () => {
       throw new Error(error as string | undefined);
     } finally {
       setHistoryLoading(false);
+    }
+  };
+
+  const handleDownload = async (imageUrl: string, productName: string) => {
+    try {
+      const response = await fetch(imageUrl);
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${productName || 'imagen'}-mejorada-${Date.now()}.jpg`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      toast.success('Imagen descargada');
+    } catch (error) {
+      toast.error('Error al descargar imagen');
+    }
+  };
+
+  const handleShare = async (imageUrl: string, productName: string) => {
+    if (navigator.share) {
+      try {
+        const response = await fetch(imageUrl);
+        const blob = await response.blob();
+        const file = new File([blob], `${productName || 'imagen'}-mejorada.jpg`, { type: 'image/jpeg' });
+
+        await navigator.share({
+          title: `Imagen mejorada - ${productName}`,
+          text: 'Imagen generada con IA en PideAI',
+          files: [file],
+        });
+        toast.success('Compartido exitosamente');
+      } catch (error) {
+        if ((error as Error).name !== 'AbortError') {
+          handleFallbackShare(imageUrl);
+        }
+      }
+    } else {
+      handleFallbackShare(imageUrl);
+    }
+  };
+
+  const handleFallbackShare = (imageUrl: string) => {
+    navigator.clipboard.writeText(imageUrl);
+    toast.success('Link copiado al portapapeles');
+  };
+
+  const handleApplyToProduct = async (item: EnhancementHistory) => {
+    if (!item.menu_item_id) {
+      toast.error('No se puede aplicar, producto no encontrado');
+      return;
+    }
+
+    setApplyingImage(item.id);
+    try {
+      const { error } = await supabase
+        .from('menu_items')
+        .update({ image_url: item.enhanced_image_url })
+        .eq('id', item.menu_item_id);
+
+      if (error) throw error;
+
+      toast.success('Imagen aplicada al producto');
+    } catch (error) {
+      toast.error('Error al aplicar imagen');
+    } finally {
+      setApplyingImage(null);
     }
   };
 
@@ -224,8 +296,10 @@ const AdminAI = () => {
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               <div className="p-4 bg-muted/50 rounded-lg">
-                <h3 className="font-medium mb-2">40 imágenes/mes</h3>
-                <p className="text-sm text-muted-foreground">Incluidas en tu plan para mejorar tu catálogo</p>
+                <h3 className="font-medium mb-2">Créditos según tu plan</h3>
+                <p className="text-sm text-muted-foreground">
+                  Free: 5 · Starter: 10 · Pro: 20 créditos mensuales
+                </p>
               </div>
               <div className="p-4 bg-muted/50 rounded-lg">
                 <h3 className="font-medium mb-2">6 Estilos</h3>
@@ -280,13 +354,54 @@ const AdminAI = () => {
                     key={item.id}
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    className="border rounded-lg overflow-hidden"
+                    className="border rounded-lg overflow-hidden group"
                   >
                     <div className="aspect-square relative">
                       <img src={item.enhanced_image_url} alt="Enhanced" className="w-full h-full object-cover" />
                       <Badge className="absolute top-2 right-2" variant="secondary">
                         {STYLE_LABELS[item.style] || item.style}
                       </Badge>
+
+                      {/* Action Buttons Overlay */}
+                      <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center gap-2 p-4">
+                        <Button
+                          size="sm"
+                          variant="secondary"
+                          onClick={() => handleDownload(item.enhanced_image_url, item.menu_items?.name || 'imagen')}
+                          className="flex flex-col gap-1 h-auto py-2 px-3 bg-white/90 hover:bg-white"
+                          title="Descargar"
+                        >
+                          <Download className="w-4 h-4" />
+                          <span className="text-xs">Descargar</span>
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="secondary"
+                          onClick={() => handleShare(item.enhanced_image_url, item.menu_items?.name || 'imagen')}
+                          className="flex flex-col gap-1 h-auto py-2 px-3 bg-white/90 hover:bg-white"
+                          title="Compartir"
+                        >
+                          <Share2 className="w-4 h-4" />
+                          <span className="text-xs">Compartir</span>
+                        </Button>
+                        {item.menu_item_id && (
+                          <Button
+                            size="sm"
+                            variant="secondary"
+                            onClick={() => handleApplyToProduct(item)}
+                            disabled={applyingImage === item.id}
+                            className="flex flex-col gap-1 h-auto py-2 px-3 bg-primary/90 hover:bg-primary text-white"
+                            title="Usar en producto"
+                          >
+                            {applyingImage === item.id ? (
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : (
+                              <ArrowUpFromLine className="w-4 h-4" />
+                            )}
+                            <span className="text-xs">Usar</span>
+                          </Button>
+                        )}
+                      </div>
                     </div>
                     <div className="p-3">
                       <p className="font-medium text-sm truncate">{item.menu_items?.name || 'Producto eliminado'}</p>
