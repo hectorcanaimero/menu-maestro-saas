@@ -19,15 +19,6 @@ export const FAQSection = () => {
         'Sí, puedes cancelar tu suscripción en cualquier momento sin penalización. No hay contratos de permanencia.',
     },
     {
-      question: '¿Qué métodos de pago aceptan?',
-      answer:
-        'Aceptamos todos los métodos de pago principales: tarjetas de crédito, débito, transferencias bancarias y pagos móviles.',
-    },
-    {
-      question: '¿Hay límite de productos que puedo agregar?',
-      answer: 'No, en todos nuestros planes puedes agregar productos ilimitados a tu catálogo digital.',
-    },
-    {
       question: '¿Ofrecen soporte técnico?',
       answer:
         'Sí, todos nuestros planes incluyen soporte técnico. El plan Pro y Business incluyen soporte prioritario 24/7.',
