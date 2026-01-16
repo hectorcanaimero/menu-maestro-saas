@@ -85,8 +85,9 @@ const AdminLayout = ({ children, userEmail = '' }: AdminLayoutProps) => {
               </div>
 
               <div className="flex gap-1 sm:gap-2 flex-shrink-0">
-                <Button variant="outline" size="sm" onClick={() => navigate('/')} className="hidden sm:flex">
-                  Ver Sitio
+                <Button variant="outline" size="sm" onClick={() => navigate('/')} className="sm:flex">
+                  <StoreIcon className="w-4 h-4 sm:mr-2" />
+                  <span className="hidden sm:inline">Ver Sitio</span>
                 </Button>
                 <Button variant="outline" size="sm" onClick={handleLogout} className="sm:flex">
                   <LogOut className="w-4 h-4 sm:mr-2" />
