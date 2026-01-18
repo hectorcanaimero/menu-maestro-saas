@@ -61,7 +61,7 @@ export const LandingHero = () => {
             <div className="flex flex-col sm:flex-row gap-4">
               <Button
                 size="lg"
-                onClick={() => navigate('/create-store')}
+                onClick={() => navigate('/auth?mode=signup')}
                 aria-label="Crear tienda gratis - Inicia tu prueba de 30 días sin tarjeta de crédito"
               >
                 Crear Tienda Gratis

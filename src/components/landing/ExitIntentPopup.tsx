@@ -52,10 +52,10 @@ export const ExitIntentPopup = () => {
   const handleCTA = () => {
     track('exit_intent_converted', {
       cta_text: 'Crear Mi Tienda Gratis',
-      destination: '/create-store',
+      destination: '/auth?mode=signup',
     });
     setIsVisible(false);
-    navigate('/create-store');
+    navigate('/auth?mode=signup');
   };
 
   return (

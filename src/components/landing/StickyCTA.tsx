@@ -51,9 +51,9 @@ export const StickyCTA = () => {
   const handleCTA = () => {
     track('sticky_cta_clicked', {
       cta_text: 'Crear Tienda Gratis',
-      destination: '/create-store',
+      destination: '/auth?mode=signup',
     });
-    navigate('/create-store');
+    navigate('/auth?mode=signup');
   };
 
   return (

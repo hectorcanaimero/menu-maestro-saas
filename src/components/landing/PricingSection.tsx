@@ -224,7 +224,7 @@ export const PricingSection = () => {
                 track('custom_plan_requested', {
                   location: 'pricing_section',
                 });
-                navigate('/create-store');
+                navigate('/auth?mode=signup');
               }}
               className="text-primary font-semibold hover:underline"
             >

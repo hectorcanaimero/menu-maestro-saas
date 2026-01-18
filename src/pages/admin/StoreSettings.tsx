@@ -28,11 +28,11 @@ import { Loader2 } from 'lucide-react';
 const CURRENCIES = [
   { value: 'USD', label: 'Dólar Estadounidense (USD)' },
   { value: 'VES', label: 'Bolívar Venezolano (VES)' },
-  { value: 'BRL', label: 'Real Brasileño (BRL)' },
+  // { value: 'BRL', label: 'Real Brasileño (BRL)' },
   { value: 'EUR', label: 'Euro (EUR)' },
-  { value: 'COP', label: 'Peso Colombiano (COP)' },
-  { value: 'ARS', label: 'Peso Argentino (ARS)' },
-  { value: 'MXN', label: 'Peso Mexicano (MXN)' },
+  // { value: 'COP', label: 'Peso Colombiano (COP)' },
+  // { value: 'ARS', label: 'Peso Argentino (ARS)' },
+  // { value: 'MXN', label: 'Peso Mexicano (MXN)' },
 ];
 
 const storeSettingsSchema = z.object({
@@ -157,15 +157,9 @@ const StoreSettings = () => {
           <h1 className="text-2xl md:text-3xl font-bold">Configuración de Tienda</h1>
         </div>
         <Tabs defaultValue="company" className="w-full">
-          <TabsList className="inline-flex w-full overflow-x-auto overflow-y-hidden whitespace-nowrap rounded-lg bg-muted p-1 text-muted-foreground md:grid md:grid-cols-8 scrollbar-hide">
+          <TabsList className="flex justify-start overflow-x-auto whitespace-nowrap p-1 gap-1 scrollbar-hide md:overflow-visible md:grid md:grid-cols-9">
             <TabsTrigger value="company" className="min-w-[100px] md:min-w-0">
               Empresa
-            </TabsTrigger>
-            <TabsTrigger value="social" className="min-w-[100px] md:min-w-0">
-              Redes
-            </TabsTrigger>
-            <TabsTrigger value="design" className="min-w-[100px] md:min-w-0">
-              Diseño
             </TabsTrigger>
             <TabsTrigger value="delivery" className="min-w-[100px] md:min-w-0">
               Entrega
@@ -181,6 +175,12 @@ const StoreSettings = () => {
             </TabsTrigger>
             <TabsTrigger value="conversion" className="min-w-[100px] md:min-w-0">
               Conversión
+            </TabsTrigger>
+            <TabsTrigger value="social" className="min-w-[100px] md:min-w-0">
+              Redes
+            </TabsTrigger>
+            <TabsTrigger value="design" className="min-w-[100px] md:min-w-0">
+              Diseño
             </TabsTrigger>
             <TabsTrigger value="advanced" className="min-w-[100px] md:min-w-0">
               Avanzado
@@ -382,26 +382,6 @@ const StoreSettings = () => {
               </CardContent>
             </Card>
           </TabsContent>
-
-          <TabsContent value="social" className="mt-4 md:mt-6">
-            <SocialLinksTab storeId={store.id} />
-          </TabsContent>
-
-          <TabsContent value="design" className="mt-4 md:mt-6">
-            <DesignSettingsTab
-              storeId={store.id}
-              initialData={{
-                logo_url: store.logo_url,
-                banner_url: (store as any).banner_url,
-                primary_color: (store as any).primary_color,
-                price_color: (store as any).price_color,
-                delivery_label: (store as any).delivery_label,
-                pickup_label: (store as any).pickup_label,
-                digital_menu_label: (store as any).digital_menu_label,
-              }}
-            />
-          </TabsContent>
-
           <TabsContent value="hours" className="mt-4 md:mt-6">
             <BusinessHoursTab storeId={store.id} forceStatus={store.force_status} />
           </TabsContent>
@@ -460,7 +440,24 @@ const StoreSettings = () => {
               }}
             />
           </TabsContent>
+          <TabsContent value="social" className="mt-4 md:mt-6">
+            <SocialLinksTab storeId={store.id} />
+          </TabsContent>
 
+          <TabsContent value="design" className="mt-4 md:mt-6">
+            <DesignSettingsTab
+              storeId={store.id}
+              initialData={{
+                logo_url: store.logo_url,
+                banner_url: (store as any).banner_url,
+                primary_color: (store as any).primary_color,
+                price_color: (store as any).price_color,
+                delivery_label: (store as any).delivery_label,
+                pickup_label: (store as any).pickup_label,
+                digital_menu_label: (store as any).digital_menu_label,
+              }}
+            />
+          </TabsContent>
           <TabsContent value="advanced" className="mt-4 md:mt-6">
             <AdvancedSettingsTab
               storeId={store.id}

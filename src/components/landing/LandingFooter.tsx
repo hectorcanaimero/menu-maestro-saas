@@ -56,7 +56,7 @@ export const LandingFooter = () => {
 
           {/* Legal */}
           <div>
-            <h4 className="font-semibold mb-4">Legal</h4>
+            {/* <h4 className="font-semibold mb-4">Legal</h4>
             <ul className="space-y-2 text-sm text-muted-foreground">
               <li>
                 <a href="#" className="hover:text-primary transition-colors">
@@ -73,7 +73,7 @@ export const LandingFooter = () => {
                   Cookies
                 </a>
               </li>
-            </ul>
+            </ul> */}
           </div>
         </div>
 
