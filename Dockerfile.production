@@ -58,7 +58,7 @@ COPY package*.json ./
 # Instalar dependencias
 # - npm ci: Instalaci\u00f3n limpia basada en package-lock.json
 # - --only=production=false: Instalar tambi\u00e9n devDependencies (necesarios para build)
-RUN npm ci --only=production=false
+RUN npm ci
 
 # Copiar el resto del c\u00f3digo fuente
 COPY . .
