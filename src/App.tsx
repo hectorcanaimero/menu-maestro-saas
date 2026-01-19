@@ -11,6 +11,7 @@ import { ErrorBoundary, SectionErrorBoundary } from "@/components/ErrorBoundary"
 import { LoadingScreen } from "@/components/LoadingScreen";
 import { ScrollToTop } from "@/components/ScrollToTop";
 import { HelmetProvider } from "react-helmet-async";
+import { useGoogleAnalytics } from "@/hooks/useGoogleAnalytics";
 
 // Lazy load all route components
 const Index = lazy(() => import("./pages/Index"));
@@ -84,6 +85,9 @@ const queryClient = new QueryClient({
 
 // Internal component to use hooks that require router context
 const AppContent = () => {
+  // Initialize Google Analytics tracking for page views
+  useGoogleAnalytics();
+
   // Note: Chatwoot is now initialized in AdminDashboard only
   // See src/pages/admin/AdminDashboard.tsx for implementation
 

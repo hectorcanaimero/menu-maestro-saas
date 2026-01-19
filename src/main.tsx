@@ -6,6 +6,7 @@ import App from './App.tsx';
 import './index.css';
 import 'leaflet/dist/leaflet.css';
 import posthog from 'posthog-js';
+import ReactGA from 'react-ga4';
 import { ErrorBoundary } from './components/ErrorBoundary';
 
 // Initialize Sentry with professional configuration
@@ -159,6 +160,39 @@ if (import.meta.env.VITE_POSTHOG_KEY && import.meta.env.VITE_POSTHOG_HOST) {
     });
   } catch (error) {
     //
+  }
+}
+
+// Initialize Google Analytics 4 (GA4)
+// Only initialize if Measurement ID is set
+if (import.meta.env.VITE_GA4_MEASUREMENT_ID) {
+  try {
+    ReactGA.initialize(import.meta.env.VITE_GA4_MEASUREMENT_ID, {
+      // Configuration options
+      gaOptions: {
+        // Anonymize IP addresses for GDPR compliance
+        anonymize_ip: true,
+        // Cookie configuration
+        cookie_flags: 'SameSite=None;Secure',
+      },
+      // Google Tag Manager options (if needed)
+      gtagOptions: {
+        // Send page views manually via hook instead of automatic
+        send_page_view: false,
+        // Additional privacy settings
+        allow_google_signals: false, // Disable advertising features
+        allow_ad_personalization_signals: false, // Disable ad personalization
+      },
+    });
+
+    // Only log in development
+    if (import.meta.env.DEV) {
+      console.log('✅ Google Analytics initialized');
+    }
+  } catch (error) {
+    if (import.meta.env.DEV) {
+      console.error('❌ Failed to initialize Google Analytics:', error);
+    }
   }
 }
 

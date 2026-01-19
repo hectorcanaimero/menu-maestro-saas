@@ -12,6 +12,15 @@ export const PricingSection = () => {
   const { track } = usePostHog();
   const [expandedPlans, setExpandedPlans] = useState<Record<string, boolean>>({});
 
+  // WhatsApp contact handler
+  const handleClick = () => {
+    const phoneNumber = '5541988003278';
+    const message = '¡Hola! Me gustaría saber de los planes cde PideAI';
+    const encodedMessage = encodeURIComponent(message);
+    const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
+    window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
+  };
+
   // Track pricing section view
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -199,7 +208,7 @@ export const PricingSection = () => {
                     is_popular: plan.popular,
                     is_free: plan.isFree,
                   });
-                  navigate('/create-store', { state: { selectedPlanId: plan.planId } });
+                  navigate('/auth?mode=signup', { state: { selectedPlanId: plan.planId } });
                 }}
                 aria-label={`${plan.cta} - Plan ${plan.name} ${plan.price}${plan.period}`}
               >
@@ -224,7 +233,7 @@ export const PricingSection = () => {
                 track('custom_plan_requested', {
                   location: 'pricing_section',
                 });
-                navigate('/auth?mode=signup');
+                handleClick();
               }}
               className="text-primary font-semibold hover:underline"
             >
