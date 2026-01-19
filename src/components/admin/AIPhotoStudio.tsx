@@ -437,7 +437,7 @@ export const AIPhotoStudio = ({ open, onOpenChange, menuItem, onImageUpdated }: 
                             <Share2 className="w-5 h-5 text-primary" />
                             <span className="text-xs text-primary">Compartir</span>
                           </Button>
-                          {/* <Button
+                          <Button
                             size="sm"
                             variant="secondary"
                             onClick={handleApply}
@@ -451,7 +451,7 @@ export const AIPhotoStudio = ({ open, onOpenChange, menuItem, onImageUpdated }: 
                               <ArrowUpFromLine className="w-5 h-5" />
                             )}
                             <span className="text-xs">Usar</span>
-                          </Button> */}
+                          </Button>
                         </div>
                       </>
                     ) : (
