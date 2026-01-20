@@ -38,8 +38,10 @@ export interface PostHogDashboardData {
 /**
  * Hook to fetch real PostHog metrics using the Query API
  * This replaces the old sessionStorage-based approach with real data from PostHog
+ * @param days - Number of days to look back (default: 30)
+ * @param storeId - Optional store ID to filter by (for multi-tenant). If null, returns global metrics.
  */
-export const usePostHogMetrics = (days: number = 30): PostHogDashboardData => {
+export const usePostHogMetrics = (days: number = 30, storeId?: string | null): PostHogDashboardData => {
   // Check if PostHog API is configured
   const isConfigured = isPostHogAPIConfigured();
 
@@ -49,8 +51,8 @@ export const usePostHogMetrics = (days: number = 30): PostHogDashboardData => {
     isLoading: metricsLoading,
     error: metricsError,
   } = useQuery<DashboardMetrics>({
-    queryKey: ['posthog-dashboard-metrics', days],
-    queryFn: () => getDashboardMetrics(days),
+    queryKey: ['posthog-dashboard-metrics', days, storeId],
+    queryFn: () => getDashboardMetrics(days, storeId),
     enabled: isConfigured,
     staleTime: 5 * 60 * 1000, // 5 minutes
     refetchInterval: 5 * 60 * 1000, // Refetch every 5 minutes
@@ -63,8 +65,8 @@ export const usePostHogMetrics = (days: number = 30): PostHogDashboardData => {
     isLoading: eventsLoading,
     error: eventsError,
   } = useQuery<TopEvent[]>({
-    queryKey: ['posthog-top-events', days],
-    queryFn: () => getTopEvents(days, 10),
+    queryKey: ['posthog-top-events', days, storeId],
+    queryFn: () => getTopEvents(days, 10, storeId),
     enabled: isConfigured,
     staleTime: 5 * 60 * 1000,
     refetchInterval: 5 * 60 * 1000,
@@ -77,8 +79,8 @@ export const usePostHogMetrics = (days: number = 30): PostHogDashboardData => {
     isLoading: funnelLoading,
     error: funnelError,
   } = useQuery<FunnelStep[]>({
-    queryKey: ['posthog-conversion-funnel', days],
-    queryFn: () => getLandingConversionFunnel(days),
+    queryKey: ['posthog-conversion-funnel', days, storeId],
+    queryFn: () => getLandingConversionFunnel(days, storeId),
     enabled: isConfigured,
     staleTime: 5 * 60 * 1000,
     refetchInterval: 5 * 60 * 1000,

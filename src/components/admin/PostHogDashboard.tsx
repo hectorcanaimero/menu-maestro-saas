@@ -134,8 +134,13 @@ const ExperimentCard = ({ name, status, variants, winner, significance }: Experi
   );
 };
 
-export const PostHogDashboard = () => {
-  const { metrics, funnelSteps, topEvents, isLoading, error } = usePostHogMetrics();
+interface PostHogDashboardProps {
+  storeId?: string | null;
+  days?: number;
+}
+
+export const PostHogDashboard = ({ storeId, days = 30 }: PostHogDashboardProps = {}) => {
+  const { metrics, funnelSteps, topEvents, isLoading, error } = usePostHogMetrics(days, storeId);
 
   const experiments: ExperimentCardProps[] = [
     {

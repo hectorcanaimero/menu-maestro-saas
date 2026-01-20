@@ -462,8 +462,9 @@ export interface DashboardMetrics {
 /**
  * Get real dashboard metrics from PostHog
  * @param days - Number of days to look back (default: 30)
+ * @param storeId - Optional store ID to filter by (for multi-tenant). If null, returns global metrics.
  */
-export async function getDashboardMetrics(days: number = 30): Promise<DashboardMetrics> {
+export async function getDashboardMetrics(days: number = 30, storeId?: string | null): Promise<DashboardMetrics> {
   if (!POSTHOG_API_KEY) {
     console.warn('[PostHog API] No API key configured for dashboard metrics');
     return {
@@ -478,9 +479,12 @@ export async function getDashboardMetrics(days: number = 30): Promise<DashboardM
     };
   }
 
+  // Build WHERE clause with optional store filter
+  const storeFilter = storeId ? `AND properties.store_id = '${storeId}'` : '';
+
   const query = `
     SELECT
-      countIf(event = '$pageview') as page_views,
+      countIf(event = '$pageview' OR event = 'catalog_page_view') as page_views,
       count(DISTINCT person_id) as unique_visitors,
       countIf(event = 'whatsapp_widget_clicked') as whatsapp_clicks,
       countIf(event = 'pricing_section_viewed') as pricing_views,
@@ -489,6 +493,7 @@ export async function getDashboardMetrics(days: number = 30): Promise<DashboardM
       avg(toFloat(properties.$session_duration)) as avg_session_duration
     FROM events
     WHERE timestamp >= now() - INTERVAL ${days} DAY
+    ${storeFilter}
   `;
 
   const response = await executeHogQLQuery(query);
@@ -546,12 +551,16 @@ export interface TopEvent {
  * Get top events from PostHog
  * @param days - Number of days to look back (default: 30)
  * @param limit - Maximum number of events to return (default: 10)
+ * @param storeId - Optional store ID to filter by (for multi-tenant). If null, returns global events.
  */
-export async function getTopEvents(days: number = 30, limit: number = 10): Promise<TopEvent[]> {
+export async function getTopEvents(days: number = 30, limit: number = 10, storeId?: string | null): Promise<TopEvent[]> {
   if (!POSTHOG_API_KEY) {
     console.warn('[PostHog API] No API key configured for top events');
     return [];
   }
+
+  // Build WHERE clause with optional store filter
+  const storeFilter = storeId ? `AND properties.store_id = '${storeId}'` : '';
 
   const query = `
     SELECT
@@ -560,6 +569,7 @@ export async function getTopEvents(days: number = 30, limit: number = 10): Promi
     FROM events
     WHERE timestamp >= now() - INTERVAL ${days} DAY
       AND event NOT LIKE '$%'
+      ${storeFilter}
     GROUP BY event
     ORDER BY event_count DESC
     LIMIT ${limit}
@@ -587,22 +597,27 @@ export interface FunnelStep {
 /**
  * Get landing page conversion funnel data from PostHog
  * @param days - Number of days to look back (default: 30)
+ * @param storeId - Optional store ID to filter by (for multi-tenant). If null, returns global funnel.
  */
-export async function getLandingConversionFunnel(days: number = 30): Promise<FunnelStep[]> {
+export async function getLandingConversionFunnel(days: number = 30, storeId?: string | null): Promise<FunnelStep[]> {
   if (!POSTHOG_API_KEY) {
     console.warn('[PostHog API] No API key configured for conversion funnel');
     return [];
   }
 
+  // Build WHERE clause with optional store filter
+  const storeFilter = storeId ? `AND properties.store_id = '${storeId}'` : '';
+
   const query = `
     SELECT
-      countIf(event = 'landing_page_viewed' OR event = '$pageview') as landing_views,
-      countIf(event = 'pricing_section_viewed') as pricing_views,
-      countIf(event = 'hero_cta_clicked' OR event = 'pricing_plan_clicked') as cta_clicks,
+      countIf(event = 'landing_page_viewed' OR event = '$pageview' OR event = 'catalog_page_view') as landing_views,
+      countIf(event = 'pricing_section_viewed' OR event = 'add_to_cart') as pricing_views,
+      countIf(event = 'hero_cta_clicked' OR event = 'pricing_plan_clicked' OR event = 'checkout_started') as cta_clicks,
       countIf(event = 'signup_started') as signup_started,
-      countIf(event = 'pricing_plan_clicked') as signup_completed
+      countIf(event = 'pricing_plan_clicked' OR event = 'order_completed') as signup_completed
     FROM events
     WHERE timestamp >= now() - INTERVAL ${days} DAY
+    ${storeFilter}
   `;
 
   const response = await executeHogQLQuery(query);
