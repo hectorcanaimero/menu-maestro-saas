@@ -1,4 +1,4 @@
-import { ShoppingCart, Plus, Minus, Trash2, X } from 'lucide-react';
+import { ShoppingCart, Plus, Minus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
@@ -6,7 +6,6 @@ import { useCart } from '@/contexts/CartContext';
 import { useNavigate } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 import { useCartTotals } from '@/hooks/useCartTotals';
-import { useFormatPrice } from '@/lib/priceFormatter';
 import { useStore } from '@/contexts/StoreContext';
 import { useStoreStatus } from '@/hooks/useStoreStatus';
 import { StoreClosedDialog } from '@/components/catalog/StoreClosedDialog';
@@ -18,7 +17,6 @@ export const CartSheet = () => {
   const { originalTotal, discountedTotal, totalSavings } = useCartTotals(items);
   const { store } = useStore();
   const navigate = useNavigate();
-  const formatPrice = useFormatPrice();
   const { status: storeStatus } = useStoreStatus(store?.id, store?.force_status || null);
   const [showClosedDialog, setShowClosedDialog] = useState(false);
 
@@ -69,7 +67,7 @@ export const CartSheet = () => {
           <SheetTitle>Carrito de Compras</SheetTitle>
         </SheetHeader>
 
-        <div className="mt-8 flex flex-col">
+        <div className="mt-8 flex flex-col h-[calc(100vh-8rem)]">
           {items.length === 0 ? (
             <div className="flex-1 flex flex-col items-center justify-center text-center py-12">
               <ShoppingCart className="w-16 h-16 text-muted-foreground mb-4" />
@@ -78,39 +76,8 @@ export const CartSheet = () => {
             </div>
           ) : (
             <>
-              <div className="space-y-2 mb-4 p-4 rounded-lg border bg-card">
-                {totalSavings > 0 && (
-                  <>
-                    <div className="flex justify-between items-center gap-4 text-sm">
-                      <span className="text-muted-foreground">Subtotal:</span>
-                      <span className="line-through text-muted-foreground flex-shrink-0">
-                        <DualPrice price={originalTotal} size="sm" />
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center gap-4 text-sm">
-                      <span className="text-green-600">Descuento:</span>
-                      <span className="text-green-600 flex-shrink-0">
-                        -<DualPrice price={totalSavings} size="sm" />
-                      </span>
-                    </div>
-                  </>
-                )}
-                <div className="flex justify-between items-center gap-4 text-lg font-bold">
-                  <span>Total:</span>
-                  <span className="flex-shrink-0">
-                    <DualPrice
-                      price={discountedTotal}
-                      size="sm"
-                      style={{ color: `hsl(var(--price-color, var(--primary)))` }}
-                    />
-                  </span>
-                </div>
-              </div>
-              <Button className="w-full" size="lg" onClick={handleCheckout}>
-                Realizar Pedido
-              </Button>
-              <div className="border-t pt-4 mt-4 space-y-4"></div>
-              <div className="flex-1 overflow-y-auto space-y-4 pr-2">
+              {/* Lista de items con scroll */}
+              <div className="flex-1 overflow-y-auto space-y-4 pr-2 mb-4">
                 {items.map((item) => (
                   <div key={item.cartItemId || item.id} className="p-4 rounded-lg border bg-card">
                     <div className="flex gap-4">
@@ -194,6 +161,41 @@ export const CartSheet = () => {
                     )}
                   </div>
                 ))}
+              </div>
+
+              {/* Resumen y botón de checkout - siempre visible al final */}
+              <div className="border-t pt-4 space-y-4">
+                <div className="space-y-2 p-4 rounded-lg border bg-card">
+                  {totalSavings > 0 && (
+                    <>
+                      <div className="flex justify-between items-center gap-4 text-sm">
+                        <span className="text-muted-foreground">Subtotal:</span>
+                        <span className="line-through text-muted-foreground flex-shrink-0">
+                          <DualPrice price={originalTotal} size="sm" />
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center gap-4 text-sm">
+                        <span className="text-green-600">Descuento:</span>
+                        <span className="text-green-600 flex-shrink-0">
+                          -<DualPrice price={totalSavings} size="sm" />
+                        </span>
+                      </div>
+                    </>
+                  )}
+                  <div className="flex justify-between items-center gap-4 text-lg font-bold">
+                    <span>Total:</span>
+                    <span className="flex-shrink-0">
+                      <DualPrice
+                        price={discountedTotal}
+                        size="sm"
+                        style={{ color: `hsl(var(--price-color, var(--primary)))` }}
+                      />
+                    </span>
+                  </div>
+                </div>
+                <Button className="w-full" size="lg" onClick={handleCheckout}>
+                  Realizar Pedido
+                </Button>
               </div>
             </>
           )}
