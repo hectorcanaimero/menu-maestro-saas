@@ -132,6 +132,10 @@ const ConfirmOrder = () => {
 
         setTimeout(() => {
           redirectToWhatsApp(result.whatsappNumber!, result.whatsappMessage!);
+          // Navigate back to home after WhatsApp redirect
+          setTimeout(() => {
+            navigate('/');
+          }, 500);
         }, 1500);
         return;
       }

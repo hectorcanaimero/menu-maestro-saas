@@ -760,42 +760,48 @@ const Checkout = () => {
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Barrio *</FormLabel>
-                          <Select onValueChange={field.onChange} value={field.value}>
+                          {store?.delivery_price_mode === 'fixed' ? (
                             <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Selecciona tu barrio" />
-                              </SelectTrigger>
+                              <Input {...field} placeholder="Ingresa tu barrio" />
                             </FormControl>
-                            <SelectContent>
-                              {deliveryZones.map((zone) => {
-                                // Calculate if this zone would have free delivery
-                                const zoneFreeDelivery =
-                                  store?.free_delivery_enabled === true && zone.free_delivery_enabled === true;
-                                const freeDeliveryThreshold =
-                                  zone.free_delivery_min_amount ?? store?.global_free_delivery_min_amount;
-                                const wouldBeFree =
-                                  zoneFreeDelivery && freeDeliveryThreshold && discountedTotal >= freeDeliveryThreshold;
+                          ) : (
+                            <Select onValueChange={field.onChange} value={field.value}>
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Selecciona tu barrio" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {deliveryZones.map((zone) => {
+                                  // Calculate if this zone would have free delivery
+                                  const zoneFreeDelivery =
+                                    store?.free_delivery_enabled === true && zone.free_delivery_enabled === true;
+                                  const freeDeliveryThreshold =
+                                    zone.free_delivery_min_amount ?? store?.global_free_delivery_min_amount;
+                                  const wouldBeFree =
+                                    zoneFreeDelivery && freeDeliveryThreshold && discountedTotal >= freeDeliveryThreshold;
 
-                                return (
-                                  <SelectItem key={zone.id} value={zone.zone_name}>
-                                    <div className="flex items-center justify-between w-full gap-2">
-                                      <span>{zone.zone_name}</span>
-                                      {wouldBeFree ? (
-                                        <span className="text-green-600 text-xs font-semibold flex items-center gap-1">
-                                          <Gift className="w-3 h-3" />
-                                          ¡GRATIS!
-                                        </span>
-                                      ) : (
-                                        <span className="text-muted-foreground text-xs">
-                                          {formatPrice(zone.delivery_price).original}
-                                        </span>
-                                      )}
-                                    </div>
-                                  </SelectItem>
-                                );
-                              })}
-                            </SelectContent>
-                          </Select>
+                                  return (
+                                    <SelectItem key={zone.id} value={zone.zone_name}>
+                                      <div className="flex items-center justify-between w-full gap-2">
+                                        <span>{zone.zone_name}</span>
+                                        {wouldBeFree ? (
+                                          <span className="text-green-600 text-xs font-semibold flex items-center gap-1">
+                                            <Gift className="w-3 h-3" />
+                                            ¡GRATIS!
+                                          </span>
+                                        ) : (
+                                          <span className="text-muted-foreground text-xs">
+                                            {formatPrice(zone.delivery_price).original}
+                                          </span>
+                                        )}
+                                      </div>
+                                    </SelectItem>
+                                  );
+                                })}
+                              </SelectContent>
+                            </Select>
+                          )}
                           <FormMessage />
                         </FormItem>
                       )}

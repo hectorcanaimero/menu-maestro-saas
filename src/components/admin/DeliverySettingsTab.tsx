@@ -30,17 +30,7 @@ const deliverySchema = z
     estimated_delivery_time: z
       .string()
       .optional()
-      .refine(
-        (val) => {
-          if (!val || val.trim() === '') return true; // Optional field
-          // Accept formats like: "30-45 min", "1-2 horas", "30 minutos", etc.
-          const validPattern = /^\d+(-\d+)?\s*(min|minutos|hora|horas|minutes|hours)?$/i;
-          return validPattern.test(val.trim());
-        },
-        {
-          message: 'Formato válido: "30-45 min", "1-2 horas", "30 minutos"',
-        },
-      ),
+      .transform((val) => val?.trim() || ''),
     skip_payment_digital_menu: z.boolean().default(false),
     delivery_price_mode: z.enum(['fixed', 'by_zone']).default('fixed'),
     fixed_delivery_price: z.number().min(0).default(0),

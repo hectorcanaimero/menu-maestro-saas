@@ -67,7 +67,7 @@ export const CartSheet = () => {
           <SheetTitle>Carrito de Compras</SheetTitle>
         </SheetHeader>
 
-        <div className="mt-8 flex flex-col h-[calc(100vh-8rem)]">
+        <div className="mt-8 flex flex-col h-[calc(100vh-12rem)]">
           {items.length === 0 ? (
             <div className="flex-1 flex flex-col items-center justify-center text-center py-12">
               <ShoppingCart className="w-16 h-16 text-muted-foreground mb-4" />
