@@ -443,3 +443,221 @@ Note: The API key will be included in your frontend bundle.
 For production, consider using a backend proxy to keep the key secure.
   `.trim();
 }
+
+// ============================================================================
+// DASHBOARD METRICS QUERIES
+// ============================================================================
+
+export interface DashboardMetrics {
+  pageViews: number;
+  uniqueVisitors: number;
+  conversionRate: number;
+  avgSessionDuration: string;
+  whatsappClicks: number;
+  pricingSectionViews: number;
+  planSelections: number;
+  scrollDepth75Plus: number;
+}
+
+/**
+ * Get real dashboard metrics from PostHog
+ * @param days - Number of days to look back (default: 30)
+ */
+export async function getDashboardMetrics(days: number = 30): Promise<DashboardMetrics> {
+  if (!POSTHOG_API_KEY) {
+    console.warn('[PostHog API] No API key configured for dashboard metrics');
+    return {
+      pageViews: 0,
+      uniqueVisitors: 0,
+      conversionRate: 0,
+      avgSessionDuration: '0:00',
+      whatsappClicks: 0,
+      pricingSectionViews: 0,
+      planSelections: 0,
+      scrollDepth75Plus: 0,
+    };
+  }
+
+  const query = `
+    SELECT
+      countIf(event = '$pageview') as page_views,
+      count(DISTINCT person_id) as unique_visitors,
+      countIf(event = 'whatsapp_widget_clicked') as whatsapp_clicks,
+      countIf(event = 'pricing_section_viewed') as pricing_views,
+      countIf(event = 'pricing_plan_clicked') as plan_selections,
+      countIf(event = 'scroll_depth_75' OR event = 'scroll_depth_100') as scroll_depth_75_plus,
+      avg(toFloat(properties.$session_duration)) as avg_session_duration
+    FROM events
+    WHERE timestamp >= now() - INTERVAL ${days} DAY
+  `;
+
+  const response = await executeHogQLQuery(query);
+
+  if (response.error || !response.results || response.results.length === 0) {
+    return {
+      pageViews: 0,
+      uniqueVisitors: 0,
+      conversionRate: 0,
+      avgSessionDuration: '0:00',
+      whatsappClicks: 0,
+      pricingSectionViews: 0,
+      planSelections: 0,
+      scrollDepth75Plus: 0,
+    };
+  }
+
+  const result = response.results[0];
+  const pageViews = result[0] || 0;
+  const uniqueVisitors = result[1] || 0;
+  const whatsappClicks = result[2] || 0;
+  const pricingSectionViews = result[3] || 0;
+  const planSelections = result[4] || 0;
+  const scrollDepth75Plus = result[5] || 0;
+  const avgDuration = result[6] || 0;
+
+  // Calculate conversion rate
+  const conversionRate = uniqueVisitors > 0
+    ? parseFloat(((planSelections / uniqueVisitors) * 100).toFixed(1))
+    : 0;
+
+  // Format session duration
+  const minutes = Math.floor(avgDuration / 60);
+  const seconds = Math.floor(avgDuration % 60);
+  const avgSessionDuration = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+
+  return {
+    pageViews,
+    uniqueVisitors,
+    conversionRate,
+    avgSessionDuration,
+    whatsappClicks,
+    pricingSectionViews,
+    planSelections,
+    scrollDepth75Plus,
+  };
+}
+
+export interface TopEvent {
+  event: string;
+  count: number;
+}
+
+/**
+ * Get top events from PostHog
+ * @param days - Number of days to look back (default: 30)
+ * @param limit - Maximum number of events to return (default: 10)
+ */
+export async function getTopEvents(days: number = 30, limit: number = 10): Promise<TopEvent[]> {
+  if (!POSTHOG_API_KEY) {
+    console.warn('[PostHog API] No API key configured for top events');
+    return [];
+  }
+
+  const query = `
+    SELECT
+      event,
+      count(*) as event_count
+    FROM events
+    WHERE timestamp >= now() - INTERVAL ${days} DAY
+      AND event NOT LIKE '$%'
+    GROUP BY event
+    ORDER BY event_count DESC
+    LIMIT ${limit}
+  `;
+
+  const response = await executeHogQLQuery(query);
+
+  if (response.error || !response.results) {
+    return [];
+  }
+
+  return response.results.map((row) => ({
+    event: row[0] || '',
+    count: row[1] || 0,
+  }));
+}
+
+export interface FunnelStep {
+  name: string;
+  count: number;
+  percentage: number;
+  dropOff?: number;
+}
+
+/**
+ * Get landing page conversion funnel data from PostHog
+ * @param days - Number of days to look back (default: 30)
+ */
+export async function getLandingConversionFunnel(days: number = 30): Promise<FunnelStep[]> {
+  if (!POSTHOG_API_KEY) {
+    console.warn('[PostHog API] No API key configured for conversion funnel');
+    return [];
+  }
+
+  const query = `
+    SELECT
+      countIf(event = 'landing_page_viewed' OR event = '$pageview') as landing_views,
+      countIf(event = 'pricing_section_viewed') as pricing_views,
+      countIf(event = 'hero_cta_clicked' OR event = 'pricing_plan_clicked') as cta_clicks,
+      countIf(event = 'signup_started') as signup_started,
+      countIf(event = 'pricing_plan_clicked') as signup_completed
+    FROM events
+    WHERE timestamp >= now() - INTERVAL ${days} DAY
+  `;
+
+  const response = await executeHogQLQuery(query);
+
+  if (response.error || !response.results || response.results.length === 0) {
+    return [];
+  }
+
+  const result = response.results[0];
+  const landingViews = result[0] || 0;
+  const pricingViews = result[1] || 0;
+  const ctaClicks = result[2] || 0;
+  const signupStarted = result[3] || 0;
+  const signupCompleted = result[4] || 0;
+
+  if (landingViews === 0) {
+    return [];
+  }
+
+  const steps = [
+    {
+      name: 'Landing Page Viewed',
+      count: landingViews,
+      percentage: 100,
+      dropOff: 0,
+    },
+    {
+      name: 'Scrolled to Pricing',
+      count: pricingViews,
+      percentage: (pricingViews / landingViews) * 100,
+      dropOff: 0,
+    },
+    {
+      name: 'CTA Clicked',
+      count: ctaClicks,
+      percentage: (ctaClicks / landingViews) * 100,
+      dropOff: 0,
+    },
+    {
+      name: 'Signup Started',
+      count: signupStarted,
+      percentage: (signupStarted / landingViews) * 100,
+      dropOff: 0,
+    },
+    {
+      name: 'Signup Completed',
+      count: signupCompleted,
+      percentage: (signupCompleted / landingViews) * 100,
+    },
+  ];
+
+  // Calculate drop-offs
+  for (let i = 0; i < steps.length - 1; i++) {
+    steps[i].dropOff = steps[i].percentage - steps[i + 1].percentage;
+  }
+
+  return steps;
+}
