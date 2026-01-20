@@ -93,3 +93,10 @@ jobs:
           echo "✅ Docker image published successfully!"
           echo "📦 Pull command: docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.ref_name }}"
           echo "🔗 View release: ${{ github.server_url }}/${{ github.repository }}/releases/tag/${{ github.ref_name }}"
+          curl -X POST https://webhooks.guria.lat/webhook/aff2fdab-f81b-4031-b145-5f6bccca32cc \
+            -H "Content-Type: application/json" \
+            -d '{
+              "service": "frontend_web",
+              "image": "ghcr.io/${{ github.repository }}",
+              "tag": "${{ github.ref_name }}"
+            }'
