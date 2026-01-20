@@ -25,7 +25,7 @@ dist-ssr
 
 # Production environment variables (with real credentials)
 .env.production
-
+.env
 # Portainer configuration files with secrets
 portainer-build-args.txt
 portainer-build-args.json
