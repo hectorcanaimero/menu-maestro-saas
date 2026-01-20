@@ -111,23 +111,18 @@ const ConfirmOrder = () => {
       // Track order_placed event in PostHog
       // DO NOT send PII (emails, phones, addresses) to PostHog
       try {
-        posthog.capture('order_placed', {
-          store_id: store.id,
-          order_id: result.orderId,
-          order_number: result.orderNumber,
-          order_type: orderData.order_type,
-          order_total: grandTotal,
-          items_count: items.length,
-          total_items: items.reduce((sum, item) => sum + item.quantity, 0),
-          delivery_price: deliveryPrice,
-          coupon_discount: couponDiscount,
-          coupon_code: orderData.coupon_code || null,
-          payment_method: orderData.payment_method || null,
-          // DO NOT send customer_email, customer_phone, or addresses for privacy
-          timestamp: Date.now(),
-        });
+        if (store?.id) {
+          posthog.capture('order_placed', {
+            store_id: store.id,
+            order_id: result.orderId,
+            total: grandTotal,
+            items_count: items.length,
+            order_type: orderData.order_type,
+            payment_method: orderData.payment_method || null,
+          });
+        }
       } catch (error) {
-        throw new Error(error as string | undefined);
+        console.error('[PostHog] Error tracking order_placed:', error);
       }
 
       // Handle WhatsApp redirect if configured

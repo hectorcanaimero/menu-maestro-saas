@@ -46,7 +46,7 @@
     },
     {
       "name": "miguel",
-      "description": "UX Validator & Usability Expert for validating user experience, accessibility (WCAG 2.1), mobile-first design, and providing actionable insights. Analyzes interfaces for usability, consistency, friction points, and performance UX. Automatically validates after UI implementations.",
+      "description": "UX Validator & Usability Expert for validating user experience, accessibility (WCAG 3.0), mobile-first design, and providing actionable insights. Analyzes interfaces for usability, consistency, friction points, and performance UX. Automatically validates after UI implementations.",
       "prompt_file": "prompts/ux-validator-agent.md",
       "tools": ["all"],
       "model": "sonnet"

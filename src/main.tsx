@@ -51,8 +51,8 @@ Sentry.init({
     // Note: Sentry User Feedback widget removed - using Chatwoot for support instead
     // See src/pages/admin/AdminDashboard.tsx for Chatwoot integration
 
-    // Browser Profiling for performance insights
-    Sentry.browserProfilingIntegration(),
+    // Browser Profiling disabled due to Document Policy violation (js-profiling not allowed)
+    // Sentry.browserProfilingIntegration(),
 
     // Additional integrations
     Sentry.browserTracingIntegration({
@@ -66,15 +66,15 @@ Sentry.init({
     }),
   ],
 
-  // Performance Monitoring - Sample 100% in dev, 20% in production
-  tracesSampleRate: import.meta.env.DEV ? 1.0 : 0.2,
+  // Performance Monitoring - Sample 100% in dev, 10% in production (reduced to avoid rate limits)
+  tracesSampleRate: import.meta.env.DEV ? 1.0 : 0.1,
 
-  // Session Replay - Sample 10% of sessions, 100% of error sessions
-  replaysSessionSampleRate: import.meta.env.DEV ? 1.0 : 0.1,
-  replaysOnErrorSampleRate: 1.0,
+  // Session Replay - Sample 5% of sessions, 50% of error sessions (reduced to avoid rate limits)
+  replaysSessionSampleRate: import.meta.env.DEV ? 0.5 : 0.05,
+  replaysOnErrorSampleRate: import.meta.env.DEV ? 1.0 : 0.5,
 
-  // Profiling - Sample 100% in dev, 10% in production
-  profilesSampleRate: import.meta.env.DEV ? 1.0 : 0.1,
+  // Profiling disabled (see browserProfilingIntegration comment above)
+  // profilesSampleRate: import.meta.env.DEV ? 1.0 : 0.1,
 
   // Enhanced error tracking
   beforeSend(event, hint) {
@@ -166,6 +166,7 @@ if (import.meta.env.VITE_POSTHOG_KEY && import.meta.env.VITE_POSTHOG_HOST) {
 // Initialize Google Analytics 4 (GA4)
 // Only initialize if Measurement ID is set
 if (import.meta.env.VITE_GA4_MEASUREMENT_ID) {
+  console.log(import.meta.env.VITE_GA4_MEASUREMENT_ID);
   try {
     ReactGA.initialize(import.meta.env.VITE_GA4_MEASUREMENT_ID, {
       // Configuration options

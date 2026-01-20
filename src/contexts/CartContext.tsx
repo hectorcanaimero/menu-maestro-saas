@@ -135,22 +135,22 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
             ? currentCartValue + totalPrice // Add one more unit of existing item
             : currentCartValue + newItemValue; // Add new item
 
-          posthog.capture('product_added_to_cart', {
-            store_id: store?.id,
-            product_id: item.id,
-            product_name: item.name,
-            product_price: item.price,
-            extras_count: item.extras?.length || 0,
-            extras_price: extrasPrice,
-            total_price: totalPrice,
-            category_id: item.categoryId,
-            has_extras: (item.extras?.length || 0) > 0,
-            quantity: existing ? existing.quantity + 1 : 1,
-            cart_value: updatedCartValue,
-            items_in_cart: existing ? current.length : current.length + 1,
-          });
+          if (store?.id) {
+            posthog.capture('product_added_to_cart', {
+              store_id: store.id,
+              product_id: item.id,
+              product_name: item.name,
+              quantity: existing ? existing.quantity + 1 : 1,
+              price: item.price,
+              extras_count: item.extras?.length || 0,
+              extras_price: extrasPrice,
+              total_price: totalPrice,
+              cart_total: updatedCartValue,
+              store_name: store.name,
+            });
+          }
         } catch (error) {
-          return error;
+          console.error('[PostHog] Error tracking product_added_to_cart:', error);
         }
 
         // Track in Sentry with breadcrumb

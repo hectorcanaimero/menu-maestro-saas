@@ -6,11 +6,11 @@
  */
 
 const POSTHOG_HOST = 'https://us.i.posthog.com';
-const POSTHOG_PROJECT_ID = '185811';
+const POSTHOG_PROJECT_ID = '88656';
 
 // For development/testing - In production, this should come from env vars
 // IMPORTANT: Create a Personal API Key in PostHog: Settings → Personal API Keys
-const POSTHOG_API_KEY = import.meta.env.VITE_POSTHOG_API_KEY || '';
+const POSTHOG_API_KEY = 'phx_16x7TW0fLnXTb8ZiFlTARezulgMiA0g4y2hzcedSVitifelF';
 
 interface PostHogQueryResponse {
   results: any[];
@@ -234,8 +234,8 @@ export async function getAbandonedCartStats(
     )
     SELECT
       count(DISTINCT c.person_id) as total_abandoned,
-      sum(c.cart_value) as total_value,
-      avg(c.cart_value) as avg_cart_value,
+      sum(toFloat(c.cart_value)) as total_value,
+      avg(toFloat(c.cart_value)) as avg_cart_value,
       count(DISTINCT o.person_id) * 100.0 / count(DISTINCT c.person_id) as recovery_rate
     FROM cart_events c
     LEFT JOIN completed_orders o ON c.person_id = o.person_id

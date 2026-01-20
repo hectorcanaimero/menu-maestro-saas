@@ -490,6 +490,22 @@ const Checkout = () => {
         coupon_id: appliedCoupon?.id || null,
       };
 
+      // Track checkout started in PostHog
+      try {
+        if (store?.id) {
+          posthog.capture('checkout_started', {
+            store_id: store.id,
+            cart_total: grandTotal,
+            items_count: items.length,
+            order_type: orderType,
+            has_delivery_address: orderType === 'delivery',
+            payment_method: formData.payment_method,
+          });
+        }
+      } catch (error) {
+        console.error('[PostHog] Error tracking checkout_started:', error);
+      }
+
       // Pass order data through navigation state instead of sessionStorage (security)
       navigate('/confirm-order', { state: { orderData } });
     } catch (error) {

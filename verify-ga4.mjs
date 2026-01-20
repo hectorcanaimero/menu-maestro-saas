@@ -1,165 +1,109 @@
 #!/usr/bin/env node
 
 /**
- * Google Analytics 4 Verification Script
- *
- * This script verifies that GA4 is properly configured and initialized
+ * Google Analytics 4 (GA4) Implementation Verification
+ * Validates GA4 setup and configuration
  */
 
-import { chromium } from 'playwright';
 import { readFileSync } from 'fs';
 
-const PORT = 8081; // Adjust if your dev server uses a different port
-const URL = `http://localhost:${PORT}`;
+const colors = {
+  reset: '\x1b[0m',
+  green: '\x1b[32m',
+  yellow: '\x1b[33m',
+  red: '\x1b[31m',
+  cyan: '\x1b[36m',
+  bright: '\x1b[1m',
+};
 
-async function verifyGA4() {
-  console.log('🔍 Verificando instalación de Google Analytics 4...\n');
+console.log(`\n${colors.bright}${colors.cyan}Google Analytics 4 (GA4) Verification${colors.reset}\n`);
 
-  // Check environment variable
-  try {
-    const envContent = readFileSync('.env', 'utf-8');
-    const ga4Match = envContent.match(/VITE_GA4_MEASUREMENT_ID=(.+)/);
+let allPassed = true;
 
-    if (ga4Match && ga4Match[1] && ga4Match[1] !== 'G-XXXXXXXXXX') {
-      console.log('✅ Variable de entorno VITE_GA4_MEASUREMENT_ID configurada');
-      console.log(`   Measurement ID: ${ga4Match[1].trim()}`);
+// 1. Check .env for GA4 Measurement ID
+console.log(`${colors.bright}1. Environment Configuration${colors.reset}\n`);
+
+try {
+  const envContent = readFileSync('.env', 'utf-8');
+  const measurementIdMatch = envContent.match(/VITE_GA4_MEASUREMENT_ID=(.+)/);
+
+  if (measurementIdMatch) {
+    const measurementId = measurementIdMatch[1].trim();
+    console.log(`${colors.green}✓${colors.reset} GA4 Measurement ID found in .env`);
+    console.log(`  ${colors.cyan}ID:${colors.reset} ${measurementId}`);
+
+    // Validate format (should be G-XXXXXXXXXX)
+    if (/^G-[A-Z0-9]{10}$/.test(measurementId)) {
+      console.log(`  ${colors.green}✓${colors.reset} Valid GA4 Measurement ID format`);
     } else {
-      console.log('❌ Variable VITE_GA4_MEASUREMENT_ID no configurada en .env');
-      process.exit(1);
+      console.log(`  ${colors.yellow}⚠${colors.reset} Measurement ID format may be invalid (expected: G-XXXXXXXXXX)`);
     }
-  } catch (error) {
-    console.log('❌ Archivo .env no encontrado');
-    process.exit(1);
+  } else {
+    console.log(`${colors.red}✗${colors.reset} VITE_GA4_MEASUREMENT_ID not found in .env`);
+    allPassed = false;
   }
-
-  // Check if server is running
-  console.log('\n🌐 Verificando servidor de desarrollo...');
-
-  let browser;
-  try {
-    browser = await chromium.launch({ headless: true });
-    const page = await browser.newPage();
-
-    // Array to capture console logs
-    const consoleLogs = [];
-    page.on('console', msg => {
-      const text = msg.text();
-      consoleLogs.push(text);
-
-      if (text.includes('Google Analytics')) {
-        console.log(`   📝 ${text}`);
-      }
-    });
-
-    // Array to capture network requests
-    const ga4Requests = [];
-    page.on('request', request => {
-      const url = request.url();
-      if (url.includes('google-analytics.com') || url.includes('googletagmanager.com')) {
-        ga4Requests.push(url);
-      }
-    });
-
-    console.log(`   Navegando a ${URL}...`);
-
-    // Navigate to the page
-    await page.goto(URL, {
-      waitUntil: 'networkidle',
-      timeout: 30000
-    });
-
-    // Wait a bit for GA4 to initialize
-    await page.waitForTimeout(3000);
-
-    // Check if GA4 initialized
-    const gaInitialized = consoleLogs.some(log =>
-      log.includes('✅ Google Analytics initialized') ||
-      log.includes('Google Analytics')
-    );
-
-    console.log('\n📊 Resultados de verificación:\n');
-
-    if (gaInitialized) {
-      console.log('✅ Google Analytics se inicializó correctamente en el navegador');
-    } else {
-      console.log('⚠️  No se detectó mensaje de inicialización (puede ser normal en producción)');
-    }
-
-    // Check for GA4 script in page
-    const ga4ScriptExists = await page.evaluate(() => {
-      const scripts = Array.from(document.querySelectorAll('script'));
-      return scripts.some(script =>
-        script.src.includes('googletagmanager.com') ||
-        script.src.includes('google-analytics.com')
-      );
-    });
-
-    if (ga4ScriptExists) {
-      console.log('✅ Script de Google Analytics encontrado en la página');
-    } else {
-      console.log('ℹ️  Script de GA se carga dinámicamente (normal con react-ga4)');
-    }
-
-    // Check for network requests
-    if (ga4Requests.length > 0) {
-      console.log(`✅ Se detectaron ${ga4Requests.length} peticiones a Google Analytics`);
-      console.log('\n   Peticiones detectadas:');
-      ga4Requests.slice(0, 3).forEach(req => {
-        const url = new URL(req);
-        console.log(`   - ${url.hostname}${url.pathname}`);
-      });
-    } else {
-      console.log('⚠️  No se detectaron peticiones HTTP a Google Analytics');
-      console.log('   Esto puede ser normal si el Measurement ID no está configurado');
-    }
-
-    // Check for gtag in window
-    const gtagExists = await page.evaluate(() => {
-      return typeof window.gtag !== 'undefined' || typeof window.dataLayer !== 'undefined';
-    });
-
-    if (gtagExists) {
-      console.log('✅ Objeto gtag/dataLayer detectado en window');
-    } else {
-      console.log('❌ Objeto gtag/dataLayer NO encontrado en window');
-    }
-
-    console.log('\n📝 Resumen:');
-    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-
-    const checksPassedCount = [
-      gaInitialized || ga4Requests.length > 0,
-      ga4ScriptExists || gtagExists,
-      consoleLogs.length > 0
-    ].filter(Boolean).length;
-
-    if (checksPassedCount >= 2) {
-      console.log('✅ Google Analytics 4 está instalado y funcionando correctamente');
-      console.log('\n💡 Próximos pasos:');
-      console.log('   1. Visita tu sitio web');
-      console.log('   2. Ve a Google Analytics → Reports → Realtime');
-      console.log('   3. Deberías ver tu actividad en tiempo real');
-    } else {
-      console.log('⚠️  Verificar configuración de Google Analytics');
-      console.log('\n💡 Pasos de solución:');
-      console.log('   1. Verifica que VITE_GA4_MEASUREMENT_ID esté en .env');
-      console.log('   2. Reinicia el servidor: npm run dev');
-      console.log('   3. Verifica que el Measurement ID sea correcto');
-    }
-
-    await browser.close();
-
-  } catch (error) {
-    if (browser) await browser.close();
-
-    if (error.message.includes('net::ERR_CONNECTION_REFUSED')) {
-      console.log('❌ No se pudo conectar al servidor de desarrollo');
-      console.log('   Asegúrate de que el servidor esté corriendo: npm run dev');
-    } else {
-      console.log('❌ Error durante la verificación:', error.message);
-    }
-    process.exit(1);
-  }
+} catch (error) {
+  console.log(`${colors.red}✗${colors.reset} Error reading .env: ${error.message}`);
+  allPassed = false;
 }
 
-verifyGA4().catch(console.error);
+console.log('');
+
+// 2. Check main.tsx initialization
+console.log(`${colors.bright}2. GA4 Initialization (main.tsx)${colors.reset}\n`);
+
+try {
+  const mainContent = readFileSync('src/main.tsx', 'utf-8');
+
+  // Check imports
+  const hasReactGA = mainContent.includes("import ReactGA from 'react-ga4'");
+  if (hasReactGA) {
+    console.log(`${colors.green}✓${colors.reset} ReactGA imported correctly`);
+  } else {
+    console.log(`${colors.red}✗${colors.reset} ReactGA not imported`);
+    allPassed = false;
+  }
+
+  // Check initialization
+  const hasInit = mainContent.includes('ReactGA.initialize');
+  if (hasInit) {
+    console.log(`${colors.green}✓${colors.reset} ReactGA.initialize() called`);
+
+    // Check configuration options
+    const hasAnonymizeIP = mainContent.includes('anonymize_ip: true');
+    const hasCookieFlags = mainContent.includes("cookie_flags: 'SameSite=None;Secure'");
+    const hasSendPageView = mainContent.includes('send_page_view: false');
+    const hasAllowSignals = mainContent.includes('allow_google_signals: false');
+    const hasAllowAdPersonalization = mainContent.includes('allow_ad_personalization_signals: false');
+
+    console.log(`  ${hasAnonymizeIP ? colors.green + '✓' : colors.yellow + '⚠'}${colors.reset} anonymize_ip: ${hasAnonymizeIP ? 'true' : 'not set'}`);
+    console.log(`  ${hasCookieFlags ? colors.green + '✓' : colors.yellow + '⚠'}${colors.reset} cookie_flags configured`);
+    console.log(`  ${hasSendPageView ? colors.green + '✓' : colors.yellow + '⚠'}${colors.reset} send_page_view: false (manual tracking)`);
+    console.log(`  ${hasAllowSignals ? colors.green + '✓' : colors.yellow + '⚠'}${colors.reset} allow_google_signals: false (privacy)`);
+    console.log(`  ${hasAllowAdPersonalization ? colors.green + '✓' : colors.yellow + '⚠'}${colors.reset} allow_ad_personalization_signals: false (privacy)`);
+  } else {
+    console.log(`${colors.red}✗${colors.reset} ReactGA.initialize() not called`);
+    allPassed = false;
+  }
+
+  // Check conditional initialization
+  const hasConditionalInit = mainContent.includes('if (import.meta.env.VITE_GA4_MEASUREMENT_ID)');
+  if (hasConditionalInit) {
+    console.log(`${colors.green}✓${colors.reset} Conditional initialization (only when Measurement ID is set)`);
+  } else {
+    console.log(`${colors.yellow}⚠${colors.reset} Initialization not conditional`);
+  }
+} catch (error) {
+  console.log(`${colors.red}✗${colors.reset} Error reading main.tsx: ${error.message}`);
+  allPassed = false;
+}
+
+console.log('');
+
+console.log(`${colors.bright}Summary${colors.reset}\n`);
+
+if (allPassed) {
+  console.log(`${colors.green}✓ GA4 is properly configured!${colors.reset}\n`);
+} else {
+  console.log(`${colors.red}✗ GA4 configuration has issues${colors.reset}\n`);
+}

@@ -112,7 +112,7 @@ const DashboardStats = () => {
 
   return (
     <div className="space-y-8 sm:space-y-6 mb-6 sm:mb-8">
-      <PostHogCatalogViewsCard />
+
       <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
         {/* Catalog Views Limit Card */}
         <CatalogViewsCard />
@@ -149,6 +149,7 @@ const DashboardStats = () => {
           </CardContent>
         </Card>
       </div>
+      <PostHogCatalogViewsCard />
       <AbandonedCartCard />
       <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-2">
         {stats.topProducts.length > 0 && (

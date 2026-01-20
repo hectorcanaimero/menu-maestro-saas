@@ -22,9 +22,9 @@ export function PostHogCatalogViewsCard() {
   );
 
   // Don't show if catalog mode is disabled
-  if (!isCatalogMode) {
-    return null;
-  }
+  // if (!isCatalogMode) {
+  //   return null;
+  // }
 
   // Show API configuration warning
   if (!isPostHogAPIConfigured()) {

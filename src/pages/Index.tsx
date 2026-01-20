@@ -59,23 +59,24 @@ const Index = () => {
     }
   }, [isCatalogMode, viewLimitStatus, usage]);
 
-  // Track catalog page views when in catalog mode
+  // Track catalog page views (for all stores, not just catalog mode)
   useEffect(() => {
-    // Only track if store is loaded and catalog mode is enabled
-    if (store?.id && isCatalogMode) {
+    // Track when store is loaded
+    if (store?.id) {
       try {
         posthog.capture('catalog_page_view', {
           store_id: store.id,
           store_name: store.name,
-          catalog_mode: true,
-          page_url: window.location.href,
-          timestamp: new Date().toISOString(),
+          subdomain: store.subdomain,
+          catalog_mode: isCatalogMode,
+          pathname: window.location.pathname,
+          url: window.location.href,
         });
       } catch (error) {
-        throw new Error(error as string | undefined);
+        console.error('[PostHog] Error tracking catalog_page_view:', error);
       }
     }
-  }, [store?.id, store?.name, isCatalogMode]);
+  }, [store?.id, store?.name, store?.subdomain, isCatalogMode]);
 
   if (storeLoading) {
     return (
