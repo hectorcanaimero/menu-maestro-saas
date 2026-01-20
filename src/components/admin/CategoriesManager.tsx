@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useStore } from '@/contexts/StoreContext';
+import { useSubscription } from '@/hooks/useSubscription';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -11,6 +12,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { Plus, Pencil, Trash2, Package } from 'lucide-react';
+import { UpgradePlanModal } from './UpgradePlanModal';
 
 interface Category {
   id: string;
@@ -23,10 +25,12 @@ interface Category {
 
 const CategoriesManager = () => {
   const { store } = useStore();
+  const { canAddMore, usage, plan } = useSubscription();
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -93,6 +97,19 @@ const CategoriesManager = () => {
         if (error) throw error;
         toast.success('Categoría actualizada');
       } else {
+        // Validate category limit before creating
+        const canAdd = await canAddMore('max_categories');
+        if (!canAdd) {
+          const limit = plan?.limits?.max_categories;
+          const current = usage?.categories?.current || 0;
+          toast.error(
+            `Has alcanzado el límite de categorías de tu plan (${current}/${limit}). Actualiza tu plan para agregar más.`,
+          );
+          setDialogOpen(false);
+          setShowUpgradeModal(true);
+          return;
+        }
+
         const { error } = await supabase.from('categories').insert([
           {
             store_id: store.id,
@@ -289,6 +306,9 @@ const CategoriesManager = () => {
           </>
         )}
       </CardContent>
+
+      {/* Upgrade Plan Modal */}
+      <UpgradePlanModal open={showUpgradeModal} onOpenChange={setShowUpgradeModal} />
     </Card>
   );
 };

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useStore } from '@/contexts/StoreContext';
+import { useSubscription } from '@/hooks/useSubscription';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -21,6 +22,7 @@ import { QuickEditDialog } from './QuickEditDialog';
 import { ImageSelectorDialog } from './ImageSelectorDialog';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
+import { UpgradePlanModal } from './UpgradePlanModal';
 
 interface MenuItem {
   id: string;
@@ -41,6 +43,7 @@ interface Category {
 
 const MenuItemsManager = () => {
   const { store } = useStore();
+  const { canAddMore, usage, plan } = useSubscription();
   const [items, setItems] = useState<MenuItem[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
@@ -51,6 +54,7 @@ const MenuItemsManager = () => {
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
   const [aiStudioOpen, setAiStudioOpen] = useState(false);
   const [aiStudioItem, setAiStudioItem] = useState<MenuItem | null>(null);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
   // Bulk selection
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
@@ -163,6 +167,19 @@ const MenuItemsManager = () => {
         if (error) throw error;
         toast.success('Producto actualizado');
       } else {
+        // Validate product limit before creating
+        const canAdd = await canAddMore('max_products');
+        if (!canAdd) {
+          const limit = plan?.limits?.max_products;
+          const current = usage?.products?.current || 0;
+          toast.error(
+            `Has alcanzado el límite de productos de tu plan (${current}/${limit}). Actualiza tu plan para agregar más.`,
+          );
+          setDialogOpen(false);
+          setShowUpgradeModal(true);
+          return;
+        }
+
         const { error } = await supabase.from('menu_items').insert([itemData]);
 
         if (error) throw error;
@@ -735,6 +752,9 @@ const MenuItemsManager = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Upgrade Plan Modal */}
+      <UpgradePlanModal open={showUpgradeModal} onOpenChange={setShowUpgradeModal} />
     </>
   );
 };

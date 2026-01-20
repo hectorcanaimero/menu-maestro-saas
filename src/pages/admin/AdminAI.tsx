@@ -310,7 +310,7 @@ const AdminAI = () => {
                 <p className="text-sm text-muted-foreground">Free: 5 · Starter: 10 · Pro: 20 créditos mensuales</p>
               </div>
               <div className="p-4 bg-muted/50 rounded-lg">
-                <h3 className="font-medium mb-2">6 Estilos</h3>
+                <h3 className="font-medium mb-2">7Estilos</h3>
                 <p className="text-sm text-muted-foreground">
                   Realista, Premium, Animado, Minimalista, Fondo Blanco, Dark Mode
                 </p>
