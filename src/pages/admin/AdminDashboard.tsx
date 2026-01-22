@@ -22,7 +22,7 @@ const AdminDashboard = () => {
 
   // Initialize Chatwoot widget for admin support
   const chatwoot = useChatwoot({
-    websiteToken: 'w6ca8SJxutDVrXby1mjDTj5D',
+    websiteToken: '8MgCVv6KwWdwTmsdwcnUuyC5',
     baseUrl: 'https://woot.guria.lat',
     enabled: true,
     position: 'right',
