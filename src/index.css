@@ -160,4 +160,31 @@ All colors MUST be HSL.
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
+
+  /* Show scrollbar on medium screens and above */
+  @media (min-width: 768px) {
+    .md\:scrollbar-default::-webkit-scrollbar {
+      display: block;
+      height: 6px;
+    }
+
+    .md\:scrollbar-default::-webkit-scrollbar-track {
+      background: hsl(var(--muted));
+      border-radius: 3px;
+    }
+
+    .md\:scrollbar-default::-webkit-scrollbar-thumb {
+      background: hsl(var(--border));
+      border-radius: 3px;
+    }
+
+    .md\:scrollbar-default::-webkit-scrollbar-thumb:hover {
+      background: hsl(var(--primary) / 0.5);
+    }
+
+    .md\:scrollbar-default {
+      -ms-overflow-style: auto;
+      scrollbar-width: thin;
+    }
+  }
 }

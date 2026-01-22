@@ -80,7 +80,7 @@ export const CategoriesSection = () => {
   return (
     <section className="sticky top-16 z-40 bg-background border-b border-border py-4">
       <div className="container mx-auto px-4">
-        <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+        <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide md:scrollbar-default">
           <Button
             variant={!selectedCategorySlug && !showFeatured ? "default" : "outline"}
             size="sm"
