@@ -7,7 +7,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { Plus, Trash2, GripVertical } from 'lucide-react';
-import { Facebook, Instagram, Twitter, Youtube, Linkedin, Globe, Phone } from 'lucide-react';
+import { Facebook, Instagram, Twitter, Youtube, Linkedin, Globe, Phone, Map } from 'lucide-react';
 import { FaWhatsapp, FaTelegram, FaTiktok } from 'react-icons/fa6';
 
 interface SocialLink {
@@ -28,6 +28,7 @@ const SOCIAL_PLATFORMS = [
   { value: 'tiktok', label: 'TikTok', icon: FaTiktok },
   { value: 'whatsapp', label: 'WhatsApp', icon: FaWhatsapp },
   { value: 'telegram', label: 'Telegram', icon: FaTelegram },
+  { value: 'maps', label: 'Mapa', icon: Map },
 ];
 
 export const SocialLinksTab = ({ storeId }: SocialLinksTabProps) => {

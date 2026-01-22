@@ -190,7 +190,7 @@ const Auth = () => {
         <Card className="w-full">
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl font-bold text-center">Panel de Administración</CardTitle>
-          <CardDescription className="text-center">Accede para gestionar tu menú de restaurante</CardDescription>
+          <CardDescription className="text-center">Accede para gestionar tu tienda online</CardDescription>
         </CardHeader>
         <CardContent>
           {showTabs ? (

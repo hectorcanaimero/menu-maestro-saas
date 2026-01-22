@@ -26,10 +26,11 @@ import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
 
 const CURRENCIES = [
+  { value: 'EUR', label: 'Euro (EUR)' },
   { value: 'USD', label: 'Dólar Estadounidense (USD)' },
   { value: 'VES', label: 'Bolívar Venezolano (VES)' },
+  // { value: 'PEN', label: 'Sol Peruano (PEN)' },
   // { value: 'BRL', label: 'Real Brasileño (BRL)' },
-  { value: 'EUR', label: 'Euro (EUR)' },
   // { value: 'COP', label: 'Peso Colombiano (COP)' },
   // { value: 'ARS', label: 'Peso Argentino (ARS)' },
   // { value: 'MXN', label: 'Peso Mexicano (MXN)' },
@@ -50,7 +51,7 @@ const storeSettingsSchema = z.object({
   is_food_business: z.boolean().optional(),
   catalog_mode: z.boolean().optional(),
 });
-
+  
 type StoreSettingsForm = z.infer<typeof storeSettingsSchema>;
 
 const StoreSettings = () => {
