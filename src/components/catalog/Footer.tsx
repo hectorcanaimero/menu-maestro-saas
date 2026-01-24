@@ -1,9 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useStore } from '@/contexts/StoreContext';
 import { supabase } from '@/integrations/supabase/client';
-import { Phone, Mail, MapPin, Facebook, Instagram, Twitter, Youtube, Linkedin, Globe } from 'lucide-react';
+import { Facebook, Instagram, Twitter, Youtube, Linkedin, Globe, Map } from 'lucide-react';
 import { FaWhatsapp, FaTelegram, FaTiktok } from 'react-icons/fa6';
-import { unknown } from 'zod';
 
 interface SocialLink {
   id: string;
@@ -22,6 +21,7 @@ const getSocialIcon = (platform: string) => {
     tiktok: FaTiktok,
     whatsapp: FaWhatsapp,
     telegram: FaTelegram,
+    maps: Map,
   };
   return icons[platform] || Globe;
 };
@@ -39,7 +39,7 @@ export const Footer = () => {
         .select('*')
         .eq('store_id', store.id)
         .order('display_order', { ascending: true });
-
+      console.log(data);
       if (data) {
         setSocialLinks(data);
       }
@@ -49,7 +49,6 @@ export const Footer = () => {
   }, [store?.id]);
 
   if (!store) return null;
-
   return (
     <footer className="bg-card border-t mt-8 md:mt-12 spac-y-12 pb-24 md:pb-6">
       <div className="container mx-auto p-4 md:px-6 md:py-10">

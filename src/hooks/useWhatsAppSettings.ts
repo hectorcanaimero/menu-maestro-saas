@@ -13,6 +13,10 @@ export interface WhatsAppSettings {
   trial_ends_at: string | null;
   auto_order_confirmation: boolean;
   auto_order_ready: boolean;
+  auto_order_preparing: boolean;
+  auto_order_out_for_delivery: boolean;
+  auto_order_delivered: boolean;
+  auto_order_cancelled: boolean;
   auto_abandoned_cart: boolean;
   abandoned_cart_delay_minutes: number;
   created_at: string;

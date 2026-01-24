@@ -15,7 +15,10 @@ import {
   PackageCheck,
   ShoppingCart,
   Server,
-  QrCode
+  QrCode,
+  ChefHat,
+  Truck,
+  PackageX
 } from "lucide-react";
 import { useWhatsAppSettings } from "@/hooks/useWhatsAppSettings";
 import { Separator } from "@/components/ui/separator";
@@ -233,6 +236,78 @@ const WhatsAppConfig = () => {
             <Switch
               checked={settings?.auto_order_ready || false}
               onCheckedChange={(checked) => updateSettings({ auto_order_ready: checked })}
+            />
+          </div>
+
+          <Separator />
+
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <ChefHat className="h-5 w-5 text-purple-500" />
+              <div>
+                <p className="font-medium">Pedido en Preparación</p>
+                <p className="text-sm text-muted-foreground">
+                  Notificar cuando el pedido está siendo preparado
+                </p>
+              </div>
+            </div>
+            <Switch
+              checked={settings?.auto_order_preparing || false}
+              onCheckedChange={(checked) => updateSettings({ auto_order_preparing: checked })}
+            />
+          </div>
+
+          <Separator />
+
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Truck className="h-5 w-5 text-indigo-500" />
+              <div>
+                <p className="font-medium">Pedido en Camino</p>
+                <p className="text-sm text-muted-foreground">
+                  Notificar cuando el pedido salió para entrega
+                </p>
+              </div>
+            </div>
+            <Switch
+              checked={settings?.auto_order_out_for_delivery || false}
+              onCheckedChange={(checked) => updateSettings({ auto_order_out_for_delivery: checked })}
+            />
+          </div>
+
+          <Separator />
+
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <CheckCircle2 className="h-5 w-5 text-green-600" />
+              <div>
+                <p className="font-medium">Pedido Entregado</p>
+                <p className="text-sm text-muted-foreground">
+                  Notificar cuando el pedido fue entregado exitosamente
+                </p>
+              </div>
+            </div>
+            <Switch
+              checked={settings?.auto_order_delivered || false}
+              onCheckedChange={(checked) => updateSettings({ auto_order_delivered: checked })}
+            />
+          </div>
+
+          <Separator />
+
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <PackageX className="h-5 w-5 text-red-500" />
+              <div>
+                <p className="font-medium">Pedido Cancelado</p>
+                <p className="text-sm text-muted-foreground">
+                  Notificar cuando un pedido fue cancelado
+                </p>
+              </div>
+            </div>
+            <Switch
+              checked={settings?.auto_order_cancelled || false}
+              onCheckedChange={(checked) => updateSettings({ auto_order_cancelled: checked })}
             />
           </div>
 

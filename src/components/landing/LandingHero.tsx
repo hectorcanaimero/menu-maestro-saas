@@ -70,8 +70,8 @@ export const LandingHero = () => {
               <Button
                 size="lg"
                 variant="outline"
-                // onClick={() => navigate('/auth')}
-                aria-label="Iniciar sesión en tu cuenta existente"
+                onClick={() => window.open('https://www.instagram.com/reel/DTzOsjwjHfX/?utm_source=ig_web_copy_link&igsh=MzRlODBiNWFlZA==', '_blank')}
+                aria-label="Ver cómo funciona - Video demostración"
               >
                 Ver como funciona
               </Button>

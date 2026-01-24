@@ -45,16 +45,19 @@ interface UsageStats {
     current: number;
     limit: number | null;
     unlimited: boolean;
+    has_override?: boolean;
   };
   orders_this_month: {
     current: number;
     limit: number | null;
     unlimited: boolean;
+    has_override?: boolean;
   };
   categories: {
     current: number;
     limit: number | null;
     unlimited: boolean;
+    has_override?: boolean;
   };
   ai_credits: {
     used: number;
@@ -65,9 +68,11 @@ interface UsageStats {
 
 /**
  * Hook principal para gestionar suscripción de la tienda
+ * @param storeIdProp - Optional store ID. If not provided, uses StoreContext
  */
-export function useSubscription() {
+export function useSubscription(storeIdProp?: string) {
   const { store } = useStore();
+  const storeId = storeIdProp || store?.id;
 
   // Obtener suscripción actual
   const {
@@ -75,9 +80,9 @@ export function useSubscription() {
     isLoading: subscriptionLoading,
     refetch: refetchSubscription,
   } = useQuery<Subscription>({
-    queryKey: ['subscription', store?.id],
+    queryKey: ['subscription', storeId],
     queryFn: async () => {
-      if (!store?.id) throw new Error('Store ID not available');
+      if (!storeId) throw new Error('Store ID not available');
 
       const { data, error } = await supabase
         .from('subscriptions')
@@ -85,20 +90,20 @@ export function useSubscription() {
           *,
           subscription_plans(*)
         `)
-        .eq('store_id', store.id)
+        .eq('store_id', storeId)
         .maybeSingle();
 
       if (error) throw error;
 
       // If no subscription exists, return null (will be handled by components)
       if (!data) {
-        console.warn('No subscription found for store:', store.id);
+        console.warn('No subscription found for store:', storeId);
         return null;
       }
 
       return data as Subscription;
     },
-    enabled: !!store?.id,
+    enabled: !!storeId,
   });
 
   // Obtener estadísticas de uso
@@ -107,26 +112,26 @@ export function useSubscription() {
     isLoading: usageLoading,
     refetch: refetchUsage,
   } = useQuery<UsageStats>({
-    queryKey: ['usage-stats', store?.id],
+    queryKey: ['usage-stats', storeId],
     queryFn: async () => {
-      if (!store?.id) throw new Error('Store ID not available');
+      if (!storeId) throw new Error('Store ID not available');
 
       const { data, error } = await supabase.rpc('get_store_usage_stats', {
-        p_store_id: store.id,
+        p_store_id: storeId,
       });
 
       if (error) throw error;
       return data as UsageStats;
     },
-    enabled: !!store?.id,
+    enabled: !!storeId,
   });
 
   // Verificar si puede acceder a un módulo
   const canAccessModule = async (moduleName: 'whatsapp' | 'delivery' | 'ai_enhancement'): Promise<boolean> => {
-    if (!store?.id) return false;
+    if (!storeId) return false;
 
     const { data, error } = await supabase.rpc('has_module_enabled', {
-      p_store_id: store.id,
+      p_store_id: storeId,
       p_module_name: moduleName,
     });
 
@@ -140,10 +145,10 @@ export function useSubscription() {
 
   // Verificar si puede acceder a una feature
   const canAccessFeature = async (featureName: string): Promise<boolean> => {
-    if (!store?.id) return false;
+    if (!storeId) return false;
 
     const { data, error } = await supabase.rpc('has_feature_enabled', {
-      p_store_id: store.id,
+      p_store_id: storeId,
       p_feature_name: featureName,
     });
 
@@ -157,10 +162,10 @@ export function useSubscription() {
 
   // Verificar si puede agregar más items (productos, categorías, etc)
   const canAddMore = async (limitKey: 'max_products' | 'max_categories' | 'max_orders_per_month'): Promise<boolean> => {
-    if (!store?.id) return false;
+    if (!storeId) return false;
 
     const { data, error } = await supabase.rpc('validate_plan_limit', {
-      p_store_id: store.id,
+      p_store_id: storeId,
       p_limit_key: limitKey,
     });
 

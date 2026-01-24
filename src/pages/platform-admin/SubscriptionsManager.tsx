@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Search, Store, Calendar, AlertCircle, CheckCircle, Clock, Ban } from 'lucide-react';
+import { Search, Store, Calendar, AlertCircle, CheckCircle, Clock, Ban, Settings } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
@@ -21,6 +21,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
+import { SubscriptionOverridesManager } from '@/components/admin/SubscriptionOverridesManager';
 
 interface Subscription {
   id: string;
@@ -56,6 +57,8 @@ function SubscriptionsManager() {
   const [selectedSubscription, setSelectedSubscription] = useState<Subscription | null>(null);
   const [showModuleDialog, setShowModuleDialog] = useState(false);
   const [moduleType, setModuleType] = useState<'whatsapp' | 'delivery' | null>(null);
+  const [showOverridesDialog, setShowOverridesDialog] = useState(false);
+  const [overrideStoreId, setOverrideStoreId] = useState<string | null>(null);
 
   // Fetch all subscriptions
   const { data: subscriptions, isLoading } = useQuery({
@@ -170,6 +173,11 @@ function SubscriptionsManager() {
       enable: !currentlyEnabled,
       currentModules: selectedSubscription.enabled_modules || {},
     });
+  };
+
+  const handleManageLimits = (storeId: string) => {
+    setOverrideStoreId(storeId);
+    setShowOverridesDialog(true);
   };
 
   if (isLoading) {
@@ -309,6 +317,18 @@ function SubscriptionsManager() {
                           </div>
                         </div>
                       </div>
+
+                      <div className="flex items-start">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleManageLimits(subscription.store_id)}
+                          className="gap-2"
+                        >
+                          <Settings className="h-4 w-4" />
+                          Límites Personalizados
+                        </Button>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
@@ -354,6 +374,19 @@ function SubscriptionsManager() {
               {toggleModuleMutation.isPending ? 'Procesando...' : 'Confirmar'}
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Subscription Overrides Dialog */}
+      <Dialog open={showOverridesDialog} onOpenChange={setShowOverridesDialog}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Límites Personalizados de Suscripción</DialogTitle>
+            <DialogDescription>
+              Ajusta los límites específicos para esta tienda, sobrescribiendo los límites del plan
+            </DialogDescription>
+          </DialogHeader>
+          {overrideStoreId && <SubscriptionOverridesManager storeId={overrideStoreId} />}
         </DialogContent>
       </Dialog>
     </div>

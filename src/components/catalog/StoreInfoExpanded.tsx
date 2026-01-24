@@ -5,11 +5,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useStoreStatus } from '@/hooks/useStoreStatus';
 import { Badge } from '@/components/ui/badge';
 import {
-  FileText,
+  Map,
   Clock,
-  Phone,
-  Mail,
-  MapPin,
   Facebook,
   Instagram,
   Twitter,
@@ -20,7 +17,7 @@ import {
 import { FaWhatsapp, FaTelegram, FaTiktok } from 'react-icons/fa6';
 
 const getSocialIcon = (platform: string) => {
-  const icons: Record = {
+  const icons: Record<string, any> = {
     facebook: Facebook,
     instagram: Instagram,
     twitter: Twitter,
@@ -29,7 +26,9 @@ const getSocialIcon = (platform: string) => {
     tiktok: FaTiktok,
     whatsapp: FaWhatsapp,
     telegram: FaTelegram,
+    maps: Map
   };
+  console.log(icons);
   return icons[platform] || Globe;
 };
 
