@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import posthog from 'posthog-js';
 import {
   Dialog,
   DialogContent,
@@ -143,7 +144,21 @@ export function PaymentProofUpload({ open, onOpenChange, subscriptionId }: Payme
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      // Track payment_submitted event
+      try {
+        posthog.capture('payment_submitted', {
+          subscription_id: subscriptionId,
+          amount: parseFloat(amount),
+          payment_method: paymentMethods.find((m) => m.id === selectedPaymentMethodId)?.name,
+          has_proof_image: !!paymentProofFile,
+          has_reference_number: !!referenceNumber,
+          timestamp: new Date().toISOString(),
+        });
+      } catch (error) {
+        console.error('[PostHog] Error tracking payment_submitted:', error);
+      }
+
       toast({
         title: 'Comprobante enviado',
         description: 'Tu comprobante de pago ha sido enviado para validación. Te notificaremos cuando sea aprobado.',

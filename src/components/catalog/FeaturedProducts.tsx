@@ -194,6 +194,7 @@ export const FeaturedProducts = () => {
                 description={product.description}
                 layout="grid"
                 categoryId={product.category_id}
+                isAvailable={product.is_available ?? true}
                 index={index}
                 allProducts={featuredProducts.map((p) => ({
                   id: p.id,
@@ -202,6 +203,7 @@ export const FeaturedProducts = () => {
                   image_url: p.image_url,
                   description: p.description,
                   categoryId: p.category_id,
+                  isAvailable: p.is_available ?? true,
                 }))}
               />
             </div>

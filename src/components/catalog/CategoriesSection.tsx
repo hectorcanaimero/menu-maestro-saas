@@ -5,6 +5,7 @@ import { useSearchParams } from "react-router-dom";
 import { useStore } from "@/contexts/StoreContext";
 import { Star } from "lucide-react";
 import { useMemo } from "react";
+import posthog from "posthog-js";
 
 // Helper function to create URL-friendly slugs
 const createSlug = (text: string): string => {
@@ -62,6 +63,22 @@ export const CategoriesSection = () => {
       setSearchParams({});
     } else {
       setSearchParams({ category: slug });
+
+      // Track category_viewed event in PostHog
+      try {
+        if (store?.id) {
+          posthog.capture('category_viewed', {
+            store_id: store.id,
+            store_name: store.name,
+            category_id: categoryId,
+            category_name: categoryName,
+            category_slug: slug,
+            timestamp: new Date().toISOString(),
+          });
+        }
+      } catch (error) {
+        console.error('[PostHog] Error tracking category_viewed:', error);
+      }
     }
   };
 

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import posthog from 'posthog-js';
 import {
   Dialog,
   DialogContent,
@@ -180,6 +181,25 @@ export function UpgradePlanModal({ open, onOpenChange, currentPlanId }: UpgradeP
       return data;
     },
     onSuccess: () => {
+      // Track subscription_upgraded event
+      try {
+        const selectedPlan = plans?.find((p) => p.id === selectedPlanId);
+        if (store?.id && selectedPlan) {
+          posthog.capture('subscription_upgraded', {
+            store_id: store.id,
+            store_name: store.name,
+            new_plan_id: selectedPlanId,
+            new_plan_name: selectedPlan.display_name,
+            new_plan_price: selectedPlan.price_monthly,
+            payment_method: paymentMethods.find((m) => m.id === selectedPaymentMethodId)?.name,
+            has_proof_image: !!paymentProofFile,
+            timestamp: new Date().toISOString(),
+          });
+        }
+      } catch (error) {
+        console.error('[PostHog] Error tracking subscription_upgraded:', error);
+      }
+
       toast({
         title: 'Solicitud enviada',
         description: 'Tu solicitud de upgrade está siendo procesada. Te notificaremos cuando sea aprobada.',

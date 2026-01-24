@@ -132,15 +132,6 @@ export const MenuItemCard = ({
                   <Sparkles className="w-3 h-3" />
                 </Button>
               )}
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => onManageExtras(item)}
-                className="h-8 flex-1"
-              >
-                <Settings className="w-3 h-3 mr-1" />
-                Extras
-              </Button>
 
               {/* Quick Edit Menu */}
               {onQuickEdit && (

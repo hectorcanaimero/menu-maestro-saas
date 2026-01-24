@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import posthog from 'posthog-js';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -107,8 +108,25 @@ function SubscriptionsManager() {
       if (error) throw error;
       return data;
     },
-    onSuccess: (_, variables) => {
+    onSuccess: (data, variables) => {
       const moduleName = variables.module === 'whatsapp' ? 'WhatsApp' : 'Delivery Avanzado (por kilómetro)';
+
+      // Track module toggle event
+      try {
+        if (selectedSubscription) {
+          posthog.capture(variables.enable ? 'module_enabled' : 'module_disabled', {
+            subscription_id: variables.subscriptionId,
+            store_id: selectedSubscription.store_id,
+            store_name: selectedSubscription.stores.name,
+            module_type: variables.module,
+            plan_name: selectedSubscription.subscription_plans.name,
+            timestamp: new Date().toISOString(),
+          });
+        }
+      } catch (error) {
+        console.error('[PostHog] Error tracking module toggle:', error);
+      }
+
       toast({
         title: variables.enable ? 'Módulo habilitado' : 'Módulo deshabilitado',
         description: `El módulo ${moduleName} ha sido ${variables.enable ? 'habilitado' : 'deshabilitado'} exitosamente`,

@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useStore } from '@/contexts/StoreContext';
 import { toast } from 'sonner';
+import posthog from 'posthog-js';
 
 export interface WhatsAppMessage {
   id: string;
@@ -101,7 +102,36 @@ export function useWhatsAppMessages() {
       if (error || !data?.success) {
         console.error('Error sending message:', error || data?.error);
         toast.error(data?.error || 'Error al enviar mensaje');
+
+        // Track failed message
+        try {
+          posthog.capture('whatsapp_message_failed', {
+            store_id: store.id,
+            store_name: store.name,
+            message_type: params.messageType,
+            error: data?.error || 'Unknown error',
+            timestamp: new Date().toISOString(),
+          });
+        } catch (e) {
+          console.error('[PostHog] Error tracking whatsapp_message_failed:', e);
+        }
+
         return false;
+      }
+
+      // Track successful message send
+      try {
+        posthog.capture('whatsapp_message_sent', {
+          store_id: store.id,
+          store_name: store.name,
+          message_type: params.messageType,
+          has_order: !!params.orderId,
+          has_campaign: !!params.campaignId,
+          has_image: !!params.imageUrl,
+          timestamp: new Date().toISOString(),
+        });
+      } catch (e) {
+        console.error('[PostHog] Error tracking whatsapp_message_sent:', e);
       }
 
       toast.success('Mensaje enviado');

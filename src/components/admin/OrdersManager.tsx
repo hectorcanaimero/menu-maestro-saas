@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useStore } from '@/contexts/StoreContext';
+import posthog from 'posthog-js';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -171,9 +172,59 @@ const OrdersManager = () => {
 
   const updateOrderStatus = async (orderId: string, newStatus: string) => {
     try {
+      // Get the order before updating to track the change
+      const order = orders.find((o) => o.id === orderId);
+
       const { error } = await supabase.from('orders').update({ status: newStatus }).eq('id', orderId);
 
       if (error) throw error;
+
+      // Track order status change events in PostHog
+      try {
+        if (store?.id && order) {
+          const eventProperties = {
+            store_id: store.id,
+            store_name: store.name,
+            order_id: orderId,
+            previous_status: order.status,
+            new_status: newStatus,
+            order_type: order.order_type,
+            total_amount: order.total_amount,
+            timestamp: new Date().toISOString(),
+          };
+
+          // Track specific status events
+          switch (newStatus) {
+            case 'confirmed':
+              posthog.capture('order_confirmed', eventProperties);
+              break;
+            case 'preparing':
+              posthog.capture('order_preparing', eventProperties);
+              break;
+            case 'ready':
+              posthog.capture('order_ready', eventProperties);
+              break;
+            case 'out_for_delivery':
+              posthog.capture('order_out_for_delivery', eventProperties);
+              break;
+            case 'delivered':
+              posthog.capture('order_delivered', eventProperties);
+              break;
+            case 'cancelled':
+              posthog.capture('order_cancelled', {
+                ...eventProperties,
+                cancellation_reason: 'manual_by_admin',
+              });
+              break;
+          }
+
+          // Always track generic status change event
+          posthog.capture('order_status_changed', eventProperties);
+        }
+      } catch (trackingError) {
+        console.error('[PostHog] Error tracking order status change:', trackingError);
+      }
+
       toast.success('Estado actualizado');
       fetchOrders();
     } catch (error) {

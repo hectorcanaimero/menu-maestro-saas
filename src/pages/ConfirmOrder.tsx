@@ -97,6 +97,22 @@ const ConfirmOrder = () => {
         return;
       }
 
+      // Check if this is customer's first order (before creating the order)
+      let isFirstOrder = false;
+      try {
+        const { data: previousOrders, error: ordersError } = await supabase
+          .from('orders')
+          .select('id')
+          .eq('customer_id', customerResult.customerId)
+          .eq('store_id', store.id);
+
+        if (!ordersError) {
+          isFirstOrder = !previousOrders || previousOrders.length === 0;
+        }
+      } catch (error) {
+        console.error('Error checking order history:', error);
+      }
+
       // Complete order (create order, items, extras, prepare WhatsApp)
       const result = await completeOrder(
         orderData,
@@ -112,14 +128,40 @@ const ConfirmOrder = () => {
       // DO NOT send PII (emails, phones, addresses) to PostHog
       try {
         if (store?.id) {
-          posthog.capture('order_placed', {
+          const orderProperties = {
             store_id: store.id,
+            store_name: store.name,
             order_id: result.orderId,
+            customer_id: customerResult.customerId,
             total: grandTotal,
             items_count: items.length,
             order_type: orderData.order_type,
+            order_status: 'pending', // New orders start as pending
             payment_method: orderData.payment_method || null,
-          });
+            has_coupon: !!orderData.coupon_code,
+            coupon_discount: couponDiscount || 0,
+            delivery_price: deliveryPrice || 0,
+            subtotal: discountedTotal,
+            is_first_order: isFirstOrder,
+            is_repeat_order: !isFirstOrder,
+            timestamp: new Date().toISOString(),
+          };
+
+          // Track main order_placed event
+          posthog.capture('order_placed', orderProperties);
+
+          // Track customer lifecycle events
+          if (isFirstOrder) {
+            posthog.capture('first_order', {
+              ...orderProperties,
+              customer_acquisition_date: new Date().toISOString(),
+            });
+          } else {
+            posthog.capture('repeat_order', {
+              ...orderProperties,
+              customer_type: 'returning',
+            });
+          }
         }
       } catch (error) {
         console.error('[PostHog] Error tracking order_placed:', error);
@@ -129,6 +171,20 @@ const ConfirmOrder = () => {
       if (result.shouldRedirectToWhatsApp && result.whatsappNumber && result.whatsappMessage) {
         toast.success('¡Pedido realizado! Redirigiendo a WhatsApp...');
         clearCart();
+
+        // Track WhatsApp redirect
+        try {
+          posthog.capture('whatsapp_redirect', {
+            store_id: store.id,
+            store_name: store.name,
+            order_id: result.orderId,
+            order_type: orderData.order_type,
+            total_amount: grandTotal,
+            timestamp: new Date().toISOString(),
+          });
+        } catch (error) {
+          console.error('[PostHog] Error tracking whatsapp_redirect:', error);
+        }
 
         setTimeout(() => {
           redirectToWhatsApp(result.whatsappNumber!, result.whatsappMessage!);

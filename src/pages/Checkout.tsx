@@ -195,13 +195,17 @@ const Checkout = () => {
       try {
         posthog.capture('checkout_started', {
           store_id: store.id,
+          store_name: store.name,
           items_count: items.length,
           total_items: items.reduce((sum, item) => sum + item.quantity, 0),
-          cart_value: discountedTotal,
+          cart_total: discountedTotal,
           order_type: orderType,
+          has_delivery_address: false, // Not yet filled at this stage
+          payment_method: null, // Not yet selected
+          timestamp: new Date().toISOString(),
         });
       } catch (error) {
-        throw new Error('[PostHog] Error tracking checkout_started:' + error);
+        console.error('[PostHog] Error tracking checkout_started:', error);
       }
     }
   }, []); // Only track once on mount
@@ -490,25 +494,47 @@ const Checkout = () => {
         coupon_id: appliedCoupon?.id || null,
       };
 
-      // Track checkout started in PostHog
+      // Track checkout completion in PostHog
       try {
         if (store?.id) {
-          posthog.capture('checkout_started', {
+          posthog.capture('checkout_step_completed', {
             store_id: store.id,
+            store_name: store.name,
+            step: 'final', // All steps completed
             cart_total: grandTotal,
             items_count: items.length,
             order_type: orderType,
             has_delivery_address: orderType === 'delivery',
             payment_method: formData.payment_method,
+            has_coupon: !!appliedCoupon,
+            delivery_price: orderType === 'delivery' ? deliveryPrice : 0,
+            timestamp: new Date().toISOString(),
           });
         }
       } catch (error) {
-        console.error('[PostHog] Error tracking checkout_started:', error);
+        console.error('[PostHog] Error tracking checkout_step_completed:', error);
       }
 
       // Pass order data through navigation state instead of sessionStorage (security)
       navigate('/confirm-order', { state: { orderData } });
     } catch (error) {
+      // Track checkout_error event
+      try {
+        if (store?.id) {
+          posthog.capture('checkout_error', {
+            store_id: store.id,
+            store_name: store.name,
+            step: currentStep,
+            order_type: orderType,
+            error_message: error instanceof Error ? error.message : 'Unknown error',
+            cart_total: grandTotal,
+            timestamp: new Date().toISOString(),
+          });
+        }
+      } catch (e) {
+        console.error('[PostHog] Error tracking checkout_error:', e);
+      }
+
       toast.error('Error al preparar el pedido');
     } finally {
       setLoading(false);
@@ -564,6 +590,23 @@ const Checkout = () => {
       setAppliedCoupon(result.coupon);
       setCouponDiscount(discount);
       toast.success(`¡Cupón aplicado! Ahorraste ${formatPrice(discount).original}`);
+
+      // Track coupon_applied event
+      try {
+        posthog.capture('coupon_applied', {
+          store_id: store.id,
+          store_name: store.name,
+          coupon_code: result.coupon.code,
+          coupon_type: result.coupon.discount_type,
+          discount_value: result.coupon.discount_value,
+          discount_amount: discount,
+          cart_total: discountedTotal,
+          final_total: discountedTotal - discount,
+          timestamp: new Date().toISOString(),
+        });
+      } catch (error) {
+        console.error('[PostHog] Error tracking coupon_applied:', error);
+      }
     } catch (error) {
       setCouponError('Error al validar el cupón');
       toast.error('Error al validar el cupón');

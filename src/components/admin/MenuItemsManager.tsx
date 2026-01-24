@@ -694,17 +694,6 @@ const MenuItemsManager = () => {
                               <Sparkles className="w-4 h-4" />
                             </Button>
                           )}
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => {
-                              setSelectedItem(item);
-                              setExtrasDialogOpen(true);
-                            }}
-                            title="Gestionar extras"
-                          >
-                            <Settings className="w-4 h-4" />
-                          </Button>
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                               <Button variant="ghost" size="icon">

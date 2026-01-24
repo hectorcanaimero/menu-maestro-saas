@@ -12,13 +12,14 @@ import { DualPrice } from '@/components/catalog/DualPrice';
 interface ProductCardProps {
   id: string;
   name: string;
-  catalog_mode: boolean;
+  catalog_mode?: boolean;
   price: number;
   image_url: string | null;
   description?: string | null;
   layout?: 'grid' | 'list';
   compact?: boolean;
   categoryId?: string | null;
+  isAvailable?: boolean;
   index?: number;
   allProducts?: Array<{
     id: string;
@@ -27,6 +28,7 @@ interface ProductCardProps {
     image_url: string | null;
     description?: string | null;
     categoryId?: string | null;
+    isAvailable?: boolean;
   }>;
 }
 
@@ -39,6 +41,7 @@ export const ProductCard = ({
   layout = 'list',
   compact = false,
   categoryId,
+  isAvailable = true,
   index = 0,
   allProducts = [],
 }: ProductCardProps) => {
@@ -53,6 +56,8 @@ export const ProductCard = ({
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.stopPropagation();
+    // Don't navigate if product is not available
+    if (!isAvailable) return;
     // Navigate to product detail page where extras can be selected
     navigate(`/products/${id}`);
   };
@@ -70,7 +75,7 @@ export const ProductCard = ({
     <Card
         className={`group h-full overflow-hidden border border-border/40 hover:border-border hover:shadow-lg transition-all duration-300 bg-card cursor-pointer rounded-lg relative ${
           compact ? 'max-w-[200px]' : ''
-        }`}
+        } ${!isAvailable ? 'opacity-70' : ''}`}
         onClick={() => navigate(`/products/${id}`)}
       >
         <div className={isGridView ? 'flex flex-col h-full' : 'flex flex-col sm:flex-row h-full'}>
@@ -89,12 +94,19 @@ export const ProductCard = ({
                 src={image_url}
                 alt={name}
                 loading="lazy"
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                className={`w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 ${!isAvailable ? 'grayscale' : ''}`}
               />
             ) : (
-              <div className="w-full h-full flex items-center justify-center bg-muted/50">
+              <div className={`w-full h-full flex items-center justify-center bg-muted/50 ${!isAvailable ? 'grayscale' : ''}`}>
                 <Eye className="w-12 h-12 text-muted-foreground/30" />
               </div>
+            )}
+
+            {/* Not Available Badge */}
+            {!isAvailable && (
+              <Badge className="absolute top-2 right-2 bg-gray-600 text-white shadow-md">
+                No disponible
+              </Badge>
             )}
 
             {/* Sale Badge */}
@@ -158,7 +170,7 @@ export const ProductCard = ({
           </div>
 
           {/* Floating Add Button - Touch-friendly on mobile */}
-          {!store?.catalog_mode ? (
+          {!store?.catalog_mode && isAvailable ? (
             <Button
               size="icon"
               onClick={handleAddToCart}

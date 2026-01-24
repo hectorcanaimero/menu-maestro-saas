@@ -15,6 +15,8 @@ import { toast } from 'sonner';
 import { Loader2, Bike, Car, PersonStanding, Truck } from 'lucide-react';
 import { useDrivers } from '@/hooks/useDrivers';
 import { useAssignDriver } from '@/hooks/useDeliveryTracking';
+import posthog from 'posthog-js';
+import { useStore } from '@/contexts/StoreContext';
 
 interface DriverAssignmentDialogProps {
   open: boolean;
@@ -66,6 +68,7 @@ export function DriverAssignmentDialog({
   const [selectedDriverId, setSelectedDriverId] = useState<string>(currentDriverId || '');
   const [isAssigning, setIsAssigning] = useState(false);
 
+  const { store } = useStore();
   const { drivers, isLoading } = useDrivers();
   const { assignDriver } = useAssignDriver();
 
@@ -91,6 +94,25 @@ export function DriverAssignmentDialog({
         undefined, // distance_km - would be calculated
         undefined, // estimated_minutes - would be calculated
       );
+
+      // Track delivery assignment
+      try {
+        const selectedDriver = drivers?.find(d => d.id === selectedDriverId);
+        if (store?.id && selectedDriver) {
+          posthog.capture('delivery_assigned', {
+            store_id: store.id,
+            store_name: store.name,
+            order_id: orderId,
+            driver_id: selectedDriverId,
+            driver_name: selectedDriver.name,
+            vehicle_type: selectedDriver.vehicle_type,
+            is_reassignment: !!currentDriverId,
+            timestamp: new Date().toISOString(),
+          });
+        }
+      } catch (error) {
+        console.error('[PostHog] Error tracking delivery_assigned:', error);
+      }
 
       toast.success('Motorista asignado correctamente');
       onOpenChange(false);

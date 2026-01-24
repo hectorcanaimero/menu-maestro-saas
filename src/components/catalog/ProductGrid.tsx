@@ -107,11 +107,13 @@ export const ProductGrid = () => {
       const from = pageParam * PRODUCTS_PER_PAGE;
       const to = from + PRODUCTS_PER_PAGE - 1;
 
+      // Incluir productos disponibles (is_available = true) y no disponibles (is_available = false)
+      // Excluir productos ocultos (is_available = null)
       let query = supabase
         .from('menu_items')
         .select('*')
         .eq('store_id', store.id)
-        .eq('is_available', true)
+        .not('is_available', 'is', null)
         .range(from, to);
 
       if (showFeatured) {
@@ -302,6 +304,7 @@ export const ProductGrid = () => {
                 description={product.description}
                 layout={viewMode}
                 categoryId={product.category_id}
+                isAvailable={product.is_available ?? true}
                 index={index}
                 allProducts={products.map((p) => ({
                   id: p.id,
@@ -310,6 +313,7 @@ export const ProductGrid = () => {
                   image_url: p.image_url,
                   description: p.description,
                   categoryId: p.category_id,
+                  isAvailable: p.is_available ?? true,
                 }))}
               />
             ))}

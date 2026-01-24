@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import posthog from 'posthog-js';
 import { Header } from '@/components/catalog/Header';
 import { Footer } from '@/components/catalog/Footer';
 import { Button } from '@/components/ui/button';
@@ -69,10 +70,29 @@ export default function ProductDetail() {
 
       setProduct(productData);
       setLoading(false);
+
+      // Track product_viewed event in PostHog
+      try {
+        if (store?.id && productData) {
+          posthog.capture('product_viewed', {
+            store_id: store.id,
+            store_name: store.name,
+            product_id: productData.id,
+            product_name: productData.name,
+            price: productData.price,
+            category_id: productData.category_id,
+            is_available: productData.is_available,
+            has_image: !!productData.image_url,
+            timestamp: new Date().toISOString(),
+          });
+        }
+      } catch (error) {
+        console.error('[PostHog] Error tracking product_viewed:', error);
+      }
     };
 
     fetchProduct();
-  }, [id, navigate]);
+  }, [id, navigate, store]);
 
   const toggleExtra = (groupId: string, extraId: string, isSingle: boolean) => {
     setSelectedExtras((prev) => {
@@ -249,15 +269,20 @@ export default function ProductDetail() {
         <div className="grid md:grid-cols-2 gap-8 lg:gap-12">
           {/* Image Gallery - For now single image, can be enhanced later */}
           <div className="space-y-4">
-            <div className="aspect-square overflow-hidden rounded-lg border border-border bg-muted/30 relative">
+            <div className={`aspect-square overflow-hidden rounded-lg border border-border bg-muted/30 relative ${!product.is_available ? 'opacity-70' : ''}`}>
               {product.image_url ? (
-                <img src={product.image_url} alt={product.name} className="w-full h-full object-cover" />
+                <img src={product.image_url} alt={product.name} className={`w-full h-full object-cover ${!product.is_available ? 'grayscale' : ''}`} />
               ) : (
-                <div className="w-full h-full flex items-center justify-center bg-muted">
+                <div className={`w-full h-full flex items-center justify-center bg-muted ${!product.is_available ? 'grayscale' : ''}`}>
                   <span className="text-muted-foreground">Sin imagen</span>
                 </div>
               )}
-              {bestDeal && (
+              {!product.is_available && (
+                <Badge className="absolute top-3 right-3 bg-gray-600 text-white shadow-md">
+                  No disponible
+                </Badge>
+              )}
+              {bestDeal && product.is_available && (
                 <Badge variant="destructive" className="absolute top-3 left-3 flex items-center gap-1 px-2 py-1">
                   <Tag className="w-3 h-3" />
                   {bestDeal.promotion.type === 'percentage'

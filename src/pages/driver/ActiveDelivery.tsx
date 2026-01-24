@@ -7,6 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
+import posthog from 'posthog-js';
 import {
   ArrowLeft,
   MapPin,
@@ -97,6 +98,35 @@ export default function ActiveDelivery() {
     onSuccess: (_, status) => {
       queryClient.invalidateQueries({ queryKey: ['delivery-assignment', assignmentId] });
       queryClient.invalidateQueries({ queryKey: ['driver-deliveries', driverId] });
+
+      // Track delivery status events
+      try {
+        if (delivery?.orders) {
+          const eventProperties = {
+            assignment_id: assignmentId,
+            order_id: delivery.orders.id,
+            driver_id: driverId,
+            new_status: status,
+            has_photo: !!photo,
+            has_signature: !!signature,
+            has_notes: !!notes,
+            timestamp: new Date().toISOString(),
+          };
+
+          if (status === 'picked_up') {
+            posthog.capture('delivery_picked_up', eventProperties);
+          } else if (status === 'in_transit') {
+            posthog.capture('delivery_in_transit', eventProperties);
+          } else if (status === 'delivered') {
+            posthog.capture('delivery_completed', {
+              ...eventProperties,
+              total_amount: delivery.orders.total_amount,
+            });
+          }
+        }
+      } catch (error) {
+        console.error('[PostHog] Error tracking delivery status:', error);
+      }
 
       if (status === 'delivered') {
         toast.success('¡Entrega completada!');
