@@ -99,7 +99,7 @@ BEGIN
     TRUE,
     NULL,
     p_ip_address,
-    v_user_id
+    NULL  -- p_user_agent (not user_id)
   );
 
   -- Return store data
