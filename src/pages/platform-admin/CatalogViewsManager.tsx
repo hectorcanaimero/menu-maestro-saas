@@ -33,11 +33,14 @@ export default function CatalogViewsManager() {
   const {
     data: stores,
     isLoading,
+    error: queryError,
     refetch,
   } = useQuery({
     queryKey: ['catalog-stores-views'],
     queryFn: async (): Promise<StoreWithViews[]> => {
-      // Get all stores in catalog mode
+      console.log('🔍 Fetching catalog stores...');
+
+      // Get all stores in catalog mode with owner profile
       const { data: catalogStores, error: storesError } = await supabase
         .from('stores')
         .select(
@@ -47,28 +50,43 @@ export default function CatalogViewsManager() {
           subdomain,
           catalog_mode,
           owner_id,
-          users!stores_owner_id_fkey (
+          profiles!stores_owner_id_fkey (
             email
           )
         `,
         )
         .eq('catalog_mode', true);
 
-      if (storesError) throw storesError;
+      if (storesError) {
+        console.error('❌ Error fetching catalog stores:', storesError);
+        throw storesError;
+      }
+
+      console.log(`✅ Found ${catalogStores?.length || 0} stores in catalog mode:`, catalogStores);
+
+      if (!catalogStores || catalogStores.length === 0) {
+        console.log('⚠️ No stores found with catalog_mode = true');
+        return [];
+      }
 
       // For each store, get view limit status
       const storesWithViews = await Promise.all(
         (catalogStores || []).map(async (store) => {
+          console.log(`📊 Checking view limit for store: ${store.name} (${store.id})`);
+
           const { data: limitStatus, error: limitError } = await supabase.rpc('check_catalog_view_limit', {
             p_store_id: store.id,
           });
 
           if (limitError) {
+            console.error(`❌ Error checking limit for ${store.name}:`, limitError);
             return null;
           }
 
+          console.log(`✅ Limit status for ${store.name}:`, limitStatus);
+
           const status = limitStatus as any;
-          const ownerEmail = (store as any).users?.email || 'Unknown';
+          const ownerEmail = (store as any).profiles?.email || 'Unknown';
 
           return {
             id: store.id,
@@ -85,7 +103,10 @@ export default function CatalogViewsManager() {
         }),
       );
 
-      return storesWithViews.filter((s) => s !== null) as StoreWithViews[];
+      const validStores = storesWithViews.filter((s) => s !== null) as StoreWithViews[];
+      console.log(`✅ Successfully processed ${validStores.length} stores:`, validStores);
+
+      return validStores;
     },
   });
 
@@ -204,6 +225,12 @@ export default function CatalogViewsManager() {
           </div>
         </CardHeader>
         <CardContent>
+          {queryError && (
+            <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+              <p className="text-sm text-red-800 font-medium">Error al cargar datos:</p>
+              <p className="text-xs text-red-600 mt-1">{(queryError as Error).message}</p>
+            </div>
+          )}
           {isLoading ? (
             <div className="flex items-center justify-center h-40">
               <RefreshCw className="h-8 w-8 animate-spin text-muted-foreground" />
@@ -288,7 +315,19 @@ export default function CatalogViewsManager() {
           ) : (
             <div className="text-center py-10 text-muted-foreground">
               <Eye className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <p>No hay tiendas en modo catálogo</p>
+              <p className="text-lg font-medium">No hay tiendas en modo catálogo</p>
+              <p className="text-sm mt-2">
+                Para que una tienda aparezca aquí, debe tener <code className="bg-gray-100 px-2 py-1 rounded text-xs">catalog_mode = true</code>
+              </p>
+              <div className="mt-4 text-xs text-left max-w-md mx-auto bg-blue-50 p-4 rounded-lg border border-blue-200">
+                <p className="font-semibold text-blue-900 mb-2">💡 Para habilitar el modo catálogo:</p>
+                <ol className="list-decimal list-inside space-y-1 text-blue-800">
+                  <li>Ve a la configuración de la tienda</li>
+                  <li>Busca "Modo de Operación"</li>
+                  <li>Selecciona "Catálogo Digital"</li>
+                  <li>Guarda los cambios</li>
+                </ol>
+              </div>
             </div>
           )}
         </CardContent>
