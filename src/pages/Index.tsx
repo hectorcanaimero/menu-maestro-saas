@@ -18,7 +18,6 @@ import { isPostHogAPIConfigured } from '@/lib/posthog-api';
 import { isMainDomain } from '@/lib/subdomain-validation';
 import { lazy, Suspense, useEffect, useMemo } from 'react';
 import posthog from 'posthog-js';
-import { supabase } from '@/integrations/supabase/client';
 
 const LandingPage = lazy(() => import('./LandingPage'));
 
@@ -65,7 +64,8 @@ const Index = () => {
     // Track when store is loaded
     if (store?.id) {
       try {
-        // Track in PostHog for analytics
+        // Track in PostHog for analytics and view limits
+        // The platform admin will read from PostHog to check limits
         posthog.capture('catalog_page_view', {
           store_id: store.id,
           store_name: store.name,
@@ -73,18 +73,6 @@ const Index = () => {
           catalog_mode: isCatalogMode,
           pathname: window.location.pathname,
           url: window.location.href,
-        });
-
-        // Increment view count in database (for catalog mode limits)
-        // This only matters for stores in catalog mode, but we track all for consistency
-        supabase.rpc('increment_catalog_view', {
-          p_store_id: store.id,
-        }).then(({ data, error }) => {
-          if (error) {
-            console.error('[DB] Error incrementing catalog view:', error);
-          } else {
-            console.log('[DB] Catalog view incremented. Total this month:', data);
-          }
         });
       } catch (error) {
         console.error('[PostHog] Error tracking catalog_page_view:', error);

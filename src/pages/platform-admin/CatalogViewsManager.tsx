@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Eye, RefreshCw, TrendingUp, AlertTriangle, Store as StoreIcon, Infinity, ExternalLink } from 'lucide-react';
 import { H1, Body } from '@/components/ui/typography';
-import posthog from 'posthog-js';
+import { getCatalogViewsByStore } from '@/lib/posthog-api';
 
 interface StoreWithViews {
   id: string;
@@ -69,37 +69,75 @@ export default function CatalogViewsManager() {
         return [];
       }
 
-      // For each store, get view limit status
+      // For each store, get view stats from PostHog and limits from Supabase
       const storesWithViews = await Promise.all(
         (catalogStores || []).map(async (store) => {
-          console.log(`📊 Checking view limit for store: ${store.name} (${store.id})`);
+          console.log(`📊 Fetching data for store: ${store.name} (${store.id})`);
 
-          const { data: limitStatus, error: limitError } = await supabase.rpc('check_catalog_view_limit', {
-            p_store_id: store.id,
-          });
+          try {
+            // Get current month views from PostHog (last 30 days)
+            const posthogData = await getCatalogViewsByStore(store.id, 30);
+            const currentViews = posthogData.totalViews;
 
-          if (limitError) {
-            console.error(`❌ Error checking limit for ${store.name}:`, limitError);
+            // Get plan limits from Supabase
+            const { data: subscriptionData, error: subError } = await supabase
+              .from('stores')
+              .select(`
+                id,
+                subscriptions!inner (
+                  status,
+                  current_period_end,
+                  subscription_plans!inner (
+                    catalog_view_limit
+                  )
+                )
+              `)
+              .eq('id', store.id)
+              .eq('subscriptions.status', 'active')
+              .single();
+
+            if (subError && subError.code !== 'PGRST116') {
+              // PGRST116 = no rows found (no active subscription)
+              console.warn(`⚠️ Error fetching subscription for ${store.name}:`, subError);
+            }
+
+            // Extract limit from subscription plan (null = unlimited)
+            const limit = subscriptionData?.subscriptions?.subscription_plans?.catalog_view_limit ?? 1000; // Default free tier: 1000
+            const isUnlimited = limit === null || limit === -1;
+
+            // Calculate soft limit (limit + 100 grace views)
+            const softLimit = !isUnlimited ? limit + 100 : null;
+
+            // Calculate percentage
+            let percentage = 0;
+            if (!isUnlimited) {
+              percentage = (currentViews / limit) * 100;
+            }
+
+            // Determine status
+            const softLimitExceeded = !isUnlimited && softLimit !== null && currentViews >= softLimit;
+            const exceeded = !isUnlimited && currentViews >= limit;
+
+            const ownerEmail = (store as any).profiles?.email || 'Unknown';
+
+            console.log(`✅ ${store.name}: ${currentViews} views / ${isUnlimited ? '∞' : limit} limit (${percentage.toFixed(1)}%)`);
+
+            return {
+              id: store.id,
+              name: store.name,
+              subdomain: store.subdomain,
+              owner_email: ownerEmail,
+              current_views: currentViews,
+              view_limit: isUnlimited ? null : limit,
+              percentage,
+              exceeded,
+              is_unlimited: isUnlimited,
+              catalog_mode: store.catalog_mode || false,
+            } as StoreWithViews;
+          } catch (error) {
+            console.error(`❌ Error processing ${store.name}:`, error);
             return null;
           }
-
-          console.log(`✅ Limit status for ${store.name}:`, limitStatus);
-
-          const status = limitStatus as any;
-          const ownerEmail = (store as any).profiles?.email || 'Unknown';
-
-          return {
-            id: store.id,
-            name: store.name,
-            subdomain: store.subdomain,
-            owner_email: ownerEmail,
-            current_views: status.current_views || 0,
-            view_limit: status.limit,
-            percentage: status.percentage || 0,
-            exceeded: status.exceeded || false,
-            is_unlimited: status.is_unlimited || false,
-            catalog_mode: store.catalog_mode || false,
-          } as StoreWithViews;
         }),
       );
 
