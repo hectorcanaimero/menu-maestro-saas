@@ -179,6 +179,9 @@ docker build \
     --build-arg VITE_POSTHOG_KEY="${VITE_POSTHOG_KEY:-}" \
     --build-arg VITE_POSTHOG_HOST="${VITE_POSTHOG_HOST:-}" \
     --build-arg VITE_POSTHOG_PERSONAL_KEY="${VITE_POSTHOG_PERSONAL_KEY:-}" \
+    --build-arg VITE_POSTHOG_API_KEY="${VITE_POSTHOG_API_KEY:-}" \
+    --build-arg VITE_GOOGLE_MAPS="${VITE_GOOGLE_MAPS:-}" \
+    --build-arg VITE_GA4_MEASUREMENT_ID="${VITE_GA4_MEASUREMENT_ID:-}" \
     "$PROJECT_ROOT"
 
 if [ $? -eq 0 ]; then
