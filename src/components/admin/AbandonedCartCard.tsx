@@ -102,19 +102,18 @@ export function AbandonedCartCard() {
     <Card>
       <CardHeader>
         <div className="flex items-center justify-between">
-          <div>
+          <div className="flex-1">
             <CardTitle className="flex items-center gap-2">
               <ShoppingCart className="h-5 w-5" />
               Carritos Abandonados
             </CardTitle>
-            <CardDescription>
-              <div className="mt-4 pt-4 border-t flex items-center justify-between">
-                <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse"></div>
-                  <span>Actualizado automáticamente cada 5 minutos</span>
-                </div>
+            <CardDescription>Análisis de carritos no completados</CardDescription>
+            <div className="mt-4 pt-4 border-t flex items-center justify-between">
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse"></div>
+                <span>Actualizado automáticamente cada 5 minutos</span>
               </div>
-            </CardDescription>
+            </div>
           </div>
           <div className="flex items-center gap-2">
             <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200">

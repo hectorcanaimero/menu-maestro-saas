@@ -131,6 +131,15 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
 
       // Extract subdomain using utility function
       const subdomain = getSubdomainFromHostname();
+
+      // If subdomain is empty, we're on the main domain (www.pideai.com)
+      // Don't try to load a store - just set store to null and finish loading
+      if (!subdomain || subdomain.trim() === '') {
+        setStore(null);
+        setLoading(false);
+        return;
+      }
+
       // Use secure RPC function with rate limiting
       const { data, error } = await supabase.rpc('get_store_by_subdomain_secure', {
         p_subdomain: subdomain,

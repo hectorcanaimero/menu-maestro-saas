@@ -10,7 +10,7 @@ const POSTHOG_PROJECT_ID = '88656';
 
 // For development/testing - In production, this should come from env vars
 // IMPORTANT: Create a Personal API Key in PostHog: Settings → Personal API Keys
-const POSTHOG_API_KEY = import.meta.env.VITE_POSTHOG_API_KEY || import.meta.env.VITE_POSTHOG_PERSONAL_KEY;
+const POSTHOG_API_KEY = import.meta.env.VITE_POSTHOG_PERSONAL_KEY;
 
 interface PostHogQueryResponse {
   results: any[];
