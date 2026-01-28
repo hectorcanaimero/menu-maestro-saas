@@ -149,7 +149,7 @@ export async function createShortUrl(
     const data = await response.json();
 
     return {
-      shortUrl: data.shortUrl,
+      shortUrl: data.shortUrl?.replace(/^http:\/\//, 'https://'),
       shortCode: data.shortCode,
       longUrl: data.longUrl,
       title: data.title,

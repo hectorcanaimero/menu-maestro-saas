@@ -6,7 +6,7 @@
  */
 
 const POSTHOG_HOST = 'https://us.i.posthog.com';
-const POSTHOG_PROJECT_ID = '88656';
+const POSTHOG_PROJECT_ID = import.meta.env.VITE_POSTHOG_PROJECT_ID || '88656';
 
 // For development/testing - In production, this should come from env vars
 // IMPORTANT: Create a Personal API Key in PostHog: Settings → Personal API Keys
@@ -219,7 +219,7 @@ export async function getAbandonedCartStats(
         properties.cart_value as cart_value,
         timestamp
       FROM events
-      WHERE event = 'add_to_cart'
+      WHERE event = 'product_added_to_cart'
         AND properties.store_id = '${storeId}'
         AND timestamp >= now() - INTERVAL ${days} DAY
     ),
@@ -228,7 +228,7 @@ export async function getAbandonedCartStats(
         person_id,
         timestamp
       FROM events
-      WHERE event = 'order_completed'
+      WHERE event = 'order_placed'
         AND properties.store_id = '${storeId}'
         AND timestamp >= now() - INTERVAL ${days} DAY
     )
@@ -291,7 +291,7 @@ export async function getAbandonedCartDetails(
         argMax(properties.cart_value, timestamp) as cart_value,
         argMax(properties.page_url, timestamp) as page_url
       FROM events
-      WHERE event = 'add_to_cart'
+      WHERE event = 'product_added_to_cart'
         AND properties.store_id = '${storeId}'
         AND timestamp >= now() - INTERVAL ${days} DAY
       GROUP BY person_id
@@ -299,7 +299,7 @@ export async function getAbandonedCartDetails(
     completed_orders AS (
       SELECT DISTINCT person_id
       FROM events
-      WHERE event = 'order_completed'
+      WHERE event = 'order_placed'
         AND properties.store_id = '${storeId}'
         AND timestamp >= now() - INTERVAL ${days} DAY
     )
@@ -342,7 +342,7 @@ export interface ConversionFunnelData {
 
 /**
  * Get conversion funnel for a store
- * Steps: catalog_view → add_to_cart → checkout_started → order_completed
+ * Steps: catalog_page_view → product_added_to_cart → checkout_started → order_placed
  */
 export async function getConversionFunnel(
   storeId: string,
@@ -366,7 +366,7 @@ export async function getConversionFunnel(
         2 as step_order,
         count(DISTINCT person_id) as count
       FROM events
-      WHERE event = 'add_to_cart'
+      WHERE event = 'product_added_to_cart'
         AND properties.store_id = '${storeId}'
         AND timestamp >= now() - INTERVAL ${days} DAY
 
@@ -388,7 +388,7 @@ export async function getConversionFunnel(
         4 as step_order,
         count(DISTINCT person_id) as count
       FROM events
-      WHERE event = 'order_completed'
+      WHERE event = 'order_placed'
         AND properties.store_id = '${storeId}'
         AND timestamp >= now() - INTERVAL ${days} DAY
     )
@@ -611,10 +611,10 @@ export async function getLandingConversionFunnel(days: number = 30, storeId?: st
   const query = `
     SELECT
       countIf(event = 'landing_page_viewed' OR event = '$pageview' OR event = 'catalog_page_view') as landing_views,
-      countIf(event = 'pricing_section_viewed' OR event = 'add_to_cart') as pricing_views,
+      countIf(event = 'pricing_section_viewed' OR event = 'product_added_to_cart') as pricing_views,
       countIf(event = 'hero_cta_clicked' OR event = 'pricing_plan_clicked' OR event = 'checkout_started') as cta_clicks,
       countIf(event = 'signup_started') as signup_started,
-      countIf(event = 'pricing_plan_clicked' OR event = 'order_completed') as signup_completed
+      countIf(event = 'pricing_plan_clicked' OR event = 'order_placed') as signup_completed
     FROM events
     WHERE timestamp >= now() - INTERVAL ${days} DAY
     ${storeFilter}

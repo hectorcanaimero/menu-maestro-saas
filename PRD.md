@@ -1,9 +1,9 @@
 # Product Requirements Document (PRD)
 # PideAI - Multi-tenant Food Ordering Platform
 
-**Document Version:** 1.0
-**Date:** December 17, 2025
-**Status:** Active Development
+**Document Version:** 2.0
+**Date:** January 25, 2026
+**Status:** Active Development - v3.0.50
 **Owner:** Product Team
 
 ---
@@ -1249,9 +1249,152 @@ A unified platform that provides:
 - **Priority**: P2 (Medium)
 - **Dependencies**: Documentation content
 
-### 6.17 Security & Privacy
+### 6.17 Platform Administration
 
-#### FR-067: User Authentication
+#### FR-067: Platform Admin Dashboard
+- **Requirement**: Centralized dashboard for platform-wide management
+- **Details**:
+  - Access restricted to platform administrators
+  - Overview of all stores and their statuses
+  - Platform-wide metrics and analytics
+  - Quick access to critical administrative tasks
+  - Real-time monitoring of pending actions
+  - Store subscription status overview
+- **Priority**: P1 (High)
+- **Dependencies**: Admin authentication, store queries
+
+#### FR-068: Payment Validation System
+- **Requirement**: Manual validation workflow for store subscription payments
+- **Details**:
+  - Store owners upload payment proof (bank transfer, mobile payment screenshot)
+  - Payment proofs stored in Supabase Storage bucket
+  - Platform admin reviews pending validations
+  - Admin can view proof image, store details, plan information
+  - Admin approves or rejects with reason
+  - Status options: pending, approved, rejected
+  - Email notification to store owner on status change
+  - Payment history tracking per store
+  - Filter and search validations by status, date, store
+- **Priority**: P1 (High)
+- **Dependencies**: Supabase Storage, email notifications, admin dashboard
+
+#### FR-069: Platform Payment Methods Management
+- **Requirement**: Centralized management of available payment methods
+- **Details**:
+  - Create, edit, delete payment methods at platform level
+  - Payment method details: name, description, instructions, account details
+  - Active/inactive status toggle
+  - Display order management
+  - Payment methods inherited by all stores
+  - Store-specific overrides (if needed)
+  - Support for: bank transfer, mobile payment, cash, credit card
+- **Priority**: P1 (High)
+- **Dependencies**: Database schema, admin interface
+
+#### FR-070: Store Module Override
+- **Requirement**: Platform admin can override module restrictions for specific stores
+- **Details**:
+  - Override subscription limits for special cases
+  - Grant premium features to trial/basic users temporarily
+  - Useful for: promotions, testing, special partnerships
+  - Audit log of all overrides
+  - Expiration date for temporary overrides
+  - Notification to store owner when override applied/removed
+- **Priority**: P2 (Medium)
+- **Dependencies**: Subscription system, admin dashboard
+
+#### FR-071: Subscription Limit Enforcement
+- **Requirement**: Enforce feature limits based on subscription tier
+- **Details**:
+  - Category limits: Free (5), Starter (15), Pro (unlimited)
+  - Product limits: Free (10), Starter (100), Pro (unlimited)
+  - Catalog view limits: Free (50/month), Starter (500/month), Pro (unlimited)
+  - Prevent exceeding limits with clear error messages
+  - Upgrade prompts when limits reached
+  - Real-time limit checking during operations
+  - Display current usage vs limit in admin dashboard
+  - Grace period warnings before hard limits
+- **Priority**: P0 (Critical)
+- **Dependencies**: Subscription system, feature gating
+
+#### FR-072: Platform Analytics Dashboard
+- **Requirement**: Platform-wide analytics for business intelligence
+- **Details**:
+  - Total stores: active, trial, paid, churned
+  - Monthly Recurring Revenue (MRR) tracking
+  - Revenue by plan tier
+  - Total orders across all stores
+  - Top performing stores by revenue/orders
+  - Geographic distribution of stores
+  - Subscription conversion rates
+  - Churn analysis and trends
+  - Feature adoption rates
+  - Platform health metrics (uptime, errors)
+- **Priority**: P2 (Medium)
+- **Dependencies**: Database aggregations, charting library
+
+### 6.18 Infinite Scroll & Performance Optimization
+
+#### FR-073: Product Catalog Infinite Scroll
+- **Requirement**: Implement infinite scroll for better mobile UX
+- **Details**:
+  - Load products in batches of 20-30 items
+  - Trigger next batch load when user scrolls to 80% of page
+  - Loading indicator while fetching
+  - Smooth scroll performance (60fps target)
+  - Preserve scroll position on back navigation
+  - Fallback to "Load More" button on poor networks
+  - Works across all product categories
+- **Priority**: P1 (High)
+- **Dependencies**: React Intersection Observer, optimized queries
+
+#### FR-074: PostHog as Single Source of Truth for Views
+- **Requirement**: Use PostHog for accurate catalog view tracking
+- **Details**:
+  - Eliminate duplicate view counting
+  - PostHog tracks all catalog_page_view events
+  - Admin dashboard queries PostHog API for view counts
+  - Unique visitor tracking using PostHog's distinct_id
+  - Date range filtering (7, 30, 90 days, custom)
+  - Remove redundant database view storage
+  - Real-time view sync (with caching)
+  - Handles PostHog API rate limits gracefully
+- **Priority**: P1 (High)
+- **Dependencies**: PostHog API integration, caching layer
+
+### 6.19 WhatsApp Notification Enhancements
+
+#### FR-075: Advanced WhatsApp Templates
+- **Requirement**: Rich WhatsApp message templates with dynamic content
+- **Details**:
+  - Order confirmation with itemized list
+  - Order status updates (preparing, ready, out for delivery, delivered)
+  - Delivery tracking link in message
+  - Payment confirmation messages
+  - Store-customizable message templates
+  - Support for template variables: {{customer_name}}, {{order_id}}, {{total}}, etc.
+  - Message preview before sending
+  - Template validation before saving
+  - Fallback to default templates if custom template fails
+- **Priority**: P1 (High)
+- **Dependencies**: WhatsApp Business API, template system
+
+#### FR-076: Bulk WhatsApp Campaigns
+- **Requirement**: Send promotional messages to customer segments
+- **Details**:
+  - Select recipient segments: all customers, recent customers, high-value customers
+  - Template-based campaign messages
+  - Schedule campaigns for future sending
+  - Track campaign metrics: sent, delivered, read, clicked
+  - Rate limiting to avoid WhatsApp blocks
+  - Opt-out mechanism for customers
+  - Campaign history and performance analysis
+- **Priority**: P2 (Medium)
+- **Dependencies**: WhatsApp Business API, customer segmentation
+
+### 6.20 Security & Privacy
+
+#### FR-077: User Authentication
 - **Requirement**: Secure user authentication system
 - **Details**:
   - Email/password signup
@@ -1740,19 +1883,36 @@ Context Update → Component Re-render → UI Update
 
 ## 11. Roadmap & Future Enhancements
 
-### 11.1 Short-term (Next 3 Months)
+### 11.1 Recently Completed (v3.0.50 - January 2026)
+
+**Completed Features:**
+- [x] PostHog analytics integration (Phase 3, 4, 5) - Complete funnel tracking
+- [x] Platform admin dashboard with payment validation workflow
+- [x] Subscription limit enforcement (categories, products, catalog views)
+- [x] Platform-level payment methods management
+- [x] Infinite scroll for product catalog (improved mobile UX)
+- [x] PostHog as single source of truth for catalog views
+- [x] Enhanced WhatsApp notification templates
+- [x] Chatwoot live chat support integration
+- [x] Sentry error monitoring and performance tracking
+- [x] Docker deployment pipeline improvements
+- [x] Horizontal scrollbar for categories on desktop
+- [x] Payment proof upload and validation system
+- [x] Store subscription module override capability
+
+### 11.2 Short-term (Next 3 Months)
 
 **Q1 2026:**
-- [ ] Complete MVP feature set
-- [ ] Launch with 10 pilot stores
-- [ ] Implement automated testing (70% coverage)
-- [ ] Add email notification system
-- [ ] Improve mobile app performance
-- [ ] Add product inventory tracking
-- [ ] Implement multi-language support (Spanish/English)
-- [ ] Add CSV import/export for menu items
-- [ ] Optimize database queries for performance
-- [ ] Launch affiliate program
+- [ ] Complete automated testing suite (70% coverage)
+- [ ] Email notification system (beyond WhatsApp)
+- [ ] Product inventory tracking with low-stock alerts
+- [ ] Multi-language support (Spanish/English)
+- [ ] CSV import/export for menu items
+- [ ] Database query optimization (targeting <50ms p95)
+- [ ] Launch affiliate/referral program
+- [ ] Customer feedback and rating system
+- [ ] Advanced search and filters for products
+- [ ] Scheduled order preparation times
 
 ### 11.2 Mid-term (3-6 Months)
 
@@ -2065,6 +2225,7 @@ Context Update → Component Re-render → UI Update
 | Version | Date | Author | Changes |
 |---------|------|--------|---------|
 | 1.0 | 2025-12-17 | Product Team | Initial PRD creation based on codebase analysis |
+| 2.0 | 2026-01-25 | Product Team | Updated to reflect v3.0.50 - Added PostHog analytics, subscription limits, platform admin features, payment validations, and latest architectural improvements |
 
 ---
 
