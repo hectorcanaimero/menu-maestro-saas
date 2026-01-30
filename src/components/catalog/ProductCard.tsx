@@ -1,7 +1,7 @@
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ShoppingCart, Eye, Tag } from 'lucide-react';
+import { ShoppingCart, Eye, Tag, Images } from 'lucide-react';
 import { useStore } from '@/contexts/StoreContext';
 import { useNavigate } from 'react-router-dom';
 import { useProductPromotions, getBestPromotion } from '@/hooks/usePromotions';
@@ -20,6 +20,7 @@ interface ProductCardProps {
   compact?: boolean;
   categoryId?: string | null;
   isAvailable?: boolean;
+  imagesCount?: number;
   index?: number;
   allProducts?: Array<{
     id: string;
@@ -42,6 +43,7 @@ export const ProductCard = ({
   compact = false,
   categoryId,
   isAvailable = true,
+  imagesCount = 0,
   index = 0,
   allProducts = [],
 }: ProductCardProps) => {
@@ -116,6 +118,14 @@ export const ProductCard = ({
                 {bestDeal.promotion.type === 'percentage'
                   ? `-${bestDeal.promotion.value}%`
                   : `-${formatPrice(bestDeal.promotion.value).original}`}
+              </Badge>
+            )}
+
+            {/* Multiple Images Badge */}
+            {imagesCount > 1 && isAvailable && (
+              <Badge variant="secondary" className="absolute bottom-2 left-2 bg-background/80 backdrop-blur-sm shadow-md flex items-center gap-1 text-xs">
+                <Images className="w-3 h-3" />
+                {imagesCount}
               </Badge>
             )}
 

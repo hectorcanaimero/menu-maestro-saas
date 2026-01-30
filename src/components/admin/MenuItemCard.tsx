@@ -8,7 +8,7 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator
 } from "@/components/ui/dropdown-menu";
-import { ImageIcon, Star, Pencil, Trash2, Settings, Sparkles, MoreVertical, DollarSign, Tag, Image, Type } from "lucide-react";
+import { ImageIcon, Star, Pencil, Trash2, Settings, Sparkles, MoreVertical, DollarSign, Tag, Image, Type, Images } from "lucide-react";
 
 interface MenuItem {
   id: string;
@@ -17,6 +17,7 @@ interface MenuItem {
   price: number;
   category_id: string | null;
   image_url: string | null;
+  images: string[] | null;
   is_available: boolean | null;
   is_featured: boolean | null;
   display_order: number | null;
@@ -32,6 +33,8 @@ interface MenuItemCardProps {
   selected?: boolean;
   onSelectChange?: (selected: boolean) => void;
   onQuickEdit?: (itemId: string, field: 'name' | 'price' | 'category' | 'image') => void;
+  onOpenGallery?: (itemId: string) => void;
+  isGalleryEnabled?: boolean;
 }
 
 export const MenuItemCard = ({
@@ -43,7 +46,9 @@ export const MenuItemCard = ({
   onEnhanceWithAI,
   selected = false,
   onSelectChange,
-  onQuickEdit
+  onQuickEdit,
+  onOpenGallery,
+  isGalleryEnabled = false
 }: MenuItemCardProps) => {
   return (
     <Card className={`overflow-hidden hover:shadow-md transition-all ${selected ? 'ring-2 ring-primary' : ''}`}>
@@ -162,6 +167,12 @@ export const MenuItemCard = ({
                       <Image className="w-4 h-4 mr-2" />
                       Cambiar imagen
                     </DropdownMenuItem>
+                    {isGalleryEnabled && onOpenGallery && (
+                      <DropdownMenuItem onClick={() => onOpenGallery(item.id)}>
+                        <Images className="w-4 h-4 mr-2" />
+                        Galería de imágenes
+                      </DropdownMenuItem>
+                    )}
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={() => onEdit(item)}>
                       <Pencil className="w-4 h-4 mr-2" />

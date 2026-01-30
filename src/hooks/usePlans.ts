@@ -18,6 +18,7 @@ export interface PlanLimits {
   max_categories: number; // -1 = unlimited
   max_orders_per_month: number; // -1 = unlimited
   max_ai_credits_per_month: number;
+  max_product_images?: number; // -1 = unlimited, only for non-food stores
 }
 
 export interface PlanModulePrices {

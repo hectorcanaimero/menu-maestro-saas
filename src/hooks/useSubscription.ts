@@ -12,6 +12,7 @@ interface SubscriptionPlan {
     max_products?: number | null;
     max_orders_per_month?: number | null;
     max_categories?: number | null;
+    max_product_images?: number | null;
     has_kitchen_display?: boolean;
     has_analytics?: boolean;
     has_promotions?: boolean;

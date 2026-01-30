@@ -294,29 +294,36 @@ export const ProductGrid = () => {
                 : 'flex flex-col gap-3 sm:gap-4'
             }
           >
-            {products.map((product, index) => (
-              <ProductCard
-                key={product.id}
-                id={product.id}
-                name={product.name}
-                price={Number(product.price)}
-                image_url={product.image_url}
-                description={product.description}
-                layout={viewMode}
-                categoryId={product.category_id}
-                isAvailable={product.is_available ?? true}
-                index={index}
-                allProducts={products.map((p) => ({
-                  id: p.id,
-                  name: p.name,
-                  price: Number(p.price),
-                  image_url: p.image_url,
-                  description: p.description,
-                  categoryId: p.category_id,
-                  isAvailable: p.is_available ?? true,
-                }))}
-              />
-            ))}
+            {products.map((product, index) => {
+              // Calculate total image count (main image + gallery images)
+              const galleryImages = Array.isArray(product.images) ? product.images.length : 0;
+              const totalImages = (product.image_url ? 1 : 0) + galleryImages;
+
+              return (
+                <ProductCard
+                  key={product.id}
+                  id={product.id}
+                  name={product.name}
+                  price={Number(product.price)}
+                  image_url={product.image_url}
+                  description={product.description}
+                  layout={viewMode}
+                  categoryId={product.category_id}
+                  isAvailable={product.is_available ?? true}
+                  imagesCount={totalImages}
+                  index={index}
+                  allProducts={products.map((p) => ({
+                    id: p.id,
+                    name: p.name,
+                    price: Number(p.price),
+                    image_url: p.image_url,
+                    description: p.description,
+                    categoryId: p.category_id,
+                    isAvailable: p.is_available ?? true,
+                  }))}
+                />
+              );
+            })}
           </div>
 
           {/* Infinite Scroll Trigger & Loading Indicator */}

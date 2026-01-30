@@ -20,9 +20,11 @@ import { MenuItemCard } from './MenuItemCard';
 import { AIPhotoStudio } from './AIPhotoStudio';
 import { QuickEditDialog } from './QuickEditDialog';
 import { ImageSelectorDialog } from './ImageSelectorDialog';
+import { ProductImageGallery } from './ProductImageGallery';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { UpgradePlanModal } from './UpgradePlanModal';
+import { Images } from 'lucide-react';
 
 interface MenuItem {
   id: string;
@@ -31,6 +33,7 @@ interface MenuItem {
   price: number;
   category_id: string | null;
   image_url: string | null;
+  images: string[] | null;
   is_available: boolean | null;
   is_featured: boolean | null;
   display_order: number | null;
@@ -65,6 +68,13 @@ const MenuItemsManager = () => {
   const [quickEditItemId, setQuickEditItemId] = useState<string>('');
   const [imageEditOpen, setImageEditOpen] = useState(false);
   const [imageEditItemId, setImageEditItemId] = useState<string>('');
+
+  // Gallery dialog (for non-food stores)
+  const [galleryOpen, setGalleryOpen] = useState(false);
+  const [galleryItemId, setGalleryItemId] = useState<string>('');
+
+  // Check if store allows gallery (non-food business)
+  const isGalleryEnabled = store?.is_food_business === false;
 
   const [formData, setFormData] = useState({
     name: '',
@@ -313,6 +323,15 @@ const MenuItemsManager = () => {
     return items.find(item => item.id === imageEditItemId);
   };
 
+  const getGalleryItem = () => {
+    return items.find(item => item.id === galleryItemId);
+  };
+
+  const handleOpenGallery = (itemId: string) => {
+    setGalleryItemId(itemId);
+    setGalleryOpen(true);
+  };
+
   const getQuickEditCurrentValue = () => {
     const item = getQuickEditItem();
     if (!item) return null;
@@ -364,6 +383,18 @@ const MenuItemsManager = () => {
         currentImageUrl={getImageEditItem()?.image_url || null}
         onSuccess={fetchData}
       />
+
+      {isGalleryEnabled && (
+        <ProductImageGallery
+          open={galleryOpen}
+          onOpenChange={setGalleryOpen}
+          itemId={galleryItemId}
+          itemName={getGalleryItem()?.name || ''}
+          currentImages={getGalleryItem()?.images || []}
+          mainImageUrl={getGalleryItem()?.image_url || null}
+          onSuccess={fetchData}
+        />
+      )}
 
       <Card>
         <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -610,6 +641,8 @@ const MenuItemsManager = () => {
                   selected={selectedItems.has(item.id)}
                   onSelectChange={(selected) => toggleItemSelection(item.id)}
                   onQuickEdit={handleQuickEdit}
+                  onOpenGallery={handleOpenGallery}
+                  isGalleryEnabled={isGalleryEnabled}
                 />
               ))
             )}
@@ -717,6 +750,12 @@ const MenuItemsManager = () => {
                                 <Image className="w-4 h-4 mr-2" />
                                 Cambiar imagen
                               </DropdownMenuItem>
+                              {isGalleryEnabled && (
+                                <DropdownMenuItem onClick={() => handleOpenGallery(item.id)}>
+                                  <Images className="w-4 h-4 mr-2" />
+                                  Galería de imágenes
+                                </DropdownMenuItem>
+                              )}
                               <DropdownMenuSeparator />
                               <DropdownMenuItem onClick={() => handleEdit(item)}>
                                 <Pencil className="w-4 h-4 mr-2" />

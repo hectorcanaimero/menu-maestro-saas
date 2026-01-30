@@ -25,6 +25,7 @@ interface Product {
   description: string | null;
   price: number;
   image_url: string | null;
+  images: string[] | null;
   category_id: string | null;
   is_available: boolean | null;
 }
@@ -37,7 +38,15 @@ export default function ProductDetail() {
   const [product, setProduct] = useState<Product | null>(null);
   const [selectedExtras, setSelectedExtras] = useState<Map<string, Set<string>>>(new Map());
   const [loading, setLoading] = useState(true);
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const formatPrice = useFormatPrice();
+
+  // Check if gallery is enabled (non-food store with multiple images)
+  const isGalleryEnabled = store?.is_food_business === false;
+  const allImages = product ? [
+    product.image_url,
+    ...(isGalleryEnabled && product.images ? product.images : [])
+  ].filter(Boolean) as string[] : [];
 
   // Get grouped extras for this product
   const { data: groupedExtras, isLoading: extrasLoading } = useProductExtraGroups(id || '');
@@ -267,11 +276,16 @@ export default function ProductDetail() {
 
         {/* Product Details Grid */}
         <div className="grid md:grid-cols-2 gap-8 lg:gap-12">
-          {/* Image Gallery - For now single image, can be enhanced later */}
+          {/* Image Gallery */}
           <div className="space-y-4">
+            {/* Main Image */}
             <div className={`aspect-square overflow-hidden rounded-lg border border-border bg-muted/30 relative ${!product.is_available ? 'opacity-70' : ''}`}>
-              {product.image_url ? (
-                <img src={product.image_url} alt={product.name} className={`w-full h-full object-cover ${!product.is_available ? 'grayscale' : ''}`} />
+              {allImages.length > 0 ? (
+                <img
+                  src={allImages[selectedImageIndex]}
+                  alt={product.name}
+                  className={`w-full h-full object-cover ${!product.is_available ? 'grayscale' : ''}`}
+                />
               ) : (
                 <div className={`w-full h-full flex items-center justify-center bg-muted ${!product.is_available ? 'grayscale' : ''}`}>
                   <span className="text-muted-foreground">Sin imagen</span>
@@ -291,6 +305,29 @@ export default function ProductDetail() {
                 </Badge>
               )}
             </div>
+
+            {/* Thumbnail Gallery - Only show if multiple images */}
+            {allImages.length > 1 && (
+              <div className="flex gap-2 overflow-x-auto pb-2">
+                {allImages.map((imageUrl, index) => (
+                  <button
+                    key={index}
+                    onClick={() => setSelectedImageIndex(index)}
+                    className={`flex-shrink-0 w-16 h-16 rounded-md overflow-hidden border-2 transition-all ${
+                      selectedImageIndex === index
+                        ? 'border-primary ring-2 ring-primary/20'
+                        : 'border-border hover:border-muted-foreground'
+                    }`}
+                  >
+                    <img
+                      src={imageUrl}
+                      alt={`${product.name} - imagen ${index + 1}`}
+                      className="w-full h-full object-cover"
+                    />
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Product Info */}
