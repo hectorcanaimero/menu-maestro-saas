@@ -19,6 +19,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -26,6 +27,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
+import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { useStore } from '@/contexts/StoreContext';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -600,11 +602,15 @@ function ExtrasDialog({
   deleteExtra: any;
   reorderExtras: any;
 }) {
+  const isMobile = useMediaQuery('(max-width: 768px)');
   const [editingExtra, setEditingExtra] = useState<ProductExtra | null>(null);
   const [extraName, setExtraName] = useState('');
   const [extraDescription, setExtraDescription] = useState('');
   const [extraPrice, setExtraPrice] = useState('');
   const [extraIsAvailable, setExtraIsAvailable] = useState(true);
+
+  // Truncate group name for title
+  const truncatedName = groupName.length > 15 ? groupName.substring(0, 15) + '...' : groupName;
 
   const handleAddExtra = async () => {
     if (!groupId || !extraName) return;
@@ -694,137 +700,202 @@ function ExtrasDialog({
     setExtraIsAvailable(true);
   };
 
+  // Form content shared between mobile and desktop
+  const FormContent = () => (
+    <div className="space-y-4">
+      <div className="space-y-2">
+        <Label htmlFor="extra_name">Nombre del Extra *</Label>
+        <Input
+          id="extra_name"
+          value={extraName}
+          onChange={(e) => setExtraName(e.target.value)}
+          placeholder="ej. Pequeña, Pepperoni, Azul"
+        />
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="extra_price">Precio</Label>
+        <Input
+          id="extra_price"
+          type="number"
+          step="0.01"
+          value={extraPrice}
+          onChange={(e) => setExtraPrice(e.target.value)}
+          placeholder="0.00"
+        />
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="extra_description">Descripción (opcional)</Label>
+        <Input
+          id="extra_description"
+          value={extraDescription}
+          onChange={(e) => setExtraDescription(e.target.value)}
+          placeholder="Breve descripción del extra"
+        />
+      </div>
+      <div className="flex items-center justify-between p-3 border rounded-lg">
+        <div className="flex-1 min-w-0">
+          <Label htmlFor="extra_available" className="font-medium">Disponible</Label>
+          <p className="text-xs text-muted-foreground">Si está desactivado, no se mostrará a los clientes</p>
+        </div>
+        <Switch
+          id="extra_available"
+          checked={extraIsAvailable}
+          onCheckedChange={setExtraIsAvailable}
+        />
+      </div>
+      <div className="flex gap-2">
+        {editingExtra ? (
+          <>
+            <Button variant="outline" onClick={cancelEdit} className="flex-1">
+              Cancelar
+            </Button>
+            <Button onClick={handleUpdateExtra} disabled={!extraName} className="flex-1">
+              Guardar
+            </Button>
+          </>
+        ) : (
+          <Button onClick={handleAddExtra} disabled={!extraName} className="w-full">
+            <Plus className="w-4 h-4 mr-1" />
+            Agregar Extra
+          </Button>
+        )}
+      </div>
+    </div>
+  );
+
+  // Extra item card for mobile (simplified)
+  const ExtraItemMobile = ({ extra }: { extra: ProductExtra }) => (
+    <div className={`p-4 border rounded-lg space-y-3 ${extra.is_available === false ? 'opacity-60 bg-muted/50' : 'bg-background'}`}>
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex-1 min-w-0">
+          <p className="font-medium">{extra.name}</p>
+          {extra.description && (
+            <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{extra.description}</p>
+          )}
+          <p className="text-sm font-semibold text-primary mt-1">${extra.price.toFixed(2)}</p>
+        </div>
+        <Switch
+          checked={extra.is_available ?? true}
+          onCheckedChange={() => handleToggleAvailability(extra)}
+        />
+      </div>
+      <div className="flex items-center gap-2 pt-2 border-t">
+        <Button variant="outline" size="sm" onClick={() => startEdit(extra)} className="flex-1">
+          <Edit className="w-4 h-4 mr-1" />
+          Editar
+        </Button>
+        <Button
+          variant="outline"
+          size="icon"
+          className="h-8 w-8 text-destructive"
+          onClick={() => handleDeleteExtra(extra.id)}
+        >
+          <Trash2 className="w-4 h-4" />
+        </Button>
+      </div>
+    </div>
+  );
+
+  // Extras list shared between mobile and desktop
+  const ExtrasList = () => (
+    <div className="space-y-3">
+      <p className="text-sm text-muted-foreground font-medium">Extras creados ({extras.length})</p>
+      {extras.length === 0 ? (
+        <div className="py-8 text-center text-muted-foreground border rounded-lg">
+          <p className="text-sm">No hay extras aún</p>
+          <p className="text-xs mt-1">Agrega el primer extra arriba</p>
+        </div>
+      ) : isMobile ? (
+        <div className="space-y-3">
+          {extras.map((extra) => (
+            <ExtraItemMobile key={extra.id} extra={extra} />
+          ))}
+        </div>
+      ) : (
+        <ProductExtrasSortable
+          extras={extras}
+          onReorder={(updates) => reorderExtras.mutate(updates)}
+          renderExtra={(extra) => (
+            <Card className={extra.is_available === false ? 'opacity-60' : ''}>
+              <CardContent className="py-3">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <p className="font-medium truncate">{extra.name}</p>
+                      {extra.is_available === false && (
+                        <Badge variant="secondary" className="text-xs">No disponible</Badge>
+                      )}
+                    </div>
+                    {extra.description && (
+                      <p className="text-xs text-muted-foreground truncate mt-0.5">{extra.description}</p>
+                    )}
+                    <p className="text-sm text-muted-foreground">${extra.price.toFixed(2)}</p>
+                  </div>
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <Switch
+                      checked={extra.is_available ?? true}
+                      onCheckedChange={() => handleToggleAvailability(extra)}
+                      aria-label="Disponibilidad"
+                    />
+                    <Button variant="outline" size="sm" onClick={() => startEdit(extra)}>
+                      <Edit className="w-3 h-3" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="text-destructive hover:text-destructive"
+                      onClick={() => handleDeleteExtra(extra.id)}
+                    >
+                      <Trash2 className="w-3 h-3" />
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        />
+      )}
+    </div>
+  );
+
+  if (isMobile) {
+    return (
+      <Sheet open={open} onOpenChange={onClose}>
+        <SheetContent side="bottom" className="h-[90vh] flex flex-col p-0">
+          <SheetHeader className="px-4 pt-4 pb-3 border-b">
+            <SheetTitle className="text-left">Gestionar Extras: {truncatedName}</SheetTitle>
+            <SheetDescription className="text-left">
+              Define las opciones individuales con nombre y precio
+            </SheetDescription>
+          </SheetHeader>
+          <div className="flex-1 overflow-y-auto p-4 space-y-6">
+            <FormContent />
+            <Separator />
+            <ExtrasList />
+          </div>
+        </SheetContent>
+      </Sheet>
+    );
+  }
+
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-lg sm:max-w-xl max-h-[90vh] overflow-y-auto overflow-x-hidden">
+      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Gestionar Extras: {groupName}</DialogTitle>
           <DialogDescription>Define las opciones individuales con su nombre y precio</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-4">
-          {/* Add/Edit Form */}
           <Card>
-            <CardContent className="pt-6 space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-[1fr,120px] gap-3">
-                <div className="space-y-2">
-                  <Label htmlFor="extra_name">Nombre del Extra *</Label>
-                  <Input
-                    id="extra_name"
-                    value={extraName}
-                    onChange={(e) => setExtraName(e.target.value)}
-                    placeholder="ej. Pequeña, Pepperoni, Azul"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="extra_price">Precio</Label>
-                  <Input
-                    id="extra_price"
-                    type="number"
-                    step="0.01"
-                    value={extraPrice}
-                    onChange={(e) => setExtraPrice(e.target.value)}
-                    placeholder="0.00"
-                  />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="extra_description">Descripción (opcional)</Label>
-                <Input
-                  id="extra_description"
-                  value={extraDescription}
-                  onChange={(e) => setExtraDescription(e.target.value)}
-                  placeholder="Breve descripción del extra"
-                />
-              </div>
-              <div className="flex items-center justify-between p-3 border rounded-lg">
-                <div>
-                  <Label htmlFor="extra_available" className="font-medium">Disponible</Label>
-                  <p className="text-xs text-muted-foreground">Si está desactivado, no se mostrará a los clientes</p>
-                </div>
-                <Switch
-                  id="extra_available"
-                  checked={extraIsAvailable}
-                  onCheckedChange={setExtraIsAvailable}
-                />
-              </div>
-              <div className="flex gap-2 justify-end">
-                {editingExtra ? (
-                  <>
-                    <Button variant="outline" onClick={cancelEdit}>
-                      Cancelar
-                    </Button>
-                    <Button onClick={handleUpdateExtra} disabled={!extraName}>
-                      Guardar
-                    </Button>
-                  </>
-                ) : (
-                  <Button onClick={handleAddExtra} disabled={!extraName}>
-                    <Plus className="w-4 h-4 mr-1" />
-                    Agregar Extra
-                  </Button>
-                )}
-              </div>
+            <CardContent className="pt-6">
+              <FormContent />
             </CardContent>
           </Card>
 
           <Separator />
 
-          {/* Extras List */}
-          <div className="space-y-2">
-            <Label className="text-sm font-medium">Extras creados ({extras.length})</Label>
-            {extras.length === 0 ? (
-              <Card>
-                <CardContent className="py-8 text-center text-muted-foreground">
-                  <p className="text-sm">No hay extras aún</p>
-                  <p className="text-xs mt-1">Agrega el primer extra arriba</p>
-                </CardContent>
-              </Card>
-            ) : (
-              <ProductExtrasSortable
-                extras={extras}
-                onReorder={(updates) => reorderExtras.mutate(updates)}
-                renderExtra={(extra) => (
-                  <Card className={extra.is_available === false ? 'opacity-60' : ''}>
-                    <CardContent className="py-3">
-                      <div className="flex items-center justify-between gap-3">
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2">
-                            <p className="font-medium truncate">{extra.name}</p>
-                            {extra.is_available === false && (
-                              <Badge variant="secondary" className="text-xs">No disponible</Badge>
-                            )}
-                          </div>
-                          {extra.description && (
-                            <p className="text-xs text-muted-foreground truncate mt-0.5">{extra.description}</p>
-                          )}
-                          <p className="text-sm text-muted-foreground">${extra.price.toFixed(2)}</p>
-                        </div>
-                        <div className="flex items-center gap-2 flex-shrink-0">
-                          <Switch
-                            checked={extra.is_available ?? true}
-                            onCheckedChange={() => handleToggleAvailability(extra)}
-                            aria-label="Disponibilidad"
-                          />
-                          <Button variant="outline" size="sm" onClick={() => startEdit(extra)}>
-                            <Edit className="w-3 h-3" />
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="text-destructive hover:text-destructive"
-                            onClick={() => handleDeleteExtra(extra.id)}
-                          >
-                            <Trash2 className="w-3 h-3" />
-                          </Button>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                )}
-              />
-            )}
-          </div>
+          <ExtrasList />
         </div>
 
         <DialogFooter>
