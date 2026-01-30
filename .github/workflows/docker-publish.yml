@@ -70,6 +70,8 @@ jobs:
             VITE_GOOGLE_MAPS=${{ secrets.VITE_GOOGLE_MAPS }}
             VITE_GA4_MEASUREMENT_ID=${{ secrets.VITE_GA4_MEASUREMENT_ID }}
             VITE_POSTHOG_PROJECT_ID=${{ secrets.VITE_POSTHOG_PROJECT_ID }}
+            VITE_SHLINK_API_URL=${{ secrets.VITE_SHLINK_API_URL }}
+            VITE_SHLINK_API_KEY=${{ secrets.VITE_SHLINK_API_KEY }}
 
       - name: Generate build summary
         run: |
