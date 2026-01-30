@@ -391,14 +391,19 @@ export default function ProductDetail() {
                             {extras.map((extra) => (
                               <label
                                 key={extra.id}
-                                className="flex items-center justify-between p-3 rounded-lg border border-border hover:bg-muted/50 cursor-pointer transition-colors"
+                                className="flex items-start justify-between p-3 rounded-lg border border-border hover:bg-muted/50 cursor-pointer transition-colors"
                               >
-                                <div className="flex items-center gap-3">
-                                  <RadioGroupItem value={extra.id} id={extra.id} />
-                                  <span className="text-foreground font-medium">{extra.name}</span>
+                                <div className="flex items-start gap-3">
+                                  <RadioGroupItem value={extra.id} id={extra.id} className="mt-0.5" />
+                                  <div>
+                                    <span className="text-foreground font-medium">{extra.name}</span>
+                                    {extra.description && (
+                                      <p className="text-xs text-muted-foreground mt-0.5">{extra.description}</p>
+                                    )}
+                                  </div>
                                 </div>
                                 <div
-                                  className="text-sm font-semibold"
+                                  className="text-sm font-semibold flex-shrink-0 ml-2"
                                   style={{ color: `hsl(var(--price-color, var(--primary)))` }}
                                 >
                                   {extra.price > 0 && '+'}
@@ -413,17 +418,23 @@ export default function ProductDetail() {
                           {extras.map((extra) => (
                             <label
                               key={extra.id}
-                              className="flex items-center justify-between p-3 rounded-lg border border-border hover:bg-muted/50 cursor-pointer transition-colors"
+                              className="flex items-start justify-between p-3 rounded-lg border border-border hover:bg-muted/50 cursor-pointer transition-colors"
                             >
-                              <div className="flex items-center gap-3">
+                              <div className="flex items-start gap-3">
                                 <Checkbox
                                   checked={groupSelections?.has(extra.id) || false}
                                   onCheckedChange={() => toggleExtra(group.id, extra.id, false)}
+                                  className="mt-0.5"
                                 />
-                                <span className="text-foreground font-medium">{extra.name}</span>
+                                <div>
+                                  <span className="text-foreground font-medium">{extra.name}</span>
+                                  {extra.description && (
+                                    <p className="text-xs text-muted-foreground mt-0.5">{extra.description}</p>
+                                  )}
+                                </div>
                               </div>
                               <div
-                                className="text-sm font-semibold"
+                                className="text-sm font-semibold flex-shrink-0 ml-2"
                                 style={{ color: `hsl(var(--price-color, var(--primary)))` }}
                               >
                                 {extra.price > 0 && '+'}

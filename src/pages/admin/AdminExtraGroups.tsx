@@ -696,7 +696,7 @@ function ExtrasDialog({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-lg sm:max-w-xl max-h-[90vh] overflow-y-auto overflow-x-hidden">
         <DialogHeader>
           <DialogTitle>Gestionar Extras: {groupName}</DialogTitle>
           <DialogDescription>Define las opciones individuales con su nombre y precio</DialogDescription>
