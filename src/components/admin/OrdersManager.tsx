@@ -238,6 +238,7 @@ const OrdersManager = () => {
       confirmed: { label: 'Confirmado', variant: 'default' },
       preparing: { label: 'Preparando', variant: 'default' },
       ready: { label: 'Listo', variant: 'default' },
+      out_for_delivery: { label: 'En Camino', variant: 'default' },
       delivered: { label: 'Entregado', variant: 'default' },
       cancelled: { label: 'Cancelado', variant: 'destructive' },
     };
@@ -403,6 +404,7 @@ const OrdersManager = () => {
                               <SelectItem value="confirmed">Confirmado</SelectItem>
                               <SelectItem value="preparing">Preparando</SelectItem>
                               <SelectItem value="ready">Listo</SelectItem>
+                              <SelectItem value="out_for_delivery">En Camino</SelectItem>
                               <SelectItem value="delivered">Entregado</SelectItem>
                               <SelectItem value="cancelled">Cancelado</SelectItem>
                             </SelectContent>
@@ -535,6 +537,7 @@ const OrdersManager = () => {
                                 <SelectItem value="confirmed">Confirmado</SelectItem>
                                 <SelectItem value="preparing">Preparando</SelectItem>
                                 <SelectItem value="ready">Listo</SelectItem>
+                                <SelectItem value="out_for_delivery">En Camino</SelectItem>
                                 <SelectItem value="delivered">Entregado</SelectItem>
                                 <SelectItem value="cancelled">Cancelado</SelectItem>
                               </SelectContent>
