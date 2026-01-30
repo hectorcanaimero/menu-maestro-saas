@@ -36,6 +36,7 @@ export interface ProductExtra {
   menu_item_id?: string | null; // For backward compat with ungrouped extras
   group_id?: string | null; // null = ungrouped (legacy)
   name: string;
+  description?: string | null; // Optional description shown to customers
   price: number;
   is_available: boolean | null;
   is_default: boolean; // Should this be pre-selected?
@@ -128,6 +129,7 @@ export interface CreateProductExtraData {
   menu_item_id?: string | null;
   group_id?: string | null;
   name: string;
+  description?: string | null;
   price: number;
   is_available?: boolean;
   is_default?: boolean;
@@ -139,6 +141,7 @@ export interface CreateProductExtraData {
  */
 export interface UpdateProductExtraData {
   name?: string;
+  description?: string | null;
   price?: number;
   is_available?: boolean;
   is_default?: boolean;

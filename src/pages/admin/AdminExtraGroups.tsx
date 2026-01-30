@@ -602,7 +602,9 @@ function ExtrasDialog({
 }) {
   const [editingExtra, setEditingExtra] = useState<ProductExtra | null>(null);
   const [extraName, setExtraName] = useState('');
+  const [extraDescription, setExtraDescription] = useState('');
   const [extraPrice, setExtraPrice] = useState('');
+  const [extraIsAvailable, setExtraIsAvailable] = useState(true);
 
   const handleAddExtra = async () => {
     if (!groupId || !extraName) return;
@@ -611,13 +613,16 @@ function ExtrasDialog({
       await createExtra.mutateAsync({
         group_id: groupId,
         name: extraName,
+        description: extraDescription || null,
         price: parseFloat(extraPrice) || 0,
-        is_available: true,
+        is_available: extraIsAvailable,
         is_default: false,
         display_order: extras.length * 10,
       });
       setExtraName('');
+      setExtraDescription('');
       setExtraPrice('');
+      setExtraIsAvailable(true);
       refetchExtras();
     } catch (error) {
       //
@@ -632,12 +637,30 @@ function ExtrasDialog({
         extraId: editingExtra.id,
         data: {
           name: extraName,
+          description: extraDescription || null,
           price: parseFloat(extraPrice),
+          is_available: extraIsAvailable,
         },
       });
       setEditingExtra(null);
       setExtraName('');
+      setExtraDescription('');
       setExtraPrice('');
+      setExtraIsAvailable(true);
+      refetchExtras();
+    } catch (error) {
+      //
+    }
+  };
+
+  const handleToggleAvailability = async (extra: ProductExtra) => {
+    try {
+      await updateExtra.mutateAsync({
+        extraId: extra.id,
+        data: {
+          is_available: !extra.is_available,
+        },
+      });
       refetchExtras();
     } catch (error) {
       //
@@ -658,13 +681,17 @@ function ExtrasDialog({
   const startEdit = (extra: ProductExtra) => {
     setEditingExtra(extra);
     setExtraName(extra.name);
+    setExtraDescription(extra.description || '');
     setExtraPrice(extra.price.toString());
+    setExtraIsAvailable(extra.is_available ?? true);
   };
 
   const cancelEdit = () => {
     setEditingExtra(null);
     setExtraName('');
+    setExtraDescription('');
     setExtraPrice('');
+    setExtraIsAvailable(true);
   };
 
   return (
@@ -678,10 +705,10 @@ function ExtrasDialog({
         <div className="space-y-4 py-4">
           {/* Add/Edit Form */}
           <Card>
-            <CardContent className="pt-6">
-              <div className="grid grid-cols-[1fr,120px,auto] gap-3 items-end">
+            <CardContent className="pt-6 space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-[1fr,120px] gap-3">
                 <div className="space-y-2">
-                  <Label htmlFor="extra_name">Nombre del Extra</Label>
+                  <Label htmlFor="extra_name">Nombre del Extra *</Label>
                   <Input
                     id="extra_name"
                     value={extraName}
@@ -700,23 +727,43 @@ function ExtrasDialog({
                     placeholder="0.00"
                   />
                 </div>
-                <div className="flex gap-2">
-                  {editingExtra ? (
-                    <>
-                      <Button onClick={handleUpdateExtra} disabled={!extraName}>
-                        Guardar
-                      </Button>
-                      <Button variant="outline" onClick={cancelEdit}>
-                        Cancelar
-                      </Button>
-                    </>
-                  ) : (
-                    <Button onClick={handleAddExtra} disabled={!extraName}>
-                      <Plus className="w-4 h-4 mr-1" />
-                      Agregar
-                    </Button>
-                  )}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="extra_description">Descripción (opcional)</Label>
+                <Input
+                  id="extra_description"
+                  value={extraDescription}
+                  onChange={(e) => setExtraDescription(e.target.value)}
+                  placeholder="Breve descripción del extra"
+                />
+              </div>
+              <div className="flex items-center justify-between p-3 border rounded-lg">
+                <div>
+                  <Label htmlFor="extra_available" className="font-medium">Disponible</Label>
+                  <p className="text-xs text-muted-foreground">Si está desactivado, no se mostrará a los clientes</p>
                 </div>
+                <Switch
+                  id="extra_available"
+                  checked={extraIsAvailable}
+                  onCheckedChange={setExtraIsAvailable}
+                />
+              </div>
+              <div className="flex gap-2 justify-end">
+                {editingExtra ? (
+                  <>
+                    <Button variant="outline" onClick={cancelEdit}>
+                      Cancelar
+                    </Button>
+                    <Button onClick={handleUpdateExtra} disabled={!extraName}>
+                      Guardar
+                    </Button>
+                  </>
+                ) : (
+                  <Button onClick={handleAddExtra} disabled={!extraName}>
+                    <Plus className="w-4 h-4 mr-1" />
+                    Agregar Extra
+                  </Button>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -738,14 +785,27 @@ function ExtrasDialog({
                 extras={extras}
                 onReorder={(updates) => reorderExtras.mutate(updates)}
                 renderExtra={(extra) => (
-                  <Card>
+                  <Card className={extra.is_available === false ? 'opacity-60' : ''}>
                     <CardContent className="py-3">
-                      <div className="flex items-center justify-between">
-                        <div className="flex-1">
-                          <p className="font-medium">{extra.name}</p>
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <p className="font-medium truncate">{extra.name}</p>
+                            {extra.is_available === false && (
+                              <Badge variant="secondary" className="text-xs">No disponible</Badge>
+                            )}
+                          </div>
+                          {extra.description && (
+                            <p className="text-xs text-muted-foreground truncate mt-0.5">{extra.description}</p>
+                          )}
                           <p className="text-sm text-muted-foreground">${extra.price.toFixed(2)}</p>
                         </div>
-                        <div className="flex gap-2">
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          <Switch
+                            checked={extra.is_available ?? true}
+                            onCheckedChange={() => handleToggleAvailability(extra)}
+                            aria-label="Disponibilidad"
+                          />
                           <Button variant="outline" size="sm" onClick={() => startEdit(extra)}>
                             <Edit className="w-3 h-3" />
                           </Button>

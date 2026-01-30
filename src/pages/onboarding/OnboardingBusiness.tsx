@@ -365,12 +365,18 @@ const OnboardingBusiness = () => {
           </div>
         </div>
 
-        <div className="flex justify-between pt-4">
-          <Button type="button" variant="outline" onClick={() => navigate('/onboarding/personal')}>
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Atrás
+        <div className="flex items-center gap-3 pt-4">
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            onClick={() => navigate('/onboarding/personal')}
+            className="h-12 w-12 rounded-full flex-shrink-0"
+            aria-label="Atrás"
+          >
+            <ArrowLeft className="w-5 h-5" />
           </Button>
-          <Button type="submit" size="lg" disabled={loading}>
+          <Button type="submit" disabled={loading} className="h-12 flex-1 text-base font-medium">
             {loading ? (
               <>
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />

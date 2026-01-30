@@ -261,12 +261,17 @@ export const ProductExtrasDialog = ({
                               className="flex items-center gap-3 p-3 md:p-2 rounded-md border hover:bg-accent/50 transition-colors cursor-pointer"
                               onClick={() => toggleGroupSelection(group.id, extra.id, 'single')}
                             >
-                              <RadioGroupItem value={extra.id} id={extra.id} className="flex-shrink-0 self-center" />
+                              <RadioGroupItem value={extra.id} id={extra.id} className="flex-shrink-0 self-start mt-1" />
                               <Label
                                 htmlFor={extra.id}
-                                className="flex-1 cursor-pointer flex justify-between items-center gap-3 py-1"
+                                className="flex-1 cursor-pointer flex justify-between items-start gap-3 py-1"
                               >
-                                <span className="text-base md:text-sm font-medium">{extra.name}</span>
+                                <div className="flex-1">
+                                  <span className="text-base md:text-sm font-medium">{extra.name}</span>
+                                  {extra.description && (
+                                    <p className="text-xs text-muted-foreground mt-0.5">{extra.description}</p>
+                                  )}
+                                </div>
                                 {extra.price > 0 && (
                                   <span
                                     className="text-base md:text-sm font-semibold whitespace-nowrap"
@@ -293,13 +298,18 @@ export const ProductExtrasDialog = ({
                               id={extra.id}
                               checked={selectedIds.includes(extra.id)}
                               onCheckedChange={() => toggleGroupSelection(group.id, extra.id, 'multiple')}
-                              className="h-5 w-5 md:h-4 md:w-4 flex-shrink-0 self-center"
+                              className="h-5 w-5 md:h-4 md:w-4 flex-shrink-0 self-start mt-1"
                             />
                             <Label
                               htmlFor={extra.id}
-                              className="flex-1 cursor-pointer flex justify-between items-center gap-3 py-1"
+                              className="flex-1 cursor-pointer flex justify-between items-start gap-3 py-1"
                             >
-                              <span className="text-base md:text-sm font-medium">{extra.name}</span>
+                              <div className="flex-1">
+                                <span className="text-base md:text-sm font-medium">{extra.name}</span>
+                                {extra.description && (
+                                  <p className="text-xs text-muted-foreground mt-0.5">{extra.description}</p>
+                                )}
+                              </div>
                               {extra.price > 0 && (
                                 <span
                                   className="text-base md:text-sm font-semibold whitespace-nowrap"
@@ -339,13 +349,18 @@ export const ProductExtrasDialog = ({
                       id={`ungrouped-${extra.id}`}
                       checked={ungroupedSelection.has(extra.id)}
                       onCheckedChange={() => toggleUngroupedExtra(extra.id)}
-                      className="h-5 w-5 md:h-4 md:w-4 self-center"
+                      className="h-5 w-5 md:h-4 md:w-4 self-start mt-1"
                     />
                     <Label
                       htmlFor={`ungrouped-${extra.id}`}
-                      className="flex-1 cursor-pointer flex justify-between items-center gap-3 py-1"
+                      className="flex-1 cursor-pointer flex justify-between items-start gap-3 py-1"
                     >
-                      <span className="text-base md:text-sm font-medium">{extra.name}</span>
+                      <div className="flex-1">
+                        <span className="text-base md:text-sm font-medium">{extra.name}</span>
+                        {extra.description && (
+                          <p className="text-xs text-muted-foreground mt-0.5">{extra.description}</p>
+                        )}
+                      </div>
                       <span
                         className="text-base md:text-sm font-semibold whitespace-nowrap"
                         style={{ color: `hsl(var(--price-color, var(--foreground)))` }}

@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Dialog,
@@ -49,6 +49,15 @@ export const ProductImageGallery = ({
   const [pendingFiles, setPendingFiles] = useState<File[]>([]);
   const [pendingPreviews, setPendingPreviews] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Reset images state when dialog opens or currentImages changes
+  useEffect(() => {
+    if (open) {
+      setImages(currentImages || []);
+      setPendingFiles([]);
+      setPendingPreviews([]);
+    }
+  }, [open, currentImages]);
 
   // Fetch image limit info for the store
   const { data: limitInfo, isLoading: loadingLimits } = useQuery<ImageLimitInfo>({

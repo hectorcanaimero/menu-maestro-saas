@@ -3,6 +3,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { toast } from 'sonner';
@@ -11,6 +13,7 @@ import { Plus, Pencil, Trash2, GripVertical } from 'lucide-react';
 interface ProductExtra {
   id: string;
   name: string;
+  description: string | null;
   price: number;
   is_available: boolean | null;
   display_order: number | null;
@@ -30,6 +33,7 @@ export const ProductExtrasManager = ({ open, onOpenChange, menuItemId, menuItemN
   const [editingExtra, setEditingExtra] = useState<ProductExtra | null>(null);
   const [formData, setFormData] = useState({
     name: '',
+    description: '',
     price: '',
     is_available: true,
   });
@@ -65,6 +69,7 @@ export const ProductExtrasManager = ({ open, onOpenChange, menuItemId, menuItemN
       const extraData = {
         menu_item_id: menuItemId,
         name: formData.name,
+        description: formData.description || null,
         price: parseFloat(formData.price),
         is_available: formData.is_available,
         display_order: editingExtra?.display_order || extras.length,
@@ -94,6 +99,7 @@ export const ProductExtrasManager = ({ open, onOpenChange, menuItemId, menuItemN
     setEditingExtra(extra);
     setFormData({
       name: extra.name,
+      description: extra.description || '',
       price: extra.price.toString(),
       is_available: extra.is_available ?? true,
     });
@@ -111,6 +117,24 @@ export const ProductExtrasManager = ({ open, onOpenChange, menuItemId, menuItemN
       fetchExtras();
     } catch (error) {
       toast.error('Error al eliminar extra');
+    }
+  };
+
+  const handleToggleAvailability = async (extra: ProductExtra) => {
+    try {
+      const { error } = await supabase
+        .from('product_extras')
+        .update({ is_available: !extra.is_available })
+        .eq('id', extra.id);
+
+      if (error) throw error;
+
+      setExtras(extras.map(e =>
+        e.id === extra.id ? { ...e, is_available: !e.is_available } : e
+      ));
+      toast.success(extra.is_available ? 'Extra deshabilitado' : 'Extra habilitado');
+    } catch (error) {
+      toast.error('Error al cambiar disponibilidad');
     }
   };
 
@@ -149,6 +173,7 @@ export const ProductExtrasManager = ({ open, onOpenChange, menuItemId, menuItemN
   const resetForm = () => {
     setFormData({
       name: '',
+      description: '',
       price: '',
       is_available: true,
     });
@@ -192,7 +217,7 @@ export const ProductExtrasManager = ({ open, onOpenChange, menuItemId, menuItemN
                 </TableHeader>
                 <TableBody>
                   {extras.map((extra, index) => (
-                    <TableRow key={extra.id}>
+                    <TableRow key={extra.id} className={!extra.is_available ? 'opacity-50' : ''}>
                       <TableCell>
                         <div className="flex flex-col gap-1">
                           <Button
@@ -215,18 +240,20 @@ export const ProductExtrasManager = ({ open, onOpenChange, menuItemId, menuItemN
                           </Button>
                         </div>
                       </TableCell>
-                      <TableCell className="font-medium">{extra.name}</TableCell>
+                      <TableCell>
+                        <div>
+                          <span className="font-medium">{extra.name}</span>
+                          {extra.description && (
+                            <p className="text-xs text-muted-foreground mt-0.5">{extra.description}</p>
+                          )}
+                        </div>
+                      </TableCell>
                       <TableCell>${extra.price.toFixed(2)}</TableCell>
                       <TableCell>
-                        <span
-                          className={`px-2 py-1 rounded text-xs ${
-                            extra.is_available
-                              ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100'
-                              : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100'
-                          }`}
-                        >
-                          {extra.is_available ? 'Disponible' : 'No disponible'}
-                        </span>
+                        <Switch
+                          checked={extra.is_available ?? true}
+                          onCheckedChange={() => handleToggleAvailability(extra)}
+                        />
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">
@@ -264,6 +291,16 @@ export const ProductExtrasManager = ({ open, onOpenChange, menuItemId, menuItemN
               />
             </div>
             <div className="space-y-2">
+              <Label htmlFor="extra-description">Descripción (opcional)</Label>
+              <Textarea
+                id="extra-description"
+                value={formData.description}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                placeholder="Describe este extra para los clientes..."
+                rows={2}
+              />
+            </div>
+            <div className="space-y-2">
               <Label htmlFor="extra-price">Precio Adicional</Label>
               <Input
                 id="extra-price"
@@ -276,17 +313,13 @@ export const ProductExtrasManager = ({ open, onOpenChange, menuItemId, menuItemN
                 required
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="extra-available">Estado</Label>
-              <select
+            <div className="flex items-center justify-between">
+              <Label htmlFor="extra-available">Disponible</Label>
+              <Switch
                 id="extra-available"
-                value={formData.is_available.toString()}
-                onChange={(e) => setFormData({ ...formData, is_available: e.target.value === 'true' })}
-                className="w-full h-10 px-3 rounded-md border border-input bg-background"
-              >
-                <option value="true">Disponible</option>
-                <option value="false">No disponible</option>
-              </select>
+                checked={formData.is_available}
+                onCheckedChange={(checked) => setFormData({ ...formData, is_available: checked })}
+              />
             </div>
             <Button type="submit" className="w-full">
               {editingExtra ? 'Actualizar' : 'Crear'}

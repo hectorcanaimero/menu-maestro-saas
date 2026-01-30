@@ -132,8 +132,8 @@ const OnboardingPersonal = () => {
           <p className="text-xs text-muted-foreground">Lo usaremos para notificaciones importantes sobre tu tienda</p>
         </div>
 
-        <div className="flex justify-end pt-4">
-          <Button type="submit" size="lg" disabled={loading}>
+        <div className="pt-4">
+          <Button type="submit" disabled={loading} className="h-12 w-full text-base font-medium">
             {loading ? (
               <>
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />

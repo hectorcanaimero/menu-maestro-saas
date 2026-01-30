@@ -364,16 +364,21 @@ const OnboardingSubdomain = () => {
           </Alert>
         )}
 
-        <div className="flex justify-between pt-4">
-          <Button type="button" variant="outline" onClick={() => navigate('/onboarding/business')}>
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Atrás
+        <div className="flex items-center gap-3 pt-4">
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            onClick={() => navigate('/onboarding/business')}
+            className="h-12 w-12 rounded-full flex-shrink-0"
+            aria-label="Atrás"
+          >
+            <ArrowLeft className="w-5 h-5" />
           </Button>
           <Button
             type="submit"
-            size="lg"
             disabled={loading || !subdomainValidation?.isValid || validatingSubdomain}
-            className="bg-gradient-to-r from-primary to-primary/80"
+            className="h-12 flex-1 bg-gradient-to-r from-primary to-primary/80 text-base font-medium"
           >
             {loading ? (
               <>
