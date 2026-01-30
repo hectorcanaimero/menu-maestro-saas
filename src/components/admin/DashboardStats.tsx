@@ -44,11 +44,12 @@ const DashboardStats = () => {
     if (!store?.id) return;
 
     try {
-      // Get total orders and sales for this store
+      // Get total orders and sales for this store (excluding cancelled orders)
       const { data: ordersData, error: ordersError } = await supabase
         .from('orders')
-        .select('id, total_amount')
-        .eq('store_id', store.id);
+        .select('id, total_amount, status')
+        .eq('store_id', store.id)
+        .neq('status', 'cancelled');
 
       if (ordersError) throw ordersError;
 
