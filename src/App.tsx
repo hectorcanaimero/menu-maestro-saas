@@ -22,6 +22,8 @@ const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const UpdatePassword = lazy(() => import("./pages/UpdatePassword"));
 const CreateStore = lazy(() => import("./pages/CreateStore"));
 const LandingPage = lazy(() => import("./pages/LandingPage"));
+const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
+const TermsConditions = lazy(() => import("./pages/TermsConditions"));
 
 // Onboarding routes - multi-step wizard
 const OnboardingPersonal = lazy(() => import("./pages/onboarding/OnboardingPersonal"));
@@ -150,6 +152,23 @@ const AppContent = () => {
                     element={
                       <SectionErrorBoundary>
                         <CreateStore />
+                      </SectionErrorBoundary>
+                    }
+                  />
+                  {/* Legal Pages */}
+                  <Route
+                    path="/privacy"
+                    element={
+                      <SectionErrorBoundary>
+                        <PrivacyPolicy />
+                      </SectionErrorBoundary>
+                    }
+                  />
+                  <Route
+                    path="/terms"
+                    element={
+                      <SectionErrorBoundary>
+                        <TermsConditions />
                       </SectionErrorBoundary>
                     }
                   />

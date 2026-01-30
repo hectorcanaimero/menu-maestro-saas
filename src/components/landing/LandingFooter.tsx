@@ -56,24 +56,19 @@ export const LandingFooter = () => {
 
           {/* Legal */}
           <div>
-            {/* <h4 className="font-semibold mb-4">Legal</h4>
+            <h4 className="font-semibold mb-4">Legal</h4>
             <ul className="space-y-2 text-sm text-muted-foreground">
               <li>
-                <a href="#" className="hover:text-primary transition-colors">
-                  Términos de Servicio
+                <a href="/terms" className="hover:text-primary transition-colors">
+                  Términos y Condiciones
                 </a>
               </li>
               <li>
-                <a href="#" className="hover:text-primary transition-colors">
+                <a href="/privacy" className="hover:text-primary transition-colors">
                   Política de Privacidad
                 </a>
               </li>
-              <li>
-                <a href="#" className="hover:text-primary transition-colors">
-                  Cookies
-                </a>
-              </li>
-            </ul> */}
+            </ul>
           </div>
         </div>
 
