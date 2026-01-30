@@ -25,17 +25,62 @@ export const CategoriesSection = () => {
   const showFeatured = searchParams.get("featured") === "true";
   const { store } = useStore();
 
+  // Fetch categories with product count
   const { data: categories, isLoading } = useQuery({
-    queryKey: ["categories", store?.id],
+    queryKey: ["categories-with-products", store?.id],
     queryFn: async () => {
       if (!store?.id) return [];
-      const { data, error } = await supabase
+
+      // Get categories
+      const { data: categoriesData, error: categoriesError } = await supabase
         .from("categories")
         .select("*")
         .eq("store_id", store.id)
         .order("display_order", { ascending: true });
-      if (error) throw error;
-      return data;
+
+      if (categoriesError) throw categoriesError;
+      if (!categoriesData) return [];
+
+      // Get product counts per category (only available products)
+      const { data: productsData, error: productsError } = await supabase
+        .from("menu_items")
+        .select("category_id")
+        .eq("store_id", store.id)
+        .eq("is_available", true);
+
+      if (productsError) throw productsError;
+
+      // Count products per category
+      const productCounts = new Map<string, number>();
+      productsData?.forEach(product => {
+        if (product.category_id) {
+          const count = productCounts.get(product.category_id) || 0;
+          productCounts.set(product.category_id, count + 1);
+        }
+      });
+
+      // Filter categories that have at least one product
+      return categoriesData.filter(category =>
+        (productCounts.get(category.id) || 0) > 0
+      );
+    },
+    enabled: !!store?.id,
+  });
+
+  // Check if there are featured products
+  const { data: hasFeaturedProducts } = useQuery({
+    queryKey: ["has-featured-products", store?.id],
+    queryFn: async () => {
+      if (!store?.id) return false;
+      const { count, error } = await supabase
+        .from("menu_items")
+        .select("id", { count: "exact", head: true })
+        .eq("store_id", store.id)
+        .eq("is_available", true)
+        .eq("is_featured", true);
+
+      if (error) return false;
+      return (count || 0) > 0;
     },
     enabled: !!store?.id,
   });
@@ -110,19 +155,21 @@ export const CategoriesSection = () => {
           >
             Todos
           </Button>
-          <Button
-            variant={showFeatured ? "default" : "outline"}
-            size="sm"
-            onClick={handleFeaturedClick}
-            className={`rounded-full whitespace-nowrap ${
-              showFeatured
-                ? "bg-primary text-primary-foreground"
-                : "bg-background hover:bg-muted"
-            }`}
-          >
-            <Star className="w-4 h-4 mr-1" />
-            Destacados
-          </Button>
+          {hasFeaturedProducts && (
+            <Button
+              variant={showFeatured ? "default" : "outline"}
+              size="sm"
+              onClick={handleFeaturedClick}
+              className={`rounded-full whitespace-nowrap ${
+                showFeatured
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-background hover:bg-muted"
+              }`}
+            >
+              <Star className="w-4 h-4 mr-1" />
+              Destacados
+            </Button>
+          )}
           {categories.map((category) => {
             const slug = createSlug(category.name);
             return (
