@@ -1,9 +1,9 @@
 # Product Requirements Document (PRD)
 # PideAI - Multi-tenant Food Ordering Platform
 
-**Document Version:** 2.0
-**Date:** January 25, 2026
-**Status:** Active Development - v3.0.50
+**Document Version:** 2.1
+**Date:** January 30, 2026
+**Status:** Active Development - v3.0.54
 **Owner:** Product Team
 
 ---
@@ -496,11 +496,16 @@ A unified platform that provides:
 - **Requirement**: Store owners can add customizable extras to products
 - **Details**:
   - Extra name (e.g., "Size", "Toppings")
+  - Extra description (optional, displayed to customers)
   - Extra options (e.g., "Small", "Medium", "Large")
   - Price modifier per option
   - Required vs optional extras
   - Multiple selection support
   - Maximum selection limits
+  - Individual extra enable/disable toggle (without deletion)
+  - Extra groups with category-level inheritance
+  - Product-level group overrides
+  - Drag-and-drop reordering for groups and extras
 - **Priority**: P0 (Critical)
 - **Dependencies**: Menu items
 
@@ -515,6 +520,24 @@ A unified platform that provides:
   - AI credit deduction from subscription
 - **Priority**: P2 (Medium)
 - **Dependencies**: AI API integration, subscription system
+
+#### FR-011b: Product Image Gallery
+- **Requirement**: Non-food stores can add multiple images per product
+- **Details**:
+  - Multiple images per product (gallery mode)
+  - Only available for non-food/catalog stores (`is_food_business = false`)
+  - Plan-based image limits:
+    - Free: 3 images per product
+    - Starter/Basic: 5 images per product
+    - Pro: 8 images per product
+    - Enterprise: Unlimited (-1)
+  - Primary `image_url` maintained for backward compatibility
+  - Additional images stored in `images` JSONB array column
+  - Database trigger validates and enforces image limits
+  - Images automatically truncated if exceeds plan limit
+  - Gallery disabled for food businesses (array cleared on save)
+- **Priority**: P1 (High)
+- **Dependencies**: Subscription system, Supabase Storage
 
 #### FR-012: Product Search
 - **Requirement**: Customers can search for products by name or description
@@ -1883,7 +1906,7 @@ Context Update → Component Re-render → UI Update
 
 ## 11. Roadmap & Future Enhancements
 
-### 11.1 Recently Completed (v3.0.50 - January 2026)
+### 11.1 Recently Completed (v3.0.54 - January 2026)
 
 **Completed Features:**
 - [x] PostHog analytics integration (Phase 3, 4, 5) - Complete funnel tracking
@@ -1899,6 +1922,13 @@ Context Update → Component Re-render → UI Update
 - [x] Horizontal scrollbar for categories on desktop
 - [x] Payment proof upload and validation system
 - [x] Store subscription module override capability
+- [x] Meta Pixel integration for Facebook tracking
+- [x] Google Tag Manager script integration
+- [x] **Product Image Gallery** - Multiple images per product for non-food stores with plan-based limits
+- [x] **Product Extras Description** - Description field for each extra displayed to customers
+- [x] **Product Extras Toggle** - Enable/disable individual extras without deletion
+- [x] **Onboarding Responsive Improvements** - Mobile-optimized button layout for onboarding flow
+- [x] Hide empty categories from catalog display
 
 ### 11.2 Short-term (Next 3 Months)
 
@@ -2226,6 +2256,7 @@ Context Update → Component Re-render → UI Update
 |---------|------|--------|---------|
 | 1.0 | 2025-12-17 | Product Team | Initial PRD creation based on codebase analysis |
 | 2.0 | 2026-01-25 | Product Team | Updated to reflect v3.0.50 - Added PostHog analytics, subscription limits, platform admin features, payment validations, and latest architectural improvements |
+| 2.1 | 2026-01-30 | Product Team | Updated to v3.0.54 - Added Product Image Gallery for non-food stores, Product Extras description and toggle features, Meta Pixel and GTM integrations, onboarding responsive improvements |
 
 ---
 

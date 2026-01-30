@@ -140,6 +140,21 @@ All routes are defined in src/App.tsx:
 - Signature capture for delivery confirmation
 - Camera access with proper error messages and loading states
 
+**Product Image Gallery:**
+- Multiple images per product (for non-food/catalog stores only)
+- Plan-based image limits: free=3, starter=5, pro=8, enterprise=unlimited
+- Database trigger validates image count against subscription plan
+- Primary `image_url` maintained for backward compatibility
+- Additional images stored in `images` JSONB array column
+- Gallery disabled automatically for food business stores (`is_food_business=true`)
+
+**Product Extras Enhancements:**
+- Each extra can have a description field displayed to customers
+- Individual extras can be enabled/disabled without deletion (via `is_available` toggle)
+- Disabled extras are hidden from customer-facing catalog but preserved in database
+- Extra groups support category-level inheritance with product-level overrides
+- Drag-and-drop reordering for groups and extras within groups
+
 ## Path Aliases
 
 The project uses `@/` as an alias for the `src/` directory:
