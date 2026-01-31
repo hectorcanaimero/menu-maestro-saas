@@ -1,7 +1,14 @@
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
@@ -60,11 +67,7 @@ export function AssignGroupDialog({ open, onClose, groupId, groupName, storeId }
     queryKey: ['extra-group', groupId],
     queryFn: async () => {
       if (!groupId) return null;
-      const { data, error } = await supabase
-        .from('extra_groups')
-        .select('*')
-        .eq('id', groupId)
-        .single();
+      const { data, error } = await supabase.from('extra_groups').select('*').eq('id', groupId).single();
       if (error) throw error;
       return data;
     },
@@ -101,9 +104,7 @@ export function AssignGroupDialog({ open, onClose, groupId, groupName, storeId }
     }
   }, [groupData]);
 
-  const filteredProducts = products?.filter((p) =>
-    p.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredProducts = products?.filter((p) => p.name.toLowerCase().includes(searchTerm.toLowerCase()));
 
   // Clear selections when switching modes
   const handleModeChange = (newMode: 'category' | 'products') => {
@@ -189,9 +190,7 @@ export function AssignGroupDialog({ open, onClose, groupId, groupName, storeId }
             group_id: groupId,
           }));
 
-          const { error: insertError } = await supabase
-            .from('product_extra_group_assignments')
-            .insert(newAssignments);
+          const { error: insertError } = await supabase.from('product_extra_group_assignments').insert(newAssignments);
 
           if (insertError) throw insertError;
         }
@@ -219,9 +218,9 @@ export function AssignGroupDialog({ open, onClose, groupId, groupName, storeId }
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto [&>button]:top-6 [&>button>svg]:h-6 [&>button>svg]:w-6">
         <DialogHeader>
-          <DialogTitle>Asignar "{groupName}"</DialogTitle>
+          <DialogTitle className="mt-8">Asignar "{groupName}"</DialogTitle>
           <DialogDescription>
             Asigna este grupo de extras a una categoría completa o a productos específicos
           </DialogDescription>
@@ -262,9 +261,7 @@ export function AssignGroupDialog({ open, onClose, groupId, groupName, storeId }
                             </p>
                           </div>
                           <div className="flex items-center gap-2">
-                            {selectedCategory === category.id && (
-                              <Badge variant="default">Seleccionado</Badge>
-                            )}
+                            {selectedCategory === category.id && <Badge variant="default">Seleccionado</Badge>}
                           </div>
                         </div>
                       </CardContent>

@@ -24,7 +24,8 @@ const LandingPage = lazy(() => import('./LandingPage'));
 const Index = () => {
   const { store, loading: storeLoading } = useStore();
   const navigate = useNavigate();
-
+  // Use custom logo if available
+  const logoUrl = store?.logo_url;
   // Apply store theme colors
   useStoreTheme();
 
@@ -141,13 +142,25 @@ const Index = () => {
 
       {/* Main content wrapper with conditional blur */}
       <div className={shouldBlurCatalog ? 'blur-md pointer-events-none select-none' : ''}>
+        {/* Center: Logo */}
+        {store && (
+          <div className="items-center justify-center py-6 md:py-8 relative flex md:hidden">
+            <button onClick={() => navigate('/')}>
+              {logoUrl ? (
+                <img src={logoUrl} alt={store?.name} className="w-auto object-contain max-w-[160px]" />
+              ) : (
+                <span className="font-bold text-base text-foreground">{store?.name || 'Tienda'}</span>
+              )}
+            </button>
+          </div>
+        )}
         {/* Categories Horizontal Scroll */}
         <CategoriesSection />
 
         <div className="container mx-auto px-4">
           {/* Store Info Widget */}
           {store && (
-            <section className="pt-4 md:pt-6">
+            <section className="pt-4 md:pt-6 hidden md:block">
               <StoreInfoWidget
                 storeId={store.id}
                 storeName={store.name}

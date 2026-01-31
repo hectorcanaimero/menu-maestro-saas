@@ -50,12 +50,12 @@ export const CartSheet = () => {
   return (
     <Sheet onOpenChange={handleOpenChange}>
       <SheetTrigger asChild>
-        <Button variant="outline" size="icon" className="relative">
-          <ShoppingCart className="w-5 h-5" />
+        <Button variant="outline" size="icon" className="relative h-8 w-8 md:h-9 md:w-9">
+          <ShoppingCart className="w-4 h-4 md:w-5 md:h-5" />
           {totalItems > 0 && (
             <Badge
               variant="destructive"
-              className="absolute -top-2 -right-2 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs"
+              className="absolute -top-2 -right-2 h-4 w-4 md:h-5 md:w-5 rounded-full p-0 flex items-center justify-center text-[10px] md:text-xs"
             >
               {totalItems}
             </Badge>

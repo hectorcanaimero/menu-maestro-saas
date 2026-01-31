@@ -10,7 +10,7 @@ import AdminLayout from '@/components/admin/AdminLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Edit, Trash2, Box, FolderTree, Settings2, ListPlus, Link2 } from 'lucide-react';
+import { Plus, Edit, Trash2, Box, FolderTree, Settings2, ListPlus, Link2, X } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -448,16 +448,15 @@ function GroupDialog({
 }) {
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto [&>button]:top-6 [&>button>svg]:h-6 [&>button>svg]:w-6">
         <DialogHeader>
-          <DialogTitle>{editing ? 'Editar Grupo' : 'Crear Grupo de Extras'}</DialogTitle>
+          <DialogTitle className="mt-6">{editing ? 'Editar Grupo' : 'Crear Grupo de Extras'}</DialogTitle>
           <DialogDescription>
             {editing
               ? 'Modifica las propiedades del grupo'
               : 'Paso 1: Define el grupo. Luego podrás agregar los extras individuales.'}
           </DialogDescription>
         </DialogHeader>
-
         <div className="space-y-4 py-4">
           {/* Name */}
           <div className="space-y-2">
@@ -700,8 +699,8 @@ function ExtrasDialog({
     setExtraIsAvailable(true);
   };
 
-  // Form content shared between mobile and desktop
-  const FormContent = () => (
+  // Form content rendered inline to avoid focus loss on mobile
+  const formContent = (
     <div className="space-y-4">
       <div className="space-y-2">
         <Label htmlFor="extra_name">Nombre del Extra *</Label>
@@ -734,14 +733,12 @@ function ExtrasDialog({
       </div>
       <div className="flex items-center justify-between p-3 border rounded-lg">
         <div className="flex-1 min-w-0">
-          <Label htmlFor="extra_available" className="font-medium">Disponible</Label>
+          <Label htmlFor="extra_available" className="font-medium">
+            Disponible
+          </Label>
           <p className="text-xs text-muted-foreground">Si está desactivado, no se mostrará a los clientes</p>
         </div>
-        <Switch
-          id="extra_available"
-          checked={extraIsAvailable}
-          onCheckedChange={setExtraIsAvailable}
-        />
+        <Switch id="extra_available" checked={extraIsAvailable} onCheckedChange={setExtraIsAvailable} />
       </div>
       <div className="flex gap-2">
         {editingExtra ? (
@@ -765,19 +762,16 @@ function ExtrasDialog({
 
   // Extra item card for mobile (simplified)
   const ExtraItemMobile = ({ extra }: { extra: ProductExtra }) => (
-    <div className={`p-4 border rounded-lg space-y-3 ${extra.is_available === false ? 'opacity-60 bg-muted/50' : 'bg-background'}`}>
+    <div
+      className={`p-4 border rounded-lg space-y-3 ${extra.is_available === false ? 'opacity-60 bg-muted/50' : 'bg-background'}`}
+    >
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
           <p className="font-medium">{extra.name}</p>
-          {extra.description && (
-            <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{extra.description}</p>
-          )}
+          {extra.description && <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{extra.description}</p>}
           <p className="text-sm font-semibold text-primary mt-1">${extra.price.toFixed(2)}</p>
         </div>
-        <Switch
-          checked={extra.is_available ?? true}
-          onCheckedChange={() => handleToggleAvailability(extra)}
-        />
+        <Switch checked={extra.is_available ?? true} onCheckedChange={() => handleToggleAvailability(extra)} />
       </div>
       <div className="flex items-center gap-2 pt-2 border-t">
         <Button variant="outline" size="sm" onClick={() => startEdit(extra)} className="flex-1">
@@ -823,7 +817,9 @@ function ExtrasDialog({
                     <div className="flex items-center gap-2">
                       <p className="font-medium truncate">{extra.name}</p>
                       {extra.is_available === false && (
-                        <Badge variant="secondary" className="text-xs">No disponible</Badge>
+                        <Badge variant="secondary" className="text-xs">
+                          No disponible
+                        </Badge>
                       )}
                     </div>
                     {extra.description && (
@@ -861,15 +857,15 @@ function ExtrasDialog({
   if (isMobile) {
     return (
       <Sheet open={open} onOpenChange={onClose}>
-        <SheetContent side="bottom" className="h-[90vh] flex flex-col p-0">
+        <SheetContent side="bottom" className="h-[99vh] flex flex-col p-0">
           <SheetHeader className="px-4 pt-4 pb-3 border-b">
-            <SheetTitle className="text-left">Gestionar Extras: {truncatedName}</SheetTitle>
+            <SheetTitle className="text-left mt-8">Gestionar Extras: {truncatedName}</SheetTitle>
             <SheetDescription className="text-left">
               Define las opciones individuales con nombre y precio
             </SheetDescription>
           </SheetHeader>
           <div className="flex-1 overflow-y-auto p-4 space-y-6">
-            <FormContent />
+            {formContent}
             <Separator />
             <ExtrasList />
           </div>
@@ -889,7 +885,7 @@ function ExtrasDialog({
         <div className="space-y-4 py-4">
           <Card>
             <CardContent className="pt-6">
-              <FormContent />
+              {formContent}
             </CardContent>
           </Card>
 
