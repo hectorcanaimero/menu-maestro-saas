@@ -767,13 +767,15 @@ function ExtrasDialog({
     >
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
-          <p className="font-medium">{extra.name}</p>
-          {extra.description && <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{extra.description}</p>}
+          <p className="font-medium break-words whitespace-normal">{extra.name}</p>
+          {extra.description && (
+            <p className="mt-0.5 text-xs text-muted-foreground break-words whitespace-normal">{extra.description}</p>
+          )}
           <p className="text-sm font-semibold text-primary mt-1">${extra.price.toFixed(2)}</p>
         </div>
         <Switch checked={extra.is_available ?? true} onCheckedChange={() => handleToggleAvailability(extra)} />
       </div>
-      <div className="flex items-center gap-2 pt-2 border-t">
+      <div className="flex items-center gap-2 pt-2 border-t shrink-0">
         <Button variant="outline" size="sm" onClick={() => startEdit(extra)} className="flex-1">
           <Edit className="w-4 h-4 mr-1" />
           Editar
@@ -876,17 +878,15 @@ function ExtrasDialog({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-lg md:max-w-[60vw] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Gestionar Extras: {groupName}</DialogTitle>
           <DialogDescription>Define las opciones individuales con su nombre y precio</DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4 py-4">
+        <div className="flex-1 min-w-0 space-y-4 py-4">
           <Card>
-            <CardContent className="pt-6">
-              {formContent}
-            </CardContent>
+            <CardContent className="pt-6">{formContent}</CardContent>
           </Card>
 
           <Separator />
