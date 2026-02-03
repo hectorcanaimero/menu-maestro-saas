@@ -71,6 +71,20 @@ All routes are defined in src/App.tsx:
 - `/admin/settings` - Store settings
 - `/create-store` - Store creation
 
+**Platform Admin Routes (platform.pideai.com):**
+- Accessed via subdomain `platform.pideai.com` (NOT via `/platform-admin` path)
+- `/` - Platform dashboard
+- `/stores` - Stores management
+- `/subscriptions` - Subscriptions management
+- `/payments` - Payment validations
+- `/plans` - Plans manager
+- `/admins` - Platform administrators
+- `/posthog` - Analytics dashboard
+- `/catalogs` - Catalog views tracking
+- `/payment-methods` - Platform payment methods
+
+**Development:** Use `localStorage.setItem("dev_subdomain", "platform")` to access platform admin locally
+
 **Important:** Add custom routes ABOVE the catch-all `*` route (NotFound)
 
 ### Database Integration
@@ -155,6 +169,43 @@ All routes are defined in src/App.tsx:
 - Extra groups support category-level inheritance with product-level overrides
 - Drag-and-drop reordering for groups and extras within groups
 
+**Currency Conversion & Price Display:**
+- Automatic conversion from USD/EUR to VES using BCV rates or manual rates
+- Dual price display: original currency (large) + converted VES (small)
+- **Hide Original Price** feature (`hide_original_price` field):
+  - When enabled: Shows ONLY VES price (hides USD/EUR)
+  - Use case: Merchants using custom exchange rates who don't want to reveal their rate
+  - Configured in Admin → Settings → Conversion tab
+  - Default: Shows both prices (dual display)
+- Active currency selection for checkout calculations
+- Manual exchange rate override option
+
+**Inventory/Stock Management (Non-Food Stores Only):**
+- **Applies ONLY to non-food stores** (`is_food_business = false`)
+- Food stores always allow orders regardless of stock levels
+- Stock tracking fields per product:
+  - `track_stock`: Enable/disable stock tracking for product
+  - `stock_quantity`: Current available units
+  - `stock_minimum`: Low stock alert threshold
+- **Automatic Stock Reduction:**
+  - Stock decreases when order status becomes "ready"
+  - Logged in `stock_history` table for audit trail
+- **Real-time Validation:**
+  - Validates stock when adding to cart
+  - Validates stock when increasing quantity
+  - Validates entire cart at checkout
+  - Clear error messages: "Solo quedan X unidades de [Producto]"
+- **Visual Indicators:**
+  - Products with stock = 0 show "Agotado" badge
+  - Out-of-stock products shown in grayscale
+  - No "add to cart" button for out-of-stock items
+- **Stock Validation Library:** `src/lib/stockValidator.ts`
+- **React Hook:** `src/hooks/useStockValidation.ts`
+- **RPC Functions:**
+  - `validate_cart_stock(store_id, items)` - Validates cart before checkout
+  - `get_low_stock_products(store_id)` - Dashboard low stock alerts
+  - `adjust_product_stock(item_id, quantity, type, notes)` - Manual adjustments
+
 ## Path Aliases
 
 The project uses `@/` as an alias for the `src/` directory:
@@ -183,3 +234,24 @@ import { supabase } from "@/integrations/supabase/client"
 - CSS variables for theming
 - shadcn/ui component system
 - Responsive design utilities
+
+## Performance Optimizations
+
+**Platform Admin RPC Functions:**
+To avoid RLS (Row Level Security) recursion issues and improve query performance, several optimized RPC functions have been implemented:
+
+- `get_user_id_by_email(email)` - Secure email lookup for platform admins
+- `get_pending_payment_validations()` - Single query for pending payments with store/plan data
+- `get_recent_payment_validations()` - Single query for recent validations
+- All queries avoid `profiles` table joins which cause RLS recursion
+- Data is fetched in single optimized queries instead of multiple sequential queries
+
+**Stock Validation:**
+- `validate_cart_stock(store_id, items)` - Batch validates all cart items in single query
+- Only runs for non-food stores to avoid unnecessary checks
+
+**Best Practices:**
+- Always use RPC functions for complex joins involving `profiles` table
+- Fetch related data in separate queries and merge in application layer
+- Use `maybeSingle()` instead of `single()` when records may not exist
+- Implement proper error handling and fallback mechanisms

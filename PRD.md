@@ -1,9 +1,9 @@
 # Product Requirements Document (PRD)
 # PideAI - Multi-tenant Food Ordering Platform
 
-**Document Version:** 2.1
-**Date:** January 30, 2026
-**Status:** Active Development - v3.0.54
+**Document Version:** 2.2
+**Date:** February 3, 2026
+**Status:** Active Development - v3.0.66+
 **Owner:** Product Team
 
 ---
@@ -381,6 +381,11 @@ A unified platform that provides:
 - **US-075**: As a platform admin, I want to view platform-wide analytics so that I can measure success.
 - **US-076**: As a platform admin, I want to compare store performance so that I can identify best practices.
 
+#### Epic: Platform Admin Access
+- **US-084**: As a platform admin, I want to access the platform admin panel via `platform.pideai.com` subdomain so that it's separate from store domains.
+- **US-085**: As a platform admin, I want to add new platform administrators by email so that I can delegate responsibilities.
+- **US-086**: As a platform admin, I want to view catalog view metrics for all stores so that I can track platform engagement.
+
 ### 5.5 Store Owner - Subscription Stories
 
 #### Epic: Subscription Payment
@@ -390,6 +395,31 @@ A unified platform that provides:
 - **US-080**: As a store owner, I want to upload my payment proof directly to Supabase Storage so that I can submit payment verification.
 - **US-081**: As a store owner, I want to copy payment details to clipboard so that I can easily paste them in my banking app.
 - **US-082**: As a store owner, I want to see my payment validation status so that I know when my payment is approved.
+
+### 5.6 Store Owner - Currency & Pricing Stories
+
+#### Epic: Currency Conversion
+- **US-083**: As a store owner with dual currency pricing, I want to hide the original price (USD/EUR) and only show VES to customers so that they don't know my exchange rate.
+- **US-087**: As a store owner, I want to toggle between showing both prices or only VES so that I can control what customers see.
+- **US-088**: As a store owner, I want to use manual exchange rates instead of BCV rates so that I can apply my own margins.
+
+### 5.7 Store Owner - Inventory Stories (Non-Food Stores)
+
+#### Epic: Stock Management
+- **US-089**: As a non-food store owner, I want to enable stock tracking for my products so that I can prevent overselling.
+- **US-090**: As a non-food store owner, I want to set stock quantities for each product so that the system knows what's available.
+- **US-091**: As a non-food store owner, I want stock to reduce automatically when orders are ready so that I don't have to update manually.
+- **US-092**: As a non-food store owner, I want to see low stock alerts so that I can reorder inventory on time.
+- **US-093**: As a non-food store owner, I want to view stock history so that I can audit all changes.
+- **US-094**: As a non-food store owner, I want to manually adjust stock quantities so that I can correct errors or add new inventory.
+
+### 5.8 Customer - Inventory Stories (Non-Food Stores)
+
+#### Epic: Stock Visibility
+- **US-095**: As a customer shopping at a non-food store, I want to see "Agotado" (Out of Stock) on products with no stock so that I don't try to order them.
+- **US-096**: As a customer, I want to be prevented from adding out-of-stock items to my cart so that I don't waste time.
+- **US-097**: As a customer, I want to see clear error messages if I try to order more than available stock so that I can adjust my quantity.
+- **US-098**: As a customer, I want stock validation at checkout so that I'm notified before payment if items are unavailable.
 
 ---
 
@@ -577,6 +607,8 @@ A unified platform that provides:
 - **Details**:
   - Update quantity (min: 1, max: 99)
   - Remove individual items
+  - Stock validation on quantity increase (for non-food stores)
+  - Clear error messages if stock unavailable
   - Clear entire cart
   - View itemized totals
   - Apply coupon codes
@@ -1415,9 +1447,176 @@ A unified platform that provides:
 - **Priority**: P2 (Medium)
 - **Dependencies**: WhatsApp Business API, customer segmentation
 
-### 6.20 Security & Privacy
+### 6.20 Currency Conversion & Price Display
 
-#### FR-077: User Authentication
+#### FR-078: Dual Currency Display
+- **Requirement**: Stores can show prices in both original currency and VES
+- **Details**:
+  - Automatic conversion from USD/EUR to VES
+  - Uses BCV (Banco Central de Venezuela) exchange rates
+  - Alternative: Manual exchange rate override
+  - Dual price display: original currency (large) + VES (small below)
+  - Active currency selection for checkout calculations
+  - Real-time rate updates (hourly)
+  - Manual rate refresh button for admins
+- **Priority**: P1 (High)
+- **Dependencies**: BCV API integration, currency conversion service
+
+#### FR-079: Hide Original Price
+- **Requirement**: Store owners can hide original currency and show only VES
+- **Details**:
+  - Toggle setting: `hide_original_price` (boolean)
+  - When enabled: Shows ONLY VES price (large), hides USD/EUR completely
+  - When disabled: Shows dual display (default)
+  - Use case: Merchants using custom exchange rates who don't want to reveal their rate to customers
+  - Configured in Admin → Settings → Conversion tab
+  - Changes apply immediately to catalog
+  - Works with both BCV and manual exchange rates
+- **Priority**: P2 (Medium)
+- **Dependencies**: Currency conversion system
+
+### 6.21 Inventory & Stock Management (Non-Food Stores Only)
+
+#### FR-080: Stock Tracking System
+- **Requirement**: Non-food stores can track product inventory
+- **Details**:
+  - **Applies ONLY to non-food stores** (`is_food_business = false`)
+  - Food stores skip all stock validations (always allow orders)
+  - Per-product settings:
+    - `track_stock` (boolean): Enable/disable tracking
+    - `stock_quantity` (integer): Current available units
+    - `stock_minimum` (integer): Low stock alert threshold
+  - Stock displayed in admin product list
+  - Low stock warnings on dashboard
+  - Stock history audit trail (`stock_history` table)
+- **Priority**: P1 (High)
+- **Dependencies**: Database schema, admin dashboard
+
+#### FR-081: Automatic Stock Reduction
+- **Requirement**: Stock decreases automatically when orders are ready
+- **Details**:
+  - Trigger: Order status changes to "ready"
+  - Only affects products with `track_stock = true`
+  - Reduces `stock_quantity` by order quantity
+  - Allows negative stock (backorder scenarios)
+  - Logs all changes to `stock_history` table with:
+    - Previous stock
+    - New stock
+    - Quantity changed
+    - Order reference
+    - Timestamp
+  - Change type: "order" (vs "manual_adjustment" or "restock")
+- **Priority**: P1 (High)
+- **Dependencies**: Order management system
+
+#### FR-082: Real-time Stock Validation
+- **Requirement**: Validate stock availability at multiple checkpoints
+- **Details**:
+  - **Validation Point 1 - Add to Cart:**
+    - Check stock before adding product
+    - Error message: "Producto está agotado" (if stock = 0)
+    - Error message: "Solo quedan X unidades de [Producto]" (if insufficient)
+  - **Validation Point 2 - Increase Quantity:**
+    - Validate before increasing cart item quantity
+    - Same error messages as add to cart
+  - **Validation Point 3 - Checkout:**
+    - Batch validate entire cart before order creation
+    - Error message: "Stock insuficiente: [Producto] (disponible: X)"
+    - Prevents order submission if any item out of stock
+  - All validations use RPC function: `validate_cart_stock(store_id, items)`
+  - Validation library: `src/lib/stockValidator.ts`
+  - React hook: `src/hooks/useStockValidation.ts`
+- **Priority**: P0 (Critical for non-food stores)
+- **Dependencies**: Cart system, checkout process
+
+#### FR-083: Out-of-Stock Visual Indicators
+- **Requirement**: Clearly show out-of-stock products to customers
+- **Details**:
+  - Products with `stock_quantity = 0`:
+    - Badge: "Agotado" (gray background)
+    - Image displayed in grayscale
+    - Card opacity reduced to 70%
+    - No "Add to Cart" button shown
+    - Product still visible but not orderable
+  - Clicking out-of-stock product:
+    - Can view details
+    - Cannot add to cart
+    - WhatsApp inquiry button still available (if enabled)
+- **Priority**: P1 (High)
+- **Dependencies**: Product catalog UI
+
+#### FR-084: Stock Management Admin Tools
+- **Requirement**: Store owners can manage inventory manually
+- **Details**:
+  - **Admin Product List:**
+    - Stock quantity column
+    - Low stock indicators (red text if at/below minimum)
+    - Quick edit stock from list view
+  - **Product Edit Form:**
+    - Enable/disable stock tracking toggle
+    - Current stock input field
+    - Minimum stock threshold input
+    - Stock history viewer
+  - **Manual Stock Adjustment:**
+    - RPC function: `adjust_product_stock(item_id, quantity, type, notes)`
+    - Change types: "manual_adjustment", "restock"
+    - Optional notes field for justification
+    - Logged to `stock_history` with admin user ID
+  - **Low Stock Dashboard Widget:**
+    - Shows products at/below minimum threshold
+    - RPC function: `get_low_stock_products(store_id)`
+    - Quick links to restock
+- **Priority**: P1 (High)
+- **Dependencies**: Admin dashboard, RPC functions
+
+### 6.22 Platform Admin Migration
+
+#### FR-085: Platform Subdomain Access
+- **Requirement**: Platform admin accessible via dedicated subdomain
+- **Details**:
+  - Production URL: `platform.pideai.com`
+  - Development: `localStorage.setItem("dev_subdomain", "platform")`
+  - OLD `/platform-admin` routes removed completely
+  - New subdomain-based routing:
+    - `/` → Platform dashboard
+    - `/stores` → Stores management
+    - `/subscriptions` → Subscriptions
+    - `/payments` → Payment validations
+    - `/plans` → Plan management
+    - `/admins` → Platform administrators
+    - `/posthog` → Analytics
+    - `/catalogs` → Catalog views tracking
+    - `/payment-methods` → Platform payment methods
+  - Automatic redirect from `/platform-admin` to platform subdomain
+  - Guard component validates platform subdomain access
+- **Priority**: P0 (Critical)
+- **Dependencies**: DNS configuration, routing system
+
+#### FR-086: Platform Admin Performance Optimizations
+- **Requirement**: Optimized queries to avoid RLS recursion and improve speed
+- **Details**:
+  - **Problem:** Direct joins with `profiles` table cause RLS recursion
+  - **Solution:** RPC functions with separate queries
+  - **Optimized RPC Functions:**
+    - `get_user_id_by_email(email)` - Secure email lookup for admins
+    - `get_pending_payment_validations()` - Single query for pending payments
+    - `get_recent_payment_validations()` - Single query for recent validations
+  - **Performance Improvements:**
+    - `/payments` page: 3-5x faster (was 4+ queries, now 2 RPC calls)
+    - `/catalogs` page: 2-3x faster (no RLS recursion)
+    - No cross-table join issues
+    - Data merged in application layer
+  - **Best Practices Applied:**
+    - Use `.maybeSingle()` instead of `.single()` to avoid errors
+    - Fetch related data separately
+    - Use Map for efficient lookups
+    - Proper error handling and fallbacks
+- **Priority**: P1 (High)
+- **Dependencies**: Supabase RPC functions, platform admin UI
+
+### 6.24 Security & Privacy
+
+#### FR-087: User Authentication
 - **Requirement**: Secure user authentication system
 - **Details**:
   - Email/password signup
@@ -1430,7 +1629,7 @@ A unified platform that provides:
 - **Priority**: P0 (Critical)
 - **Dependencies**: Supabase Auth
 
-#### FR-068: Data Privacy
+#### FR-088: Data Privacy
 - **Requirement**: Protect customer personal data
 - **Details**:
   - Encrypted data in transit (HTTPS)
@@ -1442,7 +1641,7 @@ A unified platform that provides:
 - **Priority**: P0 (Critical)
 - **Dependencies**: Supabase security, SSL certificates
 
-#### FR-069: Error Monitoring
+#### FR-089: Error Monitoring
 - **Requirement**: Track and report application errors
 - **Details**:
   - Sentry integration
