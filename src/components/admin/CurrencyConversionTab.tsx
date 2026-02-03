@@ -19,6 +19,7 @@ const currencyConversionSchema = z.object({
   manual_usd_ves_rate: z.number().min(0).nullable(),
   manual_eur_ves_rate: z.number().min(0).nullable(),
   active_currency: z.enum(['original', 'VES']),
+  hide_original_price: z.boolean(),
 });
 
 type CurrencyConversionForm = z.infer<typeof currencyConversionSchema>;
@@ -31,6 +32,7 @@ interface CurrencyConversionTabProps {
     manual_usd_ves_rate: number | null;
     manual_eur_ves_rate: number | null;
     active_currency: string | null;
+    hide_original_price: boolean | null;
   };
 }
 
@@ -55,12 +57,14 @@ export function CurrencyConversionTab({ storeId, initialData }: CurrencyConversi
       manual_usd_ves_rate: initialData.manual_usd_ves_rate,
       manual_eur_ves_rate: initialData.manual_eur_ves_rate,
       active_currency: (initialData.active_currency as 'original' | 'VES') ?? 'original',
+      hide_original_price: initialData.hide_original_price ?? false,
     },
   });
 
   const enableConversion = watch('enable_currency_conversion');
   const useManual = watch('use_manual_exchange_rate');
   const activeCurrency = watch('active_currency');
+  const hideOriginalPrice = watch('hide_original_price');
 
   // Load BCV rates on mount
   useEffect(() => {
@@ -73,6 +77,7 @@ export function CurrencyConversionTab({ storeId, initialData }: CurrencyConversi
     setValue('use_manual_exchange_rate', initialData.use_manual_exchange_rate ?? false);
     setValue('manual_usd_ves_rate', initialData.manual_usd_ves_rate);
     setValue('manual_eur_ves_rate', initialData.manual_eur_ves_rate);
+    setValue('hide_original_price', initialData.hide_original_price ?? false);
   }, [initialData, setValue]);
 
   async function loadBCVRates() {
@@ -125,6 +130,7 @@ export function CurrencyConversionTab({ storeId, initialData }: CurrencyConversi
           manual_usd_ves_rate: data.manual_usd_ves_rate,
           manual_eur_ves_rate: data.manual_eur_ves_rate,
           active_currency: data.active_currency,
+          hide_original_price: data.hide_original_price,
         })
         .eq('id', storeId);
 
@@ -186,34 +192,62 @@ export function CurrencyConversionTab({ storeId, initialData }: CurrencyConversi
                 </AlertDescription>
               </Alert>
 
-              <div className="border-t pt-4">
-                <Label className="text-base">Moneda activa para checkout</Label>
-                <p className="text-sm text-muted-foreground mb-3">
-                  Selecciona qué moneda se usará para los cálculos de pedidos y pagos
-                </p>
-                <div className="grid grid-cols-2 gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setValue('active_currency', 'original')}
-                    className={`p-4 border-2 rounded-lg transition-all ${
-                      activeCurrency === 'original'
-                        ? 'border-primary bg-primary/5'
-                        : 'border-border hover:border-primary/50'
-                    }`}
-                  >
-                    <div className="font-medium">Moneda Original</div>
-                    <div className="text-sm text-muted-foreground">USD o EUR</div>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setValue('active_currency', 'VES')}
-                    className={`p-4 border-2 rounded-lg transition-all ${
-                      activeCurrency === 'VES' ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'
-                    }`}
-                  >
-                    <div className="font-medium">Bolívares</div>
-                    <div className="text-sm text-muted-foreground">VES</div>
-                  </button>
+              <div className="border-t pt-4 space-y-4">
+                <div>
+                  <Label className="text-base">Moneda activa para checkout</Label>
+                  <p className="text-sm text-muted-foreground mb-3">
+                    Selecciona qué moneda se usará para los cálculos de pedidos y pagos
+                  </p>
+                  <div className="grid grid-cols-2 gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setValue('active_currency', 'original')}
+                      className={`p-4 border-2 rounded-lg transition-all ${
+                        activeCurrency === 'original'
+                          ? 'border-primary bg-primary/5'
+                          : 'border-border hover:border-primary/50'
+                      }`}
+                    >
+                      <div className="font-medium">Moneda Original</div>
+                      <div className="text-sm text-muted-foreground">USD o EUR</div>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setValue('active_currency', 'VES')}
+                      className={`p-4 border-2 rounded-lg transition-all ${
+                        activeCurrency === 'VES' ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'
+                      }`}
+                    >
+                      <div className="font-medium">Bolívares</div>
+                      <div className="text-sm text-muted-foreground">VES</div>
+                    </button>
+                  </div>
+                </div>
+
+                <div className="border-t pt-4">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="hide_original_price" className="text-base">
+                        Ocultar precio original (USD/EUR)
+                      </Label>
+                      <p className="text-sm text-muted-foreground">
+                        Solo muestra el precio en bolívares (VES) a los clientes, oculta el precio en USD/EUR
+                      </p>
+                    </div>
+                    <Switch
+                      id="hide_original_price"
+                      checked={hideOriginalPrice}
+                      onCheckedChange={(checked) => setValue('hide_original_price', checked)}
+                    />
+                  </div>
+
+                  {hideOriginalPrice && (
+                    <Alert className="mt-3">
+                      <AlertDescription>
+                        Los clientes solo verán el precio en bolívares (VES) en grande. El precio original no se mostrará.
+                      </AlertDescription>
+                    </Alert>
+                  )}
                 </div>
               </div>
             </>

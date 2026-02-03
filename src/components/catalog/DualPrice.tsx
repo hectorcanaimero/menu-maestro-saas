@@ -12,6 +12,7 @@ interface DualPriceProps {
 /**
  * Component to display dual currency pricing
  * Shows original price (USD/EUR) with converted VES price below if enabled
+ * Or only shows VES price if hide_original_price is enabled
  */
 export function DualPrice({ price, className = "", size = "md", style, conversionTextColor }: DualPriceProps) {
   const formatPrice = useFormatPrice();
@@ -35,11 +36,11 @@ export function DualPrice({ price, className = "", size = "md", style, conversio
   const classes = sizeClasses[size];
 
   if (!priceData.isDualDisplay) {
-    // Single price display
+    // Single price display (or VES-only when hideOriginalPrice is true)
     return <div className={`${classes.original} ${className}`} style={style}>{priceData.original}</div>;
   }
 
-  // Dual price display
+  // Dual price display (original large, converted small)
   return (
     <div className={`flex flex-col gap-0.5 ${className}`} style={style}>
       <div className={classes.original}>{priceData.original}</div>

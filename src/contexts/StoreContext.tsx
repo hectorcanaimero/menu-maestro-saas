@@ -50,6 +50,7 @@ export interface Store {
   manual_usd_ves_rate: number | null;
   manual_eur_ves_rate: number | null;
   active_currency: string | null; // 'original' or 'VES' - which currency to use for checkout
+  hide_original_price: boolean | null; // When true, only shows VES price (hides original USD/EUR)
 }
 
 interface StoreContextType {

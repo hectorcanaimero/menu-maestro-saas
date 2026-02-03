@@ -410,6 +410,7 @@ const StoreSettings = () => {
                 manual_usd_ves_rate: store.manual_usd_ves_rate,
                 manual_eur_ves_rate: store.manual_eur_ves_rate,
                 active_currency: store.active_currency,
+                hide_original_price: store.hide_original_price,
               }}
             />
           </TabsContent>

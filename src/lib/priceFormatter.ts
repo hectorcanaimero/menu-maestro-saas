@@ -75,8 +75,11 @@ export function useFormatPrice() {
     "VES"
   );
 
+  // Check if original price should be hidden
+  const hideOriginalPrice = store?.hide_original_price ?? false;
+
   return (price: number) => {
-    // Always show original price first
+    // Always calculate both prices
     const originalPrice = formatPrice(price, {
       currency: productCurrency,
       decimalPlaces: store?.decimal_places ?? 2,
@@ -84,7 +87,7 @@ export function useFormatPrice() {
       thousandsSeparator: store?.thousands_separator || ",",
     });
 
-    // If conversion is enabled and rate is available, show converted price below
+    // If conversion is enabled and rate is available, show converted price
     if (shouldShowConversion && rate) {
       const convertedPrice = formatPrice(price * rate, {
         currency: "VES",
@@ -93,10 +96,22 @@ export function useFormatPrice() {
         thousandsSeparator: store?.thousands_separator || ",",
       });
 
+      // If hide_original_price is true, only show VES price
+      if (hideOriginalPrice) {
+        return {
+          original: convertedPrice, // Show VES as main price
+          converted: null,
+          isDualDisplay: false,
+          hideOriginalPrice: true,
+        };
+      }
+
+      // Show both prices (normal dual display)
       return {
         original: originalPrice,
         converted: convertedPrice,
         isDualDisplay: true,
+        hideOriginalPrice: false,
       };
     }
 
@@ -105,6 +120,7 @@ export function useFormatPrice() {
       original: originalPrice,
       converted: null,
       isDualDisplay: false,
+      hideOriginalPrice: false,
     };
   };
 }
