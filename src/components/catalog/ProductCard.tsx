@@ -22,6 +22,8 @@ interface ProductCardProps {
   isAvailable?: boolean;
   imagesCount?: number;
   index?: number;
+  stockQuantity?: number | null;
+  trackStock?: boolean;
   allProducts?: Array<{
     id: string;
     name: string;
@@ -45,6 +47,8 @@ export const ProductCard = ({
   isAvailable = true,
   imagesCount = 0,
   index = 0,
+  stockQuantity,
+  trackStock = false,
   allProducts = [],
 }: ProductCardProps) => {
   const { store } = useStore();
@@ -56,10 +60,16 @@ export const ProductCard = ({
   const productPromotions = useProductPromotions(id, categoryId);
   const bestDeal = getBestPromotion(productPromotions, price);
 
+  // Check if product is out of stock (only for non-food stores with stock tracking)
+  const isOutOfStock = trackStock && stockQuantity !== null && stockQuantity !== undefined && stockQuantity <= 0;
+
+  // Product is effectively unavailable if marked unavailable OR out of stock
+  const effectivelyUnavailable = !isAvailable || isOutOfStock;
+
   const handleAddToCart = (e: React.MouseEvent) => {
     e.stopPropagation();
-    // Don't navigate if product is not available
-    if (!isAvailable) return;
+    // Don't navigate if product is not available or out of stock
+    if (effectivelyUnavailable) return;
     // Navigate to product detail page where extras can be selected
     navigate(`/products/${id}`);
   };
@@ -77,7 +87,7 @@ export const ProductCard = ({
     <Card
         className={`group h-full overflow-hidden border border-border/40 hover:border-border hover:shadow-lg transition-all duration-300 bg-card cursor-pointer rounded-lg relative ${
           compact ? 'max-w-[200px]' : ''
-        } ${!isAvailable ? 'opacity-70' : ''}`}
+        } ${effectivelyUnavailable ? 'opacity-70' : ''}`}
         onClick={() => navigate(`/products/${id}`)}
       >
         <div className={isGridView ? 'flex flex-col h-full' : 'flex flex-col sm:flex-row h-full'}>
@@ -96,18 +106,18 @@ export const ProductCard = ({
                 src={image_url}
                 alt={name}
                 loading="lazy"
-                className={`w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 ${!isAvailable ? 'grayscale' : ''}`}
+                className={`w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 ${effectivelyUnavailable ? 'grayscale' : ''}`}
               />
             ) : (
-              <div className={`w-full h-full flex items-center justify-center bg-muted/50 ${!isAvailable ? 'grayscale' : ''}`}>
+              <div className={`w-full h-full flex items-center justify-center bg-muted/50 ${effectivelyUnavailable ? 'grayscale' : ''}`}>
                 <Eye className="w-12 h-12 text-muted-foreground/30" />
               </div>
             )}
 
-            {/* Not Available Badge */}
-            {!isAvailable && (
+            {/* Not Available / Out of Stock Badge */}
+            {effectivelyUnavailable && (
               <Badge className="absolute top-2 right-2 bg-gray-600 text-white shadow-md">
-                No disponible
+                {isOutOfStock ? 'Agotado' : 'No disponible'}
               </Badge>
             )}
 
@@ -122,7 +132,7 @@ export const ProductCard = ({
             )}
 
             {/* Multiple Images Badge */}
-            {imagesCount > 1 && isAvailable && (
+            {imagesCount > 1 && !effectivelyUnavailable && (
               <Badge variant="secondary" className="absolute bottom-2 left-2 bg-background/80 backdrop-blur-sm shadow-md flex items-center gap-1 text-xs">
                 <Images className="w-3 h-3" />
                 {imagesCount}
@@ -180,7 +190,7 @@ export const ProductCard = ({
           </div>
 
           {/* Floating Add Button - Touch-friendly on mobile */}
-          {!store?.catalog_mode && isAvailable ? (
+          {!store?.catalog_mode && !effectivelyUnavailable ? (
             <Button
               size="icon"
               onClick={handleAddToCart}

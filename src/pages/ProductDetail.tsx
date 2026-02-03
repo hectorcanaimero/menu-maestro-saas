@@ -28,6 +28,9 @@ interface Product {
   images: string[] | null;
   category_id: string | null;
   is_available: boolean | null;
+  stock_quantity: number | null;
+  stock_minimum: number;
+  track_stock: boolean;
 }
 
 export default function ProductDetail() {
@@ -47,6 +50,12 @@ export default function ProductDetail() {
     product.image_url,
     ...(isGalleryEnabled && product.images ? product.images : [])
   ].filter(Boolean) as string[] : [];
+
+  // Check if product is out of stock (only for non-food stores with stock tracking)
+  const isOutOfStock = product?.track_stock && product?.stock_quantity !== null && product?.stock_quantity !== undefined && product?.stock_quantity <= 0;
+
+  // Product is effectively unavailable if marked unavailable OR out of stock
+  const effectivelyUnavailable = !product?.is_available || isOutOfStock;
 
   // Get grouped extras for this product
   const { data: groupedExtras, isLoading: extrasLoading } = useProductExtraGroups(id || '');
@@ -279,24 +288,24 @@ export default function ProductDetail() {
           {/* Image Gallery */}
           <div className="space-y-4">
             {/* Main Image */}
-            <div className={`aspect-square overflow-hidden rounded-lg border border-border bg-muted/30 relative ${!product.is_available ? 'opacity-70' : ''}`}>
+            <div className={`aspect-square overflow-hidden rounded-lg border border-border bg-muted/30 relative ${effectivelyUnavailable ? 'opacity-70' : ''}`}>
               {allImages.length > 0 ? (
                 <img
                   src={allImages[selectedImageIndex]}
                   alt={product.name}
-                  className={`w-full h-full object-cover ${!product.is_available ? 'grayscale' : ''}`}
+                  className={`w-full h-full object-cover ${effectivelyUnavailable ? 'grayscale' : ''}`}
                 />
               ) : (
-                <div className={`w-full h-full flex items-center justify-center bg-muted ${!product.is_available ? 'grayscale' : ''}`}>
+                <div className={`w-full h-full flex items-center justify-center bg-muted ${effectivelyUnavailable ? 'grayscale' : ''}`}>
                   <span className="text-muted-foreground">Sin imagen</span>
                 </div>
               )}
-              {!product.is_available && (
+              {effectivelyUnavailable && (
                 <Badge className="absolute top-3 right-3 bg-gray-600 text-white shadow-md">
-                  No disponible
+                  {isOutOfStock ? 'Agotado' : 'No disponible'}
                 </Badge>
               )}
-              {bestDeal && product.is_available && (
+              {bestDeal && !effectivelyUnavailable && (
                 <Badge variant="destructive" className="absolute top-3 left-3 flex items-center gap-1 px-2 py-1">
                   <Tag className="w-3 h-3" />
                   {bestDeal.promotion.type === 'percentage'
@@ -464,9 +473,11 @@ export default function ProductDetail() {
               </div>
             )}
 
-            {!product.is_available && (
+            {effectivelyUnavailable && (
               <div className="pt-4">
-                <p className="text-sm text-destructive text-center">Este producto no está disponible actualmente</p>
+                <p className="text-sm text-destructive text-center">
+                  {isOutOfStock ? 'Este producto está agotado' : 'Este producto no está disponible actualmente'}
+                </p>
               </div>
             )}
           </div>
@@ -493,11 +504,11 @@ export default function ProductDetail() {
             // Add to cart button for normal mode
             <Button
               onClick={handleAddToCart}
-              disabled={!product.is_available}
+              disabled={effectivelyUnavailable}
               className="w-full h-14 text-lg font-semibold bg-primary hover:bg-primary/90 shadow-lg"
             >
               <ShoppingCart className="w-6 h-6 mr-2" />
-              {product.is_available ? 'Agregar al carrito' : 'No disponible'}
+              {effectivelyUnavailable ? (isOutOfStock ? 'Agotado' : 'No disponible') : 'Agregar al carrito'}
             </Button>
           )}
         </div>

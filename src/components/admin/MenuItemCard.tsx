@@ -8,7 +8,8 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator
 } from "@/components/ui/dropdown-menu";
-import { ImageIcon, Star, Pencil, Trash2, Settings, Sparkles, MoreVertical, DollarSign, Tag, Image, Type, Images } from "lucide-react";
+import { ImageIcon, Star, Pencil, Trash2, Settings, Sparkles, MoreVertical, DollarSign, Tag, Image, Type, Images, Package } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
 interface MenuItem {
   id: string;
@@ -21,6 +22,9 @@ interface MenuItem {
   is_available: boolean | null;
   is_featured: boolean | null;
   display_order: number | null;
+  stock_quantity: number | null;
+  stock_minimum: number;
+  track_stock: boolean;
 }
 
 interface MenuItemCardProps {
@@ -35,6 +39,7 @@ interface MenuItemCardProps {
   onQuickEdit?: (itemId: string, field: 'name' | 'price' | 'category' | 'image') => void;
   onOpenGallery?: (itemId: string) => void;
   isGalleryEnabled?: boolean;
+  isStockEnabled?: boolean;
 }
 
 export const MenuItemCard = ({
@@ -48,8 +53,10 @@ export const MenuItemCard = ({
   onSelectChange,
   onQuickEdit,
   onOpenGallery,
-  isGalleryEnabled = false
+  isGalleryEnabled = false,
+  isStockEnabled = false
 }: MenuItemCardProps) => {
+  const isLowStock = item.track_stock && item.stock_quantity !== null && item.stock_quantity <= (item.stock_minimum ?? 0);
   return (
     <Card className={`overflow-hidden hover:shadow-md transition-all ${selected ? 'ring-2 ring-primary' : ''}`}>
       <CardContent className="p-4">
@@ -113,8 +120,8 @@ export const MenuItemCard = ({
               <span className="font-bold text-base">${item.price.toFixed(2)}</span>
             </div>
 
-            {/* Status */}
-            <div>
+            {/* Status and Stock */}
+            <div className="flex items-center gap-2 flex-wrap">
               <span className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${
                 item.is_available
                   ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100"
@@ -122,6 +129,22 @@ export const MenuItemCard = ({
               }`}>
                 {item.is_available ? "Disponible" : "No disponible"}
               </span>
+
+              {/* Stock indicator */}
+              {isStockEnabled && item.track_stock && (
+                <div className="flex items-center gap-1">
+                  <Package className="w-3 h-3 text-muted-foreground" />
+                  {isLowStock ? (
+                    <Badge variant="destructive" className="text-xs px-1.5 py-0">
+                      {item.stock_quantity}
+                    </Badge>
+                  ) : (
+                    <span className="text-xs text-muted-foreground">
+                      {item.stock_quantity ?? 0}
+                    </span>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Actions */}

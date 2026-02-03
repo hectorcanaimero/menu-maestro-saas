@@ -14,7 +14,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Switch } from '@/components/ui/switch';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { toast } from 'sonner';
-import { Plus, Pencil, Trash2, Image as ImageIcon, Star, Settings, Sparkles, MoreVertical, DollarSign, Tag, Type, Image } from 'lucide-react';
+import { Plus, Pencil, Trash2, Image as ImageIcon, Star, Settings, Sparkles, MoreVertical, DollarSign, Tag, Type, Image, Package } from 'lucide-react';
 import { ProductExtrasManager } from './ProductExtrasManager';
 import { MenuItemCard } from './MenuItemCard';
 import { AIPhotoStudio } from './AIPhotoStudio';
@@ -37,6 +37,9 @@ interface MenuItem {
   is_available: boolean | null;
   is_featured: boolean | null;
   display_order: number | null;
+  stock_quantity: number | null;
+  stock_minimum: number;
+  track_stock: boolean;
 }
 
 interface Category {
@@ -76,6 +79,9 @@ const MenuItemsManager = () => {
   // Check if store allows gallery (non-food business)
   const isGalleryEnabled = store?.is_food_business === false;
 
+  // Check if store allows stock tracking (non-food business)
+  const isStockEnabled = store?.is_food_business === false;
+
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -85,6 +91,9 @@ const MenuItemsManager = () => {
     is_available: true,
     is_featured: false,
     display_order: 0,
+    track_stock: false,
+    stock_quantity: '',
+    stock_minimum: '0',
   });
 
   useEffect(() => {
@@ -167,6 +176,14 @@ const MenuItemsManager = () => {
         is_available: formData.is_available,
         is_featured: formData.is_featured,
         display_order: formData.display_order,
+        // Stock fields (only for non-food stores)
+        track_stock: isStockEnabled ? formData.track_stock : false,
+        stock_quantity: isStockEnabled && formData.track_stock && formData.stock_quantity !== ''
+          ? parseInt(formData.stock_quantity)
+          : null,
+        stock_minimum: isStockEnabled && formData.track_stock
+          ? parseInt(formData.stock_minimum) || 0
+          : 0,
       };
 
       if (editingItem) {
@@ -215,6 +232,9 @@ const MenuItemsManager = () => {
       is_available: item.is_available ?? true,
       is_featured: item.is_featured ?? false,
       display_order: item.display_order || 0,
+      track_stock: item.track_stock ?? false,
+      stock_quantity: item.stock_quantity !== null ? item.stock_quantity.toString() : '',
+      stock_minimum: (item.stock_minimum ?? 0).toString(),
     });
     setDialogOpen(true);
   };
@@ -243,6 +263,9 @@ const MenuItemsManager = () => {
       is_available: true,
       is_featured: false,
       display_order: 0,
+      track_stock: false,
+      stock_quantity: '',
+      stock_minimum: '0',
     });
     setEditingItem(null);
   };
@@ -567,6 +590,65 @@ const MenuItemsManager = () => {
                           />
                         </div>
                       </div>
+
+                      {/* Stock Management - Only for non-food stores */}
+                      {isStockEnabled && (
+                        <div className="space-y-4 pt-2 border-t">
+                          <div className="flex items-center justify-between gap-4">
+                            <div className="space-y-0.5">
+                              <Label htmlFor="track_stock" className="text-sm md:text-base flex items-center gap-2">
+                                <Package className="w-4 h-4" />
+                                Control de Inventario
+                              </Label>
+                              <p className="text-xs text-muted-foreground">
+                                Activa para controlar el stock de este producto
+                              </p>
+                            </div>
+                            <Switch
+                              id="track_stock"
+                              checked={formData.track_stock}
+                              onCheckedChange={(checked) => setFormData({ ...formData, track_stock: checked })}
+                              className="flex-shrink-0"
+                            />
+                          </div>
+
+                          {formData.track_stock && (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pl-6 border-l-2 border-primary/20">
+                              <div className="space-y-2">
+                                <Label htmlFor="stock_quantity" className="text-sm md:text-base">
+                                  Cantidad en Stock
+                                </Label>
+                                <Input
+                                  id="stock_quantity"
+                                  type="number"
+                                  min="0"
+                                  value={formData.stock_quantity}
+                                  onChange={(e) => setFormData({ ...formData, stock_quantity: e.target.value })}
+                                  placeholder="0"
+                                  className="h-11 md:h-10 text-base md:text-sm"
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <Label htmlFor="stock_minimum" className="text-sm md:text-base">
+                                  Stock Minimo
+                                </Label>
+                                <Input
+                                  id="stock_minimum"
+                                  type="number"
+                                  min="0"
+                                  value={formData.stock_minimum}
+                                  onChange={(e) => setFormData({ ...formData, stock_minimum: e.target.value })}
+                                  placeholder="0"
+                                  className="h-11 md:h-10 text-base md:text-sm"
+                                />
+                                <p className="text-xs text-muted-foreground">
+                                  Alerta cuando el stock llegue a este nivel
+                                </p>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </AccordionContent>
                   </AccordionItem>
                 </Accordion>
@@ -643,6 +725,7 @@ const MenuItemsManager = () => {
                   onQuickEdit={handleQuickEdit}
                   onOpenGallery={handleOpenGallery}
                   isGalleryEnabled={isGalleryEnabled}
+                  isStockEnabled={isStockEnabled}
                 />
               ))
             )}
@@ -663,6 +746,7 @@ const MenuItemsManager = () => {
                   <TableHead>Nombre</TableHead>
                   <TableHead>Categoría</TableHead>
                   <TableHead>Precio</TableHead>
+                  {isStockEnabled && <TableHead>Stock</TableHead>}
                   <TableHead>Estado</TableHead>
                   <TableHead>Destacado</TableHead>
                   <TableHead className="text-right">Acciones</TableHead>
@@ -671,7 +755,7 @@ const MenuItemsManager = () => {
               <TableBody>
                 {items.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={8} className="text-center text-muted-foreground">
+                    <TableCell colSpan={isStockEnabled ? 9 : 8} className="text-center text-muted-foreground">
                       No hay productos. Crea uno para empezar.
                     </TableCell>
                   </TableRow>
@@ -696,6 +780,23 @@ const MenuItemsManager = () => {
                       <TableCell className="font-medium">{item.name}</TableCell>
                       <TableCell>{getCategoryName(item.category_id)}</TableCell>
                       <TableCell>${item.price.toFixed(2)}</TableCell>
+                      {isStockEnabled && (
+                        <TableCell>
+                          {item.track_stock ? (
+                            <div className="flex items-center gap-1">
+                              {item.stock_quantity !== null && item.stock_quantity <= (item.stock_minimum ?? 0) ? (
+                                <Badge variant="destructive" className="text-xs">
+                                  {item.stock_quantity}
+                                </Badge>
+                              ) : (
+                                <span className="text-sm">{item.stock_quantity ?? '-'}</span>
+                              )}
+                            </div>
+                          ) : (
+                            <span className="text-xs text-muted-foreground">-</span>
+                          )}
+                        </TableCell>
+                      )}
                       <TableCell>
                         <span
                           className={`px-2 py-1 rounded text-xs ${

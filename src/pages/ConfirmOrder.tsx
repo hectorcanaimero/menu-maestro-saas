@@ -16,6 +16,7 @@ import { findOrCreateCustomer } from '@/services/customerService';
 import { completeOrder } from '@/services/orderService';
 import { redirectToWhatsApp } from '@/lib/whatsappMessageGenerator';
 import { useOrderTypeLabels } from '@/hooks/useOrderTypeLabels';
+import { useStockValidation } from '@/hooks/useStockValidation';
 import posthog from 'posthog-js';
 
 interface OrderData {
@@ -47,6 +48,7 @@ const ConfirmOrder = () => {
   const { originalTotal, discountedTotal, totalSavings } = useCartTotals(items);
   const formatPrice = useFormatPrice();
   const { getLabel } = useOrderTypeLabels();
+  const { validateStock } = useStockValidation();
 
   // Apply store theme colors
   useStoreTheme();
@@ -84,6 +86,17 @@ const ConfirmOrder = () => {
 
     setLoading(true);
     try {
+      // Validate stock before proceeding (for non-food stores)
+      const stockValidation = await validateStock(items);
+      if (!stockValidation.valid) {
+        const itemNames = stockValidation.items.map(item =>
+          `${item.name} (disponible: ${item.available})`
+        ).join(', ');
+        toast.error(`Stock insuficiente: ${itemNames}`);
+        setLoading(false);
+        return;
+      }
+
       // Find or create customer
       const customerResult = await findOrCreateCustomer({
         name: orderData.customer_name,

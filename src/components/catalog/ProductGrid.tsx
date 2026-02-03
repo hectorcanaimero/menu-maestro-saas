@@ -312,6 +312,8 @@ export const ProductGrid = () => {
                   isAvailable={product.is_available ?? true}
                   imagesCount={totalImages}
                   index={index}
+                  stockQuantity={product.stock_quantity}
+                  trackStock={product.track_stock ?? false}
                   allProducts={products.map((p) => ({
                     id: p.id,
                     name: p.name,
