@@ -4,6 +4,7 @@ import posthog from 'posthog-js';
 import { useStore } from './StoreContext';
 import { setSecureItem, getSecureItem, removeSecureItem } from '@/lib/secureStorage';
 import { trackCartOperation, captureException } from '@/lib/sentry-utils';
+import { validateStock } from '@/lib/stockValidator';
 
 export interface CartItemExtra {
   id: string;
@@ -24,9 +25,9 @@ export interface CartItem {
 
 interface CartContextType {
   items: CartItem[];
-  addItem: (item: Omit<CartItem, 'quantity'>) => void;
+  addItem: (item: Omit<CartItem, 'quantity'>) => Promise<void>;
   removeItem: (id: string) => void;
-  updateQuantity: (id: string, quantity: number) => void;
+  updateQuantity: (id: string, quantity: number) => Promise<void>;
   clearCart: () => void;
   totalItems: number;
   totalPrice: number;
@@ -108,14 +109,25 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     return `${productId}::${sortedExtrasIds}`;
   };
 
-  const addItem = (item: Omit<CartItem, 'quantity'>) => {
+  const addItem = async (item: Omit<CartItem, 'quantity'>) => {
     try {
+      // Create unique cart item ID based on product and sorted extras IDs
+      const cartItemId = item.cartItemId || generateCartItemId(item.id, item.extras);
+      const itemWithId = { ...item, cartItemId };
+
+      // Find existing item to check current quantity
+      const existing = items.find((i) => i.cartItemId === cartItemId);
+      const newQuantity = existing ? existing.quantity + 1 : 1;
+
+      // Validate stock before adding
+      const stockValidation = await validateStock(item.id, newQuantity);
+
+      if (!stockValidation.isValid) {
+        toast.error(stockValidation.message || 'Producto no disponible');
+        return;
+      }
+
       setItems((current) => {
-        // Create unique cart item ID based on product and sorted extras IDs
-        const cartItemId = item.cartItemId || generateCartItemId(item.id, item.extras);
-
-        const itemWithId = { ...item, cartItemId };
-
         const existing = current.find((i) => i.cartItemId === cartItemId);
 
         // Track event in PostHog
@@ -249,13 +261,29 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const updateQuantity = (cartItemId: string, quantity: number) => {
+  const updateQuantity = async (cartItemId: string, quantity: number) => {
     if (quantity <= 0) {
       removeItem(cartItemId);
       return;
     }
 
     try {
+      // Find the item to get its product ID
+      const item = items.find((i) => i.cartItemId === cartItemId);
+
+      if (!item) {
+        toast.error('Producto no encontrado en el carrito');
+        return;
+      }
+
+      // Validate stock before updating quantity
+      const stockValidation = await validateStock(item.id, quantity);
+
+      if (!stockValidation.isValid) {
+        toast.error(stockValidation.message || 'Cantidad no disponible');
+        return;
+      }
+
       setItems((current) => {
         const item = current.find((i) => i.cartItemId === cartItemId);
 

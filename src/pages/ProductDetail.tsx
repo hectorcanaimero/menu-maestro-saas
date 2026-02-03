@@ -18,6 +18,7 @@ import { useStore } from '@/contexts/StoreContext';
 import { useFormatPrice } from '@/lib/priceFormatter';
 import { DualPrice } from '@/components/catalog/DualPrice';
 import { useProductExtraGroups } from '@/hooks/useExtraGroups';
+import { validateStock } from '@/lib/stockValidator';
 
 interface Product {
   id: string;
@@ -182,8 +183,16 @@ export default function ProductDetail() {
     return true;
   };
 
-  const handleAddToCart = () => {
+  const handleAddToCart = async () => {
     if (!product || !validateSelections()) return;
+
+    // Validate stock before adding to cart
+    const stockValidation = await validateStock(product.id, 1);
+
+    if (!stockValidation.isValid) {
+      toast.error(stockValidation.message || 'Producto no disponible');
+      return;
+    }
 
     // Flatten selected extras from all groups
     const selectedExtrasArray: Array<{ id: string; name: string; price: number }> = [];
