@@ -29,7 +29,7 @@ interface SubscriptionOverridesManagerProps {
 /**
  * Componente para gestionar límites personalizados (overrides) de suscripción
  * Solo accesible para super admins desde el panel de configuración de la tienda
- * Puede usarse desde /admin (usando StoreContext) o desde /platform-admin (con storeId prop)
+ * Puede usarse desde /admin (usando StoreContext) o desde platform.pideai.com (con storeId prop)
  */
 export function SubscriptionOverridesManager({ storeId: propStoreId }: SubscriptionOverridesManagerProps = {}) {
   const { store } = useStore();

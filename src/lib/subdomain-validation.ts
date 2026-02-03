@@ -46,7 +46,13 @@ export const RESERVED_SUBDOMAINS = [
   'files',
   'upload',
   'download',
+  'platform', // Platform admin subdomain
 ] as const;
+
+/**
+ * Platform admin subdomain constant
+ */
+export const PLATFORM_SUBDOMAIN = 'platform';
 
 /**
  * Validates subdomain format (client-side)
@@ -286,18 +292,29 @@ export function isMainDomain(): boolean {
 }
 
 /**
- * Check if current hostname is specifically www.pideai.com (for platform admin access)
+ * Check if current hostname is the platform admin subdomain (platform.pideai.com)
  *
- * @returns True only if the current domain is exactly www.pideai.com (or localhost in dev)
+ * @returns True if the current domain is platform.pideai.com (or dev_subdomain is 'platform' in dev)
  */
-export function isPlatformAdminDomain(): boolean {
+export function isPlatformSubdomain(): boolean {
   const hostname = window.location.hostname;
 
-  // En desarrollo, permitir localhost
+  // En desarrollo, verificar localStorage
   if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname.startsWith('192.168.')) {
-    return true;
+    const devSubdomain = localStorage.getItem('dev_subdomain');
+    return devSubdomain === PLATFORM_SUBDOMAIN;
   }
 
-  // En producción, solo permitir www.pideai.com
-  return hostname === 'www.pideai.com';
+  // En produccion, verificar subdomain
+  return hostname === `${PLATFORM_SUBDOMAIN}.pideai.com`;
+}
+
+/**
+ * Check if current hostname allows platform admin access
+ * Now uses platform.pideai.com instead of www.pideai.com
+ *
+ * @returns True if the current domain is platform.pideai.com (or localhost with dev_subdomain='platform')
+ */
+export function isPlatformAdminDomain(): boolean {
+  return isPlatformSubdomain();
 }

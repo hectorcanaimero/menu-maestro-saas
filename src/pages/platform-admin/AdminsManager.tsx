@@ -65,26 +65,88 @@ function AdminsManager() {
   // Add admin mutation
   const addAdminMutation = useMutation({
     mutationFn: async ({ email, role }: { email: string; role: AdminRole }) => {
-      // First, get the user_id from the email
-      const { data: userData, error: userError } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('email', email)
-        .single();
+      console.log('🔍 Buscando usuario con email:', email);
 
-      if (userError || !userData) {
-        throw new Error('Usuario no encontrado con ese email');
+      // Try to find user by email using RPC function (avoids RLS issues)
+      const { data: userIdData, error: rpcError } = await supabase
+        .rpc('get_user_id_by_email', { p_email: email.trim().toLowerCase() });
+
+      if (rpcError) {
+        console.error('❌ Error en RPC:', rpcError);
+        // Fallback to direct query if RPC doesn't exist
+        const { data: userData, error: userError } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('email', email.trim().toLowerCase())
+          .maybeSingle();
+
+        if (userError) {
+          console.error('❌ Error buscando usuario:', userError);
+          throw new Error(`Error al buscar usuario: ${userError.message}`);
+        }
+
+        if (!userData) {
+          throw new Error(`Usuario no encontrado con el email: ${email}. El usuario debe estar registrado en el sistema primero.`);
+        }
+
+        // Use fallback data
+        const userId = userData.id;
+        console.log('✅ Usuario encontrado (fallback):', userId);
+
+        // Check if already admin
+        const { data: existingAdmin } = await supabase
+          .from('platform_admins')
+          .select('id')
+          .eq('user_id', userId)
+          .maybeSingle();
+
+        if (existingAdmin) {
+          throw new Error('Este usuario ya es administrador de la plataforma');
+        }
+
+        // Get current user
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+
+        // Create admin
+        const { data, error } = await supabase
+          .from('platform_admins')
+          .insert({
+            user_id: userId,
+            role: role,
+            created_by: user?.id || null,
+          })
+          .select()
+          .single();
+
+        if (error) {
+          console.error('❌ Error creando admin:', error);
+          throw new Error(`Error al crear administrador: ${error.message}`);
+        }
+
+        console.log('✅ Administrador creado exitosamente');
+        return data;
       }
+
+      // RPC successful
+      const userId = userIdData;
+
+      if (!userId) {
+        throw new Error(`Usuario no encontrado con el email: ${email}. El usuario debe estar registrado en el sistema primero.`);
+      }
+
+      console.log('✅ Usuario encontrado:', userId);
 
       // Check if already admin
       const { data: existingAdmin } = await supabase
         .from('platform_admins')
         .select('id')
-        .eq('user_id', userData.id)
-        .single();
+        .eq('user_id', userId)
+        .maybeSingle();
 
       if (existingAdmin) {
-        throw new Error('Este usuario ya es administrador');
+        throw new Error('Este usuario ya es administrador de la plataforma');
       }
 
       // Get current user
@@ -96,14 +158,19 @@ function AdminsManager() {
       const { data, error } = await supabase
         .from('platform_admins')
         .insert({
-          user_id: userData.id,
+          user_id: userId,
           role: role,
           created_by: user?.id || null,
         })
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Error creando admin:', error);
+        throw new Error(`Error al crear administrador: ${error.message}`);
+      }
+
+      console.log('✅ Administrador creado exitosamente');
       return data;
     },
     onSuccess: () => {

@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import { Eye, EyeOff, ArrowLeft } from 'lucide-react';
 import { PasswordStrengthMeter } from '@/components/ui/password-strength-meter';
-import { getSubdomainFromHostname, getCurrentDomain } from '@/lib/subdomain-validation';
+import { getSubdomainFromHostname, getCurrentDomain, isPlatformSubdomain } from '@/lib/subdomain-validation';
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -31,6 +31,20 @@ const Auth = () => {
       } = await supabase.auth.getSession();
 
       if (session && isInitialCheck) {
+        // Special handling for platform subdomain
+        if (isPlatformSubdomain()) {
+          // Check if user is a super_admin
+          const { data: isPlatformAdmin } = await supabase.rpc('is_platform_admin');
+          const { data: adminRole } = await supabase.rpc('get_admin_role');
+
+          if (isPlatformAdmin && adminRole === 'super_admin') {
+            navigate('/');
+          }
+          // If not super_admin, stay on auth page (will show error after login attempt)
+          return;
+        }
+
+        // Normal store subdomain handling
         // Verify user is on their own store subdomain
         const currentSubdomain = getSubdomainFromHostname();
         const { data: userStore } = await supabase.rpc('get_user_owned_store').single();
@@ -85,6 +99,24 @@ const Auth = () => {
 
       if (!data.session) {
         toast.error('Error al iniciar sesión');
+        setIsLoading(false);
+        return;
+      }
+
+      // Special handling for platform subdomain - check if user is super_admin
+      if (isPlatformSubdomain()) {
+        const { data: isPlatformAdmin } = await supabase.rpc('is_platform_admin');
+        const { data: adminRole } = await supabase.rpc('get_admin_role');
+
+        if (!isPlatformAdmin || adminRole !== 'super_admin') {
+          toast.error('Acceso denegado. Solo los super administradores pueden acceder a esta plataforma.');
+          await supabase.auth.signOut();
+          setIsLoading(false);
+          return;
+        }
+
+        toast.success('Bienvenido al panel de administracion');
+        navigate('/');
         setIsLoading(false);
         return;
       }

@@ -67,6 +67,7 @@ const AdminsManager = lazy(() => import("./pages/platform-admin/AdminsManager"))
 const PostHogAnalytics = lazy(() => import("./pages/platform-admin/PostHogAnalytics"));
 const CatalogViewsManager = lazy(() => import("./pages/platform-admin/CatalogViewsManager"));
 import { PlatformAdminGuard } from "./components/platform-admin/PlatformAdminGuard";
+import { isPlatformSubdomain } from "./lib/subdomain-validation";
 
 // Driver routes - PWA for delivery drivers
 const DriverLogin = lazy(() => import("./pages/driver/DriverLogin"));
@@ -86,6 +87,116 @@ const queryClient = new QueryClient({
   },
 });
 
+// Platform Admin Routes Component - rendered when on platform.pideai.com
+const PlatformAdminRoutes = () => {
+  return (
+    <>
+      <ScrollToTop />
+      <Suspense fallback={<LoadingScreen />}>
+        <Routes>
+          {/* Auth route for platform admin */}
+          <Route
+            path="/auth"
+            element={
+              <SectionErrorBoundary>
+                <Auth />
+              </SectionErrorBoundary>
+            }
+          />
+
+          {/* Platform Admin Routes - at root level */}
+          <Route
+            path="/"
+            element={
+              <PlatformAdminGuard requiredRole="super_admin">
+                <Suspense fallback={<LoadingScreen />}>
+                  <PlatformAdminLayout />
+                </Suspense>
+              </PlatformAdminGuard>
+            }
+          >
+            <Route
+              index
+              element={
+                <SectionErrorBoundary>
+                  <PlatformDashboard />
+                </SectionErrorBoundary>
+              }
+            />
+            <Route
+              path="payments"
+              element={
+                <SectionErrorBoundary>
+                  <PaymentValidations />
+                </SectionErrorBoundary>
+              }
+            />
+            <Route
+              path="subscriptions"
+              element={
+                <SectionErrorBoundary>
+                  <SubscriptionsManager />
+                </SectionErrorBoundary>
+              }
+            />
+            <Route
+              path="stores"
+              element={
+                <SectionErrorBoundary>
+                  <StoresManager />
+                </SectionErrorBoundary>
+              }
+            />
+            <Route
+              path="catalogs"
+              element={
+                <SectionErrorBoundary>
+                  <CatalogViewsManager />
+                </SectionErrorBoundary>
+              }
+            />
+            <Route
+              path="plans"
+              element={
+                <SectionErrorBoundary>
+                  <PlansManager />
+                </SectionErrorBoundary>
+              }
+            />
+            <Route
+              path="admins"
+              element={
+                <SectionErrorBoundary>
+                  <AdminsManager />
+                </SectionErrorBoundary>
+              }
+            />
+            <Route
+              path="posthog"
+              element={
+                <SectionErrorBoundary>
+                  <PostHogAnalytics />
+                </SectionErrorBoundary>
+              }
+            />
+            <Route
+              path="payment-methods"
+              element={
+                <SectionErrorBoundary>
+                  <PlatformPaymentMethodsManager />
+                </SectionErrorBoundary>
+              }
+            />
+          </Route>
+
+          {/* Catch-all for platform subdomain */}
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </Suspense>
+    </>
+  );
+};
+
 // Internal component to use hooks that require router context
 const AppContent = () => {
   // Initialize Google Analytics tracking for page views
@@ -96,6 +207,11 @@ const AppContent = () => {
 
   // Note: Chatwoot is now initialized in AdminDashboard only
   // See src/pages/admin/AdminDashboard.tsx for implementation
+
+  // If on platform subdomain, render platform admin routes only
+  if (isPlatformSubdomain()) {
+    return <PlatformAdminRoutes />;
+  }
 
   return (
     <>
@@ -401,91 +517,6 @@ const AppContent = () => {
                       </ProtectedRoute>
                     }
                   />
-
-                  {/* Platform Admin Routes - Super Admin Panel */}
-                  <Route
-                    path="/platform-admin"
-                    element={
-                      <PlatformAdminGuard>
-                        <Suspense fallback={<LoadingScreen />}>
-                          <PlatformAdminLayout />
-                        </Suspense>
-                      </PlatformAdminGuard>
-                    }
-                  >
-                    <Route
-                      index
-                      element={
-                        <SectionErrorBoundary>
-                          <PlatformDashboard />
-                        </SectionErrorBoundary>
-                      }
-                    />
-                    <Route
-                      path="payments"
-                      element={
-                        <SectionErrorBoundary>
-                          <PaymentValidations />
-                        </SectionErrorBoundary>
-                      }
-                    />
-                    <Route
-                      path="subscriptions"
-                      element={
-                        <SectionErrorBoundary>
-                          <SubscriptionsManager />
-                        </SectionErrorBoundary>
-                      }
-                    />
-                    <Route
-                      path="stores"
-                      element={
-                        <SectionErrorBoundary>
-                          <StoresManager />
-                        </SectionErrorBoundary>
-                      }
-                    />
-                    <Route
-                      path="catalogs"
-                      element={
-                        <SectionErrorBoundary>
-                          <CatalogViewsManager />
-                        </SectionErrorBoundary>
-                      }
-                    />
-                    <Route
-                      path="plans"
-                      element={
-                        <SectionErrorBoundary>
-                          <PlansManager />
-                        </SectionErrorBoundary>
-                      }
-                    />
-                    <Route
-                      path="admins"
-                      element={
-                        <SectionErrorBoundary>
-                          <AdminsManager />
-                        </SectionErrorBoundary>
-                      }
-                    />
-                    <Route
-                      path="posthog"
-                      element={
-                        <SectionErrorBoundary>
-                          <PostHogAnalytics />
-                        </SectionErrorBoundary>
-                      }
-                    />
-                    <Route
-                      path="payment-methods"
-                      element={
-                        <SectionErrorBoundary>
-                          <PlatformPaymentMethodsManager />
-                        </SectionErrorBoundary>
-                      }
-                    />
-                  </Route>
 
                   {/* Driver Routes - PWA for delivery drivers */}
                   <Route

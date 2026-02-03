@@ -41,6 +41,7 @@ interface PaymentValidation {
     stores: {
       name: string;
       subdomain: string;
+      owner_id: string;
       email: string;
     };
     subscription_plans: {
@@ -58,90 +59,91 @@ function PaymentValidations() {
   const [showRejectDialog, setShowRejectDialog] = useState(false);
   const [rejectionReason, setRejectionReason] = useState('');
 
-  // Fetch pending payments
+  // Fetch pending payments using optimized RPC
   const { data: pendingPayments, isLoading: loadingPending } = useQuery({
     queryKey: ['payment-validations', 'pending'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('payment_validations')
-        .select(`
-          id,
-          subscription_id,
-          amount,
-          payment_date,
-          payment_method,
-          reference_number,
-          proof_image_url,
-          validation_notes,
-          status,
-          created_at,
-          validated_at,
-          validated_by,
-          rejection_reason,
-          subscriptions!inner (
-            store_id,
-            plan_id,
-            stores!inner (
-              name,
-              subdomain,
-              email
-            ),
-            subscription_plans!inner (
-              name,
-              display_name,
-              price_monthly
-            )
-          )
-        `)
-        .eq('status', 'pending')
-        .order('created_at', { ascending: false });
+      const { data, error } = await supabase.rpc('get_pending_payment_validations');
 
       if (error) throw error;
-      return data as PaymentValidation[];
+
+      // Transform RPC response to match PaymentValidation interface
+      const transformedData = data?.map((row: any) => ({
+        id: row.id,
+        subscription_id: row.subscription_id,
+        amount: row.amount,
+        payment_date: row.payment_date,
+        payment_method: row.payment_method,
+        reference_number: row.reference_number,
+        proof_image_url: row.proof_image_url,
+        validation_notes: row.validation_notes,
+        status: row.status,
+        created_at: row.created_at,
+        validated_at: row.validated_at,
+        validated_by: row.validated_by,
+        rejection_reason: row.rejection_reason,
+        subscriptions: {
+          store_id: row.store_id,
+          plan_id: row.plan_id,
+          stores: {
+            name: row.store_name,
+            subdomain: row.store_subdomain,
+            owner_id: '', // Not needed for display
+            email: row.store_owner_email,
+          },
+          subscription_plans: {
+            name: row.plan_name,
+            display_name: row.plan_display_name,
+            price_monthly: row.plan_price_monthly,
+          },
+        },
+      }));
+
+      return transformedData as PaymentValidation[];
     },
   });
 
-  // Fetch recent validations (approved/rejected)
+  // Fetch recent validations using optimized RPC
   const { data: recentValidations, isLoading: loadingRecent } = useQuery({
     queryKey: ['payment-validations', 'recent'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('payment_validations')
-        .select(`
-          id,
-          subscription_id,
-          amount,
-          payment_date,
-          payment_method,
-          reference_number,
-          proof_image_url,
-          validation_notes,
-          status,
-          created_at,
-          validated_at,
-          validated_by,
-          rejection_reason,
-          subscriptions!inner (
-            store_id,
-            plan_id,
-            stores!inner (
-              name,
-              subdomain,
-              email
-            ),
-            subscription_plans!inner (
-              name,
-              display_name,
-              price_monthly
-            )
-          )
-        `)
-        .in('status', ['approved', 'rejected'])
-        .order('validated_at', { ascending: false })
-        .limit(10);
+      const { data, error } = await supabase.rpc('get_recent_payment_validations');
 
       if (error) throw error;
-      return data as PaymentValidation[];
+
+      // Transform RPC response to match PaymentValidation interface
+      const transformedData = data?.map((row: any) => ({
+        id: row.id,
+        subscription_id: row.subscription_id,
+        amount: row.amount,
+        payment_date: row.payment_date,
+        payment_method: row.payment_method,
+        reference_number: row.reference_number,
+        proof_image_url: row.proof_image_url,
+        validation_notes: row.validation_notes,
+        status: row.status,
+        created_at: row.created_at,
+        validated_at: row.validated_at,
+        validated_by: row.validated_by,
+        rejection_reason: row.rejection_reason,
+        subscriptions: {
+          store_id: row.store_id,
+          plan_id: row.plan_id,
+          stores: {
+            name: row.store_name,
+            subdomain: row.store_subdomain,
+            owner_id: '', // Not needed for display
+            email: row.store_owner_email,
+          },
+          subscription_plans: {
+            name: row.plan_name,
+            display_name: row.plan_display_name,
+            price_monthly: row.plan_price_monthly,
+          },
+        },
+      }));
+
+      return transformedData as PaymentValidation[];
     },
   });
 

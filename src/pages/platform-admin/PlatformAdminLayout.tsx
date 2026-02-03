@@ -36,48 +36,48 @@ function PlatformAdminLayout() {
     {
       label: 'Dashboard',
       icon: LayoutDashboard,
-      href: '/platform-admin',
+      href: '/',
       exactMatch: true,
     },
     {
       label: 'Analytics',
       icon: BarChart3,
-      href: '/platform-admin/posthog',
+      href: '/posthog',
     },
     {
       label: 'Tiendas',
       icon: Store,
-      href: '/platform-admin/stores',
+      href: '/stores',
     },
     {
       label: 'Catálogos',
       icon: Eye,
-      href: '/platform-admin/catalogs',
+      href: '/catalogs',
     },
     {
       label: 'Suscripciones',
       icon: CreditCard,
-      href: '/platform-admin/subscriptions',
+      href: '/subscriptions',
     },
     {
       label: 'Pagos Pendientes',
       icon: DollarSign,
-      href: '/platform-admin/payments',
+      href: '/payments',
     },
     {
       label: 'Planes',
       icon: Package,
-      href: '/platform-admin/plans',
+      href: '/plans',
     },
     {
       label: 'Métodos de Pago',
       icon: Wallet,
-      href: '/platform-admin/payment-methods',
+      href: '/payment-methods',
     },
     {
       label: 'Administradores',
       icon: Users,
-      href: '/platform-admin/admins',
+      href: '/admins',
       requiresSuperAdmin: true,
     },
   ];

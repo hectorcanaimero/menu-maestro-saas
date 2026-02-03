@@ -11,12 +11,12 @@ interface PlatformAdminGuardProps {
 
 /**
  * Componente guard que protege rutas del panel de administración de plataforma
- * Solo permite acceso a usuarios con rol de platform admin Y desde el dominio www.pideai.com
+ * Solo permite acceso a usuarios con rol de platform admin Y desde platform.pideai.com
  */
 export function PlatformAdminGuard({ children, requiredRole }: PlatformAdminGuardProps) {
   const { isAdmin, role, isLoading } = usePlatformAdmin();
 
-  // PRIMERA VALIDACIÓN: Verificar que viene desde el dominio correcto
+  // PRIMERA VALIDACIÓN: Verificar que viene desde el dominio correcto (platform.pideai.com)
   const isValidDomain = isPlatformAdminDomain();
 
   if (!isValidDomain) {
@@ -28,12 +28,12 @@ export function PlatformAdminGuard({ children, requiredRole }: PlatformAdminGuar
             Acceso Restringido
           </h2>
           <p className="text-muted-foreground mb-4">
-            El panel de administración de plataforma solo está disponible desde el dominio principal.
+            El panel de administración de plataforma solo está disponible desde el subdominio platform.
           </p>
           <p className="text-sm text-muted-foreground">
             Dominio actual: <span className="font-semibold">{window.location.hostname}</span>
             <br />
-            Dominio requerido: <span className="font-semibold text-primary">www.pideai.com</span>
+            Dominio requerido: <span className="font-semibold text-primary">platform.pideai.com</span>
           </p>
         </div>
       </div>
@@ -52,9 +52,9 @@ export function PlatformAdminGuard({ children, requiredRole }: PlatformAdminGuar
     );
   }
 
-  // Si no es admin, redirigir al home
+  // Si no es admin, redirigir a /auth para que inicie sesion
   if (!isAdmin) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/auth" replace />;
   }
 
   // Si se requiere un rol específico, verificar

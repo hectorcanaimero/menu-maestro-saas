@@ -40,21 +40,10 @@ export default function CatalogViewsManager() {
     queryFn: async (): Promise<StoreWithViews[]> => {
       console.log('🔍 Fetching catalog stores...');
 
-      // Get all stores in catalog mode with owner profile
+      // Get all stores in catalog mode (without joining profiles to avoid RLS recursion)
       const { data: catalogStores, error: storesError } = await supabase
         .from('stores')
-        .select(
-          `
-          id,
-          name,
-          subdomain,
-          catalog_mode,
-          owner_id,
-          profiles!stores_owner_id_fkey (
-            email
-          )
-        `,
-        )
+        .select('id, name, subdomain, catalog_mode, owner_id')
         .eq('catalog_mode', true);
 
       if (storesError) {
@@ -68,6 +57,22 @@ export default function CatalogViewsManager() {
         console.log('⚠️ No stores found with catalog_mode = true');
         return [];
       }
+
+      // Get unique owner IDs
+      const ownerIds = [...new Set(catalogStores.map((s) => s.owner_id))];
+
+      // Fetch owner emails separately to avoid RLS recursion
+      const { data: owners, error: ownersError } = await supabase
+        .from('profiles')
+        .select('id, email')
+        .in('id', ownerIds);
+
+      if (ownersError) {
+        console.warn('⚠️ Error fetching owner emails:', ownersError);
+      }
+
+      // Create a map of owner_id -> email
+      const ownerEmailMap = new Map(owners?.map((o) => [o.id, o.email]) || []);
 
       // For each store, get view stats from PostHog and limits from Supabase
       const storesWithViews = await Promise.all(
@@ -118,7 +123,7 @@ export default function CatalogViewsManager() {
             const softLimitExceeded = !isUnlimited && softLimit !== null && currentViews >= softLimit;
             const exceeded = !isUnlimited && currentViews >= limit;
 
-            const ownerEmail = (store as any).profiles?.email || 'Unknown';
+            const ownerEmail = ownerEmailMap.get(store.owner_id) || 'Unknown';
 
             console.log(`✅ ${store.name}: ${currentViews} views / ${isUnlimited ? '∞' : limit} limit (${percentage.toFixed(1)}%)`);
 

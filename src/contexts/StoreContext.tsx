@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { getSubdomainFromHostname, getCurrentDomain } from '@/lib/subdomain-validation';
+import { getSubdomainFromHostname, getCurrentDomain, isPlatformSubdomain, PLATFORM_SUBDOMAIN } from '@/lib/subdomain-validation';
 import { useAutoUpdateRates } from '@/hooks/useAutoUpdateRates';
 import posthog from 'posthog-js';
 import * as Sentry from '@sentry/react';
@@ -135,6 +135,14 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
       // If subdomain is empty, we're on the main domain (www.pideai.com)
       // Don't try to load a store - just set store to null and finish loading
       if (!subdomain || subdomain.trim() === '') {
+        setStore(null);
+        setLoading(false);
+        return;
+      }
+
+      // If on platform subdomain (platform.pideai.com), skip store loading
+      // Platform admin doesn't need a store context
+      if (isPlatformSubdomain() || subdomain === PLATFORM_SUBDOMAIN) {
         setStore(null);
         setLoading(false);
         return;
