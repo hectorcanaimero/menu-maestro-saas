@@ -146,7 +146,7 @@ export const CategoriesSection = () => {
       }`}
     >
       <div className="container mx-auto px-4">
-        <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide md:scrollbar-default">
+        <div className="flex gap-2 overflow-x-auto overflow-y-hidden pb-2 scrollbar-hide md:scrollbar-default" style={{ WebkitOverflowScrolling: 'touch' } as React.CSSProperties}>
           <Button
             variant={!selectedCategorySlug && !showFeatured ? 'default' : 'outline'}
             size="sm"

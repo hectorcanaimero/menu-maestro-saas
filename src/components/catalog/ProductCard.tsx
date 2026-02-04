@@ -19,6 +19,7 @@ interface ProductCardProps {
   layout?: 'grid' | 'list';
   compact?: boolean;
   categoryId?: string | null;
+  categoryName?: string | null;
   isAvailable?: boolean;
   imagesCount?: number;
   index?: number;
@@ -31,6 +32,7 @@ interface ProductCardProps {
     image_url: string | null;
     description?: string | null;
     categoryId?: string | null;
+    categoryName?: string | null;
     isAvailable?: boolean;
   }>;
 }
@@ -44,6 +46,7 @@ export const ProductCard = ({
   layout = 'list',
   compact = false,
   categoryId,
+  categoryName,
   isAvailable = true,
   imagesCount = 0,
   index = 0,
@@ -76,8 +79,8 @@ export const ProductCard = ({
 
   const handleQuickView = (e: React.MouseEvent) => {
     e.stopPropagation();
-    const products = allProducts.length > 0 ? allProducts : [{ id, name, price, image_url, description, categoryId }];
-    openQuickView({ id, name, price, image_url, description, categoryId }, products, index);
+    const products = allProducts.length > 0 ? allProducts : [{ id, name, price, image_url, description, categoryId, categoryName }];
+    openQuickView({ id, name, price, image_url, description, categoryId, categoryName }, products, index);
   };
 
   const isGridView = layout === 'grid';
@@ -156,6 +159,11 @@ export const ProductCard = ({
             {/* Product Info */}
             <div className="flex-1 space-y-1">
               <h3 className="font-semibold text-foreground text-sm sm:text-base line-clamp-2">{name}</h3>
+              {categoryName && (
+                <Badge variant="secondary" className="text-xs w-fit mb-1">
+                  {categoryName}
+                </Badge>
+              )}
               {description && !compact && (
                 <p className="text-xs sm:text-sm text-muted-foreground line-clamp-2 leading-relaxed">{description}</p>
               )}

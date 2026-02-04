@@ -152,6 +152,7 @@ All colors MUST be HSL.
     @apply bg-background text-foreground;
   }
 
+  /* Hide scrollbar on mobile */
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
   }
@@ -163,28 +164,45 @@ All colors MUST be HSL.
 
   /* Show scrollbar on medium screens and above */
   @media (min-width: 768px) {
+    /* Override scrollbar-hide on desktop */
+    .md\:scrollbar-default.scrollbar-hide::-webkit-scrollbar {
+      display: block !important;
+      height: 8px;
+      width: 8px;
+    }
+
+    .md\:scrollbar-default.scrollbar-hide {
+      -ms-overflow-style: auto !important;
+      scrollbar-width: thin !important;
+      scrollbar-color: hsl(var(--primary) / 0.5) hsl(var(--muted) / 0.3) !important;
+    }
+
+    /* WebKit browsers (Chrome, Safari, Edge) */
     .md\:scrollbar-default::-webkit-scrollbar {
       display: block;
-      height: 6px;
+      height: 8px;
+      width: 8px;
     }
 
     .md\:scrollbar-default::-webkit-scrollbar-track {
-      background: hsl(var(--muted));
-      border-radius: 3px;
+      background: hsl(var(--muted) / 0.3);
+      border-radius: 4px;
+      margin: 0 8px;
     }
 
     .md\:scrollbar-default::-webkit-scrollbar-thumb {
-      background: hsl(var(--border));
-      border-radius: 3px;
+      background: hsl(var(--primary) / 0.5);
+      border-radius: 4px;
+      transition: background 0.2s ease;
+      border: 1px solid hsl(var(--background));
     }
 
     .md\:scrollbar-default::-webkit-scrollbar-thumb:hover {
-      background: hsl(var(--primary) / 0.5);
+      background: hsl(var(--primary) / 0.8);
     }
 
-    .md\:scrollbar-default {
-      -ms-overflow-style: auto;
-      scrollbar-width: thin;
+    .md\:scrollbar-default::-webkit-scrollbar-thumb:active {
+      background: hsl(var(--primary));
     }
   }
 }

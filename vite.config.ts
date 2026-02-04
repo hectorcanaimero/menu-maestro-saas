@@ -18,7 +18,7 @@ export default defineConfig(({ mode }) => ({
       // Only watch source files, not node_modules
       ignored: ['**/node_modules/**', '**/dist/**'],
     },
-    allowedHosts: ['1c1f0549a03e.ngrok-free.app'],
+    allowedHosts: ['cf81-2804-14c-87df-b2df-24d9-ae59-c23-f23d.ngrok-free.app'],
   },
   plugins: [
     react(),

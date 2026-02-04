@@ -14,7 +14,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Switch } from '@/components/ui/switch';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { toast } from 'sonner';
-import { Plus, Pencil, Trash2, Image as ImageIcon, Star, Settings, Sparkles, MoreVertical, DollarSign, Tag, Type, Image, Package } from 'lucide-react';
+import { Plus, Pencil, Trash2, Image as ImageIcon, Star, Settings, Sparkles, MoreVertical, DollarSign, Tag, Type, Image, Package, Search, X, Filter } from 'lucide-react';
 import { ProductExtrasManager } from './ProductExtrasManager';
 import { MenuItemCard } from './MenuItemCard';
 import { AIPhotoStudio } from './AIPhotoStudio';
@@ -64,6 +64,10 @@ const MenuItemsManager = () => {
 
   // Bulk selection
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
+
+  // Search and filters
+  const [searchQuery, setSearchQuery] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState<string>('all');
 
   // Quick edit dialogs
   const [quickEditOpen, setQuickEditOpen] = useState(false);
@@ -371,6 +375,35 @@ const MenuItemsManager = () => {
     }
   };
 
+  // Calculate products per category
+  const categoryProductCounts = categories.reduce((acc, category) => {
+    const count = items.filter(item => item.category_id === category.id).length;
+    acc[category.id] = count;
+    return acc;
+  }, {} as Record<string, number>);
+
+  // Filter items based on search query and category filter
+  const filteredItems = items.filter((item) => {
+    // Category filter
+    const matchesCategory = categoryFilter === 'all' || item.category_id === categoryFilter;
+    if (!matchesCategory) return false;
+
+    // Search filter
+    if (!searchQuery.trim()) return true;
+
+    const query = searchQuery.toLowerCase();
+    const matchesName = item.name.toLowerCase().includes(query);
+    const matchesDescription = item.description?.toLowerCase().includes(query) || false;
+    const categoryName = getCategoryName(item.category_id)?.toLowerCase() || '';
+    const matchesCategoryName = categoryName.includes(query);
+
+    return matchesName || matchesDescription || matchesCategoryName;
+  });
+
+  // Calculate totals
+  const totalProducts = items.length;
+  const displayedProducts = filteredItems.length;
+
   return (
     <>
       <ProductExtrasManager
@@ -661,12 +694,80 @@ const MenuItemsManager = () => {
           </Dialog>
         </CardHeader>
         <CardContent>
+          {/* Product Statistics */}
+          <div className="mb-4 flex flex-wrap items-center gap-4 text-sm">
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <Package className="h-4 w-4" />
+              <span>Total: <strong className="text-foreground">{totalProducts}</strong> productos</span>
+            </div>
+            {(searchQuery.trim() || categoryFilter !== 'all') && (
+              <>
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <span>•</span>
+                  <span>Mostrando: <strong className="text-primary">{displayedProducts}</strong> productos</span>
+                </div>
+                {categoryFilter !== 'all' && (
+                  <Badge variant="secondary" className="gap-1">
+                    Categoría: {categories.find(c => c.id === categoryFilter)?.name}
+                  </Badge>
+                )}
+                {searchQuery.trim() && (
+                  <Badge variant="secondary" className="gap-1">
+                    Búsqueda: {searchQuery}
+                  </Badge>
+                )}
+              </>
+            )}
+          </div>
+
+          {/* Search and Filters */}
+          <div className="mb-4 flex flex-col sm:flex-row gap-3">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Buscar productos por nombre, descripción o categoría..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+              <SelectTrigger className="w-full sm:w-[280px]">
+                <SelectValue placeholder="Filtrar por categoría" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">
+                  Todas las categorías ({totalProducts})
+                </SelectItem>
+                {categories.map((category) => (
+                  <SelectItem key={category.id} value={category.id}>
+                    {category.name} ({categoryProductCounts[category.id] || 0})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {(searchQuery.trim() || categoryFilter !== 'all') && (
+              <Button
+                variant="outline"
+                size="default"
+                onClick={() => {
+                  setSearchQuery('');
+                  setCategoryFilter('all');
+                }}
+                className="gap-2"
+              >
+                <X className="h-4 w-4" />
+                Limpiar filtros
+              </Button>
+            )}
+          </div>
+
           {/* Bulk Actions Toolbar */}
           {selectedItems.size > 0 && (
             <div className="bg-primary/10 border border-primary/20 rounded-lg p-3 mb-4 flex items-center justify-between gap-4">
               <div className="flex items-center gap-2">
                 <Checkbox
-                  checked={selectedItems.size === items.length}
+                  checked={selectedItems.size === filteredItems.length && filteredItems.length > 0}
                   onCheckedChange={toggleSelectAll}
                 />
                 <span className="text-sm font-medium">
@@ -705,10 +806,33 @@ const MenuItemsManager = () => {
 
           {/* Mobile View - Cards */}
           <div className="grid gap-4 md:hidden">
-            {items.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">No hay producto. Crea uno para empezar.</div>
+            {filteredItems.length === 0 ? (
+              <div className="text-center py-12">
+                <Filter className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-50" />
+                <p className="text-lg font-medium mb-2">No se encontraron productos</p>
+                <p className="text-sm text-muted-foreground mb-4">
+                  {searchQuery.trim() && categoryFilter !== 'all'
+                    ? 'No hay productos que coincidan con la búsqueda y categoría seleccionada.'
+                    : searchQuery.trim()
+                    ? 'No hay productos que coincidan con la búsqueda.'
+                    : categoryFilter !== 'all'
+                    ? 'No hay productos en esta categoría.'
+                    : 'No hay productos. Crea uno para empezar.'}
+                </p>
+                {(searchQuery.trim() || categoryFilter !== 'all') && (
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setSearchQuery('');
+                      setCategoryFilter('all');
+                    }}
+                  >
+                    Limpiar filtros
+                  </Button>
+                )}
+              </div>
             ) : (
-              items.map((item) => (
+              filteredItems.map((item) => (
                 <MenuItemCard
                   key={item.id}
                   item={item}
@@ -738,7 +862,7 @@ const MenuItemsManager = () => {
                 <TableRow>
                   <TableHead className="w-12">
                     <Checkbox
-                      checked={items.length > 0 && selectedItems.size === items.length}
+                      checked={filteredItems.length > 0 && selectedItems.size === filteredItems.length}
                       onCheckedChange={toggleSelectAll}
                     />
                   </TableHead>
@@ -753,14 +877,37 @@ const MenuItemsManager = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {items.length === 0 ? (
+                {filteredItems.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={isStockEnabled ? 9 : 8} className="text-center text-muted-foreground">
-                      No hay productos. Crea uno para empezar.
+                    <TableCell colSpan={isStockEnabled ? 9 : 8} className="text-center py-12">
+                      <div className="flex flex-col items-center">
+                        <Filter className="h-12 w-12 mb-4 text-muted-foreground opacity-50" />
+                        <p className="text-lg font-medium mb-2">No se encontraron productos</p>
+                        <p className="text-sm text-muted-foreground mb-4">
+                          {searchQuery.trim() && categoryFilter !== 'all'
+                            ? 'No hay productos que coincidan con la búsqueda y categoría seleccionada.'
+                            : searchQuery.trim()
+                            ? 'No hay productos que coincidan con la búsqueda.'
+                            : categoryFilter !== 'all'
+                            ? 'No hay productos en esta categoría.'
+                            : 'No hay productos. Crea uno para empezar.'}
+                        </p>
+                        {(searchQuery.trim() || categoryFilter !== 'all') && (
+                          <Button
+                            variant="outline"
+                            onClick={() => {
+                              setSearchQuery('');
+                              setCategoryFilter('all');
+                            }}
+                          >
+                            Limpiar filtros
+                          </Button>
+                        )}
+                      </div>
                     </TableCell>
                   </TableRow>
                 ) : (
-                  items.map((item) => (
+                  filteredItems.map((item) => (
                     <TableRow key={item.id} className={selectedItems.has(item.id) ? 'bg-primary/5' : ''}>
                       <TableCell>
                         <Checkbox

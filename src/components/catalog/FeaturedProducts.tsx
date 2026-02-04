@@ -81,10 +81,10 @@ export const FeaturedProducts = () => {
 
       let query = supabase
         .from('menu_items')
-        .select('*')
+        .select('*, categories(name)')
         .eq('store_id', store.id)
         .eq('is_available', true)
-        .eq('is_featured', true);
+        .eq('is_featured', true);  // Strictly true, not truthy
 
       // If a specific category is selected (not "featured" filter), filter by category
       if (selectedCategoryId && !showFeatured) {
@@ -93,8 +93,24 @@ export const FeaturedProducts = () => {
 
       query = query.order('display_order', { ascending: true });
 
+      // Development logging to verify query filters
+      if (import.meta.env.DEV) {
+        console.log('[FeaturedProducts] Filtros de query:', {
+          store_id: store.id,
+          is_available: true,
+          is_featured: true,
+          category_id: selectedCategoryId || 'all'
+        });
+      }
+
       const { data, error } = await query;
       if (error) throw error;
+
+      // Log results in development
+      if (import.meta.env.DEV && data) {
+        console.log(`[FeaturedProducts] Productos destacados encontrados: ${data.length}`);
+      }
+
       return data;
     },
     enabled: !!store?.id && shouldShowCarousel,
@@ -181,33 +197,39 @@ export const FeaturedProducts = () => {
       {/* Carousel */}
       <div className="overflow-hidden" ref={emblaRef}>
         <div className="flex gap-3 sm:gap-4">
-          {featuredProducts?.map((product, index) => (
-            <div
-              key={product.id}
-              className="flex-[0_0_65%] sm:flex-[0_0_48%] md:flex-[0_0_32%] lg:flex-[0_0_24%] min-w-0"
-            >
-              <ProductCard
-                id={product.id}
-                name={product.name}
-                price={Number(product.price)}
-                image_url={product.image_url}
-                description={product.description}
-                layout="grid"
-                categoryId={product.category_id}
-                isAvailable={product.is_available ?? true}
-                index={index}
-                allProducts={featuredProducts.map((p) => ({
-                  id: p.id,
-                  name: p.name,
-                  price: Number(p.price),
-                  image_url: p.image_url,
-                  description: p.description,
-                  categoryId: p.category_id,
-                  isAvailable: p.is_available ?? true,
-                }))}
-              />
-            </div>
-          ))}
+          {featuredProducts?.map((product, index) => {
+            const categoryName = product.categories?.name || null;
+
+            return (
+              <div
+                key={product.id}
+                className="flex-[0_0_65%] sm:flex-[0_0_48%] md:flex-[0_0_32%] lg:flex-[0_0_24%] min-w-0"
+              >
+                <ProductCard
+                  id={product.id}
+                  name={product.name}
+                  price={Number(product.price)}
+                  image_url={product.image_url}
+                  description={product.description}
+                  layout="grid"
+                  categoryId={product.category_id}
+                  categoryName={categoryName}
+                  isAvailable={product.is_available ?? true}
+                  index={index}
+                  allProducts={featuredProducts.map((p) => ({
+                    id: p.id,
+                    name: p.name,
+                    price: Number(p.price),
+                    image_url: p.image_url,
+                    description: p.description,
+                    categoryId: p.category_id,
+                    categoryName: p.categories?.name || null,
+                    isAvailable: p.is_available ?? true,
+                  }))}
+                />
+              </div>
+            );
+          })}
         </div>
       </div>
     </section>

@@ -28,6 +28,7 @@ interface Product {
   image_url: string | null;
   images: string[] | null;
   category_id: string | null;
+  categories?: { name: string } | null;
   is_available: boolean | null;
   stock_quantity: number | null;
   stock_minimum: number;
@@ -77,7 +78,7 @@ export default function ProductDetail() {
       // Fetch product details
       const { data: productData, error: productError } = await supabase
         .from('menu_items')
-        .select('*')
+        .select('*, categories(name)')
         .eq('id', id)
         .single();
 
@@ -287,7 +288,7 @@ export default function ProductDetail() {
 
       <main className="flex-1 container mx-auto px-4 py-8 pb-24">
         {/* Back Button */}
-        <Button variant="ghost" onClick={() => navigate('/')} className="mb-6 hover:bg-muted">
+        <Button variant="ghost" onClick={() => navigate(-1)} className="mb-6 hover:bg-muted">
           <ArrowLeft className="w-4 h-4 mr-2" />
           Volver
         </Button>
@@ -352,6 +353,11 @@ export default function ProductDetail() {
           <div className="space-y-6">
             <div>
               <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2">{product.name}</h1>
+              {product.categories?.name && (
+                <Badge variant="secondary" className="mb-3">
+                  {product.categories.name}
+                </Badge>
+              )}
               <div className="flex items-center gap-3">
                 {bestDeal ? (
                   <>

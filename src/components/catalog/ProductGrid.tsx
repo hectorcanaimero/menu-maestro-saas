@@ -111,11 +111,11 @@ export const ProductGrid = () => {
       // Excluir productos ocultos (is_available = null)
       let query = supabase
         .from('menu_items')
-        .select('*')
+        .select('*, categories(name)')
         .eq('store_id', store.id)
-        .not('is_available', 'is', null)
-        .range(from, to);
+        .not('is_available', 'is', null);
 
+      // Apply filters FIRST
       if (showFeatured) {
         query = query.eq('is_featured', true);
       }
@@ -124,12 +124,12 @@ export const ProductGrid = () => {
         query = query.eq('category_id', categoryFilter);
       }
 
-      // Add search filter with case-insensitive ILIKE
+      // Add search filter with case-insensitive ILIKE BEFORE pagination
       if (debouncedSearchQuery) {
         query = query.or(`name.ilike.%${debouncedSearchQuery}%,description.ilike.%${debouncedSearchQuery}%`);
       }
 
-      // Apply sorting
+      // Apply sorting BEFORE pagination
       switch (sortBy) {
         case 'price-asc':
           query = query.order('price', { ascending: true });
@@ -150,6 +150,9 @@ export const ProductGrid = () => {
           query = query.order('display_order', { ascending: true });
       }
 
+      // Apply pagination LAST
+      query = query.range(from, to);
+
       const { data: products, error } = await query;
       if (error) throw error;
 
@@ -165,8 +168,21 @@ export const ProductGrid = () => {
     initialPageParam: 0,
   });
 
-  // Flatten all pages into a single array
-  const products = data?.pages.flatMap((page) => page.products) || [];
+  // Flatten all pages and deduplicate by product.id
+  const allProducts = data?.pages.flatMap((page) => page.products) || [];
+
+  // Development logging to detect duplicates
+  if (import.meta.env.DEV && allProducts.length > 0) {
+    const ids = allProducts.map(p => p.id);
+    const duplicates = ids.filter((id, index) => ids.indexOf(id) !== index);
+    if (duplicates.length > 0) {
+      console.warn('[ProductGrid] IDs de productos duplicados detectados:', [...new Set(duplicates)]);
+      console.warn('[ProductGrid] Total productos antes de deduplicar:', allProducts.length);
+    }
+  }
+
+  const uniqueProductsMap = new Map(allProducts.map(p => [p.id, p]));
+  const products = Array.from(uniqueProductsMap.values());
 
   // Intersection Observer to trigger loading more products
   useEffect(() => {
@@ -299,6 +315,9 @@ export const ProductGrid = () => {
               const galleryImages = Array.isArray(product.images) ? product.images.length : 0;
               const totalImages = (product.image_url ? 1 : 0) + galleryImages;
 
+              // Extract category name from the join
+              const categoryName = product.categories?.name || null;
+
               return (
                 <ProductCard
                   key={product.id}
@@ -309,6 +328,7 @@ export const ProductGrid = () => {
                   description={product.description}
                   layout={viewMode}
                   categoryId={product.category_id}
+                  categoryName={categoryName}
                   isAvailable={product.is_available ?? true}
                   imagesCount={totalImages}
                   index={index}
@@ -321,6 +341,7 @@ export const ProductGrid = () => {
                     image_url: p.image_url,
                     description: p.description,
                     categoryId: p.category_id,
+                    categoryName: p.categories?.name || null,
                     isAvailable: p.is_available ?? true,
                   }))}
                 />
