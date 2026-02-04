@@ -223,32 +223,32 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
 
     // CRITICAL: If user is authenticated but NOT the owner, redirect them to their own store
     // This prevents users from accessing admin panels of stores they don't own
-    // if (session?.user && !isOwner) {
-    //   // Check if user owns a different store
-    //   const { data: userStore } = await supabase.rpc('get_user_owned_store').single();
+    if (session?.user && !isOwner) {
+      // Check if user owns a different store
+      const { data: userStore } = await supabase.rpc('get_user_owned_store').single();
 
-    //   if (userStore && userStore.subdomain !== storeData.subdomain) {
-    //     // User owns a different store - redirect them to their store WITHOUT signing out
+      if (userStore && userStore.subdomain !== storeData.subdomain) {
+        // User owns a different store - redirect them to their store WITHOUT signing out
 
-    //     // Redirect to user's store admin
-    //     const currentDomain = getCurrentDomain();
-    //     const correctStoreUrl = `${window.location.protocol}//${userStore.subdomain}.${currentDomain}/admin`;
+        // Redirect to user's store admin
+        const currentDomain = getCurrentDomain();
+        const correctStoreUrl = `${window.location.protocol}//${userStore.subdomain}.${currentDomain}/admin`;
 
-    //     // Show message
-    //     if (typeof window !== 'undefined') {
-    //       import('sonner').then(({ toast }) => {
-    //         toast.info(`Redirigiendo a tu tienda...`, {
-    //           duration: 3000,
-    //         });
-    //       });
-    //     }
+        // Show message
+        if (typeof window !== 'undefined') {
+          import('sonner').then(({ toast }) => {
+            toast.info(`Redirigiendo a tu tienda...`, {
+              duration: 3000,
+            });
+          });
+        }
 
-    //     // Redirect after a short delay to show the message
-    //     setTimeout(() => {
-    //       window.location.href = correctStoreUrl;
-    //     }, 500);
-    //   }
-    // }
+        // Redirect after a short delay to show the message
+        setTimeout(() => {
+          window.location.href = correctStoreUrl;
+        }, 500);
+      }
+    }
 
     // Set Sentry user context
     if (session?.user) {
