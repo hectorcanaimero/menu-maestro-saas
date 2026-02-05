@@ -188,8 +188,9 @@ All routes are defined in src/App.tsx:
   - `stock_quantity`: Current available units
   - `stock_minimum`: Low stock alert threshold
 - **Automatic Stock Reduction:**
-  - Stock decreases when order status becomes "ready"
-  - Logged in `stock_history` table for audit trail
+  - Stock decreases when order status becomes "confirmed"
+  - Stock is restored when order status becomes "cancelled" (if previously confirmed)
+  - All changes logged in `stock_history` table for audit trail
 - **Real-time Validation:**
   - Validates stock when adding to cart
   - Validates stock when increasing quantity

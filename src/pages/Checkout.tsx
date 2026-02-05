@@ -344,6 +344,12 @@ const Checkout = () => {
   }, [store?.id, store?.accept_cash, store?.delivery_price_mode]);
 
   const handleNext = async () => {
+    // Validar pedido mínimo primero
+    if (store?.minimum_order_price && discountedTotal < store.minimum_order_price) {
+      toast.error(`El pedido mínimo es ${formatPrice(store.minimum_order_price).original}. Tu carrito actual es ${formatPrice(discountedTotal).original}`);
+      return;
+    }
+
     const isValid = await form.trigger();
     if (!isValid) return;
 
@@ -1226,6 +1232,18 @@ const Checkout = () => {
           </form>
         </Form>
       </div>
+
+      {/* Minimum order warning - visible en todos los pasos */}
+      {store?.minimum_order_price && discountedTotal < store.minimum_order_price && (
+        <div className="container mx-auto px-4 max-w-2xl pb-4">
+          <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4">
+            <p className="text-destructive text-sm font-medium text-center">
+              El pedido mínimo es {formatPrice(store.minimum_order_price).original}.
+              Te faltan {formatPrice(store.minimum_order_price - discountedTotal).original} para continuar.
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Footer with Next Button */}
       <div className="fixed bottom-0 left-0 right-0 p-4 bg-background border-t">
