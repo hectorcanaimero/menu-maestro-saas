@@ -130,24 +130,26 @@ export const ProductGrid = () => {
       }
 
       // Apply sorting BEFORE pagination
+      // IMPORTANT: Always add secondary sort by 'id' to ensure deterministic ordering
+      // This prevents duplicate products across pages when primary sort values are equal
       switch (sortBy) {
         case 'price-asc':
-          query = query.order('price', { ascending: true });
+          query = query.order('price', { ascending: true }).order('id', { ascending: true });
           break;
         case 'price-desc':
-          query = query.order('price', { ascending: false });
+          query = query.order('price', { ascending: false }).order('id', { ascending: true });
           break;
         case 'name-asc':
-          query = query.order('name', { ascending: true });
+          query = query.order('name', { ascending: true }).order('id', { ascending: true });
           break;
         case 'name-desc':
-          query = query.order('name', { ascending: false });
+          query = query.order('name', { ascending: false }).order('id', { ascending: true });
           break;
         case 'newest':
-          query = query.order('created_at', { ascending: false });
+          query = query.order('created_at', { ascending: false }).order('id', { ascending: true });
           break;
         default:
-          query = query.order('display_order', { ascending: true });
+          query = query.order('display_order', { ascending: true }).order('id', { ascending: true });
       }
 
       // Apply pagination LAST
