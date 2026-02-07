@@ -55,6 +55,9 @@ interface OrderItem {
   price_at_time: number;
   item_name: string;
   order_item_extras: OrderItemExtra[];
+  menu_items?: {
+    image_url: string | null;
+  };
 }
 
 interface Order {
@@ -122,7 +125,10 @@ const OrdersManager = () => {
           *,
           order_items (
             *,
-            order_item_extras (*)
+            order_item_extras (*),
+            menu_items (
+              image_url
+            )
           )
         `,
         )
@@ -715,17 +721,35 @@ const OrdersManager = () => {
                 <div className="space-y-3">
                   {selectedOrder.order_items.map((item) => (
                     <div key={item.id} className="bg-muted/50 p-4 rounded-lg">
-                      <div className="flex justify-between items-start mb-2">
-                        <div className="flex-1">
-                          <p className="font-medium">
-                            {item.quantity}x {item.item_name}
-                          </p>
-                          <p className="text-sm text-muted-foreground">${item.price_at_time.toFixed(2)} c/u</p>
+                      <div className="flex gap-3 mb-2">
+                        {/* Product Image */}
+                        {item.menu_items?.image_url ? (
+                          <img
+                            src={item.menu_items.image_url}
+                            alt={item.item_name}
+                            className="w-16 h-16 object-cover rounded-lg flex-shrink-0"
+                          />
+                        ) : (
+                          <div className="w-16 h-16 bg-muted rounded-lg flex items-center justify-center flex-shrink-0">
+                            <Package className="w-6 h-6 text-muted-foreground" />
+                          </div>
+                        )}
+
+                        {/* Product Info */}
+                        <div className="flex justify-between items-start flex-1 min-w-0">
+                          <div className="flex-1">
+                            <p className="font-medium">
+                              {item.quantity}x {item.item_name}
+                            </p>
+                            <p className="text-sm text-muted-foreground">${item.price_at_time.toFixed(2)} c/u</p>
+                          </div>
+                          <p className="font-semibold ml-2">${(item.price_at_time * item.quantity).toFixed(2)}</p>
                         </div>
-                        <p className="font-semibold">${(item.price_at_time * item.quantity).toFixed(2)}</p>
                       </div>
+
+                      {/* Extras */}
                       {item.order_item_extras && item.order_item_extras.length > 0 && (
-                        <div className="mt-2 pl-4 border-l-2 border-primary/20">
+                        <div className="mt-2 pl-4 border-l-2 border-primary/20 ml-[4.5rem]">
                           <p className="text-sm font-medium mb-1">Extras:</p>
                           {item.order_item_extras.map((extra) => (
                             <div key={extra.id} className="flex justify-between text-sm">
