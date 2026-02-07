@@ -94,8 +94,8 @@ const KitchenManager = () => {
         )
         .eq('store_id', store.id)
         .neq('status', 'delivered')
+        .neq('status', 'cancelled')
         .order('created_at', { ascending: false });
-
       if (error) throw error;
       setOrders((data || []) as Order[]);
       setFilteredOrders((data || []) as Order[]);
@@ -284,8 +284,8 @@ const KitchenManager = () => {
             order.order_type === 'delivery'
               ? 'ENTREGA'
               : order.order_type === 'pickup'
-              ? 'RECOGER'
-              : 'MESA ' + (order.delivery_address?.replace('Mesa ', '') || '')
+                ? 'RECOGER'
+                : 'MESA ' + (order.delivery_address?.replace('Mesa ', '') || '')
           }</p>
           <hr>
           ${order.order_items
