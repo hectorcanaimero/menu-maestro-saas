@@ -1,0 +1,11 @@
+{
+  "name": "pideai-seo-server",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.84.0",
+    "express": "^4.21.0",
+    "compression": "^1.7.4"
+  }
+}

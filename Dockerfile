@@ -1,8 +1,8 @@
-# Dockerfile optimizado para Traefik (sin nginx)
-# Sirve estáticos vía Node + serve
+# Dockerfile optimizado para Traefik con SEO server (Express)
+# Sirve estáticos + inyecta meta tags dinámicos por subdomain
 
 ##############################
-# Stage 1: Build
+# Stage 1: Build SPA
 ##############################
 FROM node:20-alpine AS builder
 
@@ -39,14 +39,26 @@ COPY . .
 RUN npm run build
 
 ##############################
-# Stage 2: Runtime
+# Stage 2: Build server deps
+##############################
+FROM node:20-alpine AS server-deps
+
+WORKDIR /app/server
+
+COPY server/package*.json ./
+RUN npm ci --production
+
+##############################
+# Stage 3: Runtime
 ##############################
 FROM node:20-alpine AS production
 
 WORKDIR /app
 
-# Instalar server estático
-RUN npm install -g serve
+# Copiar server + dependencias
+COPY --from=server-deps /app/server/node_modules ./server/node_modules
+COPY server/package.json ./server/
+COPY server/index.js ./server/
 
 # Copiar assets del build
 COPY --from=builder /app/dist ./dist
@@ -56,10 +68,9 @@ EXPOSE 3000
 
 # Healthcheck ligero
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD wget --quiet --tries=1 --spider http://localhost:3000 || exit 1
-
+  CMD wget --quiet --tries=1 --spider http://localhost:3000/health || exit 1
 
 ##############################
 # Start server
 ##############################
-CMD ["serve", "-s", "dist", "-l", "3000"]
+CMD ["node", "server/index.js"]
