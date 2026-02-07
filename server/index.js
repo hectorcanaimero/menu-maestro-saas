@@ -5,7 +5,7 @@ import { resolve, join } from 'path';
 import { createClient } from '@supabase/supabase-js';
 
 // ─── Config ────────────────────────────────────────────────────────
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 80;
 const DIST_DIR = resolve(process.cwd(), 'dist');
 const INDEX_HTML_PATH = join(DIST_DIR, 'index.html');
 const SUPPORTED_DOMAINS = ['pideai.com', 'artex.lat'];
