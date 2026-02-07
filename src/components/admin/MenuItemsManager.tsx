@@ -764,42 +764,90 @@ const MenuItemsManager = () => {
 
           {/* Bulk Actions Toolbar */}
           {selectedItems.size > 0 && (
-            <div className="bg-primary/10 border border-primary/20 rounded-lg p-3 mb-4 flex items-center justify-between gap-4">
-              <div className="flex items-center gap-2">
-                <Checkbox
-                  checked={selectedItems.size === filteredItems.length && filteredItems.length > 0}
-                  onCheckedChange={toggleSelectAll}
-                />
-                <span className="text-sm font-medium">
-                  {selectedItems.size} producto(s) seleccionado(s)
-                </span>
+            <div className="bg-primary/10 border border-primary/20 rounded-lg p-3 mb-4">
+              {/* Mobile: Two rows with dropdown */}
+              <div className="flex flex-col gap-3 sm:hidden">
+                <div className="flex items-center gap-2">
+                  <Checkbox
+                    checked={selectedItems.size === filteredItems.length && filteredItems.length > 0}
+                    onCheckedChange={toggleSelectAll}
+                  />
+                  <span className="text-sm font-medium">
+                    {selectedItems.size} producto(s) seleccionado(s)
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-muted-foreground flex-shrink-0">Cambiar estado:</span>
+                  <Select onValueChange={(value) => {
+                    if (value === 'available') handleBulkAvailabilityChange(true);
+                    else if (value === 'unavailable') handleBulkAvailabilityChange(false);
+                    else if (value === 'hidden') handleBulkAvailabilityChange(null);
+                  }}>
+                    <SelectTrigger className="h-9 flex-1">
+                      <SelectValue placeholder="Seleccionar estado" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="available">
+                        <div className="flex items-center gap-2">
+                          <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                          <span>Disponible</span>
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="unavailable">
+                        <div className="flex items-center gap-2">
+                          <div className="w-2 h-2 rounded-full bg-red-500"></div>
+                          <span>No disponible</span>
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="hidden">
+                        <div className="flex items-center gap-2">
+                          <div className="w-2 h-2 rounded-full bg-gray-500"></div>
+                          <span>No mostrar</span>
+                        </div>
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-muted-foreground mr-2">Cambiar estado:</span>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => handleBulkAvailabilityChange(true)}
-                  className="bg-green-50 hover:bg-green-100"
-                >
-                  Disponible
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => handleBulkAvailabilityChange(false)}
-                  className="bg-red-50 hover:bg-red-100"
-                >
-                  No disponible
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => handleBulkAvailabilityChange(null)}
-                  className="bg-gray-50 hover:bg-gray-100"
-                >
-                  No mostrar
-                </Button>
+
+              {/* Desktop: Single row with buttons */}
+              <div className="hidden sm:flex items-center justify-between gap-4">
+                <div className="flex items-center gap-2">
+                  <Checkbox
+                    checked={selectedItems.size === filteredItems.length && filteredItems.length > 0}
+                    onCheckedChange={toggleSelectAll}
+                  />
+                  <span className="text-sm font-medium">
+                    {selectedItems.size} producto(s) seleccionado(s)
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-muted-foreground mr-2">Cambiar estado:</span>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => handleBulkAvailabilityChange(true)}
+                    className="bg-green-50 hover:bg-green-100"
+                  >
+                    Disponible
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => handleBulkAvailabilityChange(false)}
+                    className="bg-red-50 hover:bg-red-100"
+                  >
+                    No disponible
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => handleBulkAvailabilityChange(null)}
+                    className="bg-gray-50 hover:bg-gray-100"
+                  >
+                    No mostrar
+                  </Button>
+                </div>
               </div>
             </div>
           )}
